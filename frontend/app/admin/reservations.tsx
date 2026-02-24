@@ -165,11 +165,15 @@ export default function AdminReservations() {
       </View>
 
       <View style={styles.cardFooter}>
-        <View style={[styles.paymentBadge, { backgroundColor: getPaymentColor(item.payment_status) + '20' }]}>
+        <TouchableOpacity
+          style={[styles.paymentBadge, { backgroundColor: getPaymentColor(item.payment_status) + '20' }]}
+          onPress={() => handlePaymentStatusChange(item)}
+        >
           <Text style={[styles.paymentText, { color: getPaymentColor(item.payment_status) }]}>
-            {item.payment_status === 'paid' ? 'Payé' : item.payment_status === 'pending' ? 'En attente' : 'Non payé'}
+            {item.payment_status === 'paid' ? '✓ Payé' : item.payment_status === 'pending' ? 'En attente' : item.payment_status === 'refunded' ? 'Remboursé' : 'Non payé'}
           </Text>
-        </View>
+          <Ionicons name="chevron-down" size={10} color={getPaymentColor(item.payment_status)} />
+        </TouchableOpacity>
         <Text style={styles.price}>CHF {item.total_price.toFixed(2)}</Text>
       </View>
     </View>
