@@ -93,6 +93,7 @@ class AdminUserUpdate(BaseModel):
     client_rating: Optional[str] = None
     admin_notes: Optional[str] = None
     name: Optional[str] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
 
