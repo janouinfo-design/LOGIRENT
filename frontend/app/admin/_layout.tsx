@@ -30,7 +30,7 @@ function AdminNavBar() {
       {/* Back to Home Button */}
       <TouchableOpacity 
         style={styles.homeButton}
-        onPress={() => router.push('/(tabs)/home')}
+        onPress={() => router.push('/(tabs)')}
       >
         <Ionicons name="home" size={20} color={COLORS.text} />
         <Text style={styles.homeButtonText}>Accueil</Text>
