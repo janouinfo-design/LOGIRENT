@@ -573,4 +573,61 @@ const styles = StyleSheet.create({
   payButton: {
     paddingHorizontal: 32,
   },
+  cashButton: {
+    backgroundColor: COLORS.secondary,
+  },
+  paymentMethodsContainer: {
+    gap: 12,
+  },
+  paymentMethodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    gap: 12,
+  },
+  paymentMethodSelected: {
+    borderColor: COLORS.primary,
+    backgroundColor: 'rgba(30, 58, 138, 0.05)',
+  },
+  paymentRadio: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: COLORS.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paymentRadioSelected: {
+    borderColor: COLORS.primary,
+  },
+  paymentRadioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: COLORS.primary,
+  },
+  paymentMethodInfo: {
+    flex: 1,
+  },
+  paymentMethodTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  paymentMethodTitleSelected: {
+    color: COLORS.primary,
+  },
+  paymentMethodTitleCash: {
+    color: COLORS.secondary,
+  },
+  paymentMethodSubtitle: {
+    fontSize: 12,
+    color: COLORS.textLight,
+    marginTop: 2,
+  },
 });
