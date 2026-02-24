@@ -91,11 +91,19 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.form}>
+            {/* Error Message */}
+            {loginError ? (
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle" size={20} color="#EF4444" />
+                <Text style={styles.errorText}>{loginError}</Text>
+              </View>
+            ) : null}
+
             <Input
               label="Email"
-              placeholder="Enter your email"
+              placeholder="Entrez votre email"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(text) => { setEmail(text); setLoginError(''); }}
               keyboardType="email-address"
               autoCapitalize="none"
               icon="mail"
@@ -103,21 +111,21 @@ export default function LoginScreen() {
             />
 
             <Input
-              label="Password"
-              placeholder="Enter your password"
+              label="Mot de passe"
+              placeholder="Entrez votre mot de passe"
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(text) => { setPassword(text); setLoginError(''); }}
               secureTextEntry
               icon="lock-closed"
               error={errors.password}
             />
 
             <TouchableOpacity style={styles.forgotButton}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
+              <Text style={styles.forgotText}>Mot de passe oublié?</Text>
             </TouchableOpacity>
 
             <Button
-              title="Sign In"
+              title="Se connecter"
               onPress={handleLogin}
               loading={loading}
               size="large"
