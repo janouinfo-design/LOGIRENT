@@ -301,36 +301,40 @@ export default function AdminCalendar() {
           const hasOngoing = dayEvents.ongoing.length > 0;
 
           return (
-            <TouchableOpacity
+            <View
               key={date.toISOString()}
               nativeID={`day-${format(date, 'yyyy-MM-dd')}`}
-              onPress={() => setSelectedDate(date)}
-              data-testid={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
             >
-              <Text style={{
-                fontSize: 13,
-                fontWeight: isToday(date) ? '700' : '500',
-                color: isToday(date) ? COLORS.primary : COLORS.text,
-                marginBottom: 2,
-              }}>
-                {format(date, 'd')}
-              </Text>
-              <View style={{ flexDirection: 'row', gap: 3, alignItems: 'center' }}>
-                {hasDep && (
-                  <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.departure, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 9, fontWeight: '700', color: 'white' }}>{dayEvents.departures.length}</Text>
-                  </View>
-                )}
-                {hasRet && (
-                  <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: hasOverdueE ? COLORS.overdue : COLORS.return, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 9, fontWeight: '700', color: 'white' }}>{dayEvents.returns.length}</Text>
-                  </View>
-                )}
-                {hasOngoing && !hasDep && !hasRet && (
-                  <View style={{ width: 20, height: 4, borderRadius: 2, backgroundColor: COLORS.success + '60' }} />
-                )}
-              </View>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setSelectedDate(date)}
+                style={{ alignItems: 'center' }}
+                data-testid={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
+              >
+                <Text style={{
+                  fontSize: 13,
+                  fontWeight: isToday(date) ? '700' : '500',
+                  color: isToday(date) ? COLORS.primary : COLORS.text,
+                  marginBottom: 2,
+                }}>
+                  {format(date, 'd')}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 3, alignItems: 'center' }}>
+                  {hasDep && (
+                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: COLORS.departure, justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 9, fontWeight: '700', color: 'white' }}>{dayEvents.departures.length}</Text>
+                    </View>
+                  )}
+                  {hasRet && (
+                    <View style={{ width: 16, height: 16, borderRadius: 8, backgroundColor: hasOverdueE ? COLORS.overdue : COLORS.return, justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 9, fontWeight: '700', color: 'white' }}>{dayEvents.returns.length}</Text>
+                    </View>
+                  )}
+                  {hasOngoing && !hasDep && !hasRet && (
+                    <View style={{ width: 20, height: 4, borderRadius: 2, backgroundColor: COLORS.success + '60' }} />
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
           );
         })}
       </View>
