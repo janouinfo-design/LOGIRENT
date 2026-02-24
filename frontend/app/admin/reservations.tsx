@@ -402,6 +402,12 @@ export default function AdminReservations() {
           )}
         </View>
         <TouchableOpacity
+          style={[styles.dateFilterButton, activeDateFilter && styles.dateFilterButtonActive]}
+          onPress={() => setShowDateFilter(true)}
+        >
+          <Ionicons name="calendar" size={18} color={activeDateFilter ? COLORS.card : COLORS.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
           style={styles.sortButton}
           onPress={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
         >
@@ -410,11 +416,21 @@ export default function AdminReservations() {
             size={18} 
             color={COLORS.primary} 
           />
-          <Text style={styles.sortButtonText}>
-            {sortOrder === 'newest' ? 'Récentes' : 'Anciennes'}
-          </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Active Date Filter Badge */}
+      {activeDateFilter && (
+        <View style={styles.activeDateFilterBadge}>
+          <Ionicons name="calendar" size={16} color={COLORS.primary} />
+          <Text style={styles.activeDateFilterText}>
+            {activeDateFilter.type === 'created' ? 'Créées' : 'Location'}: {format(new Date(activeDateFilter.start), 'dd/MM/yy')} → {format(new Date(activeDateFilter.end), 'dd/MM/yy')}
+          </Text>
+          <TouchableOpacity onPress={clearDateFilter}>
+            <Ionicons name="close-circle" size={18} color={COLORS.error} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Stats */}
       <View style={styles.statsSection}>
