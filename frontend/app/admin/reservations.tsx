@@ -76,12 +76,6 @@ export default function AdminReservations() {
     }
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchReservations();
-    setRefreshing(false);
-  };
-
   // Filter and search reservations
   const filteredReservations = useMemo(() => {
     let result = [...reservations];
