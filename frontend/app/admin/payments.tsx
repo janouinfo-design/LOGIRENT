@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../../src/api/axios';
 import { format } from 'date-fns';
-
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -39,24 +36,17 @@ export default function AdminPayments() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    loadTokenAndFetch();
-  }, []);
-
-  const loadTokenAndFetch = async () => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
     fetchTransactions();
-  };
+  }, []);
 
   const fetchTransactions = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/payments`);
+      const response = await api.get('/api/admin/payments');
       setTransactions(response.data.transactions);
       setTotal(response.data.total);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
+    } catch (error: any) {
+      console.error('Error fetching transactions:', error.response?.data || error.message);
+      Alert.alert('Erreur', 'Impossible de charger les transactions');
     } finally {
       setLoading(false);
     }
@@ -78,6 +68,16 @@ export default function AdminPayments() {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'paid': return 'Payé';
+      case 'initiated': return 'Initié';
+      case 'pending': return 'En attente';
+      case 'failed': return 'Échoué';
+      default: return status;
+    }
+  };
+
   const totalPaid = transactions
     .filter(t => t.status === 'paid')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -92,7 +92,7 @@ export default function AdminPayments() {
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
           <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status}
+            {getStatusLabel(item.status)}
           </Text>
         </View>
       </View>
@@ -101,7 +101,7 @@ export default function AdminPayments() {
         <View style={styles.footerItem}>
           <Ionicons name="time" size={14} color={COLORS.textLight} />
           <Text style={styles.footerText}>
-            {format(new Date(item.created_at), 'MMM d, yyyy HH:mm')}
+            {format(new Date(item.created_at), 'dd/MM/yyyy HH:mm')}
           </Text>
         </View>
         <Text style={styles.sessionId}>...{item.session_id.slice(-12)}</Text>
@@ -119,7 +119,7 @@ export default function AdminPayments() {
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Collected</Text>
+          <Text style={styles.summaryLabel}>Total Collecté</Text>
           <Text style={[styles.summaryValue, { color: COLORS.success }]}>CHF {totalPaid.toFixed(2)}</Text>
         </View>
       </View>
@@ -135,7 +135,7 @@ export default function AdminPayments() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="card-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>No transactions yet</Text>
+            <Text style={styles.emptyText}>Aucune transaction</Text>
           </View>
         }
       />
@@ -215,7 +215,6 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    textTransform: 'capitalize',
   },
   cardFooter: {
     flexDirection: 'row',
