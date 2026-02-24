@@ -1015,6 +1015,124 @@ class RentDriveAPITester:
             self.log_result("Admin Edit Vehicle", False, error=f"Exception: {str(e)}")
             return False
 
+    def test_admin_payment_status_update(self) -> bool:
+        """Test admin payment status update endpoint"""
+        try:
+            if not self.access_token:
+                self.log_result("Admin Payment Status Update", False, error="No access token available")
+                return False
+            
+            # Step 1: Get admin reservations to find one to update
+            response = self.make_request('GET', '/admin/reservations')
+            
+            if response.status_code != 200:
+                self.log_result("Admin Payment Status Update", False, 
+                              error=f"Cannot get admin reservations: Status {response.status_code}: {response.text}")
+                return False
+            
+            reservations_data = response.json()
+            reservations = reservations_data.get('reservations', [])
+            
+            if not reservations:
+                self.log_result("Admin Payment Status Update", False, 
+                              error="No reservations found for testing")
+                return False
+            
+            # Find a suitable reservation to update (prefer unpaid ones)
+            target_reservation = None
+            for res in reservations:
+                if res.get('payment_status') == 'unpaid':
+                    target_reservation = res
+                    break
+            
+            # If no unpaid found, use first reservation
+            if not target_reservation:
+                target_reservation = reservations[0]
+            
+            reservation_id = target_reservation['id']
+            original_payment_status = target_reservation.get('payment_status', 'unpaid')
+            original_status = target_reservation.get('status', 'pending')
+            
+            print(f"    Testing with reservation {reservation_id}")
+            print(f"    Original payment_status: {original_payment_status}, status: {original_status}")
+            
+            # Step 2: Test updating payment status to "paid"
+            response = self.make_request('PUT', f'/admin/reservations/{reservation_id}/payment-status?payment_status=paid')
+            
+            if response.status_code != 200:
+                self.log_result("Admin Payment Status Update", False, 
+                              error=f"Failed to update payment status to paid: Status {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            if not data.get('message') or 'paid' not in data['message']:
+                self.log_result("Admin Payment Status Update", False, 
+                              error=f"Unexpected response for paid status: {data}")
+                return False
+            
+            # Step 3: Verify the payment status was updated
+            verification_response = self.make_request('GET', '/admin/reservations')
+            if verification_response.status_code == 200:
+                updated_reservations = verification_response.json().get('reservations', [])
+                updated_reservation = None
+                for res in updated_reservations:
+                    if res['id'] == reservation_id:
+                        updated_reservation = res
+                        break
+                
+                if updated_reservation:
+                    if updated_reservation.get('payment_status') != 'paid':
+                        self.log_result("Admin Payment Status Update", False, 
+                                      error=f"Payment status not updated to paid: {updated_reservation.get('payment_status')}")
+                        return False
+                    
+                    # Check if status changed to confirmed for pending_cash reservations
+                    if original_status == 'pending_cash' and updated_reservation.get('status') != 'confirmed':
+                        self.log_result("Admin Payment Status Update", False, 
+                                      error=f"Reservation status should change to confirmed for pending_cash, got: {updated_reservation.get('status')}")
+                        return False
+            
+            # Step 4: Test other payment statuses
+            test_statuses = ['unpaid', 'refunded', 'pending']
+            
+            for status in test_statuses:
+                response = self.make_request('PUT', f'/admin/reservations/{reservation_id}/payment-status?payment_status={status}')
+                
+                if response.status_code != 200:
+                    self.log_result("Admin Payment Status Update", False, 
+                                  error=f"Failed to update payment status to {status}: Status {response.status_code}: {response.text}")
+                    return False
+                
+                data = response.json()
+                if not data.get('message') or status not in data['message']:
+                    self.log_result("Admin Payment Status Update", False, 
+                                  error=f"Unexpected response for {status} status: {data}")
+                    return False
+            
+            # Step 5: Test invalid payment status
+            invalid_response = self.make_request('PUT', f'/admin/reservations/{reservation_id}/payment-status?payment_status=invalid_status')
+            
+            if invalid_response.status_code != 400:
+                self.log_result("Admin Payment Status Update", False, 
+                              error=f"Should reject invalid payment status with 400, got: {invalid_response.status_code}")
+                return False
+            
+            # Step 6: Restore original payment status
+            restore_response = self.make_request('PUT', f'/admin/reservations/{reservation_id}/payment-status?payment_status={original_payment_status}')
+            
+            if restore_response.status_code == 200:
+                self.log_result("Admin Payment Status Update", True, 
+                              f"All payment status updates working correctly (paid, unpaid, pending, refunded)")
+                return True
+            else:
+                self.log_result("Admin Payment Status Update", False, 
+                              error=f"Failed to restore original status: Status {restore_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Payment Status Update", False, error=f"Exception: {str(e)}")
+            return False
+
     # ==================== MAIN TEST RUNNER ====================
 
     def run_all_tests(self) -> Dict[str, Any]:
