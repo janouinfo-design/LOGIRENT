@@ -868,6 +868,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 6,
   },
+  photoBtn: {
+    backgroundColor: '#8B5CF6' + '15',
+  },
   editBtn: {
     backgroundColor: COLORS.primary + '15',
   },
