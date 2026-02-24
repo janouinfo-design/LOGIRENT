@@ -1618,6 +1618,100 @@ async def get_admin_payments(
     
     return {"transactions": transactions, "total": total}
 
+@api_router.get("/admin/calendar")
+async def get_admin_calendar(
+    month: int = None,
+    year: int = None,
+    user: dict = Depends(get_admin_user)
+):
+    """Get reservations formatted for calendar view with departure/return info"""
+    now = datetime.utcnow()
+    if month is None:
+        month = now.month
+    if year is None:
+        year = now.year
+    
+    start_of_month = datetime(year, month, 1)
+    if month == 12:
+        end_of_month = datetime(year + 1, 1, 1)
+    else:
+        end_of_month = datetime(year, month + 1, 1)
+    
+    # Get all reservations that overlap with this month
+    reservations = await db.reservations.find({
+        "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
+        "start_date": {"$lt": end_of_month},
+        "end_date": {"$gt": start_of_month}
+    }).to_list(500)
+    
+    events = []
+    for res in reservations:
+        res_user = await db.users.find_one({"id": res['user_id']})
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        
+        user_name = res_user['name'] if res_user else 'Inconnu'
+        vehicle_name = f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Inconnu'
+        
+        start_date = res['start_date']
+        end_date = res['end_date']
+        
+        # Check if overdue
+        is_overdue = res['status'] == 'active' and end_date < now
+        
+        events.append({
+            "id": res['id'],
+            "user_name": user_name,
+            "user_email": res_user['email'] if res_user else '',
+            "user_phone": res_user.get('phone', '') if res_user else '',
+            "vehicle_name": vehicle_name,
+            "vehicle_id": res.get('vehicle_id', ''),
+            "start_date": start_date.isoformat(),
+            "end_date": end_date.isoformat(),
+            "total_days": res.get('total_days', 0),
+            "total_price": res.get('total_price', 0),
+            "status": res['status'],
+            "payment_status": res.get('payment_status', 'unpaid'),
+            "payment_method": res.get('payment_method', 'card'),
+            "is_overdue": is_overdue,
+            "days_overdue": (now - end_date).days if is_overdue else 0
+        })
+    
+    return {"events": events, "month": month, "year": year}
+
+@api_router.get("/admin/overdue")
+async def get_overdue_reservations(user: dict = Depends(get_admin_user)):
+    """Get all overdue reservations (active but past end_date)"""
+    now = datetime.utcnow()
+    
+    overdue_reservations = await db.reservations.find({
+        "status": "active",
+        "end_date": {"$lt": now}
+    }).sort("end_date", 1).to_list(100)
+    
+    results = []
+    for res in overdue_reservations:
+        res_user = await db.users.find_one({"id": res['user_id']})
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        
+        days_overdue = (now - res['end_date']).days
+        
+        results.append({
+            "id": res['id'],
+            "user_name": res_user['name'] if res_user else 'Inconnu',
+            "user_email": res_user['email'] if res_user else '',
+            "user_phone": res_user.get('phone', '') if res_user else '',
+            "vehicle_name": f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Inconnu',
+            "start_date": res['start_date'].isoformat(),
+            "end_date": res['end_date'].isoformat(),
+            "total_days": res.get('total_days', 0),
+            "total_price": res.get('total_price', 0),
+            "days_overdue": days_overdue,
+            "status": res['status'],
+            "payment_status": res.get('payment_status', 'unpaid'),
+        })
+    
+    return {"overdue": results, "total": len(results)}
+
 @api_router.put("/admin/vehicles/{vehicle_id}/status")
 async def update_vehicle_status(
     vehicle_id: str,
