@@ -119,11 +119,38 @@ export default function ProfileScreen() {
       setUploadingLicense(true);
       try {
         await uploadLicense(result.assets[0].uri);
-        Alert.alert('Success', 'License uploaded successfully');
+        Alert.alert('Succès', 'Permis de conduire téléchargé');
       } catch (error: any) {
-        Alert.alert('Error', error.message);
+        Alert.alert('Erreur', error.message);
       } finally {
         setUploadingLicense(false);
+      }
+    }
+  };
+
+  const handleUploadIdCard = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie pour télécharger votre pièce d\'identité.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setUploadingId(true);
+      try {
+        await uploadIdCard(result.assets[0].uri);
+        Alert.alert('Succès', 'Pièce d\'identité téléchargée');
+      } catch (error: any) {
+        Alert.alert('Erreur', error.message);
+      } finally {
+        setUploadingId(false);
       }
     }
   };
