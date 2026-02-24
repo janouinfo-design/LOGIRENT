@@ -93,7 +93,7 @@ export default function BookingScreen() {
       });
 
       // Initiate payment
-      const originUrl = window.location.origin;
+      const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rent-hub-20.preview.emergentagent.com';
 
       const paymentData = await initiatePayment(reservation.id, originUrl);
 
