@@ -550,6 +550,13 @@ export default function AdminVehicles() {
       {/* Action Buttons */}
       <View style={styles.actionButtons}>
         <TouchableOpacity 
+          style={[styles.actionBtn, styles.photoBtn]}
+          onPress={() => openPhotoModal(item)}
+        >
+          <Ionicons name="camera" size={16} color="#8B5CF6" />
+          <Text style={[styles.actionBtnText, { color: '#8B5CF6' }]}>Photos ({item.photos?.length || 0})</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
           style={[styles.actionBtn, styles.editBtn]}
           onPress={() => openEditModal(item)}
         >
