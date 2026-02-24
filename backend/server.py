@@ -474,7 +474,7 @@ async def create_reservation(
     # Check availability - include pending reservations to prevent double booking during payment window
     overlap = await db.reservations.find_one({
         "vehicle_id": reservation_data.vehicle_id,
-        "status": {"$in": ["pending", "confirmed", "active"]},
+        "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
         "$or": [
             {"start_date": {"$lt": reservation_data.end_date}, "end_date": {"$gt": reservation_data.start_date}}
         ]
@@ -507,6 +507,14 @@ async def create_reservation(
     
     total_price = base_price + options_price
     
+    # Determine status based on payment method
+    payment_method = reservation_data.payment_method
+    if payment_method not in ["card", "cash"]:
+        payment_method = "card"
+    
+    # If cash payment, set status to pending_cash
+    status = "pending_cash" if payment_method == "cash" else "pending"
+    
     reservation = Reservation(
         user_id=user['id'],
         vehicle_id=reservation_data.vehicle_id,
@@ -516,10 +524,20 @@ async def create_reservation(
         total_days=total_days,
         base_price=base_price,
         options_price=options_price,
-        total_price=total_price
+        total_price=total_price,
+        status=status,
+        payment_method=payment_method
     )
     
     await db.reservations.insert_one(reservation.dict())
+    
+    # Send confirmation email for cash reservations
+    if payment_method == "cash":
+        try:
+            await send_cash_reservation_email(user, vehicle, reservation.dict())
+        except Exception as email_error:
+            logger.error(f"Failed to send cash reservation email: {email_error}")
+    
     return reservation
 
 @api_router.get("/reservations", response_model=List[Reservation])
