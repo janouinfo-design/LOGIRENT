@@ -91,7 +91,44 @@ export default function AdminUsers() {
   const openUserModal = (user: User) => {
     setSelectedUser(user);
     setAdminNotes(user.admin_notes || '');
+    setEditName(user.name || '');
+    setEditPhone(user.phone || '');
+    setEditAddress(user.address || '');
+    setEditMode(false);
     setShowUserModal(true);
+  };
+
+  const saveUserInfo = async () => {
+    if (!selectedUser) return;
+    
+    setSaving(true);
+    try {
+      await api.put(`/api/admin/users/${selectedUser.id}`, {
+        name: editName,
+        phone: editPhone,
+        address: editAddress,
+        admin_notes: adminNotes,
+      });
+      setSelectedUser({ 
+        ...selectedUser, 
+        name: editName,
+        phone: editPhone,
+        address: editAddress,
+        admin_notes: adminNotes 
+      });
+      setEditMode(false);
+      fetchUsers();
+      if (Platform.OS === 'web') {
+        window.alert('Informations sauvegardées');
+      }
+    } catch (error: any) {
+      console.error('Error saving user info:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Erreur lors de la sauvegarde');
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const updateRating = async (rating: string) => {
