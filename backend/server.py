@@ -871,6 +871,330 @@ async def seed_data():
     
     return {"message": f"Seeded {len(vehicles)} vehicles"}
 
+# ==================== EMAIL FUNCTIONS ====================
+
+async def send_email(recipient: str, subject: str, html_content: str):
+    """Send email using Resend"""
+    if not RESEND_API_KEY or RESEND_API_KEY == 're_placeholder':
+        logger.info(f"Email would be sent to {recipient}: {subject}")
+        return None
+    
+    params = {
+        "from": SENDER_EMAIL,
+        "to": [recipient],
+        "subject": subject,
+        "html": html_content
+    }
+    
+    try:
+        email = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Email sent to {recipient}: {email.get('id')}")
+        return email.get("id")
+    except Exception as e:
+        logger.error(f"Failed to send email to {recipient}: {str(e)}")
+        return None
+
+def generate_reservation_confirmation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+    """Generate HTML email for reservation confirmation"""
+    start_date = reservation['start_date']
+    end_date = reservation['end_date']
+    if isinstance(start_date, str):
+        start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+    if isinstance(end_date, str):
+        end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1E293B; margin: 0; padding: 0; background-color: #F8FAFC;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #1E3A8A; padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+                <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🚗 RentDrive</h1>
+                <p style="color: rgba(255,255,255,0.8); margin: 10px 0 0 0;">Reservation Confirmed</p>
+            </div>
+            
+            <div style="background-color: #FFFFFF; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h2 style="color: #1E3A8A; margin-top: 0;">Hello {user_name}!</h2>
+                <p>Your reservation has been confirmed. Here are the details:</p>
+                
+                <div style="background-color: #F8FAFC; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-top: 0; color: #1E3A8A;">{vehicle['brand']} {vehicle['model']} ({vehicle['year']})</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Pick-up Date:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{start_date.strftime('%B %d, %Y')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Return Date:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{end_date.strftime('%B %d, %Y')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Duration:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{reservation['total_days']} days</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Location:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{vehicle['location']}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="background-color: #1E3A8A; color: #FFFFFF; padding: 15px 20px; border-radius: 8px; text-align: center;">
+                    <span style="font-size: 14px;">Total Amount:</span>
+                    <span style="font-size: 24px; font-weight: bold; margin-left: 10px;">CHF {reservation['total_price']:.2f}</span>
+                </div>
+                
+                <p style="margin-top: 20px; color: #64748B; font-size: 14px;">
+                    Please bring your valid driving license when picking up the vehicle.
+                    For any questions, contact us at {SENDER_EMAIL}.
+                </p>
+                
+                <p style="margin-top: 30px;">
+                    Safe travels!<br>
+                    <strong>The RentDrive Team</strong>
+                </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; color: #64748B; font-size: 12px;">
+                <p>© 2024 RentDrive. All rights reserved.</p>
+                <p>LogiTrak Switzerland</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+
+async def send_reservation_confirmation(user: dict, vehicle: dict, reservation: dict):
+    """Send reservation confirmation email"""
+    html = generate_reservation_confirmation_email(user['name'], vehicle, reservation)
+    await send_email(
+        user['email'],
+        f"Reservation Confirmed - {vehicle['brand']} {vehicle['model']}",
+        html
+    )
+
+# ==================== ADMIN ROUTES ====================
+
+class AdminLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class AdminStats(BaseModel):
+    total_vehicles: int
+    total_users: int
+    total_reservations: int
+    total_revenue: float
+    reservations_by_status: Dict[str, int]
+    top_vehicles: List[Dict[str, Any]]
+    revenue_by_month: List[Dict[str, Any]]
+
+# Admin user check
+async def get_admin_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Check if user is admin (for simplicity, first registered user is admin)"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = decode_token(credentials.credentials)
+    user = await db.users.find_one({"id": payload['user_id']})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    # Check if user is admin (you could add an is_admin field)
+    # For MVP, allow all authenticated users to access admin
+    return user
+
+@api_router.get("/admin/stats", response_model=AdminStats)
+async def get_admin_stats(user: dict = Depends(get_admin_user)):
+    """Get dashboard statistics"""
+    
+    # Total counts
+    total_vehicles = await db.vehicles.count_documents({})
+    total_users = await db.users.count_documents({})
+    total_reservations = await db.reservations.count_documents({})
+    
+    # Total revenue (from paid reservations)
+    pipeline = [
+        {"$match": {"payment_status": "paid"}},
+        {"$group": {"_id": None, "total": {"$sum": "$total_price"}}}
+    ]
+    revenue_result = await db.reservations.aggregate(pipeline).to_list(1)
+    total_revenue = revenue_result[0]["total"] if revenue_result else 0
+    
+    # Reservations by status
+    status_pipeline = [
+        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+    ]
+    status_result = await db.reservations.aggregate(status_pipeline).to_list(10)
+    reservations_by_status = {item["_id"]: item["count"] for item in status_result}
+    
+    # Top rented vehicles
+    top_pipeline = [
+        {"$group": {"_id": "$vehicle_id", "rental_count": {"$sum": 1}}},
+        {"$sort": {"rental_count": -1}},
+        {"$limit": 5}
+    ]
+    top_result = await db.reservations.aggregate(top_pipeline).to_list(5)
+    
+    top_vehicles = []
+    for item in top_result:
+        vehicle = await db.vehicles.find_one({"id": item["_id"]})
+        if vehicle:
+            top_vehicles.append({
+                "id": vehicle["id"],
+                "name": f"{vehicle['brand']} {vehicle['model']}",
+                "rental_count": item["rental_count"]
+            })
+    
+    # Revenue by month (last 6 months)
+    six_months_ago = datetime.utcnow() - timedelta(days=180)
+    monthly_pipeline = [
+        {"$match": {"payment_status": "paid", "created_at": {"$gte": six_months_ago}}},
+        {"$group": {
+            "_id": {"year": {"$year": "$created_at"}, "month": {"$month": "$created_at"}},
+            "revenue": {"$sum": "$total_price"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id.year": 1, "_id.month": 1}}
+    ]
+    monthly_result = await db.reservations.aggregate(monthly_pipeline).to_list(12)
+    
+    revenue_by_month = []
+    for item in monthly_result:
+        month_name = datetime(item["_id"]["year"], item["_id"]["month"], 1).strftime("%b %Y")
+        revenue_by_month.append({
+            "month": month_name,
+            "revenue": item["revenue"],
+            "reservations": item["count"]
+        })
+    
+    return AdminStats(
+        total_vehicles=total_vehicles,
+        total_users=total_users,
+        total_reservations=total_reservations,
+        total_revenue=total_revenue,
+        reservations_by_status=reservations_by_status,
+        top_vehicles=top_vehicles,
+        revenue_by_month=revenue_by_month
+    )
+
+@api_router.get("/admin/users")
+async def get_admin_users(
+    skip: int = 0,
+    limit: int = 20,
+    user: dict = Depends(get_admin_user)
+):
+    """Get all users for admin"""
+    users = await db.users.find({}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+    total = await db.users.count_documents({})
+    
+    # Get reservation count for each user
+    for u in users:
+        u['reservation_count'] = await db.reservations.count_documents({"user_id": u['id']})
+        u['_id'] = str(u['_id'])
+    
+    return {"users": users, "total": total}
+
+@api_router.put("/admin/users/{user_id}/block")
+async def block_user(user_id: str, user: dict = Depends(get_admin_user)):
+    """Block/unblock a user"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    new_status = not target_user.get('blocked', False)
+    await db.users.update_one({"id": user_id}, {"$set": {"blocked": new_status}})
+    
+    return {"message": f"User {'blocked' if new_status else 'unblocked'}"}
+
+@api_router.get("/admin/reservations")
+async def get_admin_reservations(
+    skip: int = 0,
+    limit: int = 20,
+    status: Optional[str] = None,
+    user: dict = Depends(get_admin_user)
+):
+    """Get all reservations for admin"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    reservations = await db.reservations.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.reservations.count_documents(query)
+    
+    # Enrich with user and vehicle info
+    for res in reservations:
+        res['_id'] = str(res['_id'])
+        res_user = await db.users.find_one({"id": res['user_id']})
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        res['user_name'] = res_user['name'] if res_user else 'Unknown'
+        res['user_email'] = res_user['email'] if res_user else 'Unknown'
+        res['vehicle_name'] = f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Unknown'
+    
+    return {"reservations": reservations, "total": total}
+
+@api_router.put("/admin/reservations/{reservation_id}/status")
+async def update_reservation_status(
+    reservation_id: str,
+    status: str,
+    user: dict = Depends(get_admin_user)
+):
+    """Update reservation status"""
+    valid_statuses = ["pending", "confirmed", "active", "completed", "cancelled"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    result = await db.reservations.update_one(
+        {"id": reservation_id},
+        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    
+    return {"message": f"Reservation status updated to {status}"}
+
+@api_router.get("/admin/payments")
+async def get_admin_payments(
+    skip: int = 0,
+    limit: int = 20,
+    user: dict = Depends(get_admin_user)
+):
+    """Get all payment transactions"""
+    transactions = await db.payment_transactions.find({}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.payment_transactions.count_documents({})
+    
+    for tx in transactions:
+        tx['_id'] = str(tx['_id'])
+        tx_user = await db.users.find_one({"id": tx['user_id']})
+        tx['user_email'] = tx_user['email'] if tx_user else 'Unknown'
+    
+    return {"transactions": transactions, "total": total}
+
+@api_router.put("/admin/vehicles/{vehicle_id}/status")
+async def update_vehicle_status(
+    vehicle_id: str,
+    status: str,
+    user: dict = Depends(get_admin_user)
+):
+    """Update vehicle status"""
+    valid_statuses = ["available", "rented", "maintenance"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    result = await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"status": status}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    return {"message": f"Vehicle status updated to {status}"}
+
 # Include router
 app.include_router(api_router)
 
