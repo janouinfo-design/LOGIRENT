@@ -66,7 +66,7 @@ export default function AdminDashboard() {
     { icon: 'car', label: 'Véhicules', count: stats?.total_vehicles || 0, route: '/admin/vehicles', color: COLORS.primary },
     { icon: 'calendar', label: 'Réservations', count: stats?.total_reservations || 0, route: '/admin/reservations', color: COLORS.secondary },
     { icon: 'people', label: 'Utilisateurs', count: stats?.total_users || 0, route: '/admin/users', color: COLORS.success },
-    { icon: 'card', label: 'Paiements', count: 0, route: '/admin/payments', color: '#8B5CF6' },
+    { icon: 'card', label: 'Paiements', count: stats?.total_payments || 0, route: '/admin/payments', color: '#8B5CF6' },
   ];
 
   if (loading) {
