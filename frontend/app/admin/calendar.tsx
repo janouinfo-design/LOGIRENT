@@ -294,9 +294,13 @@ export default function AdminCalendar() {
         ))}
       </View>
 
-      {/* Calendar Grid */}
+      {/* Calendar Grid - Row by Row */}
       <View style={styles.calendarGrid}>
-        {calendarDays.map(date => renderCalendarDay(date))}
+        {calendarRows.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.calendarRow}>
+            {row.map(date => renderCalendarDay(date))}
+          </View>
+        ))}
       </View>
 
       {/* Selected Day Details */}
