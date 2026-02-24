@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Dimensions, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -62,22 +62,54 @@ export default function AdminDashboard() {
   };
 
   const menuItems = [
-    { icon: 'car', label: 'Vehicles', count: stats?.total_vehicles || 0, route: '/admin/vehicles', color: COLORS.primary },
-    { icon: 'calendar', label: 'Reservations', count: stats?.total_reservations || 0, route: '/admin/reservations', color: COLORS.secondary },
-    { icon: 'people', label: 'Users', count: stats?.total_users || 0, route: '/admin/users', color: COLORS.success },
-    { icon: 'card', label: 'Payments', count: 0, route: '/admin/payments', color: '#8B5CF6' },
+    { icon: 'car', label: 'Véhicules', count: stats?.total_vehicles || 0, route: '/admin/vehicles', color: COLORS.primary },
+    { icon: 'calendar', label: 'Réservations', count: stats?.total_reservations || 0, route: '/admin/reservations', color: COLORS.secondary },
+    { icon: 'people', label: 'Utilisateurs', count: stats?.total_users || 0, route: '/admin/users', color: COLORS.success },
+    { icon: 'card', label: 'Paiements', count: 0, route: '/admin/payments', color: '#8B5CF6' },
   ];
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading dashboard...</Text>
-      </View>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text>Chargement...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Top Navigation Menu */}
+      <View style={styles.topNav}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/(tabs)/profile')}>
+          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
+        <Text style={styles.topNavTitle}>Administration</Text>
+        <View style={{ width: 40 }} />
+      </View>
+
+      {/* Menu Tabs */}
+      <View style={styles.menuTabs}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.menuTabsContent}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.label}
+              style={styles.menuTab}
+              onPress={() => router.push(item.route as any)}
+            >
+              <View style={[styles.menuTabIcon, { backgroundColor: item.color + '20' }]}>
+                <Ionicons name={item.icon as any} size={20} color={item.color} />
+              </View>
+              <Text style={styles.menuTabLabel}>{item.label}</Text>
+              <View style={[styles.menuTabBadge, { backgroundColor: item.color }]}>
+                <Text style={styles.menuTabBadgeText}>{item.count}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -87,11 +119,11 @@ export default function AdminDashboard() {
         {/* Revenue Card */}
         <View style={styles.revenueCard}>
           <View style={styles.revenueHeader}>
-            <Text style={styles.revenueLabel}>Total Revenue</Text>
+            <Text style={styles.revenueLabel}>Chiffre d'Affaires Total</Text>
             <Ionicons name="trending-up" size={24} color="#FFFFFF" />
           </View>
           <Text style={styles.revenueAmount}>CHF {(stats?.total_revenue || 0).toFixed(2)}</Text>
-          <Text style={styles.revenueSubtext}>{stats?.total_reservations || 0} total reservations</Text>
+          <Text style={styles.revenueSubtext}>{stats?.total_reservations || 0} réservations au total</Text>
         </View>
 
         {/* Quick Stats */}
@@ -113,7 +145,7 @@ export default function AdminDashboard() {
 
         {/* Reservations by Status */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Reservations by Status</Text>
+          <Text style={styles.sectionTitle}>Réservations par Statut</Text>
           <View style={styles.statusGrid}>
             {Object.entries(stats?.reservations_by_status || {}).map(([status, count]) => (
               <View key={status} style={styles.statusItem}>
@@ -130,12 +162,15 @@ export default function AdminDashboard() {
                 <Text style={styles.statusCount}>{count}</Text>
               </View>
             ))}
+            {Object.keys(stats?.reservations_by_status || {}).length === 0 && (
+              <Text style={styles.emptyText}>Aucune réservation</Text>
+            )}
           </View>
         </View>
 
         {/* Top Vehicles */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Top Rented Vehicles</Text>
+          <Text style={styles.sectionTitle}>Véhicules les Plus Loués</Text>
           <View style={styles.topVehiclesCard}>
             {(stats?.top_vehicles || []).map((vehicle, index) => (
               <View key={vehicle.id} style={[
@@ -146,44 +181,35 @@ export default function AdminDashboard() {
                   <Text style={styles.rankText}>#{index + 1}</Text>
                 </View>
                 <Text style={styles.topVehicleName}>{vehicle.name}</Text>
-                <Text style={styles.topVehicleCount}>{vehicle.rental_count} rentals</Text>
+                <Text style={styles.topVehicleCount}>{vehicle.rental_count} locations</Text>
               </View>
             ))}
             {(stats?.top_vehicles || []).length === 0 && (
-              <Text style={styles.emptyText}>No rental data yet</Text>
+              <Text style={styles.emptyText}>Aucune donnée de location</Text>
             )}
           </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>Actions Rapides</Text>
           <View style={styles.actionsRow}>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => router.push('/admin/vehicles')}
             >
               <Ionicons name="add-circle" size={20} color={COLORS.primary} />
-              <Text style={styles.actionText}>Add Vehicle</Text>
+              <Text style={styles.actionText}>Ajouter Véhicule</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.actionButton}
               onPress={() => router.push('/admin/reservations')}
             >
               <Ionicons name="eye" size={20} color={COLORS.primary} />
-              <Text style={styles.actionText}>View All</Text>
+              <Text style={styles.actionText}>Voir Tout</Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Back to App */}
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.push('/(tabs)')}
-        >
-          <Ionicons name="arrow-back" size={20} color={COLORS.primary} />
-          <Text style={styles.backText}>Back to App</Text>
-        </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -201,9 +227,72 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  topNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  topNavTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  menuTabs: {
+    backgroundColor: COLORS.card,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
+  },
+  menuTabsContent: {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  menuTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginRight: 10,
+  },
+  menuTabIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  menuTabLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+    marginRight: 8,
+  },
+  menuTabBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  menuTabBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
   revenueCard: {
     backgroundColor: COLORS.primary,
-    margin: 20,
+    margin: 16,
     padding: 24,
     borderRadius: 16,
   },
@@ -259,7 +348,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   section: {
-    padding: 20,
+    padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
@@ -351,21 +440,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 20,
-    padding: 16,
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    gap: 8,
-  },
-  backText: {
     fontSize: 14,
     fontWeight: '600',
     color: COLORS.primary,
