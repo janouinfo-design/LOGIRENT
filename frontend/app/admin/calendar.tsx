@@ -626,11 +626,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 8,
+    marginBottom: 12,
   },
   dayCell: {
     width: '14.28%',
-    minHeight: 48,
-    maxHeight: 56,
+    height: 52,
     padding: 2,
     alignItems: 'center',
     justifyContent: 'flex-start',
