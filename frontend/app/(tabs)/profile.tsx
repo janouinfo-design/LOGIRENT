@@ -21,7 +21,7 @@ const COLORS = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, updateProfile, uploadLicense, isAuthenticated, loadUser, isLoading } = useAuthStore();
+  const { user, logout, updateProfile, uploadLicense, uploadIdCard, isAuthenticated, loadUser, isLoading } = useAuthStore();
   
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -29,6 +29,7 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
+  const [uploadingId, setUploadingId] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
