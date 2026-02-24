@@ -262,46 +262,67 @@ export default function AdminVehicles() {
       allowsEditing: true,
       aspect: [16, 9],
       quality: 0.8,
+      base64: true, // Get base64 for web compatibility
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets[0]) {
       setUploadingPhoto(true);
       try {
-        const formData = new FormData();
-        const uri = result.assets[0].uri;
-        const filename = uri.split('/').pop() || 'photo.jpg';
-        const match = /\.([\w]+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        const asset = result.assets[0];
         
-        formData.append('file', {
-          uri,
-          name: filename,
-          type,
-        } as any);
+        if (Platform.OS === 'web' && asset.base64) {
+          // For web, send base64 directly
+          const response = await api.post(
+            `/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos/base64`,
+            { 
+              image: asset.base64,
+              content_type: asset.mimeType || 'image/jpeg'
+            }
+          );
 
-        const response = await api.post(
-          `/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos`,
-          formData,
-          { headers: { 'Content-Type': 'multipart/form-data' } }
-        );
+          // Update local state
+          const updatedVehicle = {
+            ...selectedVehicleForPhotos,
+            photos: [...(selectedVehicleForPhotos.photos || []), response.data.photo]
+          };
+          setSelectedVehicleForPhotos(updatedVehicle);
+          fetchVehicles();
 
-        // Update local state
-        const updatedVehicle = {
-          ...selectedVehicleForPhotos,
-          photos: [...(selectedVehicleForPhotos.photos || []), response.data.photo]
-        };
-        setSelectedVehicleForPhotos(updatedVehicle);
-        fetchVehicles();
-
-        if (Platform.OS === 'web') {
           window.alert('Photo ajoutée avec succès!');
         } else {
+          // For mobile, use FormData
+          const formData = new FormData();
+          const uri = asset.uri;
+          const filename = uri.split('/').pop() || 'photo.jpg';
+          const match = /\.([\w]+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : 'image/jpeg';
+          
+          formData.append('file', {
+            uri,
+            name: filename,
+            type,
+          } as any);
+
+          const response = await api.post(
+            `/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          );
+
+          // Update local state
+          const updatedVehicle = {
+            ...selectedVehicleForPhotos,
+            photos: [...(selectedVehicleForPhotos.photos || []), response.data.photo]
+          };
+          setSelectedVehicleForPhotos(updatedVehicle);
+          fetchVehicles();
+
           Alert.alert('Succès', 'Photo ajoutée avec succès!');
         }
       } catch (error: any) {
-        console.error('Error uploading photo:', error);
+        console.error('Error uploading photo:', error.response?.data || error);
         if (Platform.OS === 'web') {
-          window.alert('Erreur lors de l\'upload de la photo');
+          window.alert('Erreur lors de l\'upload de la photo: ' + (error.response?.data?.detail || error.message));
         } else {
           Alert.alert('Erreur', 'Impossible d\'uploader la photo');
         }
