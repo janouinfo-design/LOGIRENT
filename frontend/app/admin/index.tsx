@@ -37,25 +37,19 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadToken();
+    fetchStats();
   }, []);
-
-  const loadToken = async () => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchStats();
-    } else {
-      router.replace('/(auth)/login');
-    }
-  };
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/stats`);
+      const response = await api.get('/api/admin/stats');
       setStats(response.data);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+    } catch (error: any) {
+      console.error('Error fetching stats:', error.response?.data || error.message);
+      if (error.response?.status === 401) {
+        Alert.alert('Session expirée', 'Veuillez vous reconnecter');
+        router.replace('/(auth)/login');
+      }
     } finally {
       setLoading(false);
     }
