@@ -15,6 +15,7 @@ const COLORS = {
 
 const menuItems = [
   { name: 'index', label: 'Dashboard', icon: 'stats-chart' },
+  { name: 'calendar', label: 'Agenda', icon: 'calendar-outline' },
   { name: 'reservations', label: 'Réservations', icon: 'calendar' },
   { name: 'vehicles', label: 'Véhicules', icon: 'car' },
   { name: 'users', label: 'Utilisateurs', icon: 'people' },
