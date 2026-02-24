@@ -233,6 +233,66 @@ export default function BookingScreen() {
           </View>
         )}
 
+        {/* Payment Method Selection */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Mode de Paiement</Text>
+          <View style={styles.paymentMethodsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.paymentMethodCard,
+                paymentMethod === 'card' && styles.paymentMethodSelected,
+              ]}
+              onPress={() => setPaymentMethod('card')}
+            >
+              <View style={[
+                styles.paymentRadio,
+                paymentMethod === 'card' && styles.paymentRadioSelected,
+              ]}>
+                {paymentMethod === 'card' && <View style={styles.paymentRadioInner} />}
+              </View>
+              <Ionicons 
+                name="card" 
+                size={24} 
+                color={paymentMethod === 'card' ? COLORS.primary : COLORS.textLight} 
+              />
+              <View style={styles.paymentMethodInfo}>
+                <Text style={[
+                  styles.paymentMethodTitle,
+                  paymentMethod === 'card' && styles.paymentMethodTitleSelected,
+                ]}>Carte bancaire</Text>
+                <Text style={styles.paymentMethodSubtitle}>Visa, Mastercard, Apple Pay</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentMethodCard,
+                paymentMethod === 'cash' && styles.paymentMethodSelected,
+              ]}
+              onPress={() => setPaymentMethod('cash')}
+            >
+              <View style={[
+                styles.paymentRadio,
+                paymentMethod === 'cash' && styles.paymentRadioSelected,
+              ]}>
+                {paymentMethod === 'cash' && <View style={styles.paymentRadioInner} />}
+              </View>
+              <Ionicons 
+                name="cash" 
+                size={24} 
+                color={paymentMethod === 'cash' ? COLORS.secondary : COLORS.textLight} 
+              />
+              <View style={styles.paymentMethodInfo}>
+                <Text style={[
+                  styles.paymentMethodTitle,
+                  paymentMethod === 'cash' && styles.paymentMethodTitleCash,
+                ]}>Espèces</Text>
+                <Text style={styles.paymentMethodSubtitle}>Payer lors de la prise du véhicule</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Price Summary */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Price Summary</Text>
