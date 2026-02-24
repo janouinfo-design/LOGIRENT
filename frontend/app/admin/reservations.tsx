@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../../src/api/axios';
 import { format } from 'date-fns';
-
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -41,24 +38,17 @@ export default function AdminReservations() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    loadTokenAndFetch();
-  }, [statusFilter]);
-
-  const loadTokenAndFetch = async () => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
     fetchReservations();
-  };
+  }, [statusFilter]);
 
   const fetchReservations = async () => {
     try {
       const params = statusFilter ? `?status=${statusFilter}` : '';
-      const response = await axios.get(`${API_URL}/api/admin/reservations${params}`);
+      const response = await api.get(`/api/admin/reservations${params}`);
       setReservations(response.data.reservations);
-    } catch (error) {
-      console.error('Error fetching reservations:', error);
+    } catch (error: any) {
+      console.error('Error fetching reservations:', error.response?.data || error.message);
+      Alert.alert('Erreur', 'Impossible de charger les réservations');
     } finally {
       setLoading(false);
     }
@@ -72,25 +62,26 @@ export default function AdminReservations() {
 
   const updateStatus = async (reservationId: string, newStatus: string) => {
     try {
-      await axios.put(`${API_URL}/api/admin/reservations/${reservationId}/status?status=${newStatus}`);
-      Alert.alert('Success', `Reservation status updated to ${newStatus}`);
+      await api.put(`/api/admin/reservations/${reservationId}/status?status=${newStatus}`);
+      Alert.alert('Succès', `Statut changé à ${newStatus}`);
       fetchReservations();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update status');
+    } catch (error: any) {
+      console.error('Error updating status:', error.response?.data || error.message);
+      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut');
     }
   };
 
   const handleStatusChange = (reservation: Reservation) => {
     Alert.alert(
-      'Change Status',
-      `Current: ${reservation.status}`,
+      'Changer le Statut',
+      `Statut actuel: ${reservation.status}`,
       [
-        { text: 'Pending', onPress: () => updateStatus(reservation.id, 'pending') },
-        { text: 'Confirmed', onPress: () => updateStatus(reservation.id, 'confirmed') },
-        { text: 'Active', onPress: () => updateStatus(reservation.id, 'active') },
-        { text: 'Completed', onPress: () => updateStatus(reservation.id, 'completed') },
-        { text: 'Cancelled', onPress: () => updateStatus(reservation.id, 'cancelled'), style: 'destructive' },
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'En attente', onPress: () => updateStatus(reservation.id, 'pending') },
+        { text: 'Confirmé', onPress: () => updateStatus(reservation.id, 'confirmed') },
+        { text: 'Actif', onPress: () => updateStatus(reservation.id, 'active') },
+        { text: 'Terminé', onPress: () => updateStatus(reservation.id, 'completed') },
+        { text: 'Annulé', onPress: () => updateStatus(reservation.id, 'cancelled'), style: 'destructive' },
+        { text: 'Fermer', style: 'cancel' },
       ]
     );
   };
@@ -140,16 +131,16 @@ export default function AdminReservations() {
         <View style={styles.dateItem}>
           <Ionicons name="calendar" size={14} color={COLORS.textLight} />
           <Text style={styles.dateText}>
-            {format(new Date(item.start_date), 'MMM d')} - {format(new Date(item.end_date), 'MMM d, yyyy')}
+            {format(new Date(item.start_date), 'dd MMM')} - {format(new Date(item.end_date), 'dd MMM yyyy')}
           </Text>
         </View>
-        <Text style={styles.daysText}>{item.total_days} days</Text>
+        <Text style={styles.daysText}>{item.total_days} jours</Text>
       </View>
 
       <View style={styles.cardFooter}>
         <View style={[styles.paymentBadge, { backgroundColor: getPaymentColor(item.payment_status) + '20' }]}>
           <Text style={[styles.paymentText, { color: getPaymentColor(item.payment_status) }]}>
-            {item.payment_status}
+            {item.payment_status === 'paid' ? 'Payé' : item.payment_status === 'pending' ? 'En attente' : 'Non payé'}
           </Text>
         </View>
         <Text style={styles.price}>CHF {item.total_price.toFixed(2)}</Text>
@@ -178,7 +169,7 @@ export default function AdminReservations() {
                 styles.filterText,
                 statusFilter === item && styles.filterTextActive,
               ]}>
-                {item || 'All'}
+                {item === null ? 'Tous' : item}
               </Text>
             </TouchableOpacity>
           )}
@@ -197,7 +188,7 @@ export default function AdminReservations() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>No reservations found</Text>
+            <Text style={styles.emptyText}>Aucune réservation</Text>
           </View>
         }
       />
@@ -317,7 +308,6 @@ const styles = StyleSheet.create({
   paymentText: {
     fontSize: 11,
     fontWeight: '600',
-    textTransform: 'capitalize',
   },
   price: {
     fontSize: 18,
