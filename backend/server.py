@@ -1259,7 +1259,7 @@ async def update_reservation_status(
     user: dict = Depends(get_admin_user)
 ):
     """Update reservation status"""
-    valid_statuses = ["pending", "confirmed", "active", "completed", "cancelled"]
+    valid_statuses = ["pending", "pending_cash", "confirmed", "active", "completed", "cancelled"]
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     
