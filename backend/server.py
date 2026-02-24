@@ -1420,6 +1420,46 @@ async def upload_user_photo_admin(
     
     return {"message": "Photo uploaded successfully", "photo": data_uri}
 
+@api_router.post("/admin/users/{user_id}/id-photo")
+async def upload_user_id_photo_admin(
+    user_id: str,
+    data: Base64UserPhoto,
+    user: dict = Depends(get_admin_user)
+):
+    """Upload ID photo for a user from admin"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"id_photo": data_uri}}
+    )
+    
+    return {"message": "ID photo uploaded successfully", "photo": data_uri}
+
+@api_router.post("/admin/users/{user_id}/license-photo")
+async def upload_user_license_photo_admin(
+    user_id: str,
+    data: Base64UserPhoto,
+    user: dict = Depends(get_admin_user)
+):
+    """Upload license photo for a user from admin"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"license_photo": data_uri}}
+    )
+    
+    return {"message": "License photo uploaded successfully", "photo": data_uri}
+
 @api_router.get("/admin/users/{user_id}")
 async def get_user_details_admin(
     user_id: str,
