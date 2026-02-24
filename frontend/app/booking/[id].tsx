@@ -93,9 +93,7 @@ export default function BookingScreen() {
       });
 
       // Initiate payment
-      const originUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : process.env.EXPO_PUBLIC_BACKEND_URL || '';
+      const originUrl = window.location.origin;
 
       const paymentData = await initiatePayment(reservation.id, originUrl);
 
