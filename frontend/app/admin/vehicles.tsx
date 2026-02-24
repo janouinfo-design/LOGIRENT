@@ -238,6 +238,117 @@ export default function AdminVehicles() {
     setEditingVehicle(null);
   };
 
+  // Photo management functions
+  const openPhotoModal = (vehicle: Vehicle) => {
+    setSelectedVehicleForPhotos(vehicle);
+    setShowPhotoModal(true);
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!selectedVehicleForPhotos) return;
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      if (Platform.OS === 'web') {
+        window.alert('Permission requise pour accéder à la galerie');
+      } else {
+        Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie');
+      }
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      setUploadingPhoto(true);
+      try {
+        const formData = new FormData();
+        const uri = result.assets[0].uri;
+        const filename = uri.split('/').pop() || 'photo.jpg';
+        const match = /\.([\w]+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        
+        formData.append('file', {
+          uri,
+          name: filename,
+          type,
+        } as any);
+
+        const response = await api.post(
+          `/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+
+        // Update local state
+        const updatedVehicle = {
+          ...selectedVehicleForPhotos,
+          photos: [...(selectedVehicleForPhotos.photos || []), response.data.photo]
+        };
+        setSelectedVehicleForPhotos(updatedVehicle);
+        fetchVehicles();
+
+        if (Platform.OS === 'web') {
+          window.alert('Photo ajoutée avec succès!');
+        } else {
+          Alert.alert('Succès', 'Photo ajoutée avec succès!');
+        }
+      } catch (error: any) {
+        console.error('Error uploading photo:', error);
+        if (Platform.OS === 'web') {
+          window.alert('Erreur lors de l\'upload de la photo');
+        } else {
+          Alert.alert('Erreur', 'Impossible d\'uploader la photo');
+        }
+      } finally {
+        setUploadingPhoto(false);
+      }
+    }
+  };
+
+  const handleDeletePhoto = async (photoIndex: number) => {
+    if (!selectedVehicleForPhotos) return;
+
+    const confirmDelete = Platform.OS === 'web' 
+      ? window.confirm('Supprimer cette photo?')
+      : await new Promise((resolve) => {
+          Alert.alert('Confirmer', 'Supprimer cette photo?', [
+            { text: 'Annuler', onPress: () => resolve(false) },
+            { text: 'Supprimer', style: 'destructive', onPress: () => resolve(true) },
+          ]);
+        });
+
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete(`/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos/${photoIndex}`);
+      
+      // Update local state
+      const updatedPhotos = [...(selectedVehicleForPhotos.photos || [])];
+      updatedPhotos.splice(photoIndex, 1);
+      setSelectedVehicleForPhotos({ ...selectedVehicleForPhotos, photos: updatedPhotos });
+      fetchVehicles();
+
+      if (Platform.OS === 'web') {
+        window.alert('Photo supprimée');
+      } else {
+        Alert.alert('Succès', 'Photo supprimée');
+      }
+    } catch (error: any) {
+      console.error('Error deleting photo:', error);
+      if (Platform.OS === 'web') {
+        window.alert('Erreur lors de la suppression');
+      } else {
+        Alert.alert('Erreur', 'Impossible de supprimer la photo');
+      }
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available': return COLORS.success;
