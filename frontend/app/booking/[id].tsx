@@ -7,6 +7,7 @@ import { format, addDays, differenceInDays } from 'date-fns';
 import * as WebBrowser from 'expo-web-browser';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import { useReservationStore } from '../../src/store/reservationStore';
+import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
 
 const COLORS = {
