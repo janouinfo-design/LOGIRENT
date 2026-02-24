@@ -38,8 +38,16 @@ export default function AdminUsers() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    fetchUsers();
+    loadTokenAndFetch();
   }, []);
+
+  const loadTokenAndFetch = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    fetchUsers();
+  };
 
   const fetchUsers = async () => {
     try {
