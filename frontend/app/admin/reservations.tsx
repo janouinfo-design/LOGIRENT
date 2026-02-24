@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Platform, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Platform, TextInput, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const COLORS = {
@@ -51,6 +51,13 @@ export default function AdminReservations() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  
+  // Date range filter
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [dateFilterType, setDateFilterType] = useState<'all' | 'created' | 'rental'>('all');
+  const [startDateFilter, setStartDateFilter] = useState('');
+  const [endDateFilter, setEndDateFilter] = useState('');
+  const [activeDateFilter, setActiveDateFilter] = useState<{ start: string; end: string; type: string } | null>(null);
 
   useEffect(() => {
     fetchReservations();
