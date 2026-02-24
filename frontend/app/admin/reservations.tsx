@@ -108,7 +108,7 @@ export default function AdminReservations() {
     }
   };
 
-  const filterOptions = [null, 'pending', 'confirmed', 'active', 'completed', 'cancelled'];
+  const filterOptions = [null, 'pending', 'pending_cash', 'confirmed', 'active', 'completed', 'cancelled'];
 
   const renderItem = ({ item }: { item: Reservation }) => (
     <View style={styles.card}>
