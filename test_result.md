@@ -349,6 +349,21 @@ backend:
         agent: "testing"
         comment: "✅ TESTED: Admin can successfully edit vehicle details via PUT /api/admin/vehicles/{id}. All fields update correctly including brand, model, year, price, location, description, seats, transmission, fuel_type. BMW Series 5 Updated test completed successfully."
 
+  - task: "Admin Payment Status Update"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "PUT /api/admin/reservations/{reservation_id}/payment-status endpoint implemented to update payment status (paid/unpaid/pending/refunded). Includes logic to change reservation status to 'confirmed' when marking pending_cash reservation as paid."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin payment status update endpoint working perfectly. All payment statuses (paid/unpaid/pending/refunded) update correctly. Special logic confirmed: marking pending_cash reservation as 'paid' automatically changes reservation status to 'confirmed'. Email confirmation sent when payment marked as paid. Invalid status properly rejected with 400 error."
+
 frontend:
   - task: "Welcome Screen"
     implemented: true
