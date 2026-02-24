@@ -224,35 +224,83 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      {/* License Section */}
+      {/* Documents Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Driving License</Text>
-        <View style={styles.licenseCard}>
-          {user?.license_photo ? (
-            <View style={styles.licenseImageContainer}>
-              <Image
-                source={{ uri: user.license_photo }}
-                style={styles.licenseImage}
-                resizeMode="cover"
-              />
-              <View style={styles.licenseStatus}>
-                <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-                <Text style={styles.licenseStatusText}>Verified</Text>
+        <Text style={styles.sectionTitle}>Documents Obligatoires</Text>
+        
+        {/* Alert if documents missing */}
+        {(!user?.id_photo || !user?.license_photo) && (
+          <View style={styles.alertCard}>
+            <Ionicons name="warning" size={24} color="#F59E0B" />
+            <Text style={styles.alertText}>
+              Veuillez télécharger votre pièce d'identité et votre permis de conduire pour pouvoir effectuer une réservation.
+            </Text>
+          </View>
+        )}
+
+        {/* ID Card */}
+        <View style={styles.documentCard}>
+          <View style={styles.documentHeader}>
+            <Ionicons name="card" size={24} color={COLORS.primary} />
+            <Text style={styles.documentTitle}>Pièce d'Identité</Text>
+            {user?.id_photo && (
+              <View style={styles.verifiedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                <Text style={styles.verifiedText}>Téléchargée</Text>
               </View>
-            </View>
+            )}
+          </View>
+          {user?.id_photo ? (
+            <Image
+              source={{ uri: user.id_photo }}
+              style={styles.documentImage}
+              resizeMode="cover"
+            />
           ) : (
-            <View style={styles.noLicense}>
-              <Ionicons name="id-card-outline" size={48} color={COLORS.textLight} />
-              <Text style={styles.noLicenseText}>No license uploaded</Text>
-              <Text style={styles.noLicenseSubtext}>Upload your license to rent vehicles</Text>
+            <View style={styles.noDocument}>
+              <Ionicons name="card-outline" size={40} color={COLORS.textLight} />
+              <Text style={styles.noDocumentText}>Non téléchargée</Text>
             </View>
           )}
           <Button
-            title={user?.license_photo ? 'Update License' : 'Upload License'}
+            title={user?.id_photo ? 'Modifier' : 'Télécharger'}
+            onPress={handleUploadIdCard}
+            loading={uploadingId}
+            variant={user?.id_photo ? 'outline' : 'primary'}
+            style={{ marginTop: 12 }}
+          />
+        </View>
+
+        {/* Driving License */}
+        <View style={styles.documentCard}>
+          <View style={styles.documentHeader}>
+            <Ionicons name="car" size={24} color={COLORS.primary} />
+            <Text style={styles.documentTitle}>Permis de Conduire</Text>
+            {user?.license_photo && (
+              <View style={styles.verifiedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
+                <Text style={styles.verifiedText}>Téléchargé</Text>
+              </View>
+            )}
+          </View>
+          {user?.license_photo ? (
+            <Image
+              source={{ uri: user.license_photo }}
+              style={styles.documentImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.noDocument}>
+              <Ionicons name="id-card-outline" size={40} color={COLORS.textLight} />
+              <Text style={styles.noDocumentText}>Non téléchargé</Text>
+            </View>
+          )}
+          <Button
+            title={user?.license_photo ? 'Modifier' : 'Télécharger'}
             onPress={handleUploadLicense}
             loading={uploadingLicense}
             variant={user?.license_photo ? 'outline' : 'primary'}
-            style={{ marginTop: 16 }}
+            style={{ marginTop: 12 }}
           />
         </View>
       </View>
