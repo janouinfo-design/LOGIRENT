@@ -41,8 +41,16 @@ export default function AdminReservations() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchReservations();
+    loadTokenAndFetch();
   }, [statusFilter]);
+
+  const loadTokenAndFetch = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    fetchReservations();
+  };
 
   const fetchReservations = async () => {
     try {
