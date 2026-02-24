@@ -79,9 +79,19 @@ class UserProfile(BaseModel):
     address: Optional[str] = None
     id_photo: Optional[str] = None
     license_photo: Optional[str] = None
+    profile_photo: Optional[str] = None
+    client_rating: Optional[str] = None  # good, bad, neutral, vip, blocked
+    admin_notes: Optional[str] = None
     created_at: datetime
 
 class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+
+class AdminUserUpdate(BaseModel):
+    client_rating: Optional[str] = None
+    admin_notes: Optional[str] = None
     name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
