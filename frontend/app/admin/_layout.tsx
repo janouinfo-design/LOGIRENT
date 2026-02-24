@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Stack, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuthStore } from '../../src/store/authStore';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -9,6 +10,7 @@ const COLORS = {
   background: '#F8FAFC',
   card: '#FFFFFF',
   text: '#FFFFFF',
+  error: '#EF4444',
 };
 
 const menuItems = [
@@ -22,19 +24,39 @@ const menuItems = [
 function AdminNavBar() {
   const router = useRouter();
   const pathname = usePathname();
+  const { logout, user } = useAuthStore();
 
   const currentPage = pathname.split('/').pop() || 'index';
 
+  const handleLogout = async () => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Voulez-vous vous déconnecter?');
+      if (confirmed) {
+        await logout();
+        router.replace('/admin-login');
+      }
+    } else {
+      await logout();
+      router.replace('/admin-login');
+    }
+  };
+
   return (
     <View style={styles.navContainer}>
-      {/* Back to Home Button */}
-      <TouchableOpacity 
-        style={styles.homeButton}
-        onPress={() => router.push('/(tabs)')}
-      >
-        <Ionicons name="home" size={20} color={COLORS.text} />
-        <Text style={styles.homeButtonText}>Accueil</Text>
-      </TouchableOpacity>
+      {/* Header with logo and logout */}
+      <View style={styles.navHeader}>
+        <View style={styles.logoSection}>
+          <Ionicons name="settings" size={24} color={COLORS.text} />
+          <Text style={styles.logoText}>RentDrive Admin</Text>
+        </View>
+        <View style={styles.userSection}>
+          <Text style={styles.userEmail}>{user?.email}</Text>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Ionicons name="log-out" size={18} color={COLORS.text} />
+            <Text style={styles.logoutText}>Déconnexion</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Admin Menu */}
       <ScrollView 
@@ -67,6 +89,31 @@ function AdminNavBar() {
 }
 
 export default function AdminLayout() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading, loadUser } = useAuthStore();
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/admin-login');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
+        <Text>Chargement...</Text>
+      </View>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.background }}>
       <AdminNavBar />
@@ -93,15 +140,43 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     paddingHorizontal: 16,
   },
-  homeButton: {
+  navHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
+  },
+  logoSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoText: {
+    color: COLORS.text,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  userSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  userEmail: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     gap: 6,
   },
-  homeButtonText: {
+  logoutText: {
     color: COLORS.text,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   menuContainer: {
