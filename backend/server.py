@@ -245,6 +245,7 @@ async def register(user_data: UserCreate):
         "name": user_data.name,
         "phone": user_data.phone,
         "address": None,
+        "id_photo": None,
         "license_photo": None,
         "created_at": datetime.utcnow()
     }
@@ -261,6 +262,7 @@ async def register(user_data: UserCreate):
             name=user['name'],
             phone=user['phone'],
             address=user['address'],
+            id_photo=user['id_photo'],
             license_photo=user['license_photo'],
             created_at=user['created_at']
         )
