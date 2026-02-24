@@ -25,18 +25,19 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [loginError, setLoginError] = useState('');
 
   const validate = () => {
     const newErrors: { email?: string; password?: string } = {};
     
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'L\'email est requis';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = 'Format d\'email invalide';
     }
     
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Le mot de passe est requis';
     }
     
     setErrors(newErrors);
@@ -47,11 +48,17 @@ export default function LoginScreen() {
     if (!validate()) return;
     
     setLoading(true);
+    setLoginError('');
     try {
       await login(email, password);
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      const errorMessage = error.message || 'Identifiants incorrects';
+      setLoginError(errorMessage);
+      // Also show alert for mobile
+      if (Platform.OS !== 'web') {
+        Alert.alert('Échec de connexion', errorMessage);
+      }
     } finally {
       setLoading(false);
     }
