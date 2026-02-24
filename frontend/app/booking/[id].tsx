@@ -153,10 +153,27 @@ export default function BookingScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Documents Warning */}
+        {!hasDocuments && (
+          <TouchableOpacity 
+            style={styles.documentsWarning}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
+            <Ionicons name="warning" size={24} color="#F59E0B" />
+            <View style={styles.documentsWarningText}>
+              <Text style={styles.documentsWarningTitle}>Documents manquants</Text>
+              <Text style={styles.documentsWarningSubtitle}>
+                Téléchargez votre pièce d'identité et permis de conduire pour réserver
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#F59E0B" />
+          </TouchableOpacity>
+        )}
+
         {/* Vehicle Summary */}
         <View style={styles.vehicleSummary}>
           <Text style={styles.vehicleName}>{vehicle.brand} {vehicle.model}</Text>
-          <Text style={styles.vehiclePrice}>CHF {vehicle.price_per_day}/day</Text>
+          <Text style={styles.vehiclePrice}>CHF {vehicle.price_per_day}/jour</Text>
         </View>
 
         {/* Date Selection */}
