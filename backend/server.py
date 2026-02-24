@@ -1006,6 +1006,93 @@ async def send_reservation_confirmation(user: dict, vehicle: dict, reservation: 
         html
     )
 
+def generate_cash_reservation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+    """Generate HTML email for cash payment reservation"""
+    start_date = reservation['start_date']
+    end_date = reservation['end_date']
+    if isinstance(start_date, str):
+        start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+    if isinstance(end_date, str):
+        end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+    
+    return f'''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1E293B; margin: 0; padding: 0; background-color: #F8FAFC;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background-color: #F59E0B; padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+                <h1 style="color: #FFFFFF; margin: 0; font-size: 28px;">🚗 RentDrive</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Réservation en attente - Paiement en espèces</p>
+            </div>
+            
+            <div style="background-color: #FFFFFF; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <h2 style="color: #F59E0B; margin-top: 0;">Bonjour {user_name}!</h2>
+                <p>Votre réservation a été enregistrée avec paiement en espèces. Voici les détails:</p>
+                
+                <div style="background-color: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+                    <p style="margin: 0; color: #92400E;"><strong>⚠️ Important:</strong> Le paiement sera effectué lors de la prise du véhicule. Veuillez prévoir le montant exact en espèces.</p>
+                </div>
+                
+                <div style="background-color: #F8FAFC; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <h3 style="margin-top: 0; color: #1E3A8A;">{vehicle['brand']} {vehicle['model']} ({vehicle['year']})</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Date de prise:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{start_date.strftime('%d %B %Y')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Date de retour:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{end_date.strftime('%d %B %Y')}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Durée:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{reservation['total_days']} jours</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748B;">Lieu:</td>
+                            <td style="padding: 8px 0; font-weight: bold;">{vehicle['location']}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="background-color: #F59E0B; color: #FFFFFF; padding: 15px 20px; border-radius: 8px; text-align: center;">
+                    <span style="font-size: 14px;">Montant à payer en espèces:</span>
+                    <span style="font-size: 24px; font-weight: bold; margin-left: 10px;">CHF {reservation['total_price']:.2f}</span>
+                </div>
+                
+                <p style="margin-top: 20px; color: #64748B; font-size: 14px;">
+                    N'oubliez pas d'apporter votre permis de conduire valide lors de la prise du véhicule.
+                    Pour toute question, contactez-nous à {SENDER_EMAIL}.
+                </p>
+                
+                <p style="margin-top: 30px;">
+                    Bonne route!<br>
+                    <strong>L'équipe RentDrive</strong>
+                </p>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; color: #64748B; font-size: 12px;">
+                <p>© 2024 RentDrive. Tous droits réservés.</p>
+                <p>LogiTrak Suisse</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    '''
+
+async def send_cash_reservation_email(user: dict, vehicle: dict, reservation: dict):
+    """Send cash reservation email"""
+    html = generate_cash_reservation_email(user['name'], vehicle, reservation)
+    await send_email(
+        user['email'],
+        f"Réservation en attente - {vehicle['brand']} {vehicle['model']} (Paiement espèces)",
+        html
+    )
+
 # ==================== ADMIN ROUTES ====================
 
 class AdminLogin(BaseModel):
