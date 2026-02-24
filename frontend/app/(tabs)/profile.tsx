@@ -156,12 +156,11 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
-    { icon: 'settings', label: 'Admin Dashboard', onPress: () => router.push('/admin') },
-    { icon: 'card', label: 'Payment Methods', onPress: () => {} },
+    { icon: 'card', label: 'Moyens de paiement', onPress: () => {} },
     { icon: 'notifications', label: 'Notifications', onPress: () => {} },
-    { icon: 'shield-checkmark', label: 'Privacy & Security', onPress: () => {} },
-    { icon: 'help-circle', label: 'Help & Support', onPress: () => {} },
-    { icon: 'document-text', label: 'Terms of Service', onPress: () => {} },
+    { icon: 'shield-checkmark', label: 'Confidentialité', onPress: () => {} },
+    { icon: 'help-circle', label: 'Aide & Support', onPress: () => {} },
+    { icon: 'document-text', label: 'Conditions d\'utilisation', onPress: () => {} },
   ];
 
   return (
