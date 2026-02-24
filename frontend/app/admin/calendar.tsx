@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
   weekdayCell: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: 6,
   },
   weekdayText: {
     fontSize: 12,
