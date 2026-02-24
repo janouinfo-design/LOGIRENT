@@ -27,8 +27,11 @@ export default function AdminVehicles() {
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [selectedVehicleForPhotos, setSelectedVehicleForPhotos] = useState<Vehicle | null>(null);
 
   // Form state
   const [brand, setBrand] = useState('');
