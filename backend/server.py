@@ -157,6 +157,7 @@ class ReservationCreate(BaseModel):
     start_date: datetime
     end_date: datetime
     options: List[str] = []  # option names
+    payment_method: str = "card"  # card or cash
 
 class ReservationUpdate(BaseModel):
     start_date: Optional[datetime] = None
