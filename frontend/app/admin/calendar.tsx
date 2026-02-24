@@ -159,6 +159,14 @@ export default function AdminCalendar() {
     }
   };
 
+  const calendarRows = useMemo(() => {
+    const rows: Date[][] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+      rows.push(calendarDays.slice(i, i + 7));
+    }
+    return rows;
+  }, [calendarDays]);
+
   const renderCalendarDay = (date: Date) => {
     const inMonth = isSameMonth(date, currentMonth);
     const today = isToday(date);
@@ -180,7 +188,6 @@ export default function AdminCalendar() {
           hasOverdue && styles.dayCellOverdue,
         ]}
         onPress={() => setSelectedDate(date)}
-        data-testid={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
       >
         <Text style={[
           styles.dayNumber,
@@ -202,7 +209,7 @@ export default function AdminCalendar() {
             </View>
           )}
           {hasOngoing && !hasDeparture && !hasReturn && (
-            <View style={[styles.indicatorBar, { backgroundColor: COLORS.success + '40' }]} />
+            <View style={[styles.indicatorBar, { backgroundColor: COLORS.success + '60' }]} />
           )}
         </View>
       </TouchableOpacity>
