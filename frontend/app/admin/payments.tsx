@@ -138,8 +138,18 @@ export default function AdminPayments() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="card-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>Aucune transaction</Text>
+            {error ? (
+              <>
+                <Ionicons name="alert-circle-outline" size={48} color={COLORS.error} />
+                <Text style={[styles.emptyText, { color: COLORS.error }]}>{error}</Text>
+                <Text style={styles.emptySubtext}>Veuillez vous déconnecter et vous reconnecter</Text>
+              </>
+            ) : (
+              <>
+                <Ionicons name="card-outline" size={48} color={COLORS.textLight} />
+                <Text style={styles.emptyText}>Aucune transaction</Text>
+              </>
+            )}
           </View>
         }
       />
