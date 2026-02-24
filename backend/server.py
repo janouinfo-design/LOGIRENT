@@ -1103,6 +1103,7 @@ class AdminStats(BaseModel):
     total_vehicles: int
     total_users: int
     total_reservations: int
+    total_payments: int
     total_revenue: float
     reservations_by_status: Dict[str, int]
     top_vehicles: List[Dict[str, Any]]
