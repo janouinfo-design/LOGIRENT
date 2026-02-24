@@ -495,6 +495,35 @@ async def upload_vehicle_photo(
     
     return {"message": "Photo uploaded successfully", "photo": data_uri, "total_photos": len(photos)}
 
+class Base64ImageUpload(BaseModel):
+    image: str
+    content_type: str = "image/jpeg"
+
+@api_router.post("/admin/vehicles/{vehicle_id}/photos/base64")
+async def upload_vehicle_photo_base64(
+    vehicle_id: str,
+    data: Base64ImageUpload,
+    user: dict = Depends(get_current_user)
+):
+    """Upload a photo for a vehicle using base64 (for web compatibility)"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Create data URI
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    
+    # Add photo to vehicle's photos array
+    photos = vehicle.get('photos', [])
+    photos.append(data_uri)
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"photos": photos}}
+    )
+    
+    return {"message": "Photo uploaded successfully", "photo": data_uri, "total_photos": len(photos)}
+
 @api_router.delete("/admin/vehicles/{vehicle_id}/photos/{photo_index}")
 async def delete_vehicle_photo(
     vehicle_id: str,
