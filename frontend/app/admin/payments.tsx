@@ -39,8 +39,16 @@ export default function AdminPayments() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    fetchTransactions();
+    loadTokenAndFetch();
   }, []);
+
+  const loadTokenAndFetch = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    fetchTransactions();
+  };
 
   const fetchTransactions = async () => {
     try {
