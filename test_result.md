@@ -501,10 +501,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Cash Payment Backend API"
-    - "Admin Reservation Status Change"
-    - "Admin Vehicle Edit"
+  current_focus: []
   stuck_tasks: 
     - "Create Reservation API"
   test_all: false
