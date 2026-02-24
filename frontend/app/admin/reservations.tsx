@@ -333,9 +333,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   paymentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 4,
   },
   paymentText: {
     fontSize: 11,
