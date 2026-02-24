@@ -144,7 +144,11 @@ export default function AdminVehicles() {
 
   const handleAddVehicle = async () => {
     if (!brand || !model || !year || !price) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      if (Platform.OS === 'web') {
+        window.alert('Veuillez remplir tous les champs obligatoires');
+      } else {
+        Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      }
       return;
     }
 
@@ -168,15 +172,26 @@ export default function AdminVehicles() {
         ],
       };
 
-      await api.post('/api/admin/vehicles', vehicleData);
+      console.log('Adding vehicle:', vehicleData);
+      const response = await api.post('/api/admin/vehicles', vehicleData);
+      console.log('Vehicle added:', response.data);
       
-      Alert.alert('Succès', 'Véhicule ajouté avec succès!');
+      if (Platform.OS === 'web') {
+        window.alert('Véhicule ajouté avec succès!');
+      } else {
+        Alert.alert('Succès', 'Véhicule ajouté avec succès!');
+      }
       setShowAddModal(false);
       resetForm();
       fetchVehicles();
     } catch (error: any) {
       console.error('Error adding vehicle:', error.response?.data || error.message);
-      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible d\'ajouter le véhicule');
+      const errorMsg = error.response?.data?.detail || 'Impossible d\'ajouter le véhicule';
+      if (Platform.OS === 'web') {
+        window.alert('Erreur: ' + errorMsg);
+      } else {
+        Alert.alert('Erreur', errorMsg);
+      }
     } finally {
       setSubmitting(false);
     }
