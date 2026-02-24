@@ -382,8 +382,83 @@ export default function AdminReservations() {
     </View>
   );
 
+  const renderReservationCard = (item: Reservation) => (
+    <View key={item.id} style={styles.card}>
+      {/* Header with ID and Date */}
+      <View style={styles.cardHeader}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.reservationId}>#{item.id.slice(0, 8)}</Text>
+          <Text style={styles.createdDate}>Créée le {formatDateTime(item.created_at)}</Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}
+          onPress={() => handleStatusChange(item)}
+          data-testid={`reservation-status-${item.id}`}
+        >
+          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
+          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+            {getStatusLabel(item.status)}
+          </Text>
+          <Ionicons name="chevron-down" size={12} color={getStatusColor(item.status)} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Client Info */}
+      <View style={styles.clientSection}>
+        <Ionicons name="person" size={18} color={COLORS.primary} />
+        <View style={styles.clientInfo}>
+          <Text style={styles.clientName}>{item.user_name}</Text>
+          <Text style={styles.clientEmail}>{item.user_email}</Text>
+        </View>
+      </View>
+
+      {/* Vehicle Info */}
+      <View style={styles.vehicleSection}>
+        <Ionicons name="car" size={18} color={COLORS.secondary} />
+        <Text style={styles.vehicleName}>{item.vehicle_name}</Text>
+      </View>
+
+      {/* Dates */}
+      <View style={styles.datesSection}>
+        <View style={styles.dateBox}>
+          <Text style={styles.dateLabel}>DÉBUT</Text>
+          <Text style={styles.dateValue}>{formatDate(item.start_date)}</Text>
+        </View>
+        <View style={styles.dateArrow}>
+          <Ionicons name="arrow-forward" size={20} color={COLORS.textLight} />
+          <Text style={styles.daysCount}>{item.total_days} jours</Text>
+        </View>
+        <View style={styles.dateBox}>
+          <Text style={styles.dateLabel}>FIN</Text>
+          <Text style={styles.dateValue}>{formatDate(item.end_date)}</Text>
+        </View>
+      </View>
+
+      {/* Footer with payment */}
+      <View style={styles.cardFooter}>
+        <TouchableOpacity
+          style={[styles.paymentBadge, { backgroundColor: getPaymentColor(item.payment_status) + '20' }]}
+          onPress={() => handlePaymentStatusChange(item)}
+          data-testid={`reservation-payment-${item.id}`}
+        >
+          <Text style={[styles.paymentText, { color: getPaymentColor(item.payment_status) }]}>
+            {getPaymentLabel(item.payment_status)}
+          </Text>
+          <Ionicons name="chevron-down" size={10} color={getPaymentColor(item.payment_status)} />
+        </TouchableOpacity>
+        {item.payment_method === 'cash' && (
+          <View style={styles.cashBadge}>
+            <Ionicons name="cash" size={12} color="#D97706" />
+            <Text style={styles.cashText}>Espèces</Text>
+          </View>
+        )}
+        <Text style={styles.price}>CHF {item.total_price.toFixed(2)}</Text>
+      </View>
+    </View>
+  );
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} data-testid="admin-reservations-page">
       {/* Search Bar */}
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
@@ -394,6 +469,7 @@ export default function AdminReservations() {
             placeholderTextColor={COLORS.textLight}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            data-testid="reservation-search-input"
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
@@ -404,12 +480,14 @@ export default function AdminReservations() {
         <TouchableOpacity
           style={[styles.dateFilterButton, activeDateFilter && styles.dateFilterButtonActive]}
           onPress={() => setShowDateFilter(true)}
+          data-testid="date-filter-button"
         >
           <Ionicons name="calendar" size={18} color={activeDateFilter ? COLORS.card : COLORS.primary} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.sortButton}
           onPress={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+          data-testid="sort-button"
         >
           <Ionicons 
             name={sortOrder === 'newest' ? 'arrow-down' : 'arrow-up'} 
@@ -463,6 +541,7 @@ export default function AdminReservations() {
               statusFilter === option.value && styles.filterTabActive
             ]}
             onPress={() => setStatusFilter(option.value)}
+            data-testid={`filter-tab-${option.value || 'all'}`}
           >
             <Ionicons 
               name={option.icon as any} 
@@ -481,22 +560,15 @@ export default function AdminReservations() {
 
       {/* Results count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>
+        <Text style={styles.resultsCount} data-testid="results-count">
           {filteredReservations.length} résultat{filteredReservations.length > 1 ? 's' : ''}
           {searchQuery && ` pour "${searchQuery}"`}
         </Text>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={filteredReservations}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
+      {/* Reservation Cards */}
+      <View style={styles.listContent}>
+        {filteredReservations.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={48} color={COLORS.textLight} />
             <Text style={styles.emptyText}>Aucune réservation trouvée</Text>
@@ -506,8 +578,10 @@ export default function AdminReservations() {
               </TouchableOpacity>
             )}
           </View>
-        }
-      />
+        ) : (
+          filteredReservations.map(item => renderReservationCard(item))
+        )}
+      </View>
 
       {/* Date Filter Modal */}
       <Modal
