@@ -93,6 +93,7 @@ export default function AdminUsers() {
     setSelectedUser(user);
     setAdminNotes(user.admin_notes || '');
     setEditName(user.name || '');
+    setEditEmail(user.email || '');
     setEditPhone(user.phone || '');
     setEditAddress(user.address || '');
     setEditMode(false);
@@ -106,6 +107,7 @@ export default function AdminUsers() {
     try {
       await api.put(`/api/admin/users/${selectedUser.id}`, {
         name: editName,
+        email: editEmail,
         phone: editPhone,
         address: editAddress,
         admin_notes: adminNotes,
@@ -113,6 +115,7 @@ export default function AdminUsers() {
       setSelectedUser({ 
         ...selectedUser, 
         name: editName,
+        email: editEmail,
         phone: editPhone,
         address: editAddress,
         admin_notes: adminNotes 
