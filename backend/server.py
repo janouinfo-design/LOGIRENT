@@ -5,6 +5,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import asyncio
 from pathlib import Path
 from pydantic import BaseModel, Field, EmailStr
 from typing import List, Optional, Dict, Any
@@ -13,6 +14,7 @@ from datetime import datetime, timedelta
 import jwt
 import bcrypt
 import base64
+import resend
 
 # Stripe integration
 from emergentintegrations.payments.stripe.checkout import (
@@ -34,6 +36,11 @@ JWT_EXPIRATION_HOURS = 24 * 7  # 7 days
 
 # Stripe Configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY', 'sk_test_emergent')
+
+# Email Configuration
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'contact@logitrak.ch')
+resend.api_key = RESEND_API_KEY
 
 # Create the main app
 app = FastAPI(title="RentDrive API", version="1.0.0")
