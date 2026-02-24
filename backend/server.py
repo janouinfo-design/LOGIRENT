@@ -462,10 +462,10 @@ async def create_reservation(
     if vehicle['status'] == 'maintenance':
         raise HTTPException(status_code=400, detail="Vehicle is under maintenance")
     
-    # Check availability
+    # Check availability - include pending reservations to prevent double booking during payment window
     overlap = await db.reservations.find_one({
         "vehicle_id": reservation_data.vehicle_id,
-        "status": {"$in": ["confirmed", "active"]},
+        "status": {"$in": ["pending", "confirmed", "active"]},
         "$or": [
             {"start_date": {"$lt": reservation_data.end_date}, "end_date": {"$gt": reservation_data.start_date}}
         ]
