@@ -295,7 +295,7 @@ export default function AdminCalendar() {
       </View>
 
       {/* Calendar Grid - Row by Row */}
-      <View style={styles.calendarGrid}>
+      <View style={{ height: calendarRows.length * 52, paddingHorizontal: 8, marginBottom: 12 }}>
         {calendarRows.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.calendarRow}>
             {row.map(date => renderCalendarDay(date))}
