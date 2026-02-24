@@ -702,6 +702,15 @@ async def get_payment_status(session_id: str, user: dict = Depends(get_current_u
                     "updated_at": datetime.utcnow()
                 }}
             )
+            
+            # Send confirmation email
+            try:
+                reservation = await db.reservations.find_one({"id": transaction['reservation_id']})
+                vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
+                if reservation and vehicle:
+                    await send_reservation_confirmation(user, vehicle, reservation)
+            except Exception as email_error:
+                logger.error(f"Failed to send confirmation email: {email_error}")
         
         return {
             "status": checkout_status.status,
