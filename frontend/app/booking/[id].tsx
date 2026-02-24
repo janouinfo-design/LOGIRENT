@@ -668,4 +668,27 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     marginTop: 2,
   },
+  documentsWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    margin: 16,
+    marginBottom: 0,
+    padding: 16,
+    borderRadius: 12,
+    gap: 12,
+  },
+  documentsWarningText: {
+    flex: 1,
+  },
+  documentsWarningTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#92400E',
+  },
+  documentsWarningSubtitle: {
+    fontSize: 13,
+    color: '#A16207',
+    marginTop: 2,
+  },
 });
