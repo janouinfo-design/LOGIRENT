@@ -639,16 +639,17 @@ const styles = StyleSheet.create({
   },
   calendarRow: {
     flexDirection: 'row',
+    height: 52,
   },
   dayCell: {
     flex: 1,
-    height: 52,
     padding: 2,
     alignItems: 'center',
     justifyContent: 'flex-start',
     borderWidth: 0.5,
     borderColor: COLORS.border,
     backgroundColor: COLORS.card,
+    overflow: 'hidden',
   },
   dayCellOutside: {
     backgroundColor: COLORS.background,
