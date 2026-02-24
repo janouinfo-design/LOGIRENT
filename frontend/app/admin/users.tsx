@@ -60,6 +60,7 @@ export default function AdminUsers() {
   // Edit user info
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
 
