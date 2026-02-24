@@ -93,10 +93,10 @@ export default function AdminPayments() {
           <Text style={styles.amount}>CHF {item.amount.toFixed(2)}</Text>
           <Text style={styles.email}>{item.user_email}</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {getStatusLabel(item.status)}
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.payment_status) + '20' }]}>
+          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.payment_status) }]} />
+          <Text style={[styles.statusText, { color: getStatusColor(item.payment_status) }]}>
+            {getStatusLabel(item.payment_status)}
           </Text>
         </View>
       </View>
