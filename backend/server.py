@@ -1350,6 +1350,99 @@ async def block_user(user_id: str, user: dict = Depends(get_admin_user)):
     
     return {"message": f"User {'blocked' if new_status else 'unblocked'}"}
 
+@api_router.put("/admin/users/{user_id}")
+async def update_user_admin(
+    user_id: str,
+    update_data: AdminUserUpdate,
+    user: dict = Depends(get_admin_user)
+):
+    """Update user details from admin"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    
+    if update_dict:
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_dict}
+        )
+    
+    updated_user = await db.users.find_one({"id": user_id}, {"password_hash": 0})
+    return {"message": "User updated successfully", "user": updated_user}
+
+@api_router.put("/admin/users/{user_id}/rating")
+async def update_user_rating(
+    user_id: str,
+    rating: str,
+    user: dict = Depends(get_admin_user)
+):
+    """Update user client rating"""
+    valid_ratings = ["good", "bad", "neutral", "vip", "blocked"]
+    if rating not in valid_ratings:
+        raise HTTPException(status_code=400, detail=f"Invalid rating. Must be one of: {valid_ratings}")
+    
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"client_rating": rating}}
+    )
+    
+    return {"message": f"User rating updated to {rating}"}
+
+class Base64UserPhoto(BaseModel):
+    image: str
+    content_type: str = "image/jpeg"
+
+@api_router.post("/admin/users/{user_id}/photo")
+async def upload_user_photo_admin(
+    user_id: str,
+    data: Base64UserPhoto,
+    user: dict = Depends(get_admin_user)
+):
+    """Upload a profile photo for a user from admin"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Create data URI
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"profile_photo": data_uri}}
+    )
+    
+    return {"message": "Photo uploaded successfully", "photo": data_uri}
+
+@api_router.get("/admin/users/{user_id}")
+async def get_user_details_admin(
+    user_id: str,
+    user: dict = Depends(get_admin_user)
+):
+    """Get detailed user info for admin"""
+    target_user = await db.users.find_one({"id": user_id}, {"password_hash": 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get user's reservations
+    reservations = await db.reservations.find({"user_id": user_id}).to_list(100)
+    
+    # Calculate stats
+    total_spent = sum(r.get('total_price', 0) for r in reservations if r.get('payment_status') == 'paid')
+    total_reservations = len(reservations)
+    
+    target_user['_id'] = str(target_user['_id'])
+    target_user['total_spent'] = total_spent
+    target_user['total_reservations'] = total_reservations
+    target_user['reservations'] = reservations
+    
+    return target_user
+
 @api_router.get("/admin/reservations")
 async def get_admin_reservations(
     skip: int = 0,
