@@ -92,6 +92,30 @@ export default function AdminReservations() {
       result = result.filter(r => r.status === statusFilter);
     }
 
+    // Filter by date range
+    if (activeDateFilter && activeDateFilter.start && activeDateFilter.end) {
+      const filterStart = startOfDay(new Date(activeDateFilter.start));
+      const filterEnd = endOfDay(new Date(activeDateFilter.end));
+      
+      result = result.filter(r => {
+        try {
+          if (activeDateFilter.type === 'created') {
+            // Filter by creation date
+            const createdDate = new Date(r.created_at);
+            return isWithinInterval(createdDate, { start: filterStart, end: filterEnd });
+          } else {
+            // Filter by rental period (default)
+            const rentalStart = new Date(r.start_date);
+            const rentalEnd = new Date(r.end_date);
+            // Check if rental period overlaps with filter period
+            return (rentalStart <= filterEnd && rentalEnd >= filterStart);
+          }
+        } catch {
+          return true;
+        }
+      });
+    }
+
     // Search
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -111,7 +135,29 @@ export default function AdminReservations() {
     });
 
     return result;
-  }, [reservations, statusFilter, searchQuery, sortOrder]);
+  }, [reservations, statusFilter, searchQuery, sortOrder, activeDateFilter]);
+
+  const applyDateFilter = () => {
+    if (startDateFilter && endDateFilter) {
+      setActiveDateFilter({
+        start: startDateFilter,
+        end: endDateFilter,
+        type: dateFilterType
+      });
+      setShowDateFilter(false);
+    } else {
+      if (Platform.OS === 'web') {
+        window.alert('Veuillez sélectionner les deux dates');
+      }
+    }
+  };
+
+  const clearDateFilter = () => {
+    setActiveDateFilter(null);
+    setStartDateFilter('');
+    setEndDateFilter('');
+    setDateFilterType('all');
+  };
 
   const updateStatus = async (reservationId: string, newStatus: string) => {
     try {
