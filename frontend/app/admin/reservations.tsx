@@ -632,7 +632,7 @@ export default function AdminReservations() {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
