@@ -98,6 +98,20 @@ export default function AdminReservations() {
     );
   };
 
+  const handlePaymentStatusChange = (reservation: Reservation) => {
+    Alert.alert(
+      'Changer le Statut de Paiement',
+      `Statut actuel: ${reservation.payment_status}`,
+      [
+        { text: 'Non payé', onPress: () => updatePaymentStatus(reservation.id, 'unpaid') },
+        { text: 'En attente', onPress: () => updatePaymentStatus(reservation.id, 'pending') },
+        { text: 'Payé ✓', onPress: () => updatePaymentStatus(reservation.id, 'paid') },
+        { text: 'Remboursé', onPress: () => updatePaymentStatus(reservation.id, 'refunded') },
+        { text: 'Fermer', style: 'cancel' },
+      ]
+    );
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return COLORS.success;
