@@ -71,6 +71,17 @@ export default function AdminReservations() {
     }
   };
 
+  const updatePaymentStatus = async (reservationId: string, newPaymentStatus: string) => {
+    try {
+      await api.put(`/api/admin/reservations/${reservationId}/payment-status?payment_status=${newPaymentStatus}`);
+      Alert.alert('Succès', `Statut de paiement changé à ${newPaymentStatus}`);
+      fetchReservations();
+    } catch (error: any) {
+      console.error('Error updating payment status:', error.response?.data || error.message);
+      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut de paiement');
+    }
+  };
+
   const handleStatusChange = (reservation: Reservation) => {
     Alert.alert(
       'Changer le Statut',
