@@ -217,7 +217,8 @@ export default function AdminCalendar() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ flexGrow: 0 }} data-testid="admin-calendar-page">
+    <View style={{ flex: 1, backgroundColor: COLORS.background, overflow: 'scroll' as any }}>
+      <View style={{ maxWidth: 1000, alignSelf: 'center', width: '100%', padding: 8 }}>
       {/* Overdue Alert Banner */}
       {overdue.length > 0 && (
         <View style={styles.overdueAlert} data-testid="overdue-alert-banner">
