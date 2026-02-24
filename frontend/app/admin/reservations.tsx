@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Platform } from 'react-native';
+import React, { useEffect, useState, useMemo } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Platform, TextInput, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -21,6 +22,7 @@ interface Reservation {
   id: string;
   user_name: string;
   user_email: string;
+  user_phone?: string;
   vehicle_name: string;
   start_date: string;
   end_date: string;
@@ -28,27 +30,41 @@ interface Reservation {
   total_price: number;
   status: string;
   payment_status: string;
+  payment_method?: string;
   created_at: string;
 }
+
+const STATUS_OPTIONS = [
+  { value: null, label: 'Toutes', icon: 'list' },
+  { value: 'pending', label: 'En attente', icon: 'time' },
+  { value: 'pending_cash', label: 'Espèces', icon: 'cash' },
+  { value: 'confirmed', label: 'Confirmées', icon: 'checkmark-circle' },
+  { value: 'active', label: 'Actives', icon: 'car' },
+  { value: 'completed', label: 'Terminées', icon: 'checkmark-done' },
+  { value: 'cancelled', label: 'Annulées', icon: 'close-circle' },
+];
 
 export default function AdminReservations() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   useEffect(() => {
     fetchReservations();
-  }, [statusFilter]);
+  }, []);
 
   const fetchReservations = async () => {
     try {
-      const params = statusFilter ? `?status=${statusFilter}` : '';
-      const response = await api.get(`/api/admin/reservations${params}`);
+      const response = await api.get('/api/admin/reservations');
       setReservations(response.data.reservations);
     } catch (error: any) {
       console.error('Error fetching reservations:', error.response?.data || error.message);
-      Alert.alert('Erreur', 'Impossible de charger les réservations');
+      if (Platform.OS === 'web') {
+        window.alert('Impossible de charger les réservations');
+      }
     } finally {
       setLoading(false);
     }
@@ -60,35 +76,72 @@ export default function AdminReservations() {
     setRefreshing(false);
   };
 
+  // Filter and search reservations
+  const filteredReservations = useMemo(() => {
+    let result = [...reservations];
+
+    // Filter by status
+    if (statusFilter) {
+      result = result.filter(r => r.status === statusFilter);
+    }
+
+    // Search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(r => 
+        r.user_name?.toLowerCase().includes(query) ||
+        r.user_email?.toLowerCase().includes(query) ||
+        r.vehicle_name?.toLowerCase().includes(query) ||
+        r.id.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+    return result;
+  }, [reservations, statusFilter, searchQuery, sortOrder]);
+
   const updateStatus = async (reservationId: string, newStatus: string) => {
     try {
       await api.put(`/api/admin/reservations/${reservationId}/status?status=${newStatus}`);
-      Alert.alert('Succès', `Statut changé à ${newStatus}`);
+      if (Platform.OS === 'web') {
+        window.alert(`Statut changé à ${getStatusLabel(newStatus)}`);
+      }
       fetchReservations();
     } catch (error: any) {
       console.error('Error updating status:', error.response?.data || error.message);
-      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut');
+      if (Platform.OS === 'web') {
+        window.alert('Erreur: ' + (error.response?.data?.detail || 'Impossible de modifier le statut'));
+      }
     }
   };
 
   const updatePaymentStatus = async (reservationId: string, newPaymentStatus: string) => {
     try {
       await api.put(`/api/admin/reservations/${reservationId}/payment-status?payment_status=${newPaymentStatus}`);
-      Alert.alert('Succès', `Statut de paiement changé à ${newPaymentStatus}`);
+      if (Platform.OS === 'web') {
+        window.alert(`Statut de paiement changé à ${getPaymentLabel(newPaymentStatus)}`);
+      }
       fetchReservations();
     } catch (error: any) {
       console.error('Error updating payment status:', error.response?.data || error.message);
-      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut de paiement');
+      if (Platform.OS === 'web') {
+        window.alert('Erreur: ' + (error.response?.data?.detail || 'Impossible de modifier le statut de paiement'));
+      }
     }
   };
 
   const handleStatusChange = (reservation: Reservation) => {
     if (Platform.OS === 'web') {
-      const statuses = ['pending', 'pending_cash', 'confirmed', 'active', 'completed', 'cancelled'];
-      const statusLabels = ['En attente', 'En attente (espèces)', 'Confirmé', 'Actif', 'Terminé', 'Annulé'];
       const choice = window.prompt(
-        `Changer le statut de réservation\nStatut actuel: ${reservation.status}\n\nEntrez un numéro:\n1. En attente\n2. En attente (espèces)\n3. Confirmé\n4. Actif\n5. Terminé\n6. Annulé`
+        `Changer le statut de réservation\n\nClient: ${reservation.user_name}\nVéhicule: ${reservation.vehicle_name}\nStatut actuel: ${getStatusLabel(reservation.status)}\n\nEntrez un numéro:\n1. En attente\n2. En attente (espèces)\n3. Confirmé\n4. Actif\n5. Terminé\n6. Annulé`
       );
+      const statuses = ['pending', 'pending_cash', 'confirmed', 'active', 'completed', 'cancelled'];
       if (choice && parseInt(choice) >= 1 && parseInt(choice) <= 6) {
         updateStatus(reservation.id, statuses[parseInt(choice) - 1]);
       }
@@ -98,7 +151,7 @@ export default function AdminReservations() {
         `Statut actuel: ${reservation.status}`,
         [
           { text: 'En attente', onPress: () => updateStatus(reservation.id, 'pending') },
-          { text: 'En attente (espèces)', onPress: () => updateStatus(reservation.id, 'pending_cash') },
+          { text: 'Espèces', onPress: () => updateStatus(reservation.id, 'pending_cash') },
           { text: 'Confirmé', onPress: () => updateStatus(reservation.id, 'confirmed') },
           { text: 'Actif', onPress: () => updateStatus(reservation.id, 'active') },
           { text: 'Terminé', onPress: () => updateStatus(reservation.id, 'completed') },
@@ -111,10 +164,10 @@ export default function AdminReservations() {
 
   const handlePaymentStatusChange = (reservation: Reservation) => {
     if (Platform.OS === 'web') {
-      const statuses = ['unpaid', 'pending', 'paid', 'refunded'];
       const choice = window.prompt(
-        `Changer le statut de paiement\nStatut actuel: ${reservation.payment_status}\n\nEntrez un numéro:\n1. Non payé\n2. En attente\n3. Payé ✓\n4. Remboursé`
+        `Changer le statut de paiement\n\nClient: ${reservation.user_name}\nMontant: CHF ${reservation.total_price}\nStatut actuel: ${getPaymentLabel(reservation.payment_status)}\n\nEntrez un numéro:\n1. Non payé\n2. En attente\n3. Payé ✓\n4. Remboursé`
       );
+      const statuses = ['unpaid', 'pending', 'paid', 'refunded'];
       if (choice && parseInt(choice) >= 1 && parseInt(choice) <= 4) {
         updatePaymentStatus(reservation.id, statuses[parseInt(choice) - 1]);
       }
@@ -138,10 +191,22 @@ export default function AdminReservations() {
       case 'confirmed': return COLORS.success;
       case 'active': return COLORS.primary;
       case 'pending': return COLORS.warning;
-      case 'pending_cash': return '#D97706';  // Orange darker for cash
+      case 'pending_cash': return '#D97706';
       case 'cancelled': return COLORS.error;
       case 'completed': return COLORS.textLight;
       default: return COLORS.textLight;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'confirmed': return 'Confirmée';
+      case 'active': return 'Active';
+      case 'pending': return 'En attente';
+      case 'pending_cash': return 'Espèces';
+      case 'cancelled': return 'Annulée';
+      case 'completed': return 'Terminée';
+      default: return status;
     }
   };
 
@@ -150,52 +215,115 @@ export default function AdminReservations() {
       case 'paid': return COLORS.success;
       case 'pending': return COLORS.warning;
       case 'unpaid': return COLORS.error;
-      case 'refunded': return '#6B7280';  // Gray for refunded
+      case 'refunded': return '#6B7280';
       default: return COLORS.textLight;
     }
   };
 
-  const filterOptions = [null, 'pending', 'pending_cash', 'confirmed', 'active', 'completed', 'cancelled'];
+  const getPaymentLabel = (status: string) => {
+    switch (status) {
+      case 'paid': return '✓ Payé';
+      case 'pending': return 'En attente';
+      case 'unpaid': return 'Non payé';
+      case 'refunded': return 'Remboursé';
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), 'dd MMM yyyy', { locale: fr });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatDateTime = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), "dd MMM yyyy 'à' HH:mm", { locale: fr });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Calculate stats
+  const stats = useMemo(() => {
+    const total = filteredReservations.length;
+    const confirmed = filteredReservations.filter(r => r.status === 'confirmed' || r.status === 'active').length;
+    const revenue = filteredReservations
+      .filter(r => r.payment_status === 'paid')
+      .reduce((sum, r) => sum + r.total_price, 0);
+    return { total, confirmed, revenue };
+  }, [filteredReservations]);
 
   const renderItem = ({ item }: { item: Reservation }) => (
     <View style={styles.card}>
+      {/* Header with ID and Date */}
       <View style={styles.cardHeader}>
-        <View>
-          <Text style={styles.vehicleName}>{item.vehicle_name}</Text>
-          <Text style={styles.userName}>{item.user_name}</Text>
-          <Text style={styles.userEmail}>{item.user_email}</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.reservationId}>#{item.id.slice(0, 8)}</Text>
+          <Text style={styles.createdDate}>Créée le {formatDateTime(item.created_at)}</Text>
         </View>
         <TouchableOpacity
           style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}
           onPress={() => handleStatusChange(item)}
         >
+          <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
           <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status}
+            {getStatusLabel(item.status)}
           </Text>
           <Ionicons name="chevron-down" size={12} color={getStatusColor(item.status)} />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.dateRow}>
-        <View style={styles.dateItem}>
-          <Ionicons name="calendar" size={14} color={COLORS.textLight} />
-          <Text style={styles.dateText}>
-            {format(new Date(item.start_date), 'dd MMM')} - {format(new Date(item.end_date), 'dd MMM yyyy')}
-          </Text>
+      {/* Client Info */}
+      <View style={styles.clientSection}>
+        <Ionicons name="person" size={18} color={COLORS.primary} />
+        <View style={styles.clientInfo}>
+          <Text style={styles.clientName}>{item.user_name}</Text>
+          <Text style={styles.clientEmail}>{item.user_email}</Text>
         </View>
-        <Text style={styles.daysText}>{item.total_days} jours</Text>
       </View>
 
+      {/* Vehicle Info */}
+      <View style={styles.vehicleSection}>
+        <Ionicons name="car" size={18} color={COLORS.secondary} />
+        <Text style={styles.vehicleName}>{item.vehicle_name}</Text>
+      </View>
+
+      {/* Dates */}
+      <View style={styles.datesSection}>
+        <View style={styles.dateBox}>
+          <Text style={styles.dateLabel}>DÉBUT</Text>
+          <Text style={styles.dateValue}>{formatDate(item.start_date)}</Text>
+        </View>
+        <View style={styles.dateArrow}>
+          <Ionicons name="arrow-forward" size={20} color={COLORS.textLight} />
+          <Text style={styles.daysCount}>{item.total_days} jours</Text>
+        </View>
+        <View style={styles.dateBox}>
+          <Text style={styles.dateLabel}>FIN</Text>
+          <Text style={styles.dateValue}>{formatDate(item.end_date)}</Text>
+        </View>
+      </View>
+
+      {/* Footer with payment */}
       <View style={styles.cardFooter}>
         <TouchableOpacity
           style={[styles.paymentBadge, { backgroundColor: getPaymentColor(item.payment_status) + '20' }]}
           onPress={() => handlePaymentStatusChange(item)}
         >
           <Text style={[styles.paymentText, { color: getPaymentColor(item.payment_status) }]}>
-            {item.payment_status === 'paid' ? '✓ Payé' : item.payment_status === 'pending' ? 'En attente' : item.payment_status === 'refunded' ? 'Remboursé' : 'Non payé'}
+            {getPaymentLabel(item.payment_status)}
           </Text>
           <Ionicons name="chevron-down" size={10} color={getPaymentColor(item.payment_status)} />
         </TouchableOpacity>
+        {item.payment_method === 'cash' && (
+          <View style={styles.cashBadge}>
+            <Ionicons name="cash" size={12} color="#D97706" />
+            <Text style={styles.cashText}>Espèces</Text>
+          </View>
+        )}
         <Text style={styles.price}>CHF {item.total_price.toFixed(2)}</Text>
       </View>
     </View>
@@ -203,35 +331,96 @@ export default function AdminReservations() {
 
   return (
     <View style={styles.container}>
-      {/* Status Filter */}
-      <View style={styles.filterContainer}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={filterOptions}
-          keyExtractor={(item) => item || 'all'}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.filterOption,
-                statusFilter === item && styles.filterOptionActive,
-              ]}
-              onPress={() => setStatusFilter(item)}
-            >
-              <Text style={[
-                styles.filterText,
-                statusFilter === item && styles.filterTextActive,
-              ]}>
-                {item === null ? 'Tous' : item}
-              </Text>
+      {/* Search Bar */}
+      <View style={styles.searchSection}>
+        <View style={styles.searchBar}>
+          <Ionicons name="search" size={20} color={COLORS.textLight} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher par nom, email, véhicule..."
+            placeholderTextColor={COLORS.textLight}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
             </TouchableOpacity>
           )}
-          contentContainerStyle={styles.filterList}
-        />
+        </View>
+        <TouchableOpacity
+          style={styles.sortButton}
+          onPress={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+        >
+          <Ionicons 
+            name={sortOrder === 'newest' ? 'arrow-down' : 'arrow-up'} 
+            size={18} 
+            color={COLORS.primary} 
+          />
+          <Text style={styles.sortButtonText}>
+            {sortOrder === 'newest' ? 'Récentes' : 'Anciennes'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Stats */}
+      <View style={styles.statsSection}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{stats.total}</Text>
+          <Text style={styles.statLabel}>Réservations</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statValue, { color: COLORS.success }]}>{stats.confirmed}</Text>
+          <Text style={styles.statLabel}>Actives</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statValue, { color: COLORS.primary }]}>CHF {stats.revenue.toFixed(0)}</Text>
+          <Text style={styles.statLabel}>Revenus</Text>
+        </View>
+      </View>
+
+      {/* Filter Tabs */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+        contentContainerStyle={styles.filterContainer}
+      >
+        {STATUS_OPTIONS.map((option) => (
+          <TouchableOpacity
+            key={option.value || 'all'}
+            style={[
+              styles.filterTab,
+              statusFilter === option.value && styles.filterTabActive
+            ]}
+            onPress={() => setStatusFilter(option.value)}
+          >
+            <Ionicons 
+              name={option.icon as any} 
+              size={16} 
+              color={statusFilter === option.value ? COLORS.card : COLORS.textLight} 
+            />
+            <Text style={[
+              styles.filterTabText,
+              statusFilter === option.value && styles.filterTabTextActive
+            ]}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* Results count */}
+      <View style={styles.resultsHeader}>
+        <Text style={styles.resultsCount}>
+          {filteredReservations.length} résultat{filteredReservations.length > 1 ? 's' : ''}
+          {searchQuery && ` pour "${searchQuery}"`}
+        </Text>
+      </View>
+
+      {/* List */}
       <FlatList
-        data={reservations}
+        data={filteredReservations}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -241,7 +430,12 @@ export default function AdminReservations() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="calendar-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>Aucune réservation</Text>
+            <Text style={styles.emptyText}>Aucune réservation trouvée</Text>
+            {searchQuery && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Text style={styles.clearSearch}>Effacer la recherche</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />
@@ -254,40 +448,106 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  filterContainer: {
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+  searchSection: {
+    flexDirection: 'row',
+    padding: 16,
+    paddingBottom: 8,
+    gap: 10,
   },
-  filterList: {
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    height: 46,
+    gap: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: COLORS.text,
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.card,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    gap: 6,
+  },
+  sortButtonText: {
+    fontSize: 13,
+    color: COLORS.primary,
+    fontWeight: '600',
+  },
+  statsSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  statItem: {
+    flex: 1,
+    backgroundColor: COLORS.card,
+    borderRadius: 12,
     padding: 12,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: COLORS.textLight,
+    marginTop: 2,
+  },
+  filterScroll: {
+    maxHeight: 50,
+  },
+  filterContainer: {
+    paddingHorizontal: 16,
     gap: 8,
   },
-  filterOption: {
-    paddingHorizontal: 16,
+  filterTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: COLORS.background,
-    marginRight: 8,
+    backgroundColor: COLORS.card,
+    gap: 6,
   },
-  filterOptionActive: {
+  filterTabActive: {
     backgroundColor: COLORS.primary,
   },
-  filterText: {
+  filterTabText: {
     fontSize: 13,
-    color: COLORS.text,
-    textTransform: 'capitalize',
+    color: COLORS.textLight,
+    fontWeight: '500',
   },
-  filterTextActive: {
-    color: '#FFFFFF',
-    fontWeight: '600',
+  filterTabTextActive: {
+    color: COLORS.card,
+  },
+  resultsHeader: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  resultsCount: {
+    fontSize: 13,
+    color: COLORS.textLight,
   },
   listContent: {
     padding: 16,
+    paddingTop: 8,
   },
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 12,
   },
@@ -295,21 +555,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 14,
   },
-  vehicleName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  userName: {
+  headerLeft: {},
+  reservationId: {
     fontSize: 14,
+    fontWeight: '700',
     color: COLORS.text,
-    marginTop: 4,
   },
-  userEmail: {
+  createdDate: {
     fontSize: 12,
     color: COLORS.textLight,
+    marginTop: 2,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -317,41 +574,81 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 12,
-    gap: 4,
+    gap: 6,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600',
-    textTransform: 'capitalize',
   },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  dateItem: {
+  clientSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginBottom: 10,
+    gap: 10,
   },
-  dateText: {
-    fontSize: 13,
+  clientInfo: {
+    flex: 1,
+  },
+  clientName: {
+    fontSize: 15,
+    fontWeight: '600',
     color: COLORS.text,
   },
-  daysText: {
+  clientEmail: {
     fontSize: 13,
     color: COLORS.textLight,
+  },
+  vehicleSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+    gap: 10,
+  },
+  vehicleName: {
+    fontSize: 14,
+    color: COLORS.text,
+    fontWeight: '500',
+  },
+  datesSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 14,
+  },
+  dateBox: {
+    flex: 1,
+  },
+  dateLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: COLORS.textLight,
+    marginBottom: 4,
+  },
+  dateValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  dateArrow: {
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  daysCount: {
+    fontSize: 10,
+    color: COLORS.textLight,
+    marginTop: 2,
   },
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 12,
   },
   paymentBadge: {
     flexDirection: 'row',
@@ -362,8 +659,22 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   paymentText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
+  },
+  cashBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    gap: 4,
+  },
+  cashText: {
+    fontSize: 11,
+    color: '#D97706',
+    fontWeight: '500',
   },
   price: {
     fontSize: 18,
@@ -377,6 +688,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: COLORS.textLight,
+    marginTop: 12,
+  },
+  clearSearch: {
+    fontSize: 14,
+    color: COLORS.primary,
+    fontWeight: '600',
     marginTop: 12,
   },
 });
