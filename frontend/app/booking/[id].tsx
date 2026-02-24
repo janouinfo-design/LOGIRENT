@@ -84,8 +84,24 @@ export default function BookingScreen() {
   };
 
   const handleBookNow = async () => {
+    // Check if documents are uploaded
+    if (!hasDocuments) {
+      Alert.alert(
+        'Documents Requis',
+        'Veuillez télécharger votre pièce d\'identité et votre permis de conduire dans votre profil avant de réserver.',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { 
+            text: 'Aller au Profil', 
+            onPress: () => router.push('/(tabs)/profile')
+          },
+        ]
+      );
+      return;
+    }
+
     if (totalDays <= 0) {
-      Alert.alert('Invalid Dates', 'End date must be after start date');
+      Alert.alert('Dates Invalides', 'La date de fin doit être après la date de début');
       return;
     }
 
