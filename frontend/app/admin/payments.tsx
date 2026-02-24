@@ -34,19 +34,23 @@ export default function AdminPayments() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTransactions();
   }, []);
 
   const fetchTransactions = async () => {
+    setError(null);
     try {
+      console.log('Fetching payments...');
       const response = await api.get('/api/admin/payments');
-      setTransactions(response.data.transactions);
-      setTotal(response.data.total);
+      console.log('Payments response:', response.data);
+      setTransactions(response.data.transactions || []);
+      setTotal(response.data.total || 0);
     } catch (error: any) {
       console.error('Error fetching transactions:', error.response?.data || error.message);
-      Alert.alert('Erreur', 'Impossible de charger les transactions');
+      setError(error.response?.data?.detail || 'Impossible de charger les transactions. Reconnectez-vous.');
     } finally {
       setLoading(false);
     }
