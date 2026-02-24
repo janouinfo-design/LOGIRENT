@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Ale
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Vehicle, useVehicleStore } from '../../src/store/vehicleStore';
 import Button from '../../src/components/Button';
 
@@ -38,8 +39,16 @@ export default function AdminVehicles() {
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    fetchVehicles();
+    loadTokenAndFetch();
   }, []);
+
+  const loadTokenAndFetch = async () => {
+    const token = await AsyncStorage.getItem('token');
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    }
+    fetchVehicles();
+  };
 
   const onRefresh = async () => {
     setRefreshing(true);
