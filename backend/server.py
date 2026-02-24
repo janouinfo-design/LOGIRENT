@@ -1132,6 +1132,7 @@ async def get_admin_stats(user: dict = Depends(get_admin_user)):
     total_vehicles = await db.vehicles.count_documents({})
     total_users = await db.users.count_documents({})
     total_reservations = await db.reservations.count_documents({})
+    total_payments = await db.payment_transactions.count_documents({"payment_status": "paid"})
     
     # Total revenue (from paid reservations)
     pipeline = [
