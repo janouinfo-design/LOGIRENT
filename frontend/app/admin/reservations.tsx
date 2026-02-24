@@ -77,6 +77,7 @@ export default function AdminReservations() {
       `Statut actuel: ${reservation.status}`,
       [
         { text: 'En attente', onPress: () => updateStatus(reservation.id, 'pending') },
+        { text: 'En attente (espèces)', onPress: () => updateStatus(reservation.id, 'pending_cash') },
         { text: 'Confirmé', onPress: () => updateStatus(reservation.id, 'confirmed') },
         { text: 'Actif', onPress: () => updateStatus(reservation.id, 'active') },
         { text: 'Terminé', onPress: () => updateStatus(reservation.id, 'completed') },
@@ -91,6 +92,7 @@ export default function AdminReservations() {
       case 'confirmed': return COLORS.success;
       case 'active': return COLORS.primary;
       case 'pending': return COLORS.warning;
+      case 'pending_cash': return '#D97706';  // Orange darker for cash
       case 'cancelled': return COLORS.error;
       case 'completed': return COLORS.textLight;
       default: return COLORS.textLight;
