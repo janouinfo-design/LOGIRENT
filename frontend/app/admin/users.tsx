@@ -473,48 +473,125 @@ export default function AdminUsers() {
                   <View style={styles.documentsGrid}>
                     <View style={styles.documentItem}>
                       <Text style={styles.documentLabel}>Pièce d'identité</Text>
-                      {selectedUser.id_photo ? (
-                        <Image source={{ uri: selectedUser.id_photo }} style={styles.documentImage} />
-                      ) : (
-                        <View style={styles.noDocument}>
-                          <Ionicons name="card-outline" size={32} color={COLORS.textLight} />
-                          <Text style={styles.noDocumentText}>Non fournie</Text>
-                        </View>
-                      )}
+                      <TouchableOpacity onPress={() => uploadDocumentPhoto('id')} disabled={uploadingIdPhoto}>
+                        {uploadingIdPhoto ? (
+                          <View style={styles.noDocument}>
+                            <ActivityIndicator color={COLORS.primary} />
+                          </View>
+                        ) : selectedUser.id_photo ? (
+                          <View>
+                            <Image source={{ uri: selectedUser.id_photo }} style={styles.documentImage} />
+                            <View style={styles.documentOverlay}>
+                              <Ionicons name="camera" size={20} color="#fff" />
+                            </View>
+                          </View>
+                        ) : (
+                          <View style={styles.noDocument}>
+                            <Ionicons name="add-circle" size={32} color={COLORS.primary} />
+                            <Text style={styles.addDocumentText}>Ajouter</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
                     </View>
                     <View style={styles.documentItem}>
                       <Text style={styles.documentLabel}>Permis de conduire</Text>
-                      {selectedUser.license_photo ? (
-                        <Image source={{ uri: selectedUser.license_photo }} style={styles.documentImage} />
-                      ) : (
-                        <View style={styles.noDocument}>
-                          <Ionicons name="car-outline" size={32} color={COLORS.textLight} />
-                          <Text style={styles.noDocumentText}>Non fourni</Text>
-                        </View>
-                      )}
+                      <TouchableOpacity onPress={() => uploadDocumentPhoto('license')} disabled={uploadingLicensePhoto}>
+                        {uploadingLicensePhoto ? (
+                          <View style={styles.noDocument}>
+                            <ActivityIndicator color={COLORS.primary} />
+                          </View>
+                        ) : selectedUser.license_photo ? (
+                          <View>
+                            <Image source={{ uri: selectedUser.license_photo }} style={styles.documentImage} />
+                            <View style={styles.documentOverlay}>
+                              <Ionicons name="camera" size={20} color="#fff" />
+                            </View>
+                          </View>
+                        ) : (
+                          <View style={styles.noDocument}>
+                            <Ionicons name="add-circle" size={32} color={COLORS.primary} />
+                            <Text style={styles.addDocumentText}>Ajouter</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
 
-                {/* User Info */}
+                {/* User Info - Editable */}
                 <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Informations</Text>
-                  <View style={styles.infoRow}>
-                    <Ionicons name="call" size={18} color={COLORS.textLight} />
-                    <Text style={styles.infoText}>{selectedUser.phone || 'Non renseigné'}</Text>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>Informations</Text>
+                    <TouchableOpacity onPress={() => setEditMode(!editMode)}>
+                      <Text style={styles.editLink}>{editMode ? 'Annuler' : 'Modifier'}</Text>
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.infoRow}>
-                    <Ionicons name="location" size={18} color={COLORS.textLight} />
-                    <Text style={styles.infoText}>{selectedUser.address || 'Non renseignée'}</Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Ionicons name="calendar" size={18} color={COLORS.textLight} />
-                    <Text style={styles.infoText}>Inscrit le {format(new Date(selectedUser.created_at), 'dd/MM/yyyy')}</Text>
-                  </View>
-                  <View style={styles.infoRow}>
-                    <Ionicons name="car" size={18} color={COLORS.textLight} />
-                    <Text style={styles.infoText}>{selectedUser.reservation_count} locations effectuées</Text>
-                  </View>
+                  
+                  {editMode ? (
+                    <>
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Nom</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          value={editName}
+                          onChangeText={setEditName}
+                          placeholder="Nom complet"
+                        />
+                      </View>
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Téléphone</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          value={editPhone}
+                          onChangeText={setEditPhone}
+                          placeholder="Numéro de téléphone"
+                          keyboardType="phone-pad"
+                        />
+                      </View>
+                      <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Adresse</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          value={editAddress}
+                          onChangeText={setEditAddress}
+                          placeholder="Adresse complète"
+                        />
+                      </View>
+                      <Button
+                        title="Sauvegarder les modifications"
+                        onPress={saveUserInfo}
+                        loading={saving}
+                        style={{ marginTop: 12 }}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <View style={styles.infoRow}>
+                        <Ionicons name="person" size={18} color={COLORS.textLight} />
+                        <Text style={styles.infoText}>{selectedUser.name}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Ionicons name="mail" size={18} color={COLORS.textLight} />
+                        <Text style={styles.infoText}>{selectedUser.email}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Ionicons name="call" size={18} color={COLORS.textLight} />
+                        <Text style={styles.infoText}>{selectedUser.phone || 'Non renseigné'}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Ionicons name="location" size={18} color={COLORS.textLight} />
+                        <Text style={styles.infoText}>{selectedUser.address || 'Non renseignée'}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Ionicons name="calendar" size={18} color={COLORS.textLight} />
+                        <Text style={styles.infoText}>Inscrit le {format(new Date(selectedUser.created_at), 'dd/MM/yyyy')}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Ionicons name="car" size={18} color={COLORS.textLight} />
+                        <Text style={styles.infoText}>{selectedUser.reservation_count} locations effectuées</Text>
+                      </View>
+                    </>
+                  )}
                 </View>
               </>
             )}
