@@ -343,10 +343,10 @@ export default function BookingScreen() {
           <Text style={styles.bottomPrice}>CHF {totalPrice.toFixed(2)}</Text>
         </View>
         <Button
-          title="Continue to Payment"
+          title={paymentMethod === 'cash' ? 'Réserver (Espèces)' : 'Payer par Carte'}
           onPress={handleBookNow}
           loading={isLoading}
-          style={styles.payButton}
+          style={[styles.payButton, paymentMethod === 'cash' && styles.cashButton]}
         />
       </View>
     </View>
