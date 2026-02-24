@@ -304,6 +304,51 @@ backend:
         agent: "main"
         comment: "POST /api/seed - tested, seeded 6 vehicles successfully"
 
+  - task: "Cash Payment Backend API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Added payment_method field to ReservationCreate and Reservation models. Modified create_reservation to handle cash payments with status 'pending_cash'. Added cash reservation email template."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Cash payment reservations create successfully with status='pending_cash' and payment_method='cash'. Email notification sent to user. Reservation ID c6e66241-463e-4207-846d-c508ce04922c created and verified."
+
+  - task: "Admin Reservation Status Change"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Updated admin status endpoint to include 'pending_cash' status. Endpoint already existed, verified working."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin can successfully update reservation status including to 'pending_cash' status. PUT /api/admin/reservations/{id}/status endpoint working correctly with proper validation. Tested status changes: confirmed -> pending_cash."
+
+  - task: "Admin Vehicle Edit"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: NA
+        agent: "main"
+        comment: "Admin vehicle edit endpoint already existed. PUT /api/admin/vehicles/{id} verified working."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin can successfully edit vehicle details via PUT /api/admin/vehicles/{id}. All fields update correctly including brand, model, year, price, location, description, seats, transmission, fuel_type. BMW Series 5 Updated test completed successfully."
+
 frontend:
   - task: "Welcome Screen"
     implemented: true
