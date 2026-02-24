@@ -53,7 +53,15 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [adminNotes, setAdminNotes] = useState('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingIdPhoto, setUploadingIdPhoto] = useState(false);
+  const [uploadingLicensePhoto, setUploadingLicensePhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // Edit user info
+  const [editMode, setEditMode] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editAddress, setEditAddress] = useState('');
 
   useEffect(() => {
     fetchUsers();
