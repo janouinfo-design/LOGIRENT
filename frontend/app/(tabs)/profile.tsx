@@ -89,6 +89,7 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
+    { icon: 'settings', label: 'Admin Dashboard', onPress: () => router.push('/admin') },
     { icon: 'card', label: 'Payment Methods', onPress: () => {} },
     { icon: 'notifications', label: 'Notifications', onPress: () => {} },
     { icon: 'shield-checkmark', label: 'Privacy & Security', onPress: () => {} },
