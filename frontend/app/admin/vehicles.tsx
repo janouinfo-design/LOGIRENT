@@ -269,9 +269,11 @@ export default function AdminVehicles() {
       setUploadingPhoto(true);
       try {
         const asset = result.assets[0];
+        console.log('Asset:', { uri: asset.uri?.substring(0, 50), base64: asset.base64?.substring(0, 50), mimeType: asset.mimeType });
         
-        if (Platform.OS === 'web' && asset.base64) {
-          // For web, send base64 directly
+        // For web or if base64 is available, use base64 endpoint
+        if (asset.base64) {
+          console.log('Using base64 upload...');
           const response = await api.post(
             `/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos/base64`,
             { 
@@ -288,9 +290,43 @@ export default function AdminVehicles() {
           setSelectedVehicleForPhotos(updatedVehicle);
           fetchVehicles();
 
-          window.alert('Photo ajoutée avec succès!');
+          if (Platform.OS === 'web') {
+            window.alert('Photo ajoutée avec succès!');
+          } else {
+            Alert.alert('Succès', 'Photo ajoutée avec succès!');
+          }
+        } else if (asset.uri && asset.uri.startsWith('data:')) {
+          // URI is already a data URI (common on web)
+          console.log('URI is data URI, extracting base64...');
+          const base64Match = asset.uri.match(/^data:([^;]+);base64,(.+)$/);
+          if (base64Match) {
+            const contentType = base64Match[1];
+            const base64Data = base64Match[2];
+            
+            const response = await api.post(
+              `/api/admin/vehicles/${selectedVehicleForPhotos.id}/photos/base64`,
+              { 
+                image: base64Data,
+                content_type: contentType
+              }
+            );
+
+            const updatedVehicle = {
+              ...selectedVehicleForPhotos,
+              photos: [...(selectedVehicleForPhotos.photos || []), response.data.photo]
+            };
+            setSelectedVehicleForPhotos(updatedVehicle);
+            fetchVehicles();
+
+            if (Platform.OS === 'web') {
+              window.alert('Photo ajoutée avec succès!');
+            } else {
+              Alert.alert('Succès', 'Photo ajoutée avec succès!');
+            }
+          }
         } else {
-          // For mobile, use FormData
+          // For mobile with file URI, use FormData
+          console.log('Using FormData upload...');
           const formData = new FormData();
           const uri = asset.uri;
           const filename = uri.split('/').pop() || 'photo.jpg';
