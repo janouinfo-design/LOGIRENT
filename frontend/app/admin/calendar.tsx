@@ -634,13 +634,14 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
   },
   calendarGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     paddingHorizontal: 8,
     marginBottom: 12,
   },
+  calendarRow: {
+    flexDirection: 'row',
+  },
   dayCell: {
-    width: '14.28%',
+    flex: 1,
     height: 52,
     padding: 2,
     alignItems: 'center',
