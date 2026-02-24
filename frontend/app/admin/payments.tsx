@@ -260,5 +260,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: COLORS.textLight,
     marginTop: 12,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: COLORS.textLight,
+    marginTop: 8,
+    textAlign: 'center',
   },
 });
