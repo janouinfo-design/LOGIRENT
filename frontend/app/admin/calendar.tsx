@@ -640,6 +640,9 @@ const styles = StyleSheet.create({
   calendarRow: {
     flexDirection: 'row',
     height: 52,
+    flexGrow: 0,
+    flexShrink: 0,
+    flexBasis: 52,
   },
   dayCell: {
     flex: 1,
