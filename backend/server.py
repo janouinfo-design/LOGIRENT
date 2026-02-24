@@ -465,6 +465,60 @@ async def create_vehicle(vehicle_data: VehicleCreate, user: dict = Depends(get_c
     await db.vehicles.insert_one(vehicle.dict())
     return vehicle
 
+@api_router.post("/admin/vehicles/{vehicle_id}/photos")
+async def upload_vehicle_photo(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """Upload a photo for a vehicle"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Read and convert to base64
+    content = await file.read()
+    base64_image = base64.b64encode(content).decode('utf-8')
+    
+    # Determine content type
+    content_type = file.content_type or 'image/jpeg'
+    data_uri = f"data:{content_type};base64,{base64_image}"
+    
+    # Add photo to vehicle's photos array
+    photos = vehicle.get('photos', [])
+    photos.append(data_uri)
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"photos": photos}}
+    )
+    
+    return {"message": "Photo uploaded successfully", "photo": data_uri, "total_photos": len(photos)}
+
+@api_router.delete("/admin/vehicles/{vehicle_id}/photos/{photo_index}")
+async def delete_vehicle_photo(
+    vehicle_id: str,
+    photo_index: int,
+    user: dict = Depends(get_current_user)
+):
+    """Delete a photo from a vehicle"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    photos = vehicle.get('photos', [])
+    if photo_index < 0 or photo_index >= len(photos):
+        raise HTTPException(status_code=400, detail="Invalid photo index")
+    
+    photos.pop(photo_index)
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"photos": photos}}
+    )
+    
+    return {"message": "Photo deleted successfully"}
+
 @api_router.put("/admin/vehicles/{vehicle_id}", response_model=Vehicle)
 async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, user: dict = Depends(get_current_user)):
     existing = await db.vehicles.find_one({"id": vehicle_id})
