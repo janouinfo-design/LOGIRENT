@@ -73,22 +73,31 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/');
+  const handleLogout = async () => {
+    // On web, use window.confirm instead of Alert
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Êtes-vous sûr de vouloir vous déconnecter?');
+      if (confirmed) {
+        await logout();
+        router.replace('/');
+      }
+    } else {
+      Alert.alert(
+        'Déconnexion',
+        'Êtes-vous sûr de vouloir vous déconnecter?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          {
+            text: 'Déconnexion',
+            style: 'destructive',
+            onPress: async () => {
+              await logout();
+              router.replace('/');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleUploadLicense = async () => {
