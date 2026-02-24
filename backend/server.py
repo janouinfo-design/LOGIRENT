@@ -1193,6 +1193,7 @@ async def get_admin_stats(user: dict = Depends(get_admin_user)):
         total_vehicles=total_vehicles,
         total_users=total_users,
         total_reservations=total_reservations,
+        total_payments=total_payments,
         total_revenue=total_revenue,
         reservations_by_status=reservations_by_status,
         top_vehicles=top_vehicles,
