@@ -10,6 +10,7 @@ interface User {
   name: string;
   phone?: string;
   address?: string;
+  id_photo?: string;
   license_photo?: string;
   created_at: string;
 }
@@ -25,6 +26,7 @@ interface AuthState {
   loadUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   uploadLicense: (imageUri: string) => Promise<void>;
+  uploadIdCard: (imageUri: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -116,6 +118,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user } = get();
       if (user) {
         set({ user: { ...user, license_photo: response.data.license_photo } });
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Upload failed');
+    }
+  },
+
+  uploadIdCard: async (imageUri: string) => {
+    try {
+      const formData = new FormData();
+      const filename = imageUri.split('/').pop() || 'id_card.jpg';
+      const match = /\.([\w]+)$/.exec(filename);
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      
+      formData.append('file', {
+        uri: imageUri,
+        name: filename,
+        type,
+      } as any);
+
+      const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      
+      const { user } = get();
+      if (user) {
+        set({ user: { ...user, id_photo: response.data.id_photo } });
       }
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Upload failed');
