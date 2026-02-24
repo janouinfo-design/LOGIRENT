@@ -71,25 +71,42 @@ export default function AdminVehicles() {
   const updateVehicleStatus = async (vehicleId: string, status: string) => {
     try {
       await api.put(`/api/admin/vehicles/${vehicleId}/status?status=${status}`);
-      Alert.alert('Succès', `Statut du véhicule changé à ${status}`);
+      if (Platform.OS === 'web') {
+        window.alert(`Statut du véhicule changé à ${getStatusLabel(status)}`);
+      } else {
+        Alert.alert('Succès', `Statut du véhicule changé à ${getStatusLabel(status)}`);
+      }
       fetchVehicles();
     } catch (error: any) {
       console.error('Error updating status:', error.response?.data || error.message);
-      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut');
+      if (Platform.OS === 'web') {
+        window.alert('Erreur: ' + (error.response?.data?.detail || 'Impossible de modifier le statut'));
+      } else {
+        Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut');
+      }
     }
   };
 
   const handleStatusChange = (vehicle: Vehicle) => {
-    Alert.alert(
-      'Changer le Statut',
-      `Statut actuel: ${vehicle.status}`,
-      [
-        { text: 'Disponible', onPress: () => updateVehicleStatus(vehicle.id, 'available') },
-        { text: 'En location', onPress: () => updateVehicleStatus(vehicle.id, 'rented') },
-        { text: 'Maintenance', onPress: () => updateVehicleStatus(vehicle.id, 'maintenance') },
-        { text: 'Annuler', style: 'cancel' },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      const choice = window.prompt(
+        `Changer le statut du véhicule\n${vehicle.brand} ${vehicle.model}\nStatut actuel: ${getStatusLabel(vehicle.status)}\n\nEntrez un numéro:\n1. Disponible\n2. En location\n3. Maintenance`
+      );
+      if (choice === '1') updateVehicleStatus(vehicle.id, 'available');
+      else if (choice === '2') updateVehicleStatus(vehicle.id, 'rented');
+      else if (choice === '3') updateVehicleStatus(vehicle.id, 'maintenance');
+    } else {
+      Alert.alert(
+        'Changer le Statut',
+        `Statut actuel: ${vehicle.status}`,
+        [
+          { text: 'Disponible', onPress: () => updateVehicleStatus(vehicle.id, 'available') },
+          { text: 'En location', onPress: () => updateVehicleStatus(vehicle.id, 'rented') },
+          { text: 'Maintenance', onPress: () => updateVehicleStatus(vehicle.id, 'maintenance') },
+          { text: 'Annuler', style: 'cancel' },
+        ]
+      );
+    }
   };
 
   const openEditModal = (vehicle: Vehicle) => {
