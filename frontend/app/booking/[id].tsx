@@ -26,12 +26,16 @@ export default function BookingScreen() {
   const router = useRouter();
   const { selectedVehicle, fetchVehicle } = useVehicleStore();
   const { createReservation, initiatePayment, isLoading } = useReservationStore();
+  const { user } = useAuthStore();
 
   const [startDate, setStartDate] = useState(addDays(new Date(), 1));
   const [endDate, setEndDate] = useState(addDays(new Date(), 3));
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [showDatePicker, setShowDatePicker] = useState<'start' | 'end' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
+
+  // Check if documents are uploaded
+  const hasDocuments = user?.id_photo && user?.license_photo;
 
   useEffect(() => {
     if (id) {
