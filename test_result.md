@@ -617,3 +617,36 @@ agent_communication:
       
       📊 OVERALL BACKEND STATUS: 27/28 backend APIs working (96.4% success rate)
       Only remaining issue: Create Reservation API duplicate booking prevention (existing bug)
+
+  - agent: "testing"
+    message: |
+      🎯 ADMIN PAYMENT STATUS UPDATE ENDPOINT TESTING COMPLETED
+      
+      ✅ COMPREHENSIVE TESTING RESULTS:
+      - Endpoint: PUT /api/admin/reservations/{reservation_id}/payment-status?payment_status={status}
+      - All payment statuses tested: paid, unpaid, pending, refunded ✅
+      - Invalid status properly rejected with 400 error ✅
+      - Response messages correct: "Payment status updated to {status}" ✅
+      
+      ✅ SPECIAL LOGIC VERIFIED:
+      - When marking pending_cash reservation as "paid" ✅
+      - Reservation status automatically changes to "confirmed" ✅  
+      - Email confirmation sent to user when payment marked as paid ✅
+      
+      ✅ AUTHENTICATION & AUTHORIZATION:
+      - Admin endpoint requires JWT token ✅
+      - Unauthorized access properly rejected with 401 ✅
+      
+      ✅ DATA PERSISTENCE:
+      - Payment status changes persist in database ✅
+      - Status changes visible in admin reservations list ✅
+      
+      📋 MANUAL TEST FLOW COMPLETED:
+      1. Login with test@example.com/password123 → ✅ JWT received
+      2. GET /api/admin/reservations → ✅ 14 reservations retrieved  
+      3. PUT payment-status to paid/unpaid/pending/refunded → ✅ All working
+      4. Verification of status changes → ✅ All confirmed
+      
+      🎊 VERDICT: Admin Payment Status Update endpoint is FULLY FUNCTIONAL
+      📊 UPDATED BACKEND STATUS: 28/29 backend APIs working (96.5% success rate)
+      Only remaining issue: Create Reservation API duplicate booking prevention (existing bug)
