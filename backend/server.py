@@ -1294,7 +1294,7 @@ async def update_payment_status(
     }
     
     # If marking as paid, also update reservation status to confirmed if it was pending_cash
-    if payment_status == "paid" and reservation.get('status') == 'pending_cash':
+    if payment_status == "paid" and reservation.get('status') in ['pending_cash', 'pending']:
         update_data["status"] = "confirmed"
     
     await db.reservations.update_one(
@@ -1302,8 +1302,36 @@ async def update_payment_status(
         {"$set": update_data}
     )
     
-    # Send confirmation email if payment marked as paid
+    # Create or update payment transaction when status changes to paid
     if payment_status == "paid":
+        # Check if transaction exists
+        existing_tx = await db.payment_transactions.find_one({"reservation_id": reservation_id})
+        
+        if existing_tx:
+            # Update existing transaction
+            await db.payment_transactions.update_one(
+                {"reservation_id": reservation_id},
+                {"$set": {
+                    "status": "paid",
+                    "payment_status": "paid",
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+        else:
+            # Create new transaction for cash payment
+            new_transaction = PaymentTransaction(
+                user_id=reservation['user_id'],
+                reservation_id=reservation_id,
+                session_id=f"cash_{reservation_id}",
+                amount=float(reservation['total_price']),
+                currency="chf",
+                status="paid",
+                payment_status="paid",
+                metadata={"payment_method": reservation.get('payment_method', 'cash'), "admin_confirmed": True}
+            )
+            await db.payment_transactions.insert_one(new_transaction.dict())
+        
+        # Send confirmation email
         try:
             res_user = await db.users.find_one({"id": reservation['user_id']})
             vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
