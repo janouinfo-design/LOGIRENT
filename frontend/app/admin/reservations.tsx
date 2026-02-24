@@ -508,6 +508,136 @@ export default function AdminReservations() {
           </View>
         }
       />
+
+      {/* Date Filter Modal */}
+      <Modal
+        visible={showDateFilter}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDateFilter(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filtrer par date</Text>
+            <TouchableOpacity onPress={() => setShowDateFilter(false)}>
+              <Ionicons name="close" size={24} color={COLORS.text} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.modalContent}>
+            {/* Filter Type */}
+            <View style={styles.filterTypeSection}>
+              <Text style={styles.filterTypeLabel}>Filtrer par :</Text>
+              <View style={styles.filterTypeOptions}>
+                <TouchableOpacity
+                  style={[styles.filterTypeOption, dateFilterType === 'rental' && styles.filterTypeOptionActive]}
+                  onPress={() => setDateFilterType('rental')}
+                >
+                  <Ionicons name="car" size={20} color={dateFilterType === 'rental' ? COLORS.card : COLORS.primary} />
+                  <Text style={[styles.filterTypeText, dateFilterType === 'rental' && styles.filterTypeTextActive]}>
+                    Période de location
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.filterTypeOption, dateFilterType === 'created' && styles.filterTypeOptionActive]}
+                  onPress={() => setDateFilterType('created')}
+                >
+                  <Ionicons name="time" size={20} color={dateFilterType === 'created' ? COLORS.card : COLORS.primary} />
+                  <Text style={[styles.filterTypeText, dateFilterType === 'created' && styles.filterTypeTextActive]}>
+                    Date de création
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Date Inputs */}
+            <View style={styles.dateInputsSection}>
+              <View style={styles.dateInputGroup}>
+                <Text style={styles.dateInputLabel}>Date de début</Text>
+                <TextInput
+                  style={styles.dateInput}
+                  value={startDateFilter}
+                  onChangeText={setStartDateFilter}
+                  placeholder="AAAA-MM-JJ"
+                  placeholderTextColor={COLORS.textLight}
+                />
+                <Text style={styles.dateInputHint}>Exemple: 2026-02-01</Text>
+              </View>
+              <View style={styles.dateInputGroup}>
+                <Text style={styles.dateInputLabel}>Date de fin</Text>
+                <TextInput
+                  style={styles.dateInput}
+                  value={endDateFilter}
+                  onChangeText={setEndDateFilter}
+                  placeholder="AAAA-MM-JJ"
+                  placeholderTextColor={COLORS.textLight}
+                />
+                <Text style={styles.dateInputHint}>Exemple: 2026-02-28</Text>
+              </View>
+            </View>
+
+            {/* Quick Select */}
+            <View style={styles.quickSelectSection}>
+              <Text style={styles.quickSelectLabel}>Sélection rapide</Text>
+              <View style={styles.quickSelectOptions}>
+                <TouchableOpacity
+                  style={styles.quickSelectButton}
+                  onPress={() => {
+                    const today = new Date();
+                    setStartDateFilter(format(today, 'yyyy-MM-dd'));
+                    setEndDateFilter(format(today, 'yyyy-MM-dd'));
+                  }}
+                >
+                  <Text style={styles.quickSelectText}>Aujourd'hui</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickSelectButton}
+                  onPress={() => {
+                    const today = new Date();
+                    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    setStartDateFilter(format(weekAgo, 'yyyy-MM-dd'));
+                    setEndDateFilter(format(today, 'yyyy-MM-dd'));
+                  }}
+                >
+                  <Text style={styles.quickSelectText}>7 derniers jours</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickSelectButton}
+                  onPress={() => {
+                    const today = new Date();
+                    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+                    setStartDateFilter(format(monthAgo, 'yyyy-MM-dd'));
+                    setEndDateFilter(format(today, 'yyyy-MM-dd'));
+                  }}
+                >
+                  <Text style={styles.quickSelectText}>30 derniers jours</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.quickSelectButton}
+                  onPress={() => {
+                    const today = new Date();
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                    setStartDateFilter(format(firstDay, 'yyyy-MM-dd'));
+                    setEndDateFilter(format(today, 'yyyy-MM-dd'));
+                  }}
+                >
+                  <Text style={styles.quickSelectText}>Ce mois</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <TouchableOpacity style={styles.clearButton} onPress={clearDateFilter}>
+              <Text style={styles.clearButtonText}>Effacer</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.applyButton} onPress={applyDateFilter}>
+              <Ionicons name="checkmark" size={20} color={COLORS.card} />
+              <Text style={styles.applyButtonText}>Appliquer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
