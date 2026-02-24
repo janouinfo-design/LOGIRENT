@@ -2,12 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, TextInput, Modal, ScrollView, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Vehicle, useVehicleStore } from '../../src/store/vehicleStore';
+import api from '../../src/api/axios';
+import { Vehicle } from '../../src/store/vehicleStore';
 import Button from '../../src/components/Button';
-
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -24,30 +21,36 @@ const COLORS = {
 
 export default function AdminVehicles() {
   const router = useRouter();
-  const { vehicles, fetchVehicles, isLoading } = useVehicleStore();
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Form state
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
-  const [year, setYear] = useState('');
+  const [year, setYear] = useState('2024');
   const [type, setType] = useState('berline');
   const [price, setPrice] = useState('');
   const [location, setLocation] = useState('Geneva');
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    loadTokenAndFetch();
+    fetchVehicles();
   }, []);
 
-  const loadTokenAndFetch = async () => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  const fetchVehicles = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/api/vehicles');
+      setVehicles(response.data);
+    } catch (error: any) {
+      console.error('Error fetching vehicles:', error.response?.data || error.message);
+      Alert.alert('Erreur', 'Impossible de charger les véhicules');
+    } finally {
+      setIsLoading(false);
     }
-    fetchVehicles();
   };
 
   const onRefresh = async () => {
@@ -58,62 +61,77 @@ export default function AdminVehicles() {
 
   const updateVehicleStatus = async (vehicleId: string, status: string) => {
     try {
-      await axios.put(`${API_URL}/api/admin/vehicles/${vehicleId}/status?status=${status}`);
-      Alert.alert('Success', `Vehicle status updated to ${status}`);
+      await api.put(`/api/admin/vehicles/${vehicleId}/status?status=${status}`);
+      Alert.alert('Succès', `Statut du véhicule changé à ${status}`);
       fetchVehicles();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update vehicle status');
+    } catch (error: any) {
+      console.error('Error updating status:', error.response?.data || error.message);
+      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible de modifier le statut');
     }
   };
 
   const handleStatusChange = (vehicle: Vehicle) => {
     Alert.alert(
-      'Change Status',
-      `Current status: ${vehicle.status}`,
+      'Changer le Statut',
+      `Statut actuel: ${vehicle.status}`,
       [
-        { text: 'Available', onPress: () => updateVehicleStatus(vehicle.id, 'available') },
+        { text: 'Disponible', onPress: () => updateVehicleStatus(vehicle.id, 'available') },
         { text: 'Maintenance', onPress: () => updateVehicleStatus(vehicle.id, 'maintenance') },
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Annuler', style: 'cancel' },
       ]
     );
   };
 
   const handleAddVehicle = async () => {
     if (!brand || !model || !year || !price) {
-      Alert.alert('Error', 'Please fill all required fields');
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
       return;
     }
 
+    setSubmitting(true);
     try {
-      await axios.post(`${API_URL}/api/admin/vehicles`, {
+      const vehicleData = {
         brand,
         model,
         year: parseInt(year),
         type,
         price_per_day: parseFloat(price),
         location,
-        description,
+        description: description || `${brand} ${model} disponible à la location.`,
         photos: [],
+        seats: 5,
+        transmission: 'automatic',
+        fuel_type: 'essence',
         options: [
           { name: 'GPS', price_per_day: 10.0 },
-          { name: 'Baby Seat', price_per_day: 15.0 },
+          { name: 'Siège Bébé', price_per_day: 15.0 },
         ],
-      });
-      Alert.alert('Success', 'Vehicle added successfully');
+      };
+
+      console.log('Adding vehicle:', vehicleData);
+      const response = await api.post('/api/admin/vehicles', vehicleData);
+      console.log('Vehicle added:', response.data);
+      
+      Alert.alert('Succès', 'Véhicule ajouté avec succès!');
       setShowAddModal(false);
       resetForm();
       fetchVehicles();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add vehicle');
+    } catch (error: any) {
+      console.error('Error adding vehicle:', error.response?.data || error.message);
+      Alert.alert('Erreur', error.response?.data?.detail || 'Impossible d\'ajouter le véhicule');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const resetForm = () => {
     setBrand('');
     setModel('');
-    setYear('');
+    setYear('2024');
     setPrice('');
     setDescription('');
+    setType('berline');
+    setLocation('Geneva');
   };
 
   const getStatusColor = (status: string) => {
@@ -125,10 +143,19 @@ export default function AdminVehicles() {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'available': return 'Disponible';
+      case 'rented': return 'Loué';
+      case 'maintenance': return 'Maintenance';
+      default: return status;
+    }
+  };
+
   const renderItem = ({ item }: { item: Vehicle }) => (
     <View style={styles.vehicleCard}>
       <View style={styles.vehicleHeader}>
-        {item.photos.length > 0 ? (
+        {item.photos && item.photos.length > 0 ? (
           <Image source={{ uri: item.photos[0] }} style={styles.vehicleImage} />
         ) : (
           <View style={styles.vehiclePlaceholder}>
@@ -138,7 +165,7 @@ export default function AdminVehicles() {
         <View style={styles.vehicleInfo}>
           <Text style={styles.vehicleName}>{item.brand} {item.model}</Text>
           <Text style={styles.vehicleYear}>{item.year} • {item.type}</Text>
-          <Text style={styles.vehiclePrice}>CHF {item.price_per_day}/day</Text>
+          <Text style={styles.vehiclePrice}>CHF {item.price_per_day}/jour</Text>
         </View>
       </View>
       
@@ -153,7 +180,7 @@ export default function AdminVehicles() {
         >
           <View style={[styles.statusDot, { backgroundColor: getStatusColor(item.status) }]} />
           <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status}
+            {getStatusLabel(item.status)}
           </Text>
           <Ionicons name="chevron-down" size={14} color={getStatusColor(item.status)} />
         </TouchableOpacity>
@@ -176,9 +203,17 @@ export default function AdminVehicles() {
             style={styles.addButton}
             onPress={() => setShowAddModal(true)}
           >
-            <Ionicons name="add-circle" size={20} color={COLORS.primary} />
-            <Text style={styles.addButtonText}>Add New Vehicle</Text>
+            <Ionicons name="add-circle" size={24} color={COLORS.primary} />
+            <Text style={styles.addButtonText}>Ajouter un Véhicule</Text>
           </TouchableOpacity>
+        }
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="car-outline" size={48} color={COLORS.textLight} />
+              <Text style={styles.emptyText}>Aucun véhicule</Text>
+            </View>
+          ) : null
         }
       />
 
@@ -191,58 +226,62 @@ export default function AdminVehicles() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add New Vehicle</Text>
+            <Text style={styles.modalTitle}>Nouveau Véhicule</Text>
             <TouchableOpacity onPress={() => setShowAddModal(false)}>
               <Ionicons name="close" size={24} color={COLORS.text} />
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalContent}>
+          <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Brand *</Text>
+              <Text style={styles.inputLabel}>Marque *</Text>
               <TextInput
                 style={styles.input}
                 value={brand}
                 onChangeText={setBrand}
-                placeholder="e.g., BMW"
+                placeholder="ex: BMW, Mercedes, Audi..."
+                placeholderTextColor={COLORS.textLight}
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Model *</Text>
+              <Text style={styles.inputLabel}>Modèle *</Text>
               <TextInput
                 style={styles.input}
                 value={model}
                 onChangeText={setModel}
-                placeholder="e.g., Series 3"
+                placeholder="ex: Series 3, Classe C, Q5..."
+                placeholderTextColor={COLORS.textLight}
               />
             </View>
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, { flex: 1 }]}>
-                <Text style={styles.inputLabel}>Year *</Text>
+                <Text style={styles.inputLabel}>Année *</Text>
                 <TextInput
                   style={styles.input}
                   value={year}
                   onChangeText={setYear}
                   placeholder="2024"
+                  placeholderTextColor={COLORS.textLight}
                   keyboardType="numeric"
                 />
               </View>
               <View style={[styles.inputGroup, { flex: 1, marginLeft: 12 }]}>
-                <Text style={styles.inputLabel}>Price/Day *</Text>
+                <Text style={styles.inputLabel}>Prix/Jour (CHF) *</Text>
                 <TextInput
                   style={styles.input}
                   value={price}
                   onChangeText={setPrice}
                   placeholder="120"
+                  placeholderTextColor={COLORS.textLight}
                   keyboardType="numeric"
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Type</Text>
+              <Text style={styles.inputLabel}>Type de Véhicule</Text>
               <View style={styles.typeOptions}>
                 {['berline', 'SUV', 'citadine', 'utilitaire'].map((t) => (
                   <TouchableOpacity
@@ -251,7 +290,7 @@ export default function AdminVehicles() {
                     onPress={() => setType(t)}
                   >
                     <Text style={[styles.typeOptionText, type === t && styles.typeOptionTextActive]}>
-                      {t}
+                      {t === 'berline' ? 'Berline' : t === 'citadine' ? 'Citadine' : t === 'utilitaire' ? 'Utilitaire' : t}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -259,16 +298,16 @@ export default function AdminVehicles() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Location</Text>
+              <Text style={styles.inputLabel}>Localisation</Text>
               <View style={styles.typeOptions}>
-                {['Geneva', 'Zurich', 'Lausanne'].map((loc) => (
+                {['Geneva', 'Zurich', 'Lausanne', 'Bern'].map((loc) => (
                   <TouchableOpacity
                     key={loc}
                     style={[styles.typeOption, location === loc && styles.typeOptionActive]}
                     onPress={() => setLocation(loc)}
                   >
                     <Text style={[styles.typeOptionText, location === loc && styles.typeOptionTextActive]}>
-                      {loc}
+                      {loc === 'Geneva' ? 'Genève' : loc}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -281,7 +320,8 @@ export default function AdminVehicles() {
                 style={[styles.input, styles.textArea]}
                 value={description}
                 onChangeText={setDescription}
-                placeholder="Vehicle description..."
+                placeholder="Description du véhicule..."
+                placeholderTextColor={COLORS.textLight}
                 multiline
                 numberOfLines={4}
               />
@@ -290,14 +330,15 @@ export default function AdminVehicles() {
 
           <View style={styles.modalFooter}>
             <Button
-              title="Cancel"
+              title="Annuler"
               onPress={() => setShowAddModal(false)}
               variant="outline"
               style={{ flex: 1 }}
             />
             <Button
-              title="Add Vehicle"
+              title="Ajouter"
               onPress={handleAddVehicle}
+              loading={submitting}
               style={{ flex: 1 }}
             />
           </View>
@@ -320,10 +361,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.card,
-    padding: 16,
+    padding: 20,
     borderRadius: 12,
     marginBottom: 16,
-    gap: 8,
+    gap: 10,
     borderWidth: 2,
     borderColor: COLORS.primary,
     borderStyle: 'dashed',
@@ -338,6 +379,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   vehicleHeader: {
     flexDirection: 'row',
@@ -396,9 +442,9 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
     gap: 6,
   },
   statusDot: {
@@ -407,9 +453,17 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    textTransform: 'capitalize',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingTop: 60,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: COLORS.textLight,
+    marginTop: 12,
   },
   modalContainer: {
     flex: 1,
@@ -434,7 +488,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
@@ -461,12 +515,12 @@ const styles = StyleSheet.create({
   typeOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
   },
   typeOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 25,
     backgroundColor: COLORS.card,
     borderWidth: 1,
     borderColor: COLORS.border,
@@ -478,6 +532,7 @@ const styles = StyleSheet.create({
   typeOptionText: {
     fontSize: 14,
     color: COLORS.text,
+    fontWeight: '500',
   },
   typeOptionTextActive: {
     color: '#FFFFFF',
