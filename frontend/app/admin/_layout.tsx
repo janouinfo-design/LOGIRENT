@@ -125,6 +125,7 @@ export default function AdminLayout() {
         }}
       >
         <Stack.Screen name="index" />
+        <Stack.Screen name="calendar" />
         <Stack.Screen name="vehicles" />
         <Stack.Screen name="reservations" />
         <Stack.Screen name="users" />
