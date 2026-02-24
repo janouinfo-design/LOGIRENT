@@ -1273,6 +1273,47 @@ async def update_reservation_status(
     
     return {"message": f"Reservation status updated to {status}"}
 
+@api_router.put("/admin/reservations/{reservation_id}/payment-status")
+async def update_payment_status(
+    reservation_id: str,
+    payment_status: str,
+    user: dict = Depends(get_admin_user)
+):
+    """Update payment status - useful for cash payments"""
+    valid_statuses = ["unpaid", "pending", "paid", "refunded"]
+    if payment_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid payment status. Must be one of: {valid_statuses}")
+    
+    reservation = await db.reservations.find_one({"id": reservation_id})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    
+    update_data = {
+        "payment_status": payment_status,
+        "updated_at": datetime.utcnow()
+    }
+    
+    # If marking as paid, also update reservation status to confirmed if it was pending_cash
+    if payment_status == "paid" and reservation.get('status') == 'pending_cash':
+        update_data["status"] = "confirmed"
+    
+    await db.reservations.update_one(
+        {"id": reservation_id},
+        {"$set": update_data}
+    )
+    
+    # Send confirmation email if payment marked as paid
+    if payment_status == "paid":
+        try:
+            res_user = await db.users.find_one({"id": reservation['user_id']})
+            vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
+            if res_user and vehicle:
+                await send_reservation_confirmation(res_user, vehicle, reservation)
+        except Exception as email_error:
+            logger.error(f"Failed to send confirmation email: {email_error}")
+    
+    return {"message": f"Payment status updated to {payment_status}"}
+
 @api_router.get("/admin/payments")
 async def get_admin_payments(
     skip: int = 0,
