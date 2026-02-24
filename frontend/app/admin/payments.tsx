@@ -83,7 +83,7 @@ export default function AdminPayments() {
   };
 
   const totalPaid = transactions
-    .filter(t => t.status === 'paid')
+    .filter(t => t.payment_status === 'paid')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const renderItem = ({ item }: { item: Transaction }) => (
