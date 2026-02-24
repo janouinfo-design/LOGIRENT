@@ -517,7 +517,8 @@ export default function AdminCalendar() {
           </View>
         )}
       </Modal>
-    </ScrollView>
+      </View>
+    </View>
   );
 }
 
