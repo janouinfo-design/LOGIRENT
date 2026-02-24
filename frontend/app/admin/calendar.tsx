@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform, Modal } from 'react-native';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
@@ -64,11 +64,71 @@ export default function AdminCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const gridRef = useRef<any>(null);
 
   useEffect(() => {
     fetchCalendarData();
     fetchOverdue();
   }, [currentMonth]);
+
+  // Inject CSS Grid styles on web
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const styleId = 'calendar-grid-styles';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          .cal-grid {
+            display: grid !important;
+            grid-template-columns: repeat(7, 1fr) !important;
+            gap: 1px !important;
+            background: ${COLORS.border} !important;
+            border: 1px solid ${COLORS.border} !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+          }
+          .cal-cell {
+            background: ${COLORS.card} !important;
+            min-height: 60px !important;
+            max-height: 60px !important;
+            padding: 4px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            transition: background 0.15s !important;
+          }
+          .cal-cell:hover { background: ${COLORS.primary}08 !important; }
+          .cal-cell.outside { opacity: 0.35; }
+          .cal-cell.today { background: ${COLORS.primary}12 !important; border: 2px solid ${COLORS.primary} !important; }
+          .cal-cell.selected { background: ${COLORS.primary}20 !important; }
+          .cal-cell.has-overdue { background: #FEF2F2 !important; }
+          .cal-weekday {
+            background: ${COLORS.primary}08 !important;
+            min-height: 32px !important;
+            max-height: 32px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-weight: 600 !important;
+            font-size: 12px !important;
+            color: ${COLORS.textLight} !important;
+          }
+          .cal-day-num { font-size: 13px; font-weight: 500; color: ${COLORS.text}; margin-bottom: 2px; }
+          .cal-day-num.today-num { font-weight: 700; color: ${COLORS.primary}; }
+          .cal-indicators { display: flex; gap: 3px; align-items: center; }
+          .cal-dot {
+            width: 16px; height: 16px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 9px; font-weight: 700; color: white;
+          }
+          .cal-bar { width: 20px; height: 4px; border-radius: 2px; }
+        `;
+        document.head.appendChild(style);
+      }
+    }
+  }, []);
 
   const fetchCalendarData = async () => {
     try {
@@ -101,15 +161,9 @@ export default function AdminCalendar() {
       const start = new Date(event.start_date);
       const end = new Date(event.end_date);
 
-      if (isSameDay(start, date)) {
-        departures.push(event);
-      }
-      if (isSameDay(end, date)) {
-        returns.push(event);
-      }
-      if (start < date && end > date) {
-        ongoing.push(event);
-      }
+      if (isSameDay(start, date)) departures.push(event);
+      if (isSameDay(end, date)) returns.push(event);
+      if (start < date && end > date) ongoing.push(event);
     });
 
     return { departures, returns, ongoing };
@@ -136,89 +190,36 @@ export default function AdminCalendar() {
   }, [selectedDate, events]);
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'confirmed': return 'Confirmée';
-      case 'active': return 'Active';
-      case 'pending': return 'En attente';
-      case 'pending_cash': return 'Espèces';
-      case 'cancelled': return 'Annulée';
-      case 'completed': return 'Terminée';
-      default: return status;
-    }
+    const map: Record<string, string> = {
+      confirmed: 'Confirmée', active: 'Active', pending: 'En attente',
+      pending_cash: 'Espèces', cancelled: 'Annulée', completed: 'Terminée',
+    };
+    return map[status] || status;
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': return COLORS.success;
-      case 'active': return COLORS.primary;
-      case 'pending': return COLORS.warning;
-      case 'pending_cash': return '#D97706';
-      case 'cancelled': return COLORS.error;
-      case 'completed': return COLORS.textLight;
-      default: return COLORS.textLight;
-    }
+    const map: Record<string, string> = {
+      confirmed: COLORS.success, active: COLORS.primary, pending: COLORS.warning,
+      pending_cash: '#D97706', cancelled: COLORS.error, completed: COLORS.textLight,
+    };
+    return map[status] || COLORS.textLight;
   };
 
-  const calendarRows = useMemo(() => {
-    const rows: Date[][] = [];
-    for (let i = 0; i < calendarDays.length; i += 7) {
-      rows.push(calendarDays.slice(i, i + 7));
+  // Set className on the grid div after render (web only)
+  useEffect(() => {
+    if (Platform.OS === 'web' && gridRef.current) {
+      const el = gridRef.current as any;
+      const domNode = el._nativeTag || el;
+      if (domNode && domNode.classList) {
+        domNode.classList.add('cal-grid');
+      }
     }
-    return rows;
-  }, [calendarDays]);
-
-  const renderCalendarDay = (date: Date) => {
-    const inMonth = isSameMonth(date, currentMonth);
-    const today = isToday(date);
-    const isSelected = selectedDate && isSameDay(date, selectedDate);
-    const dayEvents = getEventsForDate(date);
-    const hasDeparture = dayEvents.departures.length > 0;
-    const hasReturn = dayEvents.returns.length > 0;
-    const hasOverdue = dayEvents.returns.some(e => e.is_overdue) || dayEvents.ongoing.some(e => e.is_overdue);
-    const hasOngoing = dayEvents.ongoing.length > 0;
-
-    return (
-      <TouchableOpacity
-        key={date.toISOString()}
-        style={[
-          styles.dayCell,
-          !inMonth && styles.dayCellOutside,
-          today && styles.dayCellToday,
-          isSelected && styles.dayCellSelected,
-          hasOverdue && styles.dayCellOverdue,
-        ]}
-        onPress={() => setSelectedDate(date)}
-      >
-        <Text style={[
-          styles.dayNumber,
-          !inMonth && styles.dayNumberOutside,
-          today && styles.dayNumberToday,
-          isSelected && styles.dayNumberSelected,
-        ]}>
-          {format(date, 'd')}
-        </Text>
-        <View style={styles.dayIndicators}>
-          {hasDeparture && (
-            <View style={[styles.indicator, { backgroundColor: COLORS.departure }]}>
-              <Text style={styles.indicatorText}>{dayEvents.departures.length}</Text>
-            </View>
-          )}
-          {hasReturn && (
-            <View style={[styles.indicator, { backgroundColor: hasOverdue ? COLORS.overdue : COLORS.return }]}>
-              <Text style={styles.indicatorText}>{dayEvents.returns.length}</Text>
-            </View>
-          )}
-          {hasOngoing && !hasDeparture && !hasReturn && (
-            <View style={[styles.indicatorBar, { backgroundColor: COLORS.success + '60' }]} />
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  });
 
   return (
     <View style={{ flex: 1, backgroundColor: COLORS.background, overflow: 'scroll' as any }}>
-      <View style={{ maxWidth: 1000, alignSelf: 'center', width: '100%', padding: 8 }}>
+      <View style={{ maxWidth: 1000, alignSelf: 'center', width: '100%', paddingHorizontal: 16, paddingTop: 8 }}>
+
       {/* Overdue Alert Banner */}
       {overdue.length > 0 && (
         <View style={styles.overdueAlert} data-testid="overdue-alert-banner">
@@ -230,11 +231,11 @@ export default function AdminCalendar() {
           </View>
           {overdue.map(item => (
             <View key={item.id} style={styles.overdueItem}>
-              <View style={styles.overdueItemLeft}>
+              <View style={{ flex: 1 }}>
                 <Text style={styles.overdueVehicle}>{item.vehicle_name}</Text>
                 <Text style={styles.overdueClient}>{item.user_name} - {item.user_phone || item.user_email}</Text>
               </View>
-              <View style={styles.overdueItemRight}>
+              <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.overdueDays}>+{item.days_overdue}j</Text>
                 <Text style={styles.overdueDate}>
                   Retour prévu: {format(new Date(item.end_date), 'dd/MM', { locale: fr })}
@@ -247,21 +248,13 @@ export default function AdminCalendar() {
 
       {/* Calendar Header */}
       <View style={styles.calendarHeader}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => setCurrentMonth(subMonths(currentMonth, 1))}
-          data-testid="calendar-prev-month"
-        >
+        <TouchableOpacity style={styles.navButton} onPress={() => setCurrentMonth(subMonths(currentMonth, 1))} data-testid="calendar-prev-month">
           <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.monthTitle}>
           {format(currentMonth, 'MMMM yyyy', { locale: fr })}
         </Text>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          data-testid="calendar-next-month"
-        >
+        <TouchableOpacity style={styles.navButton} onPress={() => setCurrentMonth(addMonths(currentMonth, 1))} data-testid="calendar-next-month">
           <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
@@ -281,28 +274,65 @@ export default function AdminCalendar() {
           <Text style={styles.legendText}>Retard</Text>
         </View>
         <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: COLORS.success + '40' }]} />
+          <View style={[styles.legendDot, { backgroundColor: COLORS.success + '60' }]} />
           <Text style={styles.legendText}>En cours</Text>
         </View>
       </View>
 
-      {/* Weekday Headers */}
-      <View style={styles.weekdayRow}>
-        {WEEKDAYS.map(day => (
-          <View key={day} style={styles.weekdayCell}>
-            <Text style={styles.weekdayText}>{day}</Text>
-          </View>
-        ))}
-      </View>
+      {/* Calendar Grid - Using CSS class injection for web */}
+      {Platform.OS === 'web' ? (
+        <div className="cal-grid" style={{ marginBottom: 12 }}>
+          {WEEKDAYS.map(day => (
+            <div key={day} className="cal-weekday">{day}</div>
+          ))}
+          {calendarDays.map(date => {
+            const inMonth = isSameMonth(date, currentMonth);
+            const today = isToday(date);
+            const isSelected = selectedDate && isSameDay(date, selectedDate);
+            const dayEvents = getEventsForDate(date);
+            const hasDep = dayEvents.departures.length > 0;
+            const hasRet = dayEvents.returns.length > 0;
+            const hasOverdue = dayEvents.returns.some(e => e.is_overdue) || dayEvents.ongoing.some(e => e.is_overdue);
+            const hasOngoing = dayEvents.ongoing.length > 0;
 
-      {/* Calendar Grid - Row by Row */}
-      <View style={{ height: calendarRows.length * 52, paddingHorizontal: 8, marginBottom: 12 }}>
-        {calendarRows.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.calendarRow}>
-            {row.map(date => renderCalendarDay(date))}
-          </View>
-        ))}
-      </View>
+            const classes = ['cal-cell'];
+            if (!inMonth) classes.push('outside');
+            if (today) classes.push('today');
+            if (isSelected) classes.push('selected');
+            if (hasOverdue) classes.push('has-overdue');
+
+            return (
+              <div
+                key={date.toISOString()}
+                className={classes.join(' ')}
+                onClick={() => setSelectedDate(date)}
+                data-testid={`calendar-day-${format(date, 'yyyy-MM-dd')}`}
+              >
+                <span className={`cal-day-num ${today ? 'today-num' : ''}`}>
+                  {format(date, 'd')}
+                </span>
+                <div className="cal-indicators">
+                  {hasDep && (
+                    <div className="cal-dot" style={{ background: COLORS.departure }}>
+                      {dayEvents.departures.length}
+                    </div>
+                  )}
+                  {hasRet && (
+                    <div className="cal-dot" style={{ background: hasOverdue ? COLORS.overdue : COLORS.return }}>
+                      {dayEvents.returns.length}
+                    </div>
+                  )}
+                  {hasOngoing && !hasDep && !hasRet && (
+                    <div className="cal-bar" style={{ background: COLORS.success + '60' }} />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <Text>Calendrier non disponible</Text>
+      )}
 
       {/* Selected Day Details */}
       {selectedDate && (
@@ -311,7 +341,6 @@ export default function AdminCalendar() {
             {format(selectedDate, 'EEEE d MMMM yyyy', { locale: fr })}
           </Text>
 
-          {/* Departures */}
           {selectedDateEvents.departures.length > 0 && (
             <View style={styles.eventSection}>
               <View style={styles.eventSectionHeader}>
@@ -321,12 +350,8 @@ export default function AdminCalendar() {
                 </Text>
               </View>
               {selectedDateEvents.departures.map(event => (
-                <TouchableOpacity
-                  key={`dep-${event.id}`}
-                  style={styles.eventCard}
-                  onPress={() => { setSelectedEvent(event); setShowDetailModal(true); }}
-                  data-testid={`departure-event-${event.id}`}
-                >
+                <TouchableOpacity key={`dep-${event.id}`} style={styles.eventCard}
+                  onPress={() => { setSelectedEvent(event); setShowDetailModal(true); }}>
                   <View style={[styles.eventCardBorder, { backgroundColor: COLORS.departure }]} />
                   <View style={styles.eventCardContent}>
                     <Text style={styles.eventVehicle}>{event.vehicle_name}</Text>
@@ -345,7 +370,6 @@ export default function AdminCalendar() {
             </View>
           )}
 
-          {/* Returns */}
           {selectedDateEvents.returns.length > 0 && (
             <View style={styles.eventSection}>
               <View style={styles.eventSectionHeader}>
@@ -355,12 +379,9 @@ export default function AdminCalendar() {
                 </Text>
               </View>
               {selectedDateEvents.returns.map(event => (
-                <TouchableOpacity
-                  key={`ret-${event.id}`}
+                <TouchableOpacity key={`ret-${event.id}`}
                   style={[styles.eventCard, event.is_overdue && styles.eventCardOverdue]}
-                  onPress={() => { setSelectedEvent(event); setShowDetailModal(true); }}
-                  data-testid={`return-event-${event.id}`}
-                >
+                  onPress={() => { setSelectedEvent(event); setShowDetailModal(true); }}>
                   <View style={[styles.eventCardBorder, { backgroundColor: event.is_overdue ? COLORS.overdue : COLORS.return }]} />
                   <View style={styles.eventCardContent}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -382,7 +403,6 @@ export default function AdminCalendar() {
             </View>
           )}
 
-          {/* Ongoing */}
           {selectedDateEvents.ongoing.length > 0 && (
             <View style={styles.eventSection}>
               <View style={styles.eventSectionHeader}>
@@ -392,11 +412,9 @@ export default function AdminCalendar() {
                 </Text>
               </View>
               {selectedDateEvents.ongoing.map(event => (
-                <TouchableOpacity
-                  key={`ong-${event.id}`}
+                <TouchableOpacity key={`ong-${event.id}`}
                   style={[styles.eventCard, event.is_overdue && styles.eventCardOverdue]}
-                  onPress={() => { setSelectedEvent(event); setShowDetailModal(true); }}
-                >
+                  onPress={() => { setSelectedEvent(event); setShowDetailModal(true); }}>
                   <View style={[styles.eventCardBorder, { backgroundColor: event.is_overdue ? COLORS.overdue : COLORS.success }]} />
                   <View style={styles.eventCardContent}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -431,12 +449,8 @@ export default function AdminCalendar() {
       <View style={{ height: 40 }} />
 
       {/* Event Detail Modal */}
-      <Modal
-        visible={showDetailModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowDetailModal(false)}
-      >
+      <Modal visible={showDetailModal} animationType="slide" presentationStyle="pageSheet"
+        onRequestClose={() => setShowDetailModal(false)}>
         {selectedEvent && (
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
@@ -454,49 +468,42 @@ export default function AdminCalendar() {
                   </Text>
                 </View>
               )}
-
               <View style={styles.modalSection}>
                 <Text style={styles.modalSectionTitle}>Véhicule</Text>
                 <Text style={styles.modalValue}>{selectedEvent.vehicle_name}</Text>
               </View>
-
               <View style={styles.modalSection}>
                 <Text style={styles.modalSectionTitle}>Client</Text>
                 <Text style={styles.modalValue}>{selectedEvent.user_name}</Text>
                 <Text style={styles.modalSubValue}>{selectedEvent.user_email}</Text>
-                {selectedEvent.user_phone ? (
-                  <Text style={styles.modalSubValue}>{selectedEvent.user_phone}</Text>
-                ) : null}
+                {selectedEvent.user_phone ? <Text style={styles.modalSubValue}>{selectedEvent.user_phone}</Text> : null}
               </View>
-
               <View style={styles.modalRow}>
-                <View style={styles.modalHalf}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.modalSectionTitle}>Départ</Text>
                   <Text style={styles.modalValue}>
                     {format(new Date(selectedEvent.start_date), 'dd MMM yyyy', { locale: fr })}
                   </Text>
                 </View>
-                <View style={styles.modalHalf}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.modalSectionTitle}>Retour</Text>
                   <Text style={[styles.modalValue, selectedEvent.is_overdue && { color: COLORS.overdue }]}>
                     {format(new Date(selectedEvent.end_date), 'dd MMM yyyy', { locale: fr })}
                   </Text>
                 </View>
               </View>
-
               <View style={styles.modalRow}>
-                <View style={styles.modalHalf}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.modalSectionTitle}>Durée</Text>
                   <Text style={styles.modalValue}>{selectedEvent.total_days} jours</Text>
                 </View>
-                <View style={styles.modalHalf}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.modalSectionTitle}>Montant</Text>
                   <Text style={styles.modalValue}>CHF {selectedEvent.total_price.toFixed(2)}</Text>
                 </View>
               </View>
-
               <View style={styles.modalRow}>
-                <View style={styles.modalHalf}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.modalSectionTitle}>Statut</Text>
                   <View style={[styles.modalBadge, { backgroundColor: getStatusColor(selectedEvent.status) + '20' }]}>
                     <Text style={[styles.modalBadgeText, { color: getStatusColor(selectedEvent.status) }]}>
@@ -504,7 +511,7 @@ export default function AdminCalendar() {
                     </Text>
                   </View>
                 </View>
-                <View style={styles.modalHalf}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.modalSectionTitle}>Paiement</Text>
                   <Text style={styles.modalValue}>
                     {selectedEvent.payment_status === 'paid' ? 'Payé' : 
@@ -517,21 +524,18 @@ export default function AdminCalendar() {
           </View>
         )}
       </Modal>
+
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: COLORS.background,
-  },
   overdueAlert: {
     backgroundColor: COLORS.overdue,
-    margin: 16,
-    marginBottom: 8,
     borderRadius: 14,
     padding: 16,
+    marginBottom: 12,
   },
   overdueAlertHeader: {
     flexDirection: 'row',
@@ -553,37 +557,14 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 6,
   },
-  overdueItemLeft: {
-    flex: 1,
-  },
-  overdueVehicle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.card,
-  },
-  overdueClient: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 2,
-  },
-  overdueItemRight: {
-    alignItems: 'flex-end',
-  },
-  overdueDays: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FEE2E2',
-  },
-  overdueDate: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.7)',
-    marginTop: 2,
-  },
+  overdueVehicle: { fontSize: 14, fontWeight: '600', color: COLORS.card },
+  overdueClient: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  overdueDays: { fontSize: 18, fontWeight: '800', color: '#FEE2E2' },
+  overdueDate: { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
   calendarHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
     paddingVertical: 14,
   },
   navButton: {
@@ -606,117 +587,14 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingBottom: 12,
   },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendText: {
-    fontSize: 11,
-    color: COLORS.textLight,
-  },
-  weekdayRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 8,
-  },
-  weekdayCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  weekdayText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textLight,
-  },
-  calendarGrid: {
-    paddingHorizontal: 8,
-    marginBottom: 12,
-  },
-  calendarRow: {
-    flexDirection: 'row',
-    height: 52,
-    flexGrow: 0,
-    flexShrink: 0,
-    flexBasis: 52,
-  },
-  dayCell: {
-    flex: 1,
-    padding: 2,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    borderWidth: 0.5,
-    borderColor: COLORS.border,
-    backgroundColor: COLORS.card,
-    overflow: 'hidden',
-  },
-  dayCellOutside: {
-    backgroundColor: COLORS.background,
-  },
-  dayCellToday: {
-    backgroundColor: COLORS.primary + '08',
-    borderColor: COLORS.primary,
-    borderWidth: 1.5,
-  },
-  dayCellSelected: {
-    backgroundColor: COLORS.primary + '15',
-    borderColor: COLORS.primary,
-    borderWidth: 2,
-  },
-  dayCellOverdue: {
-    backgroundColor: '#FEF2F2',
-  },
-  dayNumber: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: COLORS.text,
-    marginTop: 2,
-  },
-  dayNumberOutside: {
-    color: COLORS.textLight + '60',
-  },
-  dayNumberToday: {
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  dayNumberSelected: {
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  dayIndicators: {
-    flexDirection: 'row',
-    gap: 3,
-    marginTop: 2,
-    alignItems: 'center',
-  },
-  indicator: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  indicatorText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: COLORS.card,
-  },
-  indicatorBar: {
-    width: 18,
-    height: 4,
-    borderRadius: 2,
-  },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendDot: { width: 10, height: 10, borderRadius: 5 },
+  legendText: { fontSize: 11, color: COLORS.textLight },
   dayDetails: {
-    margin: 16,
-    marginTop: 12,
     backgroundColor: COLORS.card,
     borderRadius: 16,
     padding: 16,
+    marginTop: 8,
   },
   dayDetailsTitle: {
     fontSize: 16,
@@ -725,19 +603,9 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     textTransform: 'capitalize',
   },
-  eventSection: {
-    marginBottom: 16,
-  },
-  eventSectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
-  },
-  eventSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  eventSection: { marginBottom: 16 },
+  eventSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  eventSectionTitle: { fontSize: 14, fontWeight: '600' },
   eventCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -746,142 +614,36 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     overflow: 'hidden',
   },
-  eventCardOverdue: {
-    backgroundColor: '#FEF2F2',
-  },
-  eventCardBorder: {
-    width: 4,
-    alignSelf: 'stretch',
-  },
-  eventCardContent: {
-    flex: 1,
-    padding: 10,
-  },
-  eventVehicle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  eventClient: {
-    fontSize: 12,
-    color: COLORS.textLight,
-    marginTop: 2,
-  },
-  eventDates: {
-    fontSize: 11,
-    color: COLORS.textLight,
-    marginTop: 2,
-  },
-  eventStatus: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  eventStatusText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  eventPrice: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.primary,
-    marginRight: 12,
-  },
-  overdueBadge: {
-    backgroundColor: COLORS.overdue,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  overdueBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.card,
-  },
-  noEvents: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  noEventsText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 8,
-  },
-  // Modal
-  modalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  eventCardOverdue: { backgroundColor: '#FEF2F2' },
+  eventCardBorder: { width: 4, alignSelf: 'stretch' },
+  eventCardContent: { flex: 1, padding: 10 },
+  eventVehicle: { fontSize: 14, fontWeight: '600', color: COLORS.text },
+  eventClient: { fontSize: 12, color: COLORS.textLight, marginTop: 2 },
+  eventDates: { fontSize: 11, color: COLORS.textLight, marginTop: 2 },
+  eventStatus: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginRight: 10 },
+  eventStatusText: { fontSize: 11, fontWeight: '600' },
+  eventPrice: { fontSize: 14, fontWeight: '700', color: COLORS.primary, marginRight: 12 },
+  overdueBadge: { backgroundColor: COLORS.overdue, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  overdueBadgeText: { fontSize: 10, fontWeight: '700', color: COLORS.card },
+  noEvents: { alignItems: 'center', paddingVertical: 24 },
+  noEventsText: { fontSize: 14, color: COLORS.textLight, marginTop: 8 },
+  modalContainer: { flex: 1, backgroundColor: COLORS.background },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    padding: 20, backgroundColor: COLORS.card, borderBottomWidth: 1, borderBottomColor: COLORS.border,
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
+  modalTitle: { fontSize: 18, fontWeight: '600', color: COLORS.text },
+  modalContent: { flex: 1, padding: 20 },
   modalOverdueAlert: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.overdue,
-    padding: 14,
-    borderRadius: 12,
-    gap: 10,
-    marginBottom: 20,
+    flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.overdue,
+    padding: 14, borderRadius: 12, gap: 10, marginBottom: 20,
   },
-  modalOverdueText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: COLORS.card,
-  },
-  modalSection: {
-    marginBottom: 18,
-  },
-  modalSectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.textLight,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  modalValue: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  modalSubValue: {
-    fontSize: 13,
-    color: COLORS.textLight,
-    marginTop: 2,
-  },
-  modalRow: {
-    flexDirection: 'row',
-    gap: 16,
-    marginBottom: 18,
-  },
-  modalHalf: {
-    flex: 1,
-  },
-  modalBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginTop: 4,
-  },
-  modalBadgeText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  modalOverdueText: { fontSize: 15, fontWeight: '700', color: COLORS.card },
+  modalSection: { marginBottom: 18 },
+  modalSectionTitle: { fontSize: 12, fontWeight: '600', color: COLORS.textLight, textTransform: 'uppercase', marginBottom: 4 },
+  modalValue: { fontSize: 16, fontWeight: '600', color: COLORS.text },
+  modalSubValue: { fontSize: 13, color: COLORS.textLight, marginTop: 2 },
+  modalRow: { flexDirection: 'row', gap: 16, marginBottom: 18 },
+  modalBadge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginTop: 4 },
+  modalBadgeText: { fontSize: 13, fontWeight: '600' },
 });
