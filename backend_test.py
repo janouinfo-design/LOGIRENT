@@ -1182,6 +1182,7 @@ class RentDriveAPITester:
         self.test_admin_get_reservations()
         self.test_admin_update_reservation_status()
         self.test_admin_edit_vehicle()
+        self.test_admin_payment_status_update()
         
         # Summary
         print("\n" + "=" * 60)
