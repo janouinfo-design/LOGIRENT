@@ -24,6 +24,7 @@ interface Stats {
   total_vehicles: number;
   total_users: number;
   total_reservations: number;
+  total_payments: number;
   total_revenue: number;
   reservations_by_status: Record<string, number>;
   top_vehicles: Array<{ id: string; name: string; rental_count: number }>;
