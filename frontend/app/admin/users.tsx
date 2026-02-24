@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../../src/api/axios';
 import { format } from 'date-fns';
-
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -38,24 +35,17 @@ export default function AdminUsers() {
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    loadTokenAndFetch();
-  }, []);
-
-  const loadTokenAndFetch = async () => {
-    const token = await AsyncStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    }
     fetchUsers();
-  };
+  }, []);
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/admin/users`);
+      const response = await api.get('/api/admin/users');
       setUsers(response.data.users);
       setTotal(response.data.total);
-    } catch (error) {
-      console.error('Error fetching users:', error);
+    } catch (error: any) {
+      console.error('Error fetching users:', error.response?.data || error.message);
+      Alert.alert('Erreur', 'Impossible de charger les utilisateurs');
     } finally {
       setLoading(false);
     }
@@ -68,22 +58,23 @@ export default function AdminUsers() {
   };
 
   const toggleBlockUser = async (userId: string, currentlyBlocked: boolean) => {
-    const action = currentlyBlocked ? 'unblock' : 'block';
+    const action = currentlyBlocked ? 'débloquer' : 'bloquer';
     Alert.alert(
-      `${action.charAt(0).toUpperCase() + action.slice(1)} User`,
-      `Are you sure you want to ${action} this user?`,
+      `${action.charAt(0).toUpperCase() + action.slice(1)} l'utilisateur`,
+      `Êtes-vous sûr de vouloir ${action} cet utilisateur?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Annuler', style: 'cancel' },
         {
           text: action.charAt(0).toUpperCase() + action.slice(1),
           style: currentlyBlocked ? 'default' : 'destructive',
           onPress: async () => {
             try {
-              await axios.put(`${API_URL}/api/admin/users/${userId}/block`);
-              Alert.alert('Success', `User ${action}ed`);
+              await api.put(`/api/admin/users/${userId}/block`);
+              Alert.alert('Succès', `Utilisateur ${currentlyBlocked ? 'débloqué' : 'bloqué'}`);
               fetchUsers();
-            } catch (error) {
-              Alert.alert('Error', `Failed to ${action} user`);
+            } catch (error: any) {
+              console.error('Error blocking user:', error.response?.data || error.message);
+              Alert.alert('Erreur', error.response?.data?.detail || `Impossible de ${action} l'utilisateur`);
             }
           },
         },
@@ -102,7 +93,7 @@ export default function AdminUsers() {
             <Text style={styles.userName}>{item.name}</Text>
             {item.blocked && (
               <View style={styles.blockedBadge}>
-                <Text style={styles.blockedText}>Blocked</Text>
+                <Text style={styles.blockedText}>Bloqué</Text>
               </View>
             )}
           </View>
@@ -114,11 +105,11 @@ export default function AdminUsers() {
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
           <Ionicons name="calendar" size={16} color={COLORS.textLight} />
-          <Text style={styles.statText}>{item.reservation_count} rentals</Text>
+          <Text style={styles.statText}>{item.reservation_count} locations</Text>
         </View>
         <View style={styles.statItem}>
           <Ionicons name="time" size={16} color={COLORS.textLight} />
-          <Text style={styles.statText}>Joined {format(new Date(item.created_at), 'MMM d, yyyy')}</Text>
+          <Text style={styles.statText}>Inscrit le {format(new Date(item.created_at), 'dd/MM/yyyy')}</Text>
         </View>
       </View>
 
@@ -127,12 +118,12 @@ export default function AdminUsers() {
           {item.license_photo ? (
             <>
               <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
-              <Text style={[styles.licenseText, { color: COLORS.success }]}>License verified</Text>
+              <Text style={[styles.licenseText, { color: COLORS.success }]}>Permis vérifié</Text>
             </>
           ) : (
             <>
               <Ionicons name="alert-circle" size={16} color={COLORS.warning} />
-              <Text style={[styles.licenseText, { color: COLORS.warning }]}>No license</Text>
+              <Text style={[styles.licenseText, { color: COLORS.warning }]}>Pas de permis</Text>
             </>
           )}
         </View>
@@ -149,7 +140,7 @@ export default function AdminUsers() {
             styles.blockButtonText,
             { color: item.blocked ? COLORS.success : COLORS.error }
           ]}>
-            {item.blocked ? 'Unblock' : 'Block'}
+            {item.blocked ? 'Débloquer' : 'Bloquer'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -159,7 +150,7 @@ export default function AdminUsers() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerText}>{total} total users</Text>
+        <Text style={styles.headerText}>{total} utilisateurs au total</Text>
       </View>
 
       <FlatList
@@ -173,7 +164,7 @@ export default function AdminUsers() {
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="people-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>No users found</Text>
+            <Text style={styles.emptyText}>Aucun utilisateur</Text>
           </View>
         }
       />
