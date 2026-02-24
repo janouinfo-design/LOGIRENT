@@ -1370,6 +1370,7 @@ async def update_user_admin(
         )
     
     updated_user = await db.users.find_one({"id": user_id}, {"password_hash": 0})
+    updated_user['_id'] = str(updated_user['_id'])
     return {"message": "User updated successfully", "user": updated_user}
 
 @api_router.put("/admin/users/{user_id}/rating")
