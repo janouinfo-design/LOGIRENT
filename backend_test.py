@@ -784,6 +784,237 @@ class RentDriveAPITester:
             self.log_result("Unauthorized Access Protection", False, error=f"Exception: {str(e)}")
             return False
 
+    # ==================== NEW FEATURES TESTS ====================
+    
+    def test_cash_payment_reservation(self) -> bool:
+        """Test creating a reservation with cash payment method"""
+        try:
+            if not self.access_token:
+                self.log_result("Cash Payment Reservation", False, error="No access token available")
+                return False
+                
+            # Get a vehicle ID
+            vehicles_response = self.make_request('GET', '/vehicles')
+            if vehicles_response.status_code != 200:
+                self.log_result("Cash Payment Reservation", False, 
+                              error="Cannot get vehicles list")
+                return False
+                
+            vehicles = vehicles_response.json()
+            if not vehicles:
+                self.log_result("Cash Payment Reservation", False, 
+                              error="No vehicles available for testing")
+                return False
+                
+            vehicle_id = vehicles[0]['id']
+            
+            # Create reservation with cash payment
+            start_date = datetime.now() + timedelta(days=14)  # Use different dates to avoid conflicts
+            end_date = start_date + timedelta(days=3)
+            
+            reservation_data = {
+                "vehicle_id": vehicle_id,
+                "start_date": start_date.isoformat(),
+                "end_date": end_date.isoformat(),
+                "options": [],
+                "payment_method": "cash"
+            }
+            
+            response = self.make_request('POST', '/reservations', json=reservation_data)
+            
+            if response.status_code == 200 or response.status_code == 201:
+                data = response.json()
+                if (data.get('status') == 'pending_cash' and 
+                    data.get('payment_method') == 'cash'):
+                    self.cash_reservation_id = data['id']  # Store for admin tests
+                    self.log_result("Cash Payment Reservation", True, 
+                                  f"Cash reservation created with status='{data['status']}', payment_method='{data['payment_method']}'")
+                    return True
+                else:
+                    self.log_result("Cash Payment Reservation", False, 
+                                  error=f"Incorrect status/payment_method: status={data.get('status')}, payment_method={data.get('payment_method')}")
+                    return False
+            else:
+                self.log_result("Cash Payment Reservation", False, 
+                              error=f"Status {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Cash Payment Reservation", False, error=f"Exception: {str(e)}")
+            return False
+
+    def test_admin_get_reservations(self) -> bool:
+        """Test admin getting all reservations"""
+        try:
+            if not self.access_token:
+                self.log_result("Admin Get Reservations", False, error="No access token available")
+                return False
+                
+            response = self.make_request('GET', '/admin/reservations')
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'reservations' in data and isinstance(data['reservations'], list):
+                    self.log_result("Admin Get Reservations", True, 
+                                  f"Admin retrieved {len(data['reservations'])} reservations")
+                    return True
+                else:
+                    self.log_result("Admin Get Reservations", False, 
+                                  error=f"Invalid response format: {data}")
+                    return False
+            else:
+                self.log_result("Admin Get Reservations", False, 
+                              error=f"Status {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Get Reservations", False, error=f"Exception: {str(e)}")
+            return False
+
+    def test_admin_update_reservation_status(self) -> bool:
+        """Test admin updating reservation status"""
+        try:
+            if not self.access_token:
+                self.log_result("Admin Update Reservation Status", False, error="No access token available")
+                return False
+            
+            # Use the cash reservation created earlier if available
+            reservation_id = getattr(self, 'cash_reservation_id', None)
+            if not reservation_id:
+                # Try to get a reservation from the list
+                reservations_response = self.make_request('GET', '/admin/reservations')
+                if reservations_response.status_code != 200:
+                    self.log_result("Admin Update Reservation Status", False, 
+                                  error="Cannot get reservations for testing")
+                    return False
+                
+                reservations_data = reservations_response.json()
+                reservations = reservations_data.get('reservations', [])
+                if not reservations:
+                    self.log_result("Admin Update Reservation Status", False, 
+                                  error="No reservations available for testing")
+                    return False
+                
+                reservation_id = reservations[0]['id']
+            
+            # Test updating to confirmed status
+            response = self.make_request('PUT', f'/admin/reservations/{reservation_id}/status?status=confirmed')
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'message' in data and 'confirmed' in data['message']:
+                    # Test updating to pending_cash status
+                    response2 = self.make_request('PUT', f'/admin/reservations/{reservation_id}/status?status=pending_cash')
+                    
+                    if response2.status_code == 200:
+                        data2 = response2.json()
+                        if 'message' in data2 and 'pending_cash' in data2['message']:
+                            self.log_result("Admin Update Reservation Status", True, 
+                                          f"Successfully updated reservation status to confirmed and pending_cash")
+                            return True
+                        else:
+                            self.log_result("Admin Update Reservation Status", False, 
+                                          error=f"Failed to update to pending_cash: {data2}")
+                            return False
+                    else:
+                        self.log_result("Admin Update Reservation Status", False, 
+                                      error=f"Failed to update to pending_cash - Status {response2.status_code}: {response2.text}")
+                        return False
+                else:
+                    self.log_result("Admin Update Reservation Status", False, 
+                                  error=f"Unexpected response format: {data}")
+                    return False
+            else:
+                self.log_result("Admin Update Reservation Status", False, 
+                              error=f"Status {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Update Reservation Status", False, error=f"Exception: {str(e)}")
+            return False
+
+    def test_admin_edit_vehicle(self) -> bool:
+        """Test admin editing vehicle details"""
+        try:
+            if not self.access_token:
+                self.log_result("Admin Edit Vehicle", False, error="No access token available")
+                return False
+                
+            # Get a vehicle to edit
+            vehicles_response = self.make_request('GET', '/vehicles')
+            if vehicles_response.status_code != 200:
+                self.log_result("Admin Edit Vehicle", False, 
+                              error="Cannot get vehicles list")
+                return False
+                
+            vehicles = vehicles_response.json()
+            if not vehicles:
+                self.log_result("Admin Edit Vehicle", False, 
+                              error="No vehicles available for testing")
+                return False
+                
+            vehicle_id = vehicles[0]['id']
+            original_vehicle = vehicles[0]
+            
+            # Update vehicle data
+            updated_data = {
+                "brand": "BMW",
+                "model": "Series 5 Updated",
+                "year": 2025,
+                "type": "berline",
+                "price_per_day": 150.0,
+                "location": "Geneva",
+                "description": "Updated description",
+                "seats": 5,
+                "transmission": "automatic",
+                "fuel_type": "hybrid",
+                "photos": [],
+                "options": []
+            }
+            
+            response = self.make_request('PUT', f'/admin/vehicles/{vehicle_id}', json=updated_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get('brand') == 'BMW' and 
+                    data.get('model') == 'Series 5 Updated' and
+                    data.get('year') == 2025 and
+                    data.get('price_per_day') == 150.0):
+                    # Restore original vehicle data
+                    restore_data = {
+                        "brand": original_vehicle['brand'],
+                        "model": original_vehicle['model'],
+                        "year": original_vehicle['year'],
+                        "type": original_vehicle['type'],
+                        "price_per_day": original_vehicle['price_per_day'],
+                        "location": original_vehicle['location'],
+                        "description": original_vehicle.get('description', ''),
+                        "seats": original_vehicle['seats'],
+                        "transmission": original_vehicle['transmission'],
+                        "fuel_type": original_vehicle['fuel_type'],
+                        "photos": original_vehicle.get('photos', []),
+                        "options": original_vehicle.get('options', [])
+                    }
+                    
+                    # Restore original data
+                    self.make_request('PUT', f'/admin/vehicles/{vehicle_id}', json=restore_data)
+                    
+                    self.log_result("Admin Edit Vehicle", True, 
+                                  f"Vehicle updated successfully and restored")
+                    return True
+                else:
+                    self.log_result("Admin Edit Vehicle", False, 
+                                  error=f"Vehicle not updated correctly: {data}")
+                    return False
+            else:
+                self.log_result("Admin Edit Vehicle", False, 
+                              error=f"Status {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin Edit Vehicle", False, error=f"Exception: {str(e)}")
+            return False
+
     # ==================== MAIN TEST RUNNER ====================
 
     def run_all_tests(self) -> Dict[str, Any]:
@@ -825,6 +1056,14 @@ class RentDriveAPITester:
         print("-" * 30)
         self.test_stripe_checkout()
         self.test_payment_status()
+        
+        # New Features Tests
+        print("\n🆕 New Features Tests")
+        print("-" * 30)
+        self.test_cash_payment_reservation()
+        self.test_admin_get_reservations()
+        self.test_admin_update_reservation_status()
+        self.test_admin_edit_vehicle()
         
         # Summary
         print("\n" + "=" * 60)
