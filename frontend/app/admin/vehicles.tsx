@@ -666,6 +666,79 @@ export default function AdminVehicles() {
           </View>
         </View>
       </Modal>
+
+      {/* Photo Management Modal */}
+      <Modal
+        visible={showPhotoModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPhotoModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
+              Photos - {selectedVehicleForPhotos?.brand} {selectedVehicleForPhotos?.model}
+            </Text>
+            <TouchableOpacity onPress={() => setShowPhotoModal(false)}>
+              <Ionicons name="close" size={24} color={COLORS.text} />
+            </TouchableOpacity>
+          </View>
+          
+          <ScrollView style={styles.modalContent}>
+            {/* Upload Button */}
+            <TouchableOpacity 
+              style={styles.uploadPhotoBtn}
+              onPress={handleUploadPhoto}
+              disabled={uploadingPhoto}
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator color={COLORS.primary} />
+              ) : (
+                <>
+                  <Ionicons name="cloud-upload" size={32} color={COLORS.primary} />
+                  <Text style={styles.uploadPhotoBtnText}>Ajouter une photo</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Photos Grid */}
+            {selectedVehicleForPhotos?.photos && selectedVehicleForPhotos.photos.length > 0 ? (
+              <View style={styles.photosGrid}>
+                {selectedVehicleForPhotos.photos.map((photo, index) => (
+                  <View key={index} style={styles.photoItem}>
+                    <Image source={{ uri: photo }} style={styles.photoImage} />
+                    <TouchableOpacity 
+                      style={styles.deletePhotoBtn}
+                      onPress={() => handleDeletePhoto(index)}
+                    >
+                      <Ionicons name="trash" size={16} color="#fff" />
+                    </TouchableOpacity>
+                    {index === 0 && (
+                      <View style={styles.mainPhotoBadge}>
+                        <Text style={styles.mainPhotoBadgeText}>Principale</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.noPhotos}>
+                <Ionicons name="images-outline" size={48} color={COLORS.textLight} />
+                <Text style={styles.noPhotosText}>Aucune photo</Text>
+                <Text style={styles.noPhotosSubtext}>Ajoutez des photos pour attirer plus de clients</Text>
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.modalFooter}>
+            <Button
+              title="Fermer"
+              onPress={() => setShowPhotoModal(false)}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
