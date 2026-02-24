@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,7 +21,7 @@ const COLORS = {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, updateProfile, uploadLicense } = useAuthStore();
+  const { user, logout, updateProfile, uploadLicense, isAuthenticated, loadUser, isLoading } = useAuthStore();
   
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
@@ -29,6 +29,36 @@ export default function ProfileScreen() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      router.replace('/(auth)/login');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setAddress(user.address || '');
+    }
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={COLORS.primary} />
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Chargement du profil...</Text>
+      </View>
+    );
+  }
 
   const handleSave = async () => {
     setLoading(true);
