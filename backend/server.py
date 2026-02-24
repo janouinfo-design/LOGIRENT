@@ -146,7 +146,8 @@ class Reservation(BaseModel):
     base_price: float
     options_price: float
     total_price: float
-    status: str = "pending"  # pending, confirmed, active, completed, cancelled
+    status: str = "pending"  # pending, pending_cash, confirmed, active, completed, cancelled
+    payment_method: str = "card"  # card or cash
     payment_session_id: Optional[str] = None
     payment_status: str = "unpaid"  # unpaid, pending, paid, refunded
     created_at: datetime = Field(default_factory=datetime.utcnow)
