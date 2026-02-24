@@ -456,13 +456,38 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Cash Payment Backend API"
+    - "Admin Reservation Status Change"
+    - "Admin Vehicle Edit"
   stuck_tasks: 
     - "Create Reservation API"
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "main"
+    message: |
+      Implemented 3 new features:
+      1. Cash Payment Option - Users can now choose to pay in cash at vehicle pickup
+      2. Admin Reservation Status Change - Already existed, verified working
+      3. Admin Vehicle Edit - Already existed, verified working
+      
+      Backend changes:
+      - Added payment_method field to ReservationCreate and Reservation models
+      - Modified create_reservation to handle cash payments with status "pending_cash"
+      - Added cash reservation email template
+      - Updated admin status endpoint to include "pending_cash" status
+      
+      Frontend changes:
+      - Added payment method selection UI in booking screen (card/cash)
+      - Updated button text based on payment method
+      - Added pending_cash status color and filter in admin reservations
+      
+      Please test:
+      1. POST /api/reservations with payment_method="cash"
+      2. PUT /api/admin/reservations/{id}/status with status="pending_cash"
+      3. PUT /api/admin/vehicles/{id} to edit vehicle
   - agent: "main"
     message: |
       Completed initial implementation of RentDrive car rental app.
