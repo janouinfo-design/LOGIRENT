@@ -129,6 +129,7 @@ export default function AdminReservations() {
       case 'paid': return COLORS.success;
       case 'pending': return COLORS.warning;
       case 'unpaid': return COLORS.error;
+      case 'refunded': return '#6B7280';  // Gray for refunded
       default: return COLORS.textLight;
     }
   };
