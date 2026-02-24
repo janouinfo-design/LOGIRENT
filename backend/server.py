@@ -284,6 +284,7 @@ async def login(credentials: UserLogin):
             name=user['name'],
             phone=user.get('phone'),
             address=user.get('address'),
+            id_photo=user.get('id_photo'),
             license_photo=user.get('license_photo'),
             created_at=user['created_at']
         )
@@ -303,6 +304,7 @@ async def get_profile(user: dict = Depends(get_current_user)):
         name=user['name'],
         phone=user.get('phone'),
         address=user.get('address'),
+        id_photo=user.get('id_photo'),
         license_photo=user.get('license_photo'),
         created_at=user['created_at']
     )
@@ -325,6 +327,7 @@ async def update_profile(update_data: UserUpdate, user: dict = Depends(get_curre
         name=updated_user['name'],
         phone=updated_user.get('phone'),
         address=updated_user.get('address'),
+        id_photo=updated_user.get('id_photo'),
         license_photo=updated_user.get('license_photo'),
         created_at=updated_user['created_at']
     )
@@ -349,6 +352,28 @@ async def upload_license(
     )
     
     return {"message": "License uploaded successfully", "license_photo": data_uri}
+
+@api_router.post("/auth/upload-id")
+async def upload_id(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """Upload ID card photo"""
+    # Read and convert to base64
+    content = await file.read()
+    base64_image = base64.b64encode(content).decode('utf-8')
+    
+    # Determine content type
+    content_type = file.content_type or 'image/jpeg'
+    data_uri = f"data:{content_type};base64,{base64_image}"
+    
+    # Update user
+    await db.users.update_one(
+        {"id": user['id']},
+        {"$set": {"id_photo": data_uri}}
+    )
+    
+    return {"message": "ID uploaded successfully", "id_photo": data_uri}
 
 # ==================== VEHICLE ROUTES ====================
 
