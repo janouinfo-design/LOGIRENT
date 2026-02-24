@@ -629,9 +629,9 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: '14.28%',
-    minHeight: 70,
-    maxHeight: 90,
-    padding: 3,
+    minHeight: 48,
+    maxHeight: 56,
+    padding: 2,
     alignItems: 'center',
     justifyContent: 'flex-start',
     borderWidth: 0.5,
