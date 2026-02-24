@@ -77,6 +77,7 @@ class UserProfile(BaseModel):
     name: str
     phone: Optional[str] = None
     address: Optional[str] = None
+    id_photo: Optional[str] = None
     license_photo: Optional[str] = None
     created_at: datetime
 
