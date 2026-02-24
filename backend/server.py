@@ -369,10 +369,10 @@ async def get_vehicles(
     if start_date and end_date:
         available_vehicles = []
         for vehicle in vehicles:
-            # Check for overlapping reservations
+            # Check for overlapping reservations - include pending to prevent double booking
             overlap = await db.reservations.find_one({
                 "vehicle_id": vehicle['id'],
-                "status": {"$in": ["confirmed", "active"]},
+                "status": {"$in": ["pending", "confirmed", "active"]},
                 "$or": [
                     {"start_date": {"$lt": end_date}, "end_date": {"$gt": start_date}}
                 ]
