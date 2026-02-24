@@ -47,7 +47,6 @@ const STATUS_OPTIONS = [
 export default function AdminReservations() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
