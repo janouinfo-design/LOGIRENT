@@ -170,6 +170,67 @@ export default function AdminUsers() {
     }
   };
 
+  const uploadDocumentPhoto = async (type: 'id' | 'license') => {
+    if (!selectedUser) return;
+
+    const setUploading = type === 'id' ? setUploadingIdPhoto : setUploadingLicensePhoto;
+    const endpoint = type === 'id' ? 'id-photo' : 'license-photo';
+    const fieldName = type === 'id' ? 'id_photo' : 'license_photo';
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      if (Platform.OS === 'web') {
+        window.alert('Permission requise');
+      }
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setUploading(true);
+      try {
+        const asset = result.assets[0];
+        let base64Data = asset.base64;
+        let contentType = asset.mimeType || 'image/jpeg';
+
+        if (!base64Data && asset.uri && asset.uri.startsWith('data:')) {
+          const match = asset.uri.match(/^data:([^;]+);base64,(.+)$/);
+          if (match) {
+            contentType = match[1];
+            base64Data = match[2];
+          }
+        }
+
+        if (base64Data) {
+          const response = await api.post(`/api/admin/users/${selectedUser.id}/${endpoint}`, {
+            image: base64Data,
+            content_type: contentType,
+          });
+
+          setSelectedUser({ ...selectedUser, [fieldName]: response.data.photo });
+          fetchUsers();
+          if (Platform.OS === 'web') {
+            window.alert(`${type === 'id' ? 'Pièce d\'identité' : 'Permis de conduire'} mis à jour`);
+          }
+        }
+      } catch (error: any) {
+        console.error('Error uploading document:', error);
+        if (Platform.OS === 'web') {
+          window.alert('Erreur lors de l\'upload');
+        }
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+
   const handleUploadPhoto = async () => {
     if (!selectedUser) return;
 
