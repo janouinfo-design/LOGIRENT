@@ -543,6 +543,17 @@ export default function AdminUsers() {
                         />
                       </View>
                       <View style={styles.inputGroup}>
+                        <Text style={styles.inputLabel}>Email</Text>
+                        <TextInput
+                          style={styles.textInput}
+                          value={editEmail}
+                          onChangeText={setEditEmail}
+                          placeholder="Email"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                        />
+                      </View>
+                      <View style={styles.inputGroup}>
                         <Text style={styles.inputLabel}>Téléphone</Text>
                         <TextInput
                           style={styles.textInput}
