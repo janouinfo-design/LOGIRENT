@@ -91,9 +91,25 @@ export default function BookingScreen() {
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
         options: selectedOptions,
+        payment_method: paymentMethod,
       });
 
-      // Initiate payment
+      // If cash payment, show success and go to reservations
+      if (paymentMethod === 'cash') {
+        Alert.alert(
+          'Réservation Confirmée',
+          'Votre réservation a été enregistrée. Le paiement sera effectué en espèces lors de la prise du véhicule.',
+          [
+            {
+              text: 'Voir mes réservations',
+              onPress: () => router.push('/(tabs)/reservations'),
+            },
+          ]
+        );
+        return;
+      }
+
+      // Initiate card payment
       const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rental-hub-staging-1.preview.emergentagent.com';
 
       const paymentData = await initiatePayment(reservation.id, originUrl);
