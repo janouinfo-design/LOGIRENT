@@ -86,8 +86,8 @@ export default function LoginScreen() {
             <View style={styles.logoContainer}>
               <Ionicons name="car-sport" size={40} color={COLORS.primary} />
             </View>
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Sign in to continue your journey</Text>
+            <Text style={styles.title}>Bon retour!</Text>
+            <Text style={styles.subtitle}>Connectez-vous pour continuer</Text>
           </View>
 
           <View style={styles.form}>
