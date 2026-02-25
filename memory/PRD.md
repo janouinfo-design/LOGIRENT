@@ -1,100 +1,126 @@
-# LogiRent - Product Requirements Document
+# LogiRent - PRD (Product Requirements Document)
 
 ## Original Problem Statement
 Build a complete car rental solution named "LogiRent" with:
-- Client Mobile/Web App (React Native/Expo)
-- Admin Web Back-office with multi-agency support
-- Super admin oversight of all agencies
+- Client Mobile App (iOS & Android) and Web App
+- Admin Web Back-office
+- (Optional future) Driver/Agent App
+
+## User Personas
+- **Client**: End-user who browses vehicles, makes reservations, pays
+- **Admin**: Agency manager who manages vehicles, reservations, users
+- **Super Admin**: Global admin who manages all agencies
+
+## Core Requirements
+- **Branding**: "LogiRent", colors violet/grey/black
+- **i18n**: French and English
+- **Account Management**: Email/password auth, profile with document upload
+- **Vehicle Catalog**: Elegant homepage with animated cards
+- **Reservation**: Calendar date selection, same-day booking, Airbnb-style availability
+- **Payment**: Stripe (Credit Card, Apple/Google Pay) and TWINT
+- **Notifications**: Reservation status and late returns
+- **Admin**: Full CRUD, visual calendar, stats, multi-agency support
 
 ## Architecture
-- **Frontend**: React Native + Expo Router + Zustand + Axios
-- **Backend**: Python FastAPI + MongoDB
-- **Payments**: Stripe (Card, TWINT) + Cash
-- **Auth**: JWT-based with roles (client, admin, super_admin)
+```
+/app
+├── backend/
+│   ├── server.py             # FastAPI with multi-agency logic, RBAC, all endpoints
+│   └── requirements.txt
+└── frontend/
+    ├── app/
+    │   ├── (tabs)/
+    │   │   ├── index.tsx         # Homepage with hero, categories, vehicle grid
+    │   │   ├── vehicles.tsx      # Vehicle catalog
+    │   │   ├── reservations.tsx  # Client reservations with LIST + CALENDAR views
+    │   │   ├── profile.tsx       # User profile
+    │   │   └── _layout.tsx       # Tab layout
+    │   ├── admin/
+    │   │   ├── agencies.tsx      # Super-admin agency management
+    │   │   ├── calendar.tsx      # Admin reservation calendar
+    │   │   ├── vehicles.tsx      # Admin vehicle CRUD
+    │   │   ├── reservations.tsx  # Admin reservation management
+    │   │   ├── users.tsx         # Admin user management
+    │   │   └── payments.tsx      # Admin payments
+    │   ├── vehicle/[id].tsx      # Vehicle detail with availability calendar
+    │   ├── booking/[id].tsx      # Booking flow with payment
+    │   ├── admin-login.tsx       # Admin login
+    │   └── _layout.tsx           # Root layout with SafeAreaView, TopNavBar
+    ├── src/
+    │   ├── store/                # Zustand stores (auth, vehicle, reservation, notification)
+    │   ├── api/axios.ts          # API client
+    │   ├── components/           # Shared components
+    │   └── i18n/                 # Internationalization
+```
 
-## Multi-Agency Data Model
-### Collections:
-- **agencies**: {id, name, address, phone, email, logo, created_at}
-- **users**: {id, email, password_hash, name, phone, address, id_photo, license_photo, role, agency_id, created_at}
-- **vehicles**: {id, brand, model, year, type, price_per_day, photos, description, seats, transmission, fuel_type, options, status, location, agency_id, created_at}
-- **reservations**: {id, user_id, vehicle_id, agency_id, start_date, end_date, options, total_days, base_price, options_price, total_price, status, payment_method, payment_status, created_at}
-- **notifications**: {id, user_id, message, read, created_at}
-- **payment_transactions**: {id, user_id, reservation_id, session_id, amount, currency, status, payment_status, metadata, created_at}
+## Tech Stack
+- **Frontend**: React Native (Expo) for Web, Expo Router, Zustand
+- **Backend**: FastAPI, MongoDB (Motor), JWT auth
+- **Payments**: Stripe (via emergentintegrations)
+- **Email**: Resend (configured but needs user API key)
 
-## Roles
-- **client**: Browse all vehicles from all agencies, make reservations, manage profile
-- **admin**: Manages their agency's vehicles, reservations, and clients (isolated data)
-- **super_admin**: Oversees all agencies, creates agencies with admin accounts, sees all data
+## DB Schema
+- **agencies**: `{_id, name, created_at}`
+- **users**: `{id, name, email, password_hash, role, agency_id, phone, documents, ...}`
+- **vehicles**: `{id, brand, model, year, type, price_per_day, agency_id, status, photos, ...}`
+- **reservations**: `{id, user_id, vehicle_id, agency_id, start_date, end_date, total_days, total_price, status, payment_status, ...}`
+- **notifications**: `{user_id, type, message, read, created_at}`
 
-## Key API Endpoints
-### Auth
-- POST /api/auth/login - Universal login
-- POST /api/auth/register - Client registration
-- POST /api/auth/register-admin - Self-register as agency admin (creates agency)
-- POST /api/admin/login - Admin-only login (role check, returns 403 for clients)
+## What's Been Implemented (as of Feb 25, 2026)
 
-### Agencies (Super Admin)
-- GET /api/agencies - List agencies (super admin=all, admin=own)
-- POST /api/agencies - Create agency + admin account (super admin only)
-- PUT /api/agencies/{id} - Update agency info
-- DELETE /api/agencies/{id} - Delete agency
+### Multi-Agency Architecture (Complete)
+- Full multi-tenancy with super_admin, admin, client roles
+- Data scoping by agency_id
+- Super-admin dashboard at /admin/agencies
 
-### Vehicles & Reservations
-- GET /api/vehicles?agency_id=xxx - List vehicles (optional agency filter)
-- POST /api/admin/vehicles - Create vehicle (auto-assigns agency_id from admin)
-- POST /api/reservations - Create reservation (auto-assigns agency_id from vehicle)
-- GET /api/admin/stats - Dashboard stats (scoped by agency)
-- GET /api/admin/reservations - Reservations (scoped by agency)
-- GET /api/admin/users - Users who booked with agency
-- GET /api/admin/calendar - Calendar view (scoped by agency)
+### Client Features (Complete)
+- Homepage with hero, search, categories, vehicle cards
+- Vehicle catalog with filtering
+- Vehicle detail with availability calendar
+- Booking flow with Stripe payment + cash option
+- **Reservations page with LIST + CALENDAR views** (NEW - Feb 25)
+  - Toggle between list and calendar modes
+  - Calendar shows monthly grid with reservation dots
+  - Date selection shows reservation details
+  - Month navigation (forward/backward)
+  - French localization
+- Profile management
+- Notifications (bell icon)
+- FR/EN language switching
 
-### Setup
-- POST /api/setup/init - Initialize platform (create default agency, migrate data)
+### Admin Features (Complete)
+- Admin login and scoped dashboard
+- Vehicle CRUD management
+- Reservation management
+- User management
+- Calendar/agenda view for reservations
+- Overdue rental alerts
+- Agency management (super-admin)
 
-## Test Credentials
-- Super Admin: test@example.com / password123 (LogiRent Geneva)
-- Admin Lausanne: admin2@logirent.ch / password123 (LogiRent Lausanne)
-- Admin Zurich: pierre@logirent-zurich.ch / zurich2026 (LogiRent Zurich)
-- Client: client1@test.com / test1234
+### Bug Fixes (Complete)
+- Silent booking failure → clear error messages
+- Incorrect availability calendar → includes pending reservations
+- Mobile responsive fixes (hero section, nav overlap, compact cards)
+- Filter tabs layout on mobile → horizontal row with flexWrap
 
-## Implemented Features (as of Feb 25, 2026)
+## Credentials
+- **Super Admin**: test@example.com / password123
+- **Client**: client1@test.com / test1234
 
-### Client Features
-- [x] Registration & login
-- [x] Vehicle catalog with 3-column grid
-- [x] Professional homepage with hero section
-- [x] Vehicle detail page with Airbnb-style availability calendar
-- [x] Booking with date/time selection, same-day booking
-- [x] Payment: Card (Stripe), TWINT (Stripe), Cash
-- [x] In-app feedback banners for booking errors/success
-- [x] Reservation management (My Rentals)
-- [x] Profile with document upload
-- [x] Late return notifications (bell icon)
-- [x] Global top navigation bar (Facebook-style)
+## Prioritized Backlog
 
-### Admin Features
-- [x] Admin login page (dark theme, login + register toggle)
-- [x] Vehicle CRUD (scoped by agency)
-- [x] Reservation management with status/payment modals (scoped by agency)
-- [x] User management (scoped by agency - only clients who booked)
-- [x] Calendar view (scoped by agency)
-- [x] Dashboard stats (scoped by agency)
-- [x] Agency name badge and role badge in admin panel
+### P2 - Push Notifications
+- Enhance notification system with real push notifications
 
-### Super Admin Features
-- [x] Agency CRUD (create, edit, delete)
-- [x] Create agency + admin account simultaneously (credentials shown in success modal)
-- [x] All-data overview (sees all agencies, vehicles, reservations, users)
-- [x] Agences navigation tab
+### P3 - Deploy to App Stores
+- Generate builds for Google Play and Apple App Store
 
-### Multi-Agency System
-- [x] Complete data isolation per agency
-- [x] Role-based access control (client, admin, super_admin)
-- [x] Auto-assignment of agency_id on vehicle creation and reservation creation
-- [x] Agency-scoped admin panel
+### P4 - Driver/Agent Application
+- Optional future component
 
-## Backlog (Priority Order)
-- [ ] P2: Admin Statistics & Dashboards (charts, revenue graphs, fleet utilization)
-- [ ] P2: Push Notifications (enhance existing bell system)
-- [ ] P3: Driver/Agent Application
-- [ ] P4: App Store deployment (iOS + Android)
+### P5 - Admin Statistics & Dashboards
+- Advanced dashboards for revenue and fleet utilization
+
+### Minor
+- Agency admin count doesn't include super_admin in stats
+- Availability calendar component could be extracted as reusable
