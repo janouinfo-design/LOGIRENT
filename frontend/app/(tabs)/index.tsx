@@ -146,6 +146,7 @@ export default function HomeScreen() {
               <Text style={[styles.langLabel, lang === 'en' && styles.langLabelActive]}>EN</Text>
             </TouchableOpacity>
           </View>
+          </View>
         </View>
 
         {/* Hero Section */}
