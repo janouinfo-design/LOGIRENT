@@ -448,18 +448,38 @@ export default function BookingScreen() {
         <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* Bottom Bar */}
+      {/* Bottom Bar with Feedback + Button */}
       <View style={styles.bottomBar}>
-        <View style={styles.totalContainer}>
-          <Text style={styles.bottomLabel}>Prix Total</Text>
-          <Text style={styles.bottomPrice}>CHF {totalPrice.toFixed(2)}</Text>
+        {feedbackMessage && (
+          <TouchableOpacity 
+            style={[
+              styles.feedbackBanner, 
+              feedbackMessage.type === 'success' ? styles.feedbackSuccess : styles.feedbackError
+            ]}
+            onPress={() => setFeedbackMessage(null)}
+            data-testid="feedback-banner"
+          >
+            <Ionicons 
+              name={feedbackMessage.type === 'success' ? 'checkmark-circle' : 'alert-circle'} 
+              size={20} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.feedbackText}>{feedbackMessage.text}</Text>
+            <Ionicons name="close" size={16} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+        )}
+        <View style={styles.bottomInner}>
+          <View style={styles.totalContainer}>
+            <Text style={styles.bottomLabel}>Prix Total</Text>
+            <Text style={styles.bottomPrice}>CHF {totalPrice.toFixed(2)}</Text>
+          </View>
+          <Button
+            title={paymentMethod === 'cash' ? 'Réserver (Espèces)' : paymentMethod === 'twint' ? 'Payer par TWINT' : 'Payer par Carte'}
+            onPress={handleBookNow}
+            loading={isLoading}
+            style={[styles.payButton, paymentMethod === 'cash' && styles.cashButton, paymentMethod === 'twint' && styles.twintButton]}
+          />
         </View>
-        <Button
-          title={paymentMethod === 'cash' ? 'Réserver (Espèces)' : paymentMethod === 'twint' ? 'Payer par TWINT' : 'Payer par Carte'}
-          onPress={handleBookNow}
-          loading={isLoading}
-          style={[styles.payButton, paymentMethod === 'cash' && styles.cashButton, paymentMethod === 'twint' && styles.twintButton]}
-        />
       </View>
     </View>
   );
