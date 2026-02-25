@@ -166,7 +166,7 @@ export default function BookingScreen() {
       }
 
       // Initiate card payment
-      const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rental-dash-12.preview.emergentagent.com';
+      const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rental-hub-dev-3.preview.emergentagent.com';
 
       const paymentData = await initiatePayment(reservation.id, originUrl);
 

@@ -11,7 +11,7 @@ import os
 from datetime import datetime, timedelta
 
 # Get the base URL from environment variable
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://rental-dash-12.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://rental-hub-dev-3.preview.emergentagent.com')
 BASE_URL = BASE_URL.rstrip('/')
 
 # Test credentials
