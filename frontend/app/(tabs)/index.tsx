@@ -78,7 +78,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
 
