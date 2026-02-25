@@ -314,11 +314,11 @@ export default function ReservationsScreen() {
 
   const handleCancel = (id: string) => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Voulez-vous annuler cette reservation ?')) {
+      if (window.confirm('Voulez-vous annuler cette r\u00e9servation ?')) {
         cancelReservation(id).then(() => fetchReservations());
       }
     } else {
-      Alert.alert('Annuler la reservation', 'Voulez-vous annuler cette reservation ?', [
+      Alert.alert('Annuler la r\u00e9servation', 'Voulez-vous annuler cette r\u00e9servation ?', [
         { text: 'Non', style: 'cancel' },
         { text: 'Oui, annuler', style: 'destructive', onPress: () => cancelReservation(id).then(() => fetchReservations()) },
       ]);
@@ -346,7 +346,7 @@ export default function ReservationsScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.title}>Mes Locations</Text>
-            <Text style={styles.subtitle}>{reservations.length} reservation{reservations.length !== 1 ? 's' : ''}</Text>
+            <Text style={styles.subtitle}>{reservations.length} r\u00e9servation{reservations.length !== 1 ? 's' : ''}</Text>
           </View>
           {/* View Mode Toggle */}
           <View style={styles.viewToggle} data-testid="view-mode-toggle">
@@ -390,9 +390,9 @@ export default function ReservationsScreen() {
               {filteredReservations.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="calendar-outline" size={56} color={C.gray} />
-                  <Text style={styles.emptyText}>Aucune reservation</Text>
-                  <Text style={styles.emptySubtext}>Reservez votre premier vehicule</Text>
-                  <Button title="Voir les vehicules" onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
+                  <Text style={styles.emptyText}>Aucune r\u00e9servation</Text>
+                  <Text style={styles.emptySubtext}>R\u00e9servez votre premier v\u00e9hicule</Text>
+                  <Button title="Voir les v\u00e9hicules" onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
                 </View>
               ) : (
                 filteredReservations.map((item) => (
