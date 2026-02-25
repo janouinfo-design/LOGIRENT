@@ -1317,17 +1317,36 @@ async def get_admin_user(credentials: HTTPAuthorizationCredentials = Depends(sec
 
 @api_router.get("/admin/stats", response_model=AdminStats)
 async def get_admin_stats(user: dict = Depends(get_admin_user)):
-    """Get dashboard statistics"""
+    """Get dashboard statistics - scoped by agency for admins"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
     
-    # Total counts
-    total_vehicles = await db.vehicles.count_documents({})
-    total_users = await db.users.count_documents({})
-    total_reservations = await db.reservations.count_documents({})
-    total_payments = await db.payment_transactions.count_documents({"payment_status": "paid"})
+    # Build query filters
+    vehicle_filter = {} if is_super else {"agency_id": agency_id}
+    reservation_filter = {} if is_super else {"agency_id": agency_id}
     
-    # Total revenue (from paid reservations)
+    total_vehicles = await db.vehicles.count_documents(vehicle_filter)
+    
+    # For users: count users who have reservations with this agency
+    if is_super:
+        total_users = await db.users.count_documents({})
+    else:
+        user_ids = await db.reservations.distinct("user_id", {"agency_id": agency_id})
+        total_users = len(user_ids)
+    
+    total_reservations = await db.reservations.count_documents(reservation_filter)
+    
+    paid_filter = {**reservation_filter, "payment_status": "paid"}
+    total_payments = await db.payment_transactions.count_documents(
+        {} if is_super else {"reservation_id": {"$in": [r['id'] async for r in db.reservations.find({"agency_id": agency_id}, {"id": 1})]}}
+    ) if not is_super else await db.payment_transactions.count_documents({"payment_status": "paid"})
+    
+    # Total revenue
+    revenue_match = {"payment_status": "paid"}
+    if not is_super:
+        revenue_match["agency_id"] = agency_id
     pipeline = [
-        {"$match": {"payment_status": "paid"}},
+        {"$match": revenue_match},
         {"$group": {"_id": None, "total": {"$sum": "$total_price"}}}
     ]
     revenue_result = await db.reservations.aggregate(pipeline).to_list(1)
