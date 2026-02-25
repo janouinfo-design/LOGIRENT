@@ -90,24 +90,26 @@ function AppContent() {
   const showNav = !isLanding && !isAuth && !isAdmin && isAuthenticated;
 
   return (
-    <View style={{ flex: 1, backgroundColor: C.bg }}>
-      {showNav && <TopNavBar />}
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: C.bg },
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)/login" />
-        <Stack.Screen name="(auth)/register" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="vehicle/[id]" />
-        <Stack.Screen name="booking/[id]" />
-        <Stack.Screen name="payment-success" />
-        <Stack.Screen name="payment-cancel" />
-      </Stack>
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: C.white }} edges={['top']}>
+      <View style={{ flex: 1, backgroundColor: C.bg }}>
+        {showNav && <TopNavBar />}
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: C.bg },
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)/login" />
+          <Stack.Screen name="(auth)/register" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="vehicle/[id]" />
+          <Stack.Screen name="booking/[id]" />
+          <Stack.Screen name="payment-success" />
+          <Stack.Screen name="payment-cancel" />
+        </Stack>
+      </View>
+    </SafeAreaView>
   );
 }
 
