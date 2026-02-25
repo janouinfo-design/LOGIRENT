@@ -779,6 +779,39 @@ const styles = StyleSheet.create({
   cashButton: {
     backgroundColor: COLORS.secondary,
   },
+  twintButton: {
+    backgroundColor: '#000000',
+  },
+  twintIconBox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  twintIconText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  paymentMethodSelectedTwint: {
+    borderColor: '#000000',
+    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+  },
+  paymentRadioSelectedTwint: {
+    borderColor: '#000000',
+  },
+  paymentRadioInnerTwint: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#000000',
+  },
+  paymentMethodTitleTwint: {
+    color: '#000000',
+    fontWeight: '700',
+  },
   paymentMethodsContainer: {
     gap: 12,
   },
