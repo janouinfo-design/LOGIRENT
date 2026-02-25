@@ -468,10 +468,10 @@ export default function BookingScreen() {
 
         {/* Price Summary */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Price Summary</Text>
+          <Text style={styles.sectionTitle}>Résumé du prix</Text>
           <View style={styles.priceCard}>
             <View style={styles.priceRow}>
-              <Text style={styles.priceLabel}>Base Price ({totalDays} days)</Text>
+              <Text style={styles.priceLabel}>Prix de base ({totalDays} jours)</Text>
               <Text style={styles.priceValue}>CHF {basePrice.toFixed(2)}</Text>
             </View>
             {optionsPrice > 0 && (
@@ -489,19 +489,19 @@ export default function BookingScreen() {
 
         {/* Policies */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Rental Policies</Text>
+          <Text style={styles.sectionTitle}>Conditions de location</Text>
           <View style={styles.policyCard}>
             <View style={styles.policyItem}>
               <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-              <Text style={styles.policyText}>Free cancellation up to 24h before</Text>
+              <Text style={styles.policyText}>Annulation gratuite jusqu'à 24h avant</Text>
             </View>
             <View style={styles.policyItem}>
               <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-              <Text style={styles.policyText}>Full insurance included</Text>
+              <Text style={styles.policyText}>Assurance complète incluse</Text>
             </View>
             <View style={styles.policyItem}>
               <Ionicons name="checkmark-circle" size={20} color={COLORS.success} />
-              <Text style={styles.policyText}>24/7 roadside assistance</Text>
+              <Text style={styles.policyText}>Assistance routière 24h/24</Text>
             </View>
           </View>
         </View>
@@ -512,7 +512,7 @@ export default function BookingScreen() {
       {/* Bottom Bar */}
       <View style={styles.bottomBar}>
         <View style={styles.totalContainer}>
-          <Text style={styles.bottomLabel}>Total Price</Text>
+          <Text style={styles.bottomLabel}>Prix Total</Text>
           <Text style={styles.bottomPrice}>CHF {totalPrice.toFixed(2)}</Text>
         </View>
         <Button
