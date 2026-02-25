@@ -109,22 +109,22 @@ export default function BookingScreen() {
   const handleBookNow = async () => {
     // Check if documents are uploaded
     if (!hasDocuments) {
-      Alert.alert(
-        'Documents Requis',
-        'Veuillez télécharger votre pièce d\'identité et votre permis de conduire dans votre profil avant de réserver.',
-        [
+      if (Platform.OS === 'web') {
+        if (window.confirm('Documents requis. Veuillez télécharger votre pièce d\'identité et permis dans votre profil. Aller au profil ?')) {
+          router.push('/(tabs)/profile');
+        }
+      } else {
+        Alert.alert('Documents Requis', 'Veuillez télécharger vos documents.', [
           { text: 'Annuler', style: 'cancel' },
-          { 
-            text: 'Aller au Profil', 
-            onPress: () => router.push('/(tabs)/profile')
-          },
-        ]
-      );
+          { text: 'Aller au Profil', onPress: () => router.push('/(tabs)/profile') },
+        ]);
+      }
       return;
     }
 
     if (totalDays <= 0) {
-      Alert.alert('Dates Invalides', 'La date de fin doit être après la date de début');
+      if (Platform.OS === 'web') window.alert('La date de fin doit être après la date de début');
+      else Alert.alert('Dates Invalides', 'La date de fin doit être après la date de début');
       return;
     }
 
@@ -147,16 +147,14 @@ export default function BookingScreen() {
 
       // If cash payment, show success and go to reservations
       if (paymentMethod === 'cash') {
-        Alert.alert(
-          'Réservation Confirmée',
-          'Votre réservation a été enregistrée. Le paiement sera effectué en espèces lors de la prise du véhicule.',
-          [
-            {
-              text: 'Voir mes réservations',
-              onPress: () => router.push('/(tabs)/reservations'),
-            },
-          ]
-        );
+        if (Platform.OS === 'web') {
+          window.alert('Réservation confirmée ! Le paiement sera effectué en espèces lors de la prise du véhicule.');
+          router.push('/(tabs)/reservations');
+        } else {
+          Alert.alert('Réservation Confirmée', 'Le paiement sera effectué en espèces.', [
+            { text: 'Voir mes réservations', onPress: () => router.push('/(tabs)/reservations') },
+          ]);
+        }
         return;
       }
 
