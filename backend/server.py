@@ -531,7 +531,7 @@ async def get_vehicle_availability(vehicle_id: str, month: int = None, year: int
     
     reservations = await db.reservations.find({
         "vehicle_id": vehicle_id,
-        "status": {"$in": ["confirmed", "active"]},
+        "status": {"$in": ["confirmed", "active", "pending", "pending_cash"]},
         "start_date": {"$lt": end_of_month},
         "end_date": {"$gt": start_of_month}
     }).to_list(100)
