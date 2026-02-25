@@ -1946,10 +1946,43 @@ async def list_agencies(user: dict = Depends(get_agency_admin)):
 
 @api_router.post("/agencies")
 async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin)):
-    """Create a new agency (super admin only)"""
-    agency = Agency(**data.dict())
+    """Create a new agency with its admin account (super admin only)"""
+    # Validate admin fields
+    if not data.admin_email or not data.admin_password or not data.admin_name:
+        raise HTTPException(status_code=400, detail="Les champs admin (nom, email, mot de passe) sont requis")
+    
+    # Check if admin email already exists
+    existing = await db.users.find_one({"email": data.admin_email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail=f"L'email {data.admin_email} est déjà utilisé")
+    
+    # Create agency
+    agency = Agency(name=data.name, address=data.address, phone=data.phone, email=data.email)
     await db.agencies.insert_one(agency.dict())
-    return {"id": agency.id, "name": agency.name, "message": "Agence créée avec succès"}
+    
+    # Create admin user for this agency
+    admin_user = {
+        "id": str(uuid.uuid4()),
+        "email": data.admin_email.lower(),
+        "password_hash": hash_password(data.admin_password),
+        "name": data.admin_name,
+        "phone": None,
+        "address": None,
+        "id_photo": None,
+        "license_photo": None,
+        "role": "admin",
+        "agency_id": agency.id,
+        "created_at": datetime.utcnow()
+    }
+    await db.users.insert_one(admin_user)
+    
+    return {
+        "id": agency.id,
+        "name": agency.name,
+        "admin_email": data.admin_email.lower(),
+        "admin_name": data.admin_name,
+        "message": f"Agence '{agency.name}' créée avec le compte admin {data.admin_email}"
+    }
 
 @api_router.put("/agencies/{agency_id}")
 async def update_agency(agency_id: str, data: AgencyCreate, user: dict = Depends(get_super_admin)):
