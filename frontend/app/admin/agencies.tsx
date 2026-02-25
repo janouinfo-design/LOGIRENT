@@ -92,7 +92,7 @@ export default function AgenciesPage() {
 
   const openEdit = (agency: Agency) => {
     setEditAgency(agency);
-    setForm({ name: agency.name, address: agency.address || '', phone: agency.phone || '', email: agency.email || '' });
+    setForm({ name: agency.name, address: agency.address || '', phone: agency.phone || '', email: agency.email || '', admin_name: '', admin_email: '', admin_password: '' });
     setShowModal(true);
   };
 
