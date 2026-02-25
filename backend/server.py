@@ -232,10 +232,11 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
-def create_token(user_id: str, email: str) -> str:
+def create_token(user_id: str, email: str, role: str = 'client') -> str:
     payload = {
         'user_id': user_id,
         'email': email,
+        'role': role,
         'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS)
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
