@@ -286,16 +286,25 @@ export default function AdminCalendar() {
         </TouchableOpacity>
       </View>
 
-      {/* Month Picker Popup */}
-      {showMonthPicker && (
-        <View style={styles.monthPickerOverlay}>
-          <View style={styles.monthPickerCard}>
+      {/* Month Picker Modal */}
+      <Modal
+        visible={showMonthPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMonthPicker(false)}
+      >
+        <TouchableOpacity 
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}
+          activeOpacity={1}
+          onPress={() => setShowMonthPicker(false)}
+        >
+          <TouchableOpacity activeOpacity={1} style={styles.monthPickerCard}>
             {/* Year Navigation */}
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <TouchableOpacity onPress={() => setPickerYear(pickerYear - 1)} style={{ padding: 8 }}>
                 <Ionicons name="chevron-back" size={20} color={COLORS.primary} />
               </TouchableOpacity>
-              <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.text }}>{pickerYear}</Text>
+              <Text style={{ fontSize: 20, fontWeight: '700', color: COLORS.text }}>{pickerYear}</Text>
               <TouchableOpacity onPress={() => setPickerYear(pickerYear + 1)} style={{ padding: 8 }}>
                 <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
               </TouchableOpacity>
@@ -342,9 +351,9 @@ export default function AdminCalendar() {
                 <Text style={{ fontSize: 13, fontWeight: '500', color: COLORS.textLight }}>Fermer</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      )}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Legend */}
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, paddingBottom: 12 }}>
