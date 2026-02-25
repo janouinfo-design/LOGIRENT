@@ -3,10 +3,11 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../src/store/authStore';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { I18nProvider } from '../src/i18n';
 
 const COLORS = {
-  primary: '#1E3A8A',
-  background: '#F8FAFC',
+  primary: '#6B21A8',
+  background: '#FAFAFA',
 };
 
 export default function RootLayout() {
@@ -25,7 +26,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <I18nProvider>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -40,12 +41,12 @@ export default function RootLayout() {
         <Stack.Screen name="(auth)/login" options={{ title: 'Login', headerShown: false }} />
         <Stack.Screen name="(auth)/register" options={{ title: 'Create Account', headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="vehicle/[id]" options={{ title: 'Vehicle Details' }} />
-        <Stack.Screen name="booking/[id]" options={{ title: 'Book Vehicle' }} />
+        <Stack.Screen name="vehicle/[id]" options={{ title: 'Détails' }} />
+        <Stack.Screen name="booking/[id]" options={{ title: 'Réservation' }} />
         <Stack.Screen name="payment-success" options={{ title: 'Payment', headerShown: false }} />
         <Stack.Screen name="payment-cancel" options={{ title: 'Payment Cancelled' }} />
       </Stack>
-    </>
+    </I18nProvider>
   );
 }
 
