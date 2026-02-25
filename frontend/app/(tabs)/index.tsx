@@ -81,6 +81,8 @@ export default function HomeScreen() {
   const { lang, t } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
   useEffect(() => { fetchVehicles(); }, []);
 
@@ -109,11 +111,11 @@ export default function HomeScreen() {
         <AnimatedSection delay={0}>
           <View style={styles.hero}>
             <View style={styles.heroBg} />
-            <View style={styles.heroInner}>
+            <View style={[styles.heroInner, isMobile && { flexDirection: 'column' }]}>
               {/* Left Content */}
-              <View style={styles.heroLeft}>
+              <View style={[styles.heroLeft, isMobile && { padding: 20 }]}>
                 <Text style={styles.heroGreeting}>{t('greeting')}</Text>
-                <Text style={styles.heroTitle}>LogiRent</Text>
+                <Text style={[styles.heroTitle, isMobile && { fontSize: 28 }]}>LogiRent</Text>
                 <Text style={styles.heroSubtitle}>{t('heroSubtitle')}</Text>
 
                 {/* Search Bar */}
@@ -137,24 +139,24 @@ export default function HomeScreen() {
                 {/* Stats */}
                 <View style={styles.heroStats}>
                   <View style={styles.heroStat}>
-                    <Text style={styles.heroStatNum}>{vehicles.length}+</Text>
+                    <Text style={[styles.heroStatNum, isMobile && { fontSize: 18 }]}>{vehicles.length}+</Text>
                     <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Véhicules' : 'Vehicles'}</Text>
                   </View>
                   <View style={styles.heroStatDivider} />
                   <View style={styles.heroStat}>
-                    <Text style={styles.heroStatNum}>500+</Text>
+                    <Text style={[styles.heroStatNum, isMobile && { fontSize: 18 }]}>500+</Text>
                     <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Clients' : 'Clients'}</Text>
                   </View>
                   <View style={styles.heroStatDivider} />
                   <View style={styles.heroStat}>
-                    <Text style={styles.heroStatNum}>24/7</Text>
+                    <Text style={[styles.heroStatNum, isMobile && { fontSize: 18 }]}>24/7</Text>
                     <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Support' : 'Support'}</Text>
                   </View>
                 </View>
               </View>
 
               {/* Right Image */}
-              <View style={styles.heroRight}>
+              <View style={[styles.heroRight, isMobile && { width: '100%', height: 200, minHeight: 200 }]}>
                 <Image
                   source={{ uri: 'https://images.unsplash.com/photo-1762602671608-06e044a71448?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBjYXIlMjByZW50YWwlMjBwcmVtaXVtfGVufDB8fHx8MTc3MjAxMzA3MXww&ixlib=rb-4.1.0&q=85' }}
                   style={styles.heroImage}
