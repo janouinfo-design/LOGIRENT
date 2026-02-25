@@ -35,8 +35,9 @@ export default function AgenciesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editAgency, setEditAgency] = useState<Agency | null>(null);
-  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '' });
+  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' });
   const [error, setError] = useState('');
+  const [successInfo, setSuccessInfo] = useState<{name: string, email: string, password: string} | null>(null);
 
   const isSuperAdmin = user?.role === 'super_admin';
 
