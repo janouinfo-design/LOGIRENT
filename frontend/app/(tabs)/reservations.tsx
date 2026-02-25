@@ -109,14 +109,14 @@ export default function ReservationsScreen() {
       </View>
 
       {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterBar} contentContainerStyle={styles.filterContent}>
+      <View style={styles.filterBar}>
         {filters.map(f => (
           <TouchableOpacity key={f.id} style={[styles.filterChip, filter === f.id && styles.filterChipActive]}
             onPress={() => setFilter(f.id)} data-testid={`filter-${f.id}`}>
             <Text style={[styles.filterText, filter === f.id && styles.filterTextActive]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       {/* Reservations List */}
       <ScrollView style={styles.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
