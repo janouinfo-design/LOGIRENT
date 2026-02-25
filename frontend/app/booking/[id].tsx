@@ -163,6 +163,26 @@ export default function BookingScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Feedback Message Banner */}
+        {feedbackMessage && (
+          <TouchableOpacity 
+            style={[
+              styles.feedbackBanner, 
+              feedbackMessage.type === 'success' ? styles.feedbackSuccess : styles.feedbackError
+            ]}
+            onPress={() => setFeedbackMessage(null)}
+            data-testid="feedback-banner"
+          >
+            <Ionicons 
+              name={feedbackMessage.type === 'success' ? 'checkmark-circle' : 'alert-circle'} 
+              size={22} 
+              color="#FFFFFF" 
+            />
+            <Text style={styles.feedbackText}>{feedbackMessage.text}</Text>
+            <Ionicons name="close" size={18} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+        )}
+
         {/* Documents Warning */}
         {!hasDocuments && (
           <TouchableOpacity 
