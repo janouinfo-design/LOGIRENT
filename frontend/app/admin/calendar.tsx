@@ -593,15 +593,6 @@ const styles = StyleSheet.create({
   overdueAlert: { backgroundColor: COLORS.overdue, borderRadius: 14, padding: 16, marginBottom: 12 },
   overdueItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 10, padding: 12, marginTop: 6 },
   navButton: { width: 40, height: 40, borderRadius: 12, backgroundColor: COLORS.card, justifyContent: 'center', alignItems: 'center' },
-  monthPickerOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    alignItems: 'center',
-    paddingTop: 60,
-  },
   monthPickerCard: {
     backgroundColor: COLORS.card,
     borderRadius: 16,
