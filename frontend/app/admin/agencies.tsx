@@ -273,7 +273,20 @@ export default function AgenciesPage() {
                 <Text style={styles.credentialValue}>{successInfo?.password}</Text>
               </View>
             </View>
-            <Text style={styles.credentialsNote}>Communiquez ces identifiants a l'administrateur de l'agence.</Text>
+            <View style={styles.linksBox}>
+              <Text style={styles.credentialsTitle}>Liens a communiquer :</Text>
+              <View style={styles.credentialRow}>
+                <Ionicons name="shield-checkmark" size={16} color={COLORS.warning} />
+                <Text style={styles.credentialLabel}>Panel Admin :</Text>
+                <Text style={styles.linkValue} selectable>{API_URL}/admin-login</Text>
+              </View>
+              <View style={styles.credentialRow}>
+                <Ionicons name="globe-outline" size={16} color={COLORS.success} />
+                <Text style={styles.credentialLabel}>App Client :</Text>
+                <Text style={styles.linkValue} selectable>{API_URL}</Text>
+              </View>
+            </View>
+            <Text style={styles.credentialsNote}>Communiquez ces identifiants et liens a l'administrateur de l'agence.</Text>
             <TouchableOpacity style={styles.saveBtn} onPress={() => setSuccessInfo(null)} data-testid="agency-success-close">
               <Text style={styles.saveBtnText}>Fermer</Text>
             </TouchableOpacity>
