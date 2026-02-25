@@ -416,6 +416,7 @@ export default function BookingScreen() {
                 paymentMethod === 'card' && styles.paymentMethodSelected,
               ]}
               onPress={() => setPaymentMethod('card')}
+              data-testid="payment-card"
             >
               <View style={[
                 styles.paymentRadio,
@@ -440,9 +441,36 @@ export default function BookingScreen() {
             <TouchableOpacity
               style={[
                 styles.paymentMethodCard,
+                paymentMethod === 'twint' && styles.paymentMethodSelectedTwint,
+              ]}
+              onPress={() => setPaymentMethod('twint')}
+              data-testid="payment-twint"
+            >
+              <View style={[
+                styles.paymentRadio,
+                paymentMethod === 'twint' && styles.paymentRadioSelectedTwint,
+              ]}>
+                {paymentMethod === 'twint' && <View style={styles.paymentRadioInnerTwint} />}
+              </View>
+              <View style={styles.twintIconBox}>
+                <Text style={styles.twintIconText}>T</Text>
+              </View>
+              <View style={styles.paymentMethodInfo}>
+                <Text style={[
+                  styles.paymentMethodTitle,
+                  paymentMethod === 'twint' && styles.paymentMethodTitleTwint,
+                ]}>TWINT</Text>
+                <Text style={styles.paymentMethodSubtitle}>Paiement mobile suisse</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.paymentMethodCard,
                 paymentMethod === 'cash' && styles.paymentMethodSelected,
               ]}
               onPress={() => setPaymentMethod('cash')}
+              data-testid="payment-cash"
             >
               <View style={[
                 styles.paymentRadio,
