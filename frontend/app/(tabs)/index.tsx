@@ -364,6 +364,7 @@ const styles = StyleSheet.create({
     maxWidth: 1200,
     alignSelf: 'center',
     width: '100%',
+    justifyContent: 'center',
   },
   empty: { alignItems: 'center', paddingVertical: 40 },
   emptyText: { fontSize: 15, color: C.grayLight, marginTop: 10 },
