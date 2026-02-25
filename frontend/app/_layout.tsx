@@ -129,12 +129,12 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg },
-  topBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border, gap: 8 },
-  logoSection: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  logo: { width: 28, height: 28 },
-  logoText: { fontSize: 18, fontWeight: '800', color: C.dark },
-  navIcons: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 4 },
-  navItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, gap: 6 },
+  topBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, paddingHorizontal: 12, paddingTop: 4, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border, gap: 4 },
+  logoSection: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  logo: { width: 24, height: 24 },
+  logoText: { fontSize: 16, fontWeight: '800', color: C.dark },
+  navIcons: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 2 },
+  navItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, gap: 4 },
   navItemActive: { backgroundColor: 'rgba(124, 58, 237, 0.08)' },
   navLabel: { fontSize: 13, fontWeight: '500', color: C.gray },
   navLabelActive: { color: C.purple, fontWeight: '600' },
