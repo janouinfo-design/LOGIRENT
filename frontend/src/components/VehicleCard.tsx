@@ -90,10 +90,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     flexBasis: '31%',
-    flexGrow: 0,
+    flexGrow: 1,
     flexShrink: 0,
-    minWidth: 240,
-    maxWidth: 380,
+    minWidth: 300,
+    maxWidth: 400,
   },
   topRow: {
     flexDirection: 'row',
