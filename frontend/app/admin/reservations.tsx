@@ -50,6 +50,7 @@ export default function AdminReservations() {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [actionModal, setActionModal] = useState<{ type: 'status' | 'payment'; reservation: Reservation } | null>(null);
   
   // Date range filter
   const [showDateFilter, setShowDateFilter] = useState(false);
