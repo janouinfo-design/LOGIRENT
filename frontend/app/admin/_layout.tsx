@@ -1,209 +1,123 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
-import { Stack, useRouter, usePathname } from 'expo-router';
+import { Slot, useRouter, usePathname } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
 const COLORS = {
-  primary: '#1E3A8A',
-  secondary: '#F59E0B',
-  background: '#F8FAFC',
-  card: '#FFFFFF',
+  primary: '#6C2BD9',
+  primaryDark: '#5521B5',
+  background: '#0F0B1A',
+  card: '#1A1425',
   text: '#FFFFFF',
-  error: '#EF4444',
+  textLight: '#9CA3AF',
+  border: '#2D2640',
+  accent: '#A78BFA',
+  success: '#10B981',
+  warning: '#F59E0B',
 };
 
-const menuItems = [
-  { name: 'index', label: 'Dashboard', icon: 'stats-chart' },
-  { name: 'calendar', label: 'Agenda', icon: 'calendar-outline' },
-  { name: 'reservations', label: 'Réservations', icon: 'calendar' },
-  { name: 'vehicles', label: 'Véhicules', icon: 'car' },
-  { name: 'users', label: 'Utilisateurs', icon: 'people' },
-  { name: 'payments', label: 'Paiements', icon: 'card' },
+const NAV_ITEMS = [
+  { key: '/admin', label: 'Tableau de bord', icon: 'grid-outline' as const },
+  { key: '/admin/vehicles', label: 'Véhicules', icon: 'car-outline' as const },
+  { key: '/admin/reservations', label: 'Réservations', icon: 'calendar-outline' as const },
+  { key: '/admin/users', label: 'Clients', icon: 'people-outline' as const },
 ];
 
-function AdminNavBar() {
+const SUPER_NAV_ITEMS = [
+  { key: '/admin/agencies', label: 'Agences', icon: 'business-outline' as const },
+];
+
+export default function AdminLayout() {
   const router = useRouter();
   const pathname = usePathname();
-  const { logout, user } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
 
-  const currentPage = pathname.split('/').pop() || 'index';
-
-  const handleLogout = async () => {
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm('Voulez-vous vous déconnecter?');
-      if (confirmed) {
-        await logout();
-        router.replace('/admin-login');
-      }
-    } else {
-      await logout();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/admin-login');
+      return;
+    }
+    const role = user?.role || 'client';
+    if (role !== 'admin' && role !== 'super_admin') {
       router.replace('/admin-login');
     }
-  };
+  }, [isAuthenticated, user]);
+
+  if (!isAuthenticated || !user) return null;
+
+  const isSuperAdmin = user.role === 'super_admin';
+  const allNavItems = isSuperAdmin ? [...NAV_ITEMS, ...SUPER_NAV_ITEMS] : NAV_ITEMS;
 
   return (
-    <View style={styles.navContainer}>
-      {/* Header with logo and logout */}
-      <View style={styles.navHeader}>
-        <View style={styles.logoSection}>
-          <Ionicons name="settings" size={24} color={COLORS.text} />
-          <Text style={styles.logoText}>RentDrive Admin</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Top Admin Bar */}
+      <View style={styles.topBar}>
+        <View style={styles.topBarLeft}>
+          <TouchableOpacity onPress={() => router.push('/(tabs)')} data-testid="admin-go-home">
+            <Ionicons name="arrow-back" size={22} color={COLORS.accent} />
+          </TouchableOpacity>
+          <View style={styles.brandGroup}>
+            <Ionicons name="shield-checkmark" size={20} color={COLORS.accent} />
+            <Text style={styles.brandText}>LogiRent Admin</Text>
+          </View>
         </View>
-        <View style={styles.userSection}>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Ionicons name="log-out" size={18} color={COLORS.text} />
-            <Text style={styles.logoutText}>Déconnexion</Text>
+        <View style={styles.topBarRight}>
+          <View style={styles.agencyBadge} data-testid="admin-agency-badge">
+            <Ionicons name="business" size={14} color={COLORS.warning} />
+            <Text style={styles.agencyText}>{user.agency_name || 'N/A'}</Text>
+          </View>
+          <View style={styles.roleBadge} data-testid="admin-role-badge">
+            <Text style={styles.roleText}>
+              {isSuperAdmin ? 'Super Admin' : 'Admin'}
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="admin-logout-btn">
+            <Ionicons name="log-out-outline" size={22} color={COLORS.textLight} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Admin Menu */}
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.menuContainer}
-      >
-        {menuItems.map((item) => {
-          const isActive = currentPage === item.name || (currentPage === 'admin' && item.name === 'index');
+      {/* Navigation Tabs */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.navTabs} contentContainerStyle={styles.navTabsContent}>
+        {allNavItems.map((item) => {
+          const isActive = pathname === item.key || (item.key !== '/admin' && pathname.startsWith(item.key));
           return (
             <TouchableOpacity
-              key={item.name}
-              style={[styles.menuItem, isActive && styles.menuItemActive]}
-              onPress={() => router.push(`/admin/${item.name === 'index' ? '' : item.name}` as any)}
+              key={item.key}
+              style={[styles.navTab, isActive && styles.navTabActive]}
+              onPress={() => router.push(item.key as any)}
+              data-testid={`admin-nav-${item.key.replace('/admin/', '').replace('/admin', 'dashboard')}`}
             >
-              <Ionicons 
-                name={item.icon as any} 
-                size={18} 
-                color={isActive ? COLORS.secondary : 'rgba(255,255,255,0.7)'} 
-              />
-              <Text style={[styles.menuText, isActive && styles.menuTextActive]}>
-                {item.label}
-              </Text>
+              <Ionicons name={item.icon} size={18} color={isActive ? COLORS.accent : COLORS.textLight} />
+              <Text style={[styles.navTabText, isActive && styles.navTabTextActive]}>{item.label}</Text>
             </TouchableOpacity>
           );
         })}
       </ScrollView>
-    </View>
-  );
-}
 
-export default function AdminLayout() {
-  const router = useRouter();
-  const { isAuthenticated, isLoading, loadUser } = useAuthStore();
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/admin-login');
-    }
-  }, [isAuthenticated, isLoading]);
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: COLORS.background }}>
-        <Text>Chargement...</Text>
-      </View>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  return (
-    <View style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <AdminNavBar />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: COLORS.background },
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="calendar" />
-        <Stack.Screen name="vehicles" />
-        <Stack.Screen name="reservations" />
-        <Stack.Screen name="users" />
-        <Stack.Screen name="payments" />
-      </Stack>
-    </View>
+      {/* Content */}
+      <Slot />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  navContainer: {
-    backgroundColor: COLORS.primary,
-    paddingTop: Platform.OS === 'web' ? 10 : 50,
-    paddingBottom: 10,
-    paddingHorizontal: 16,
-  },
-  navHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  logoSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoText: {
-    color: COLORS.text,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  userSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  userEmail: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-  },
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 6,
-  },
-  logoutText: {
-    color: COLORS.text,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  menuContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    gap: 6,
-  },
-  menuItemActive: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  menuText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  menuTextActive: {
-    color: COLORS.text,
-    fontWeight: '600',
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: COLORS.border },
+  topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  brandGroup: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  brandText: { color: COLORS.text, fontSize: 16, fontWeight: '700' },
+  topBarRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  agencyBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(245,158,11,0.12)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  agencyText: { color: COLORS.warning, fontSize: 12, fontWeight: '600' },
+  roleBadge: { backgroundColor: 'rgba(108,43,217,0.2)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  roleText: { color: COLORS.accent, fontSize: 12, fontWeight: '700' },
+  navTabs: { borderBottomWidth: 1, borderBottomColor: COLORS.border, maxHeight: 48 },
+  navTabsContent: { paddingHorizontal: 12, gap: 4 },
+  navTab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 12 },
+  navTabActive: { borderBottomWidth: 2, borderBottomColor: COLORS.accent },
+  navTabText: { color: COLORS.textLight, fontSize: 13, fontWeight: '500' },
+  navTabTextActive: { color: COLORS.accent, fontWeight: '700' },
 });
