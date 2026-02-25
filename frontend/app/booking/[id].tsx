@@ -128,12 +128,18 @@ export default function BookingScreen() {
     }
 
     try {
+      // Combine date + time
+      const startDateTime = new Date(startDate);
+      startDateTime.setHours(startHour, startMin, 0, 0);
+      const endDateTime = new Date(endDate);
+      endDateTime.setHours(endHour, endMin, 0, 0);
+
       // Create reservation - TWINT goes through Stripe checkout like card
       const effectivePaymentMethod = paymentMethod === 'twint' ? 'card' : paymentMethod;
       const reservation = await createReservation({
         vehicle_id: id!,
-        start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        start_date: startDateTime.toISOString(),
+        end_date: endDateTime.toISOString(),
         options: selectedOptions,
         payment_method: effectivePaymentMethod,
       });
