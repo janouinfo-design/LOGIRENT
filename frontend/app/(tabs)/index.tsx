@@ -1,42 +1,41 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, RefreshControl, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
-import { useVehicleStore, Vehicle } from '../../src/store/vehicleStore';
+import { useVehicleStore } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
 
 const { width } = Dimensions.get('window');
 
 const COLORS = {
-  primary: '#1E3A8A',
-  secondary: '#F59E0B',
-  background: '#F8FAFC',
+  primary: '#0F172A',
+  gold: '#D4A853',
+  goldLight: '#F5E6C8',
+  bg: '#FAFBFC',
   card: '#FFFFFF',
-  text: '#1E293B',
+  text: '#0F172A',
   textLight: '#64748B',
   border: '#E2E8F0',
 };
 
 const vehicleTypes = [
-  { id: 'all', name: 'All', icon: 'car' },
-  { id: 'SUV', name: 'SUV', icon: 'car-sport' },
-  { id: 'berline', name: 'Sedan', icon: 'car-outline' },
-  { id: 'citadine', name: 'City', icon: 'car' },
-  { id: 'utilitaire', name: 'Van', icon: 'cube' },
+  { id: 'all', name: 'Tous', icon: 'grid-outline' },
+  { id: 'SUV', name: 'SUV', icon: 'car-sport-outline' },
+  { id: 'berline', name: 'Berline', icon: 'car-outline' },
+  { id: 'citadine', name: 'Citadine', icon: 'car' },
+  { id: 'utilitaire', name: 'Utilitaire', icon: 'cube-outline' },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { vehicles, fetchVehicles, isLoading, setFilters } = useVehicleStore();
+  const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
 
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
+  useEffect(() => { fetchVehicles(); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -46,93 +45,93 @@ export default function HomeScreen() {
 
   const handleTypeSelect = (typeId: string) => {
     setSelectedType(typeId);
-    if (typeId === 'all') {
-      setFilters({ type: undefined });
-      fetchVehicles({ type: undefined });
-    } else {
-      setFilters({ type: typeId });
-      fetchVehicles({ type: typeId });
-    }
+    const type = typeId === 'all' ? undefined : typeId;
+    setFilters({ type });
+    fetchVehicles({ type });
   };
 
-  const featuredVehicles = vehicles.slice(0, 3);
+  const firstName = user?.name?.split(' ')[0] || 'Client';
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        contentContainerStyle={{ paddingBottom: 30 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'Guest'}</Text>
-            <Text style={styles.headerTitle}>Find Your Perfect Ride</Text>
+        {/* Hero Header */}
+        <View style={styles.hero}>
+          <View style={styles.heroTop}>
+            <View>
+              <Text style={styles.greeting}>Bonjour, {firstName}</Text>
+              <Text style={styles.heroTitle}>Trouvez votre{'\n'}voiture idéale</Text>
+            </View>
+            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/profile')}>
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileInitial}>{firstName.charAt(0).toUpperCase()}</Text>
+              </View>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.notificationBtn}>
-            <Ionicons name="notifications-outline" size={24} color={COLORS.text} />
+
+          {/* Search Bar */}
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={() => router.push('/(tabs)/vehicles')}
+            data-testid="search-bar"
+          >
+            <Ionicons name="search" size={18} color={COLORS.gold} />
+            <Text style={styles.searchText}>Rechercher un véhicule...</Text>
+            <View style={styles.searchFilter}>
+              <Ionicons name="options-outline" size={16} color={COLORS.primary} />
+            </View>
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
-        <TouchableOpacity 
-          style={styles.searchBar}
-          onPress={() => router.push('/(tabs)/vehicles')}
-        >
-          <Ionicons name="search" size={20} color={COLORS.textLight} />
-          <Text style={styles.searchText}>Search vehicles...</Text>
-        </TouchableOpacity>
-
         {/* Categories */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Categories</Text>
+          <Text style={styles.sectionTitle}>Catégories</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoriesContainer}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
           >
-            {vehicleTypes.map((type) => (
-              <TouchableOpacity
-                key={type.id}
-                style={[
-                  styles.categoryItem,
-                  selectedType === type.id && styles.categoryItemActive,
-                ]}
-                onPress={() => handleTypeSelect(type.id)}
-              >
-                <View style={[
-                  styles.categoryIcon,
-                  selectedType === type.id && styles.categoryIconActive,
-                ]}>
+            {vehicleTypes.map((type) => {
+              const active = selectedType === type.id;
+              return (
+                <TouchableOpacity
+                  key={type.id}
+                  style={[styles.catPill, active && styles.catPillActive]}
+                  onPress={() => handleTypeSelect(type.id)}
+                  data-testid={`category-${type.id}`}
+                >
                   <Ionicons
                     name={type.icon as any}
-                    size={24}
-                    color={selectedType === type.id ? '#FFFFFF' : COLORS.primary}
+                    size={18}
+                    color={active ? '#FFFFFF' : COLORS.primary}
                   />
-                </View>
-                <Text style={[
-                  styles.categoryText,
-                  selectedType === type.id && styles.categoryTextActive,
-                ]}>
-                  {type.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text style={[styles.catText, active && styles.catTextActive]}>
+                    {type.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </ScrollView>
         </View>
 
-        {/* Featured Vehicles */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Vehicles</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {featuredVehicles.map((vehicle) => (
+        {/* Vehicle Count + View Toggle */}
+        <View style={styles.resultsRow}>
+          <Text style={styles.resultsText}>
+            {vehicles.length} véhicule{vehicles.length > 1 ? 's' : ''}
+            {selectedType !== 'all' && <Text style={{ color: COLORS.gold }}> - {vehicleTypes.find(t => t.id === selectedType)?.name}</Text>}
+          </Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
+            <Text style={styles.viewAll}>Voir tout</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Vehicle Grid - Square Cards */}
+        <View style={styles.vehicleGrid}>
+          {vehicles.map((vehicle) => (
             <VehicleCard
               key={vehicle.id}
               vehicle={vehicle}
@@ -141,19 +140,31 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Promo Banner */}
-        <View style={styles.promoBanner}>
-          <View style={styles.promoContent}>
-            <Text style={styles.promoTitle}>First Rental?</Text>
-            <Text style={styles.promoSubtitle}>Get 15% off your first booking!</Text>
-            <TouchableOpacity style={styles.promoButton}>
-              <Text style={styles.promoButtonText}>Book Now</Text>
+        {vehicles.length === 0 && (
+          <View style={styles.empty}>
+            <Ionicons name="car-outline" size={48} color={COLORS.textLight} />
+            <Text style={styles.emptyText}>Aucun véhicule trouvé</Text>
+            <TouchableOpacity onPress={() => handleTypeSelect('all')}>
+              <Text style={styles.emptyAction}>Réinitialiser les filtres</Text>
             </TouchableOpacity>
           </View>
-          <Ionicons name="gift" size={80} color="rgba(255,255,255,0.3)" style={styles.promoIcon} />
-        </View>
+        )}
 
-        <View style={{ height: 24 }} />
+        {/* Promo Banner */}
+        <View style={styles.promo}>
+          <View style={styles.promoLeft}>
+            <View style={styles.promoBadge}>
+              <Ionicons name="star" size={12} color={COLORS.gold} />
+              <Text style={styles.promoBadgeText}>Offre spéciale</Text>
+            </View>
+            <Text style={styles.promoTitle}>Première location ?</Text>
+            <Text style={styles.promoSub}>Profitez de -15% sur votre première réservation</Text>
+            <TouchableOpacity style={styles.promoBtn}>
+              <Text style={styles.promoBtnText}>Réserver maintenant</Text>
+              <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -162,140 +173,198 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: COLORS.bg,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  hero: {
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 8,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  heroTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
   },
   greeting: {
-    fontSize: 14,
-    color: COLORS.textLight,
+    fontSize: 13,
+    color: COLORS.gold,
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: COLORS.text,
+  heroTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    marginTop: 6,
+    lineHeight: 32,
+  },
+  profileBtn: {
     marginTop: 4,
   },
-  notificationBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.card,
+  profileAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.gold,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  profileInitial: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
-    marginHorizontal: 20,
-    marginTop: 16,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 12,
+    paddingVertical: 13,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
   searchText: {
-    fontSize: 16,
-    color: COLORS.textLight,
+    flex: 1,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+  },
+  searchFilter: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: COLORS.gold,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   section: {
     marginTop: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: COLORS.text,
     paddingHorizontal: 20,
-    marginBottom: 16,
+    marginBottom: 14,
   },
-  seeAll: {
-    fontSize: 14,
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  categoriesContainer: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  categoryItem: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  categoryItemActive: {},
-  categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(30, 58, 138, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  categoryIconActive: {
-    backgroundColor: COLORS.primary,
-  },
-  categoryText: {
-    fontSize: 12,
-    color: COLORS.textLight,
-    fontWeight: '500',
-  },
-  categoryTextActive: {
-    color: COLORS.primary,
-    fontWeight: '600',
-  },
-  promoBanner: {
-    backgroundColor: COLORS.primary,
-    marginHorizontal: 20,
-    marginTop: 24,
-    borderRadius: 16,
-    padding: 20,
+  catPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 25,
+    backgroundColor: COLORS.card,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  catPillActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  catText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  catTextActive: {
+    color: '#FFFFFF',
+  },
+  resultsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginTop: 24,
+    marginBottom: 14,
+  },
+  resultsText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.textLight,
+  },
+  viewAll: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.gold,
+  },
+  vehicleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  empty: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: COLORS.textLight,
+    marginTop: 10,
+  },
+  emptyAction: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.gold,
+    marginTop: 8,
+  },
+  promo: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    backgroundColor: COLORS.primary,
+    borderRadius: 18,
+    padding: 22,
     overflow: 'hidden',
   },
-  promoContent: {
-    flex: 1,
+  promoLeft: {},
+  promoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(212, 168, 83, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  promoBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.gold,
   },
   promoTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 6,
   },
-  promoSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+  promoSub: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.6)',
+    lineHeight: 18,
     marginBottom: 16,
   },
-  promoButton: {
-    backgroundColor: COLORS.secondary,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+  promoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     alignSelf: 'flex-start',
+    backgroundColor: COLORS.gold,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  promoButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  promoIcon: {
-    position: 'absolute',
-    right: -10,
-    bottom: -10,
+  promoBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
 });
