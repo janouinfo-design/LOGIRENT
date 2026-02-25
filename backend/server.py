@@ -194,6 +194,7 @@ class PaymentTransaction(BaseModel):
 class CheckoutRequest(BaseModel):
     reservation_id: str
     origin_url: str
+    payment_method_type: str = "card"  # card, twint
 
 # ==================== HELPERS ====================
 
