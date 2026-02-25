@@ -107,47 +107,6 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Navigation Bar */}
-        <View style={styles.navbar}>
-          <View style={styles.logoRow}>
-            <Image source={{ uri: LOGO_URL }} style={styles.logoImage} resizeMode="contain" />
-            <Text style={styles.logoText}>Logi<Text style={{ color: C.purpleLight }}>Rent</Text></Text>
-          </View>
-          
-          {/* Language Switcher & Notifications */}
-          <View style={styles.navRight}>
-            <TouchableOpacity
-              style={styles.notifBtn}
-              onPress={() => router.push('/(tabs)/reservations')}
-              data-testid="notification-bell"
-            >
-              <Ionicons name="notifications-outline" size={22} color={C.dark} />
-              {unreadCount > 0 && (
-                <View style={styles.notifBadge}>
-                  <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-                </View>
-              )}
-            </TouchableOpacity>
-            <View style={styles.langSwitch}>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'fr' && styles.langBtnActive]}
-              onPress={() => setLang('fr')}
-              data-testid="lang-fr"
-            >
-              <Text style={styles.langFlag}>🇫🇷</Text>
-              <Text style={[styles.langLabel, lang === 'fr' && styles.langLabelActive]}>FR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
-              onPress={() => setLang('en')}
-              data-testid="lang-en"
-            >
-              <Text style={styles.langFlag}>🇬🇧</Text>
-              <Text style={[styles.langLabel, lang === 'en' && styles.langLabelActive]}>EN</Text>
-            </TouchableOpacity>
-          </View>
-          </View>
-        </View>
 
         {/* Hero Section */}
         <AnimatedSection delay={0}>
