@@ -174,7 +174,11 @@ export default function BookingScreen() {
         router.push('/(tabs)/reservations');
       }
     } catch (error: any) {
-      Alert.alert('Booking Error', error.message);
+      if (Platform.OS === 'web') {
+        window.alert(error.message || 'Erreur lors de la réservation');
+      } else {
+        Alert.alert('Erreur', error.message);
+      }
     }
   };
 
