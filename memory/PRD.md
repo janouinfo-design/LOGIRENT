@@ -42,7 +42,11 @@ Target market: Switzerland (TWINT payment important)
     └── package.json
 ```
 
-## What's Been Implemented
+## Tâches complétées (25 Fév 2026)
+- Correction affichage statuts réservations admin (FlatList -> ScrollView)
+- Page Agenda/Calendrier admin avec CSS Grid, indicateurs départs/retours, détection retards
+- Mini calendrier popup sur la page de réservation client
+- Traduction complète en français de la page booking
 
 ### Client App
 - [x] Email/password registration & login
