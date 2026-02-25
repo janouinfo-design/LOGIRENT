@@ -466,6 +466,7 @@ async def get_vehicles(
     max_price: Optional[float] = None,
     location: Optional[str] = None,
     transmission: Optional[str] = None,
+    agency_id: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None
 ):
@@ -481,6 +482,8 @@ async def get_vehicles(
         query["location"] = {"$regex": location, "$options": "i"}
     if transmission:
         query["transmission"] = transmission
+    if agency_id:
+        query["agency_id"] = agency_id
     
     vehicles = await db.vehicles.find(query).to_list(100)
     
