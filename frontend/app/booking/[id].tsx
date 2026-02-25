@@ -827,4 +827,138 @@ const styles = StyleSheet.create({
     color: '#A16207',
     marginTop: 2,
   },
+  calendarHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  calendarHintText: {
+    fontSize: 11,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
+  calModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  calModalContent: {
+    backgroundColor: COLORS.card,
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 380,
+  },
+  calModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  calModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  calNavRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  calMonthTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.text,
+    textTransform: 'capitalize',
+  },
+  calWeekRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  calWeekday: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '600',
+    color: COLORS.textLight,
+    paddingVertical: 6,
+  },
+  calDaysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  calDay: {
+    width: '14.28%',
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+  },
+  calDayOutside: {
+    opacity: 0.2,
+  },
+  calDayInRange: {
+    backgroundColor: 'rgba(30, 58, 138, 0.08)',
+    borderRadius: 0,
+  },
+  calDaySelected: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 20,
+  },
+  calDayToday: {
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
+  calDayDisabled: {
+    opacity: 0.3,
+  },
+  calDayText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: COLORS.text,
+  },
+  calDayTextOutside: {
+    color: COLORS.textLight,
+  },
+  calDayTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  calDayTextToday: {
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  calDayTextDisabled: {
+    color: COLORS.textLight,
+  },
+  calQuickSelect: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  calQuickBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(30, 58, 138, 0.08)',
+  },
+  calQuickBtnActive: {
+    backgroundColor: COLORS.primary,
+  },
+  calQuickBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  calQuickBtnTextActive: {
+    color: '#FFFFFF',
+  },
 });
