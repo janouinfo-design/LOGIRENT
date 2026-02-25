@@ -1096,4 +1096,51 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: COLORS.card,
   },
+  actionModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionModalBox: {
+    backgroundColor: COLORS.card,
+    borderRadius: 16,
+    padding: 24,
+    width: 360,
+    maxWidth: '90%',
+  },
+  actionModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  actionModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.text,
+  },
+  actionModalSub: {
+    fontSize: 13,
+    color: COLORS.textLight,
+    marginBottom: 2,
+  },
+  actionModalOptions: {
+    marginTop: 16,
+    gap: 8,
+  },
+  actionModalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    gap: 10,
+  },
+  actionModalBtnText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });
