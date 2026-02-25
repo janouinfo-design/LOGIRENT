@@ -89,11 +89,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: C.border,
-    flexBasis: '31%',
-    flexGrow: 1,
-    flexShrink: 0,
-    minWidth: 300,
-    maxWidth: 400,
+    width: 340,
+    maxWidth: '100%',
   },
   topRow: {
     flexDirection: 'row',
