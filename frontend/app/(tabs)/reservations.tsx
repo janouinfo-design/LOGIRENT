@@ -24,18 +24,18 @@ const C = {
 };
 
 const statusLabels: Record<string, string> = {
-  confirmed: 'Confirmee',
+  confirmed: 'Confirm\u00e9e',
   active: 'En cours',
   pending: 'En attente',
-  pending_cash: 'Especes en attente',
-  cancelled: 'Annulee',
-  completed: 'Terminee',
+  pending_cash: 'Esp\u00e8ces en attente',
+  cancelled: 'Annul\u00e9e',
+  completed: 'Termin\u00e9e',
 };
 
 const paymentLabels: Record<string, string> = {
-  paid: 'Paye',
+  paid: 'Pay\u00e9',
   pending: 'En attente',
-  unpaid: 'Non paye',
+  unpaid: 'Non pay\u00e9',
 };
 
 const getStatusColor = (status: string) => {
