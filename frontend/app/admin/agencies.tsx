@@ -176,17 +176,18 @@ export default function AgenciesPage() {
                     <Text style={styles.statLabel}>Admins</Text>
                   </View>
                 </View>
-                <View style={styles.linksRow}>
-                  <TouchableOpacity style={styles.linkBtn} onPress={() => { if (typeof window !== 'undefined') window.open(`${API_URL}/admin-login`, '_blank'); }}>
-                    <Ionicons name="shield-checkmark" size={15} color={COLORS.warning} />
-                    <Text style={styles.linkBtnText}>Panel Admin</Text>
-                    <Ionicons name="open-outline" size={13} color={COLORS.textLight} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.linkBtn} onPress={() => { if (typeof window !== 'undefined') window.open(`${API_URL}`, '_blank'); }}>
-                    <Ionicons name="globe-outline" size={15} color={COLORS.success} />
-                    <Text style={styles.linkBtnText}>App Client</Text>
-                    <Ionicons name="open-outline" size={13} color={COLORS.textLight} />
-                  </TouchableOpacity>
+                <View style={styles.linksSection}>
+                  <Text style={styles.linksSectionTitle}>Liens d'acces</Text>
+                  <View style={styles.linkItem}>
+                    <Ionicons name="shield-checkmark" size={16} color={COLORS.warning} />
+                    <Text style={styles.linkLabel}>Admin : </Text>
+                    <Text style={styles.linkUrl} selectable>{API_URL}/admin-login</Text>
+                  </View>
+                  <View style={styles.linkItem}>
+                    <Ionicons name="globe-outline" size={16} color={COLORS.success} />
+                    <Text style={styles.linkLabel}>Client : </Text>
+                    <Text style={styles.linkUrl} selectable>{API_URL}</Text>
+                  </View>
                 </View>
               </View>
             ))}
