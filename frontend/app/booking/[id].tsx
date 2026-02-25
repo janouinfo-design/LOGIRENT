@@ -30,8 +30,8 @@ export default function BookingScreen() {
   const { createReservation, initiatePayment, isLoading } = useReservationStore();
   const { user } = useAuthStore();
 
-  const [startDate, setStartDate] = useState(addDays(new Date(), 1));
-  const [endDate, setEndDate] = useState(addDays(new Date(), 3));
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(addDays(new Date(), 2));
   const [startHour, setStartHour] = useState(8);
   const [startMin, setStartMin] = useState(0);
   const [endHour, setEndHour] = useState(18);
