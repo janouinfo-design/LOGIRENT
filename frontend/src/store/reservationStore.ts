@@ -34,7 +34,7 @@ interface ReservationState {
   fetchReservations: () => Promise<void>;
   createReservation: (data: { vehicle_id: string; start_date: string; end_date: string; options: string[]; payment_method?: string }) => Promise<Reservation>;
   cancelReservation: (id: string) => Promise<void>;
-  initiatePayment: (reservationId: string, originUrl: string) => Promise<{ url: string; session_id: string }>;
+  initiatePayment: (reservationId: string, originUrl: string, paymentMethodType?: string) => Promise<{ url: string; session_id: string }>;
   checkPaymentStatus: (sessionId: string) => Promise<any>;
 }
 
@@ -80,11 +80,12 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
     }
   },
 
-  initiatePayment: async (reservationId: string, originUrl: string) => {
+  initiatePayment: async (reservationId: string, originUrl: string, paymentMethodType: string = 'card') => {
     try {
       const response = await axios.post(`${API_URL}/api/payments/checkout`, {
         reservation_id: reservationId,
         origin_url: originUrl,
+        payment_method_type: paymentMethodType,
       });
       return response.data;
     } catch (error: any) {
