@@ -72,6 +72,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  registerAdmin: async (email: string, password: string, name: string, agencyName: string, phone?: string) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/auth/register-admin`, {
+        email,
+        password,
+        name,
+        agency_name: agencyName,
+        phone,
+      });
+      const { access_token, user } = response.data;
+      await AsyncStorage.setItem('token', access_token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      set({ user, token: access_token, isAuthenticated: true, isLoading: false });
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Registration failed');
+    }
+  },
+
+  adminLogin: async (email: string, password: string) => {
+    try {
+      const response = await axios.post(`${API_URL}/api/admin/login`, {
+        email,
+        password,
+      });
+      const { access_token, user } = response.data;
+      await AsyncStorage.setItem('token', access_token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      set({ user, token: access_token, isAuthenticated: true, isLoading: false });
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || 'Login failed');
+    }
+  },
+
   logout: async () => {
     await AsyncStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
