@@ -1379,13 +1379,23 @@ async def get_admin_users(
     limit: int = 20,
     user: dict = Depends(get_admin_user)
 ):
-    """Get all users for admin"""
-    users = await db.users.find({}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
-    total = await db.users.count_documents({})
+    """Get users - for agency admin, only users who have reservations with their agency"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
     
-    # Get reservation count for each user
+    if is_super:
+        users = await db.users.find({}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+        total = await db.users.count_documents({})
+    else:
+        # Get user IDs who have reservations with this agency
+        user_ids = await db.reservations.distinct("user_id", {"agency_id": agency_id})
+        users = await db.users.find({"id": {"$in": user_ids}}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+        total = len(user_ids)
+    
     for u in users:
-        u['reservation_count'] = await db.reservations.count_documents({"user_id": u['id']})
+        u['reservation_count'] = await db.reservations.count_documents(
+            {"user_id": u['id']} if is_super else {"user_id": u['id'], "agency_id": agency_id}
+        )
         u['_id'] = str(u['_id'])
     
     return {"users": users, "total": total}
