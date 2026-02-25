@@ -92,6 +92,7 @@ const styles = StyleSheet.create({
     marginBottom: CARD_GAP,
     borderWidth: 1,
     borderColor: COLORS.border,
+    maxWidth: 420,
   },
   imageBox: {
     width: '100%',
