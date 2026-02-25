@@ -109,18 +109,58 @@ export default function HomeScreen() {
         <AnimatedSection delay={0}>
           <View style={styles.hero}>
             <View style={styles.heroBg} />
-            <View style={styles.heroContent}>
-              <Text style={styles.heroGreeting}>{t('greeting')}</Text>
-              <Text style={styles.heroTitle}>LogiRent</Text>
-              <Text style={styles.heroSubtitle}>{t('heroSubtitle')}</Text>
-              <TouchableOpacity
-                style={styles.heroButton}
-                onPress={() => router.push('/(tabs)/vehicles')}
-                data-testid="explore-fleet-btn"
-              >
-                <Text style={styles.heroButtonText}>{t('ourFleet')}</Text>
-                <Ionicons name="arrow-forward" size={16} color={C.dark} />
-              </TouchableOpacity>
+            <View style={styles.heroInner}>
+              {/* Left Content */}
+              <View style={styles.heroLeft}>
+                <Text style={styles.heroGreeting}>{t('greeting')}</Text>
+                <Text style={styles.heroTitle}>LogiRent</Text>
+                <Text style={styles.heroSubtitle}>{t('heroSubtitle')}</Text>
+
+                {/* Search Bar */}
+                <View style={styles.heroSearch}>
+                  <Ionicons name="search" size={18} color={C.gray} />
+                  <TouchableOpacity
+                    style={styles.heroSearchInput}
+                    onPress={() => router.push('/(tabs)/vehicles')}
+                    data-testid="hero-search"
+                  >
+                    <Text style={styles.heroSearchPlaceholder}>{t('searchPlaceholder')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.heroSearchBtn}
+                    onPress={() => router.push('/(tabs)/vehicles')}
+                  >
+                    <Ionicons name="arrow-forward" size={16} color="#FFF" />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Stats */}
+                <View style={styles.heroStats}>
+                  <View style={styles.heroStat}>
+                    <Text style={styles.heroStatNum}>{vehicles.length}+</Text>
+                    <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Véhicules' : 'Vehicles'}</Text>
+                  </View>
+                  <View style={styles.heroStatDivider} />
+                  <View style={styles.heroStat}>
+                    <Text style={styles.heroStatNum}>500+</Text>
+                    <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Clients' : 'Clients'}</Text>
+                  </View>
+                  <View style={styles.heroStatDivider} />
+                  <View style={styles.heroStat}>
+                    <Text style={styles.heroStatNum}>24/7</Text>
+                    <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Support' : 'Support'}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Right Image */}
+              <View style={styles.heroRight}>
+                <Image
+                  source={{ uri: 'https://images.unsplash.com/photo-1762602671608-06e044a71448?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBjYXIlMjByZW50YWwlMjBwcmVtaXVtfGVufDB8fHx8MTc3MjAxMzA3MXww&ixlib=rb-4.1.0&q=85' }}
+                  style={styles.heroImage}
+                  resizeMode="cover"
+                />
+              </View>
             </View>
           </View>
         </AnimatedSection>
