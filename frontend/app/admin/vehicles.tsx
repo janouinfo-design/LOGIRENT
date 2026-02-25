@@ -23,6 +23,7 @@ const COLORS = {
 
 export default function AdminVehicles() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
