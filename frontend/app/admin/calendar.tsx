@@ -270,13 +270,81 @@ export default function AdminCalendar() {
         <TouchableOpacity style={styles.navButton} onPress={() => setCurrentMonth(subMonths(currentMonth, 1))} data-testid="calendar-prev-month">
           <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.text, textTransform: 'capitalize' }}>
-          {format(currentMonth, 'MMMM yyyy', { locale: fr })}
-        </Text>
+        <TouchableOpacity 
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.card, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border }}
+          onPress={() => { setPickerYear(currentMonth.getFullYear()); setShowMonthPicker(true); }}
+          data-testid="month-picker-trigger"
+        >
+          <Ionicons name="calendar" size={16} color={COLORS.primary} />
+          <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.text, textTransform: 'capitalize' }}>
+            {format(currentMonth, 'MMMM yyyy', { locale: fr })}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color={COLORS.primary} />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.navButton} onPress={() => setCurrentMonth(addMonths(currentMonth, 1))} data-testid="calendar-next-month">
           <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
+
+      {/* Month Picker Popup */}
+      {showMonthPicker && (
+        <View style={styles.monthPickerOverlay}>
+          <View style={styles.monthPickerCard}>
+            {/* Year Navigation */}
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <TouchableOpacity onPress={() => setPickerYear(pickerYear - 1)} style={{ padding: 8 }}>
+                <Ionicons name="chevron-back" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
+              <Text style={{ fontSize: 18, fontWeight: '700', color: COLORS.text }}>{pickerYear}</Text>
+              <TouchableOpacity onPress={() => setPickerYear(pickerYear + 1)} style={{ padding: 8 }}>
+                <Ionicons name="chevron-forward" size={20} color={COLORS.primary} />
+              </TouchableOpacity>
+            </View>
+            {/* Month Grid */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {MONTHS_FR.map((month, index) => {
+                const isCurrentMonth = currentMonth.getMonth() === index && currentMonth.getFullYear() === pickerYear;
+                const isThisMonth = new Date().getMonth() === index && new Date().getFullYear() === pickerYear;
+                return (
+                  <TouchableOpacity
+                    key={month}
+                    style={[
+                      styles.monthPickerItem,
+                      isCurrentMonth && styles.monthPickerItemActive,
+                      isThisMonth && !isCurrentMonth && styles.monthPickerItemToday,
+                    ]}
+                    onPress={() => handleMonthSelect(index)}
+                    data-testid={`month-pick-${index}`}
+                  >
+                    <Text style={[
+                      styles.monthPickerText,
+                      isCurrentMonth && styles.monthPickerTextActive,
+                      isThisMonth && !isCurrentMonth && styles.monthPickerTextToday,
+                    ]}>
+                      {month.substring(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+            {/* Quick Actions */}
+            <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: COLORS.border }}>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 16, paddingVertical: 8, backgroundColor: COLORS.primary + '10', borderRadius: 8 }}
+                onPress={() => { setCurrentMonth(new Date()); setShowMonthPicker(false); }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '600', color: COLORS.primary }}>Aujourd'hui</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }}
+                onPress={() => setShowMonthPicker(false)}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '500', color: COLORS.textLight }}>Fermer</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
       {/* Legend */}
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, paddingBottom: 12 }}>
