@@ -414,18 +414,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     alignSelf: 'center',
   },
-  heroButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  heroButtonText: { fontSize: 14, fontWeight: '700', color: C.dark },
   section: { marginTop: 28 },
   sectionTitle: {
     fontSize: 20,
