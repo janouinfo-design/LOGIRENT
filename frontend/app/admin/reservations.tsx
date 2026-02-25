@@ -592,6 +592,75 @@ export default function AdminReservations() {
         </View>
       </Modal>
     </ScrollView>
+
+    {/* Status / Payment Modal */}
+    {actionModal && (
+      <Modal visible transparent animationType="fade" onRequestClose={() => setActionModal(null)}>
+        <TouchableOpacity style={styles.actionModalOverlay} activeOpacity={1} onPress={() => setActionModal(null)}>
+          <TouchableOpacity activeOpacity={1} style={styles.actionModalBox}>
+            <View style={styles.actionModalHeader}>
+              <Text style={styles.actionModalTitle}>
+                {actionModal.type === 'status' ? 'Statut de réservation' : 'Statut de paiement'}
+              </Text>
+              <TouchableOpacity onPress={() => setActionModal(null)} data-testid="close-action-modal">
+                <Ionicons name="close" size={22} color={COLORS.text} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.actionModalSub}>
+              {actionModal.reservation.user_name} — {actionModal.reservation.vehicle_name}
+            </Text>
+            <Text style={styles.actionModalSub}>
+              CHF {actionModal.reservation.total_price.toFixed(2)}
+            </Text>
+
+            {actionModal.type === 'status' ? (
+              <View style={styles.actionModalOptions}>
+                {[
+                  { value: 'pending', label: 'En attente', icon: 'time', color: '#F59E0B' },
+                  { value: 'pending_cash', label: 'Espèces en attente', icon: 'cash', color: '#D97706' },
+                  { value: 'confirmed', label: 'Confirmée', icon: 'checkmark-circle', color: '#10B981' },
+                  { value: 'active', label: 'Active', icon: 'car', color: '#1E3A8A' },
+                  { value: 'completed', label: 'Terminée', icon: 'checkmark-done', color: '#6B7280' },
+                  { value: 'cancelled', label: 'Annulée', icon: 'close-circle', color: '#EF4444' },
+                ].map(opt => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.actionModalBtn, actionModal.reservation.status === opt.value && { backgroundColor: opt.color + '18', borderColor: opt.color }]}
+                    onPress={() => { updateStatus(actionModal.reservation.id, opt.value); setActionModal(null); }}
+                    data-testid={`status-${opt.value}`}
+                  >
+                    <Ionicons name={opt.icon as any} size={18} color={opt.color} />
+                    <Text style={[styles.actionModalBtnText, { color: opt.color }]}>{opt.label}</Text>
+                    {actionModal.reservation.status === opt.value && <Ionicons name="checkmark" size={16} color={opt.color} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View style={styles.actionModalOptions}>
+                {[
+                  { value: 'unpaid', label: 'Non payé', icon: 'close-circle', color: '#EF4444' },
+                  { value: 'pending', label: 'En attente', icon: 'time', color: '#F59E0B' },
+                  { value: 'paid', label: 'Payé', icon: 'checkmark-circle', color: '#10B981' },
+                  { value: 'refunded', label: 'Remboursé', icon: 'return-down-back', color: '#6B7280' },
+                ].map(opt => (
+                  <TouchableOpacity
+                    key={opt.value}
+                    style={[styles.actionModalBtn, actionModal.reservation.payment_status === opt.value && { backgroundColor: opt.color + '18', borderColor: opt.color }]}
+                    onPress={() => { updatePaymentStatus(actionModal.reservation.id, opt.value); setActionModal(null); }}
+                    data-testid={`payment-${opt.value}`}
+                  >
+                    <Ionicons name={opt.icon as any} size={18} color={opt.color} />
+                    <Text style={[styles.actionModalBtnText, { color: opt.color }]}>{opt.label}</Text>
+                    {actionModal.reservation.payment_status === opt.value && <Ionicons name="checkmark" size={16} color={opt.color} />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    )}
+  </View>
   );
 }
 
