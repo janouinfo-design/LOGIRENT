@@ -228,6 +228,17 @@ export default function BookingScreen() {
                   <Ionicons name="add" size={20} color={COLORS.primary} />
                 </TouchableOpacity>
               </View>
+              {/* Time Picker */}
+              <View style={styles.timePicker}>
+                <Ionicons name="time-outline" size={14} color={COLORS.primary} />
+                <TouchableOpacity style={styles.timeBtn} onPress={() => setStartHour(h => h > 0 ? h - 1 : 23)}>
+                  <Ionicons name="chevron-down" size={14} color={COLORS.textLight} />
+                </TouchableOpacity>
+                <Text style={styles.timeText}>{String(startHour).padStart(2, '0')}:{String(startMin).padStart(2, '0')}</Text>
+                <TouchableOpacity style={styles.timeBtn} onPress={() => setStartHour(h => h < 23 ? h + 1 : 0)}>
+                  <Ionicons name="chevron-up" size={14} color={COLORS.textLight} />
+                </TouchableOpacity>
+              </View>
               <View style={styles.calendarHint}>
                 <Ionicons name="calendar-outline" size={14} color={COLORS.primary} />
                 <Text style={styles.calendarHintText}>Ouvrir calendrier</Text>
@@ -252,6 +263,17 @@ export default function BookingScreen() {
                 </View>
                 <TouchableOpacity style={styles.dateButton} onPress={() => incrementDays('end', 1)}>
                   <Ionicons name="add" size={20} color={COLORS.primary} />
+                </TouchableOpacity>
+              </View>
+              {/* Time Picker */}
+              <View style={styles.timePicker}>
+                <Ionicons name="time-outline" size={14} color={COLORS.primary} />
+                <TouchableOpacity style={styles.timeBtn} onPress={() => setEndHour(h => h > 0 ? h - 1 : 23)}>
+                  <Ionicons name="chevron-down" size={14} color={COLORS.textLight} />
+                </TouchableOpacity>
+                <Text style={styles.timeText}>{String(endHour).padStart(2, '0')}:{String(endMin).padStart(2, '0')}</Text>
+                <TouchableOpacity style={styles.timeBtn} onPress={() => setEndHour(h => h < 23 ? h + 1 : 0)}>
+                  <Ionicons name="chevron-up" size={14} color={COLORS.textLight} />
                 </TouchableOpacity>
               </View>
               <View style={styles.calendarHint}>
