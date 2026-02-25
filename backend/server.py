@@ -603,7 +603,7 @@ async def create_reservation(
         ]
     })
     if overlap:
-        raise HTTPException(status_code=400, detail="Vehicle not available for selected dates")
+        raise HTTPException(status_code=400, detail="Ce véhicule n'est pas disponible pour les dates sélectionnées. Veuillez consulter le calendrier de disponibilité et choisir d'autres dates.")
     
     # Calculate pricing
     total_days = (reservation_data.end_date - reservation_data.start_date).days
