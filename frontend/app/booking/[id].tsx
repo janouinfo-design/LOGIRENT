@@ -372,7 +372,7 @@ export default function BookingScreen() {
         {/* Options */}
         {vehicle.options.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Additional Options</Text>
+            <Text style={styles.sectionTitle}>Options supplémentaires</Text>
             {vehicle.options.map((option) => {
               const isSelected = selectedOptions.includes(option.name);
               const optionTotal = option.price_per_day * totalDays;
