@@ -2,7 +2,13 @@
   "summary": "Completed comprehensive testing of LogiRent P0/P1/P2 features. All 13 backend tests passed. Frontend testing verified: 3-column vehicle grid (P0), TWINT payment method with correct styling (P1), notification bell icon and backend endpoints (P2), language switcher (FR/EN), and category filter.",
   "backend_issues": {
     "critical": [],
-    "minor": []
+    "minor": [
+      {
+        "endpoint": "/api/payments/checkout with twint",
+        "issue": "TWINT payment method not activated in Stripe dashboard. Stripe returns 'The payment method type provided: twint is invalid'. This is a configuration issue, not a code issue.",
+        "priority": "MEDIUM"
+      }
+    ]
   },
   "frontend_issues": {
     "ui_bugs": [
