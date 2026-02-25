@@ -247,7 +247,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: C.success }]} />
-          <Text style={calStyles.legendText}>Confirmee</Text>
+          <Text style={calStyles.legendText}>Confirm\u00e9e</Text>
         </View>
       </View>
 
@@ -260,7 +260,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
           {selectedReservations.length === 0 ? (
             <View style={calStyles.emptyDay}>
               <Ionicons name="calendar-outline" size={28} color={C.gray} />
-              <Text style={calStyles.emptyDayText}>Aucune reservation</Text>
+              <Text style={calStyles.emptyDayText}>Aucune r\u00e9servation</Text>
             </View>
           ) : (
             selectedReservations.map(res => {
@@ -334,9 +334,9 @@ export default function ReservationsScreen() {
   const filters = [
     { id: 'all', label: 'Toutes' },
     { id: 'pending', label: 'En attente' },
-    { id: 'confirmed', label: 'Confirmees' },
+    { id: 'confirmed', label: 'Confirm\u00e9es' },
     { id: 'active', label: 'En cours' },
-    { id: 'completed', label: 'Terminees' },
+    { id: 'completed', label: 'Termin\u00e9es' },
   ];
 
   return (
