@@ -1780,11 +1780,11 @@ async def get_unread_count(user: dict = Depends(get_current_user)):
     count = await db.notifications.count_documents({"user_id": user['id'], "read": False})
     return {"count": count}
 
-@api_router.post("/admin/check-overdue")
-async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
-    """Check for overdue reservations and create notifications"""
+# ==================== BACKGROUND CRON: OVERDUE CHECK ====================
+
+async def _check_overdue_task():
+    """Internal function to check overdue reservations and notify users"""
     now = datetime.utcnow()
-    
     overdue_reservations = await db.reservations.find({
         "status": "active",
         "end_date": {"$lt": now}
@@ -1816,7 +1816,6 @@ async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
         await db.notifications.insert_one(notification)
         created += 1
         
-        # Also send email notification
         try:
             res_user = await db.users.find_one({"id": res['user_id']})
             if res_user:
@@ -1838,6 +1837,28 @@ async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
         except Exception as e:
             logger.error(f"Failed to send overdue email: {e}")
     
+    return created
+
+async def overdue_cron_loop():
+    """Background task that checks for overdue reservations every hour"""
+    while True:
+        try:
+            created = await _check_overdue_task()
+            if created > 0:
+                logger.info(f"Overdue cron: created {created} late return notifications")
+        except Exception as e:
+            logger.error(f"Overdue cron error: {e}")
+        await asyncio.sleep(3600)  # Check every hour
+
+@app.on_event("startup")
+async def startup_cron():
+    asyncio.create_task(overdue_cron_loop())
+    logger.info("Overdue cron job started (checks every hour)")
+
+@api_router.post("/admin/check-overdue")
+async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
+    """Manually trigger overdue check"""
+    created = await _check_overdue_task()
     return {"message": f"Checked overdue reservations. Created {created} new notifications."}
 
 # Include router
