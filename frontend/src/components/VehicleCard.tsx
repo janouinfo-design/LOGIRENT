@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Vehicle } from '../store/vehicleStore';
 
@@ -8,85 +8,76 @@ interface Props {
   onPress: () => void;
 }
 
+const CARD_GAP = 12;
+const SCREEN_PADDING = 16;
+const cardWidth = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
+
 const COLORS = {
-  primary: '#1E3A8A',
-  secondary: '#F59E0B',
-  background: '#F8FAFC',
+  primary: '#0F172A',
+  gold: '#D4A853',
+  goldLight: '#F5E6C8',
   card: '#FFFFFF',
-  text: '#1E293B',
+  text: '#0F172A',
   textLight: '#64748B',
   success: '#10B981',
+  error: '#EF4444',
+  bg: '#F8FAFC',
   border: '#E2E8F0',
 };
 
 export default function VehicleCard({ vehicle, onPress }: Props) {
-  const getTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'suv': return 'car-sport';
-      case 'citadine': return 'car';
-      case 'berline': return 'car-outline';
-      case 'utilitaire': return 'cube';
-      default: return 'car';
-    }
-  };
-
-  const getFuelIcon = (fuel: string) => {
-    switch (fuel.toLowerCase()) {
-      case 'electric': return 'flash';
-      case 'hybrid': return 'leaf';
-      default: return 'water';
-    }
-  };
+  const isAvailable = vehicle.status === 'available';
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.imageContainer}>
+    <TouchableOpacity
+      style={[styles.card, { width: cardWidth > 180 ? cardWidth : '48%' }]}
+      onPress={onPress}
+      activeOpacity={0.92}
+      data-testid={`vehicle-card-${vehicle.id}`}
+    >
+      {/* Square Photo */}
+      <View style={styles.imageBox}>
         {vehicle.photos.length > 0 ? (
-          <Image
-            source={{ uri: vehicle.photos[0] }}
-            style={styles.image}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: vehicle.photos[0] }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
-            <Ionicons name="car" size={48} color={COLORS.textLight} />
+            <Ionicons name="car-sport" size={36} color={COLORS.textLight} />
           </View>
         )}
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{vehicle.type}</Text>
+        {/* Availability Badge */}
+        <View style={[styles.availBadge, { backgroundColor: isAvailable ? COLORS.success : COLORS.error }]}>
+          <View style={[styles.availDot, { backgroundColor: isAvailable ? '#6EE7B7' : '#FCA5A5' }]} />
+          <Text style={styles.availText}>{isAvailable ? 'Disponible' : 'Indisponible'}</Text>
+        </View>
+        {/* Type Badge */}
+        <View style={styles.typeBadge}>
+          <Text style={styles.typeText}>{vehicle.type}</Text>
         </View>
       </View>
-      
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{vehicle.brand} {vehicle.model}</Text>
-          <Text style={styles.year}>{vehicle.year}</Text>
-        </View>
+
+      {/* Info below */}
+      <View style={styles.info}>
+        <Text style={styles.brand} numberOfLines={1}>{vehicle.brand}</Text>
+        <Text style={styles.model} numberOfLines={1}>{vehicle.model} {vehicle.year}</Text>
         
-        <View style={styles.features}>
-          <View style={styles.feature}>
-            <Ionicons name="people" size={16} color={COLORS.textLight} />
-            <Text style={styles.featureText}>{vehicle.seats}</Text>
+        <View style={styles.specs}>
+          <View style={styles.spec}>
+            <Ionicons name="people-outline" size={12} color={COLORS.textLight} />
+            <Text style={styles.specText}>{vehicle.seats}</Text>
           </View>
-          <View style={styles.feature}>
-            <Ionicons name="cog" size={16} color={COLORS.textLight} />
-            <Text style={styles.featureText}>{vehicle.transmission === 'automatic' ? 'Auto' : 'Manual'}</Text>
+          <View style={styles.spec}>
+            <Ionicons name="cog-outline" size={12} color={COLORS.textLight} />
+            <Text style={styles.specText}>{vehicle.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
           </View>
-          <View style={styles.feature}>
-            <Ionicons name={getFuelIcon(vehicle.fuel_type)} size={16} color={COLORS.textLight} />
-            <Text style={styles.featureText}>{vehicle.fuel_type}</Text>
+          <View style={styles.spec}>
+            <Ionicons name="flash-outline" size={12} color={COLORS.textLight} />
+            <Text style={styles.specText}>{vehicle.fuel_type}</Text>
           </View>
         </View>
-        
-        <View style={styles.footer}>
-          <View style={styles.location}>
-            <Ionicons name="location" size={14} color={COLORS.textLight} />
-            <Text style={styles.locationText}>{vehicle.location}</Text>
-          </View>
-          <View style={styles.priceContainer}>
-            <Text style={styles.price}>CHF {vehicle.price_per_day}</Text>
-            <Text style={styles.perDay}>/day</Text>
-          </View>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>CHF {vehicle.price_per_day}</Text>
+          <Text style={styles.perDay}>/jour</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -96,18 +87,16 @@ export default function VehicleCard({ vehicle, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: COLORS.card,
-    borderRadius: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: 14,
     overflow: 'hidden',
+    marginBottom: CARD_GAP,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  imageContainer: {
-    height: 160,
-    backgroundColor: COLORS.background,
+  imageBox: {
+    width: '100%',
+    aspectRatio: 1,
+    backgroundColor: '#F1F5F9',
   },
   image: {
     width: '100%',
@@ -117,84 +106,91 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#F1F5F9',
   },
-  badge: {
+  availBadge: {
     position: 'absolute',
-    top: 12,
-    left: 12,
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    top: 8,
+    left: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 20,
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
+  availDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  availText: {
+    fontSize: 10,
     fontWeight: '600',
-    textTransform: 'capitalize',
+    color: '#FFFFFF',
   },
-  content: {
-    padding: 16,
+  typeBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+  typeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  title: {
-    fontSize: 18,
+  info: {
+    padding: 10,
+  },
+  brand: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.gold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  model: {
+    fontSize: 14,
     fontWeight: '700',
     color: COLORS.text,
+    marginTop: 1,
   },
-  year: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    fontWeight: '500',
-  },
-  features: {
+  specs: {
     flexDirection: 'row',
-    marginBottom: 12,
-    gap: 16,
+    gap: 8,
+    marginTop: 6,
   },
-  feature: {
+  spec: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
   },
-  featureText: {
-    fontSize: 13,
+  specText: {
+    fontSize: 10,
     color: COLORS.textLight,
     textTransform: 'capitalize',
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  location: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  locationText: {
-    fontSize: 13,
-    color: COLORS.textLight,
-  },
-  priceContainer: {
+  priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
   price: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
     color: COLORS.primary,
   },
   perDay: {
-    fontSize: 13,
+    fontSize: 11,
     color: COLORS.textLight,
     marginLeft: 2,
   },
