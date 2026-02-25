@@ -96,7 +96,8 @@ const styles = StyleSheet.create({
   },
   imageBox: {
     width: '100%',
-    aspectRatio: 1.15,
+    aspectRatio: 1,
+    maxHeight: 280,
     backgroundColor: '#F1F5F9',
   },
   image: {
