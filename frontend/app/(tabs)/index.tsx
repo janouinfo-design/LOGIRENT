@@ -34,15 +34,6 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
       @media (max-width: 550px) {
         #vehicle-grid { grid-template-columns: 1fr !important; }
       }
-      #vehicle-grid > div {
-        animation: fadeSlideUp 0.5s ease forwards !important;
-        opacity: 0;
-      }
-      ${Array.from({length: 12}, (_, i) => `#vehicle-grid > div:nth-child(${i+1}) { animation-delay: ${i * 0.08}s !important; }`).join('\n')}
-      @keyframes fadeSlideUp {
-        from { opacity: 0; transform: translateY(24px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
     `;
     document.head.appendChild(s);
   }
