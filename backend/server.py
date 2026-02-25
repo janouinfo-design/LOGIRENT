@@ -1553,15 +1553,17 @@ async def get_admin_reservations(
     status: Optional[str] = None,
     user: dict = Depends(get_admin_user)
 ):
-    """Get all reservations for admin"""
-    query = {}
+    """Get reservations - scoped by agency"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    
+    query = {} if is_super else {"agency_id": agency_id}
     if status:
         query["status"] = status
     
     reservations = await db.reservations.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.reservations.count_documents(query)
     
-    # Enrich with user and vehicle info
     for res in reservations:
         res['_id'] = str(res['_id'])
         res_user = await db.users.find_one({"id": res['user_id']})
