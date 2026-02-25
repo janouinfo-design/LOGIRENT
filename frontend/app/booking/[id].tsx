@@ -577,6 +577,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: COLORS.textLight,
     marginBottom: 8,
+    fontWeight: '500',
   },
   dateSelector: {
     flexDirection: 'row',
