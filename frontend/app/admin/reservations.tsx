@@ -184,53 +184,11 @@ export default function AdminReservations() {
   };
 
   const handleStatusChange = (reservation: Reservation) => {
-    if (Platform.OS === 'web') {
-      const choice = window.prompt(
-        `Changer le statut de réservation\n\nClient: ${reservation.user_name}\nVéhicule: ${reservation.vehicle_name}\nStatut actuel: ${getStatusLabel(reservation.status)}\n\nEntrez un numéro:\n1. En attente\n2. En attente (espèces)\n3. Confirmé\n4. Actif\n5. Terminé\n6. Annulé`
-      );
-      const statuses = ['pending', 'pending_cash', 'confirmed', 'active', 'completed', 'cancelled'];
-      if (choice && parseInt(choice) >= 1 && parseInt(choice) <= 6) {
-        updateStatus(reservation.id, statuses[parseInt(choice) - 1]);
-      }
-    } else {
-      Alert.alert(
-        'Changer le Statut',
-        `Statut actuel: ${reservation.status}`,
-        [
-          { text: 'En attente', onPress: () => updateStatus(reservation.id, 'pending') },
-          { text: 'Espèces', onPress: () => updateStatus(reservation.id, 'pending_cash') },
-          { text: 'Confirmé', onPress: () => updateStatus(reservation.id, 'confirmed') },
-          { text: 'Actif', onPress: () => updateStatus(reservation.id, 'active') },
-          { text: 'Terminé', onPress: () => updateStatus(reservation.id, 'completed') },
-          { text: 'Annulé', onPress: () => updateStatus(reservation.id, 'cancelled'), style: 'destructive' },
-          { text: 'Fermer', style: 'cancel' },
-        ]
-      );
-    }
+    setActionModal({ type: 'status', reservation });
   };
 
   const handlePaymentStatusChange = (reservation: Reservation) => {
-    if (Platform.OS === 'web') {
-      const choice = window.prompt(
-        `Changer le statut de paiement\n\nClient: ${reservation.user_name}\nMontant: CHF ${reservation.total_price}\nStatut actuel: ${getPaymentLabel(reservation.payment_status)}\n\nEntrez un numéro:\n1. Non payé\n2. En attente\n3. Payé ✓\n4. Remboursé`
-      );
-      const statuses = ['unpaid', 'pending', 'paid', 'refunded'];
-      if (choice && parseInt(choice) >= 1 && parseInt(choice) <= 4) {
-        updatePaymentStatus(reservation.id, statuses[parseInt(choice) - 1]);
-      }
-    } else {
-      Alert.alert(
-        'Changer le Statut de Paiement',
-        `Statut actuel: ${reservation.payment_status}`,
-        [
-          { text: 'Non payé', onPress: () => updatePaymentStatus(reservation.id, 'unpaid') },
-          { text: 'En attente', onPress: () => updatePaymentStatus(reservation.id, 'pending') },
-          { text: 'Payé ✓', onPress: () => updatePaymentStatus(reservation.id, 'paid') },
-          { text: 'Remboursé', onPress: () => updatePaymentStatus(reservation.id, 'refunded') },
-          { text: 'Fermer', style: 'cancel' },
-        ]
-      );
-    }
+    setActionModal({ type: 'payment', reservation });
   };
 
   const getStatusColor = (status: string) => {
