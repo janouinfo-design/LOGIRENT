@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/api/axios';
 import { Vehicle } from '../../src/store/vehicleStore';
+import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
 
 const COLORS = {
