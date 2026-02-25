@@ -33,7 +33,7 @@ export default function BookingScreen() {
   const [endDate, setEndDate] = useState(addDays(new Date(), 3));
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [showDatePicker, setShowDatePicker] = useState<'start' | 'end' | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'twint' | 'cash'>('card');
   const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   // Mini Calendar logic
