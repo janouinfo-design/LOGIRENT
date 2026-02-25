@@ -299,6 +299,9 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     paddingHorizontal: 16,
     gap: 12,
+    maxWidth: 900,
+    alignSelf: 'center',
+    width: '100%',
   },
   empty: {
     alignItems: 'center',
