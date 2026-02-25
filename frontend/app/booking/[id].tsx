@@ -109,24 +109,10 @@ export default function BookingScreen() {
   };
 
   const handleBookNow = async () => {
-    // Check if documents are uploaded
-    if (!hasDocuments) {
-      if (Platform.OS === 'web') {
-        if (window.confirm('Documents requis. Veuillez télécharger votre pièce d\'identité et permis dans votre profil. Aller au profil ?')) {
-          router.push('/(tabs)/profile');
-        }
-      } else {
-        Alert.alert('Documents Requis', 'Veuillez télécharger vos documents.', [
-          { text: 'Annuler', style: 'cancel' },
-          { text: 'Aller au Profil', onPress: () => router.push('/(tabs)/profile') },
-        ]);
-      }
-      return;
-    }
+    setFeedbackMessage(null);
 
     if (totalDays <= 0) {
-      if (Platform.OS === 'web') window.alert('La date de fin doit être après la date de début');
-      else Alert.alert('Dates Invalides', 'La date de fin doit être après la date de début');
+      setFeedbackMessage({ type: 'error', text: 'La date de fin doit être après la date de début.' });
       return;
     }
 
@@ -149,14 +135,8 @@ export default function BookingScreen() {
 
       // If cash payment, show success and go to reservations
       if (paymentMethod === 'cash') {
-        if (Platform.OS === 'web') {
-          window.alert('Réservation confirmée ! Le paiement sera effectué en espèces lors de la prise du véhicule.');
-          router.push('/(tabs)/reservations');
-        } else {
-          Alert.alert('Réservation Confirmée', 'Le paiement sera effectué en espèces.', [
-            { text: 'Voir mes réservations', onPress: () => router.push('/(tabs)/reservations') },
-          ]);
-        }
+        setFeedbackMessage({ type: 'success', text: 'Réservation confirmée ! Paiement en espèces lors de la prise du véhicule.' });
+        setTimeout(() => router.push('/(tabs)/reservations'), 2000);
         return;
       }
 
@@ -171,16 +151,12 @@ export default function BookingScreen() {
       } else {
         const result = await WebBrowser.openBrowserAsync(paymentData.url);
         if (result.type === 'cancel') {
-          Alert.alert('Payment Cancelled', 'Your reservation is saved but not confirmed.');
+          setFeedbackMessage({ type: 'error', text: 'Paiement annulé. Votre réservation est sauvegardée mais non confirmée.' });
         }
         router.push('/(tabs)/reservations');
       }
     } catch (error: any) {
-      if (Platform.OS === 'web') {
-        window.alert(error.message || 'Erreur lors de la réservation');
-      } else {
-        Alert.alert('Erreur', error.message);
-      }
+      setFeedbackMessage({ type: 'error', text: error.message || 'Erreur lors de la réservation. Veuillez réessayer.' });
     }
   };
 
