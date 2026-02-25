@@ -40,6 +40,7 @@ export default function BookingScreen() {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [showDatePicker, setShowDatePicker] = useState<'start' | 'end' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'twint' | 'cash'>('card');
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleCalendarDateSelect = (date: Date) => {
     const today = startOfDay(new Date());
