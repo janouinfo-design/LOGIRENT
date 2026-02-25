@@ -222,15 +222,16 @@ export default function HomeScreen() {
           </View>
         </AnimatedSection>
 
-        {/* Vehicle Grid - 3 per row via CSS Grid */}
-        <View nativeID="vehicle-grid">
+        {/* Vehicle Grid */}
+        <View style={styles.vehicleGrid}>
           {vehicles.map((vehicle, index) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-              index={index}
-            />
+            <AnimatedCard key={vehicle.id} index={index}>
+              <VehicleCard
+                vehicle={vehicle}
+                onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                index={index}
+              />
+            </AnimatedCard>
           ))}
         </View>
 
