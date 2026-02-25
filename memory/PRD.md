@@ -32,8 +32,9 @@ Build a complete car rental solution named "LogiRent" with:
 - [x] User authentication (register/login)
 - [x] Profile management with document uploads
 - [x] Homepage redesign: LogiRent branding, violet/grey/black theme, 3-column vehicle grid with scroll animations
+- [x] **Vehicles page (Notre Flotte)**: Rewritten with 3-column grid, French UI, quick category filters
 - [x] Internationalization (FR/EN) with flag switcher
-- [x] Vehicle catalog with category filters
+- [x] Vehicle catalog with category filters on both homepage and vehicles page
 - [x] Booking page with mini-calendar popup and month/year pickers
 - [x] Payment: Stripe (Card), TWINT option, Cash payment
 - [x] Notification system: bell icon, unread count, notification endpoints
@@ -59,31 +60,29 @@ Build a complete car rental solution named "LogiRent" with:
 ```
 /app
 ├── backend/
-│   └── server.py          # FastAPI server
+│   └── server.py
 └── frontend/
     ├── app/
     │   ├── (auth)/         # Login/Register screens
-    │   ├── (tabs)/         # Main app tabs (Home, Vehicles, Reservations, Profile)
-    │   ├── admin/          # Admin panel (dashboard, vehicles, reservations, users, calendar)
+    │   ├── (tabs)/         # Main app tabs
+    │   │   ├── index.tsx       # Homepage (3-col grid, hero, categories)
+    │   │   ├── vehicles.tsx    # Notre Flotte (3-col grid, filters)
+    │   │   ├── reservations.tsx
+    │   │   └── profile.tsx
+    │   ├── admin/          # Admin panel
     │   ├── booking/        # Booking flow with payment
     │   └── vehicle/        # Vehicle detail
     └── src/
         ├── store/          # Zustand stores (auth, vehicle, reservation, notification)
         ├── i18n/           # Internationalization
-        └── components/     # Reusable components
+        └── components/     # Reusable components (VehicleCard, Button)
 ```
-
-## Tech Stack
-- **Frontend**: React Native (Expo), Expo Router, Zustand, Axios, i18next
-- **Backend**: FastAPI, MongoDB (Motor), JWT Auth
-- **Payments**: Stripe via emergentintegrations (Card + TWINT)
-- **Email**: Resend
 
 ## Prioritized Backlog
 
 ### P1 - High Priority
+- TWINT activation in Stripe dashboard (requires real Stripe key - code is ready)
 - Late return notification triggers (scheduled job to auto-check overdue)
-- TWINT activation in Stripe dashboard (requires real Stripe key)
 
 ### P2 - Medium Priority
 - Refactor booking.tsx calendar into reusable component
