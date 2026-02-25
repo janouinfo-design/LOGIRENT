@@ -114,8 +114,21 @@ export default function HomeScreen() {
             <Text style={styles.logoText}>Logi<Text style={{ color: C.purpleLight }}>Rent</Text></Text>
           </View>
           
-          {/* Language Switcher */}
-          <View style={styles.langSwitch}>
+          {/* Language Switcher & Notifications */}
+          <View style={styles.navRight}>
+            <TouchableOpacity
+              style={styles.notifBtn}
+              onPress={() => router.push('/(tabs)/reservations')}
+              data-testid="notification-bell"
+            >
+              <Ionicons name="notifications-outline" size={22} color={C.dark} />
+              {unreadCount > 0 && (
+                <View style={styles.notifBadge}>
+                  <Text style={styles.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+            <View style={styles.langSwitch}>
             <TouchableOpacity
               style={[styles.langBtn, lang === 'fr' && styles.langBtnActive]}
               onPress={() => setLang('fr')}
