@@ -7,22 +7,23 @@ import { useAuthStore } from '../../src/store/authStore';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
 
-const COLORS = {
-  primary: '#1E3A8A',
-  secondary: '#F59E0B',
-  background: '#F8FAFC',
+const C = {
+  purple: '#7C3AED',
+  purpleDark: '#5B21B6',
+  purpleLight: '#EDE9FE',
+  dark: '#1A1A2E',
+  gray: '#6B7280',
+  grayLight: '#F3F4F6',
+  border: '#E5E7EB',
   card: '#FFFFFF',
-  text: '#1E293B',
-  textLight: '#64748B',
-  border: '#E2E8F0',
+  bg: '#FAFAFA',
   success: '#10B981',
   error: '#EF4444',
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, updateProfile, uploadLicense, uploadIdCard, isAuthenticated, loadUser, isLoading } = useAuthStore();
-  
+  const { user, logout, updateProfile, uploadLicense, uploadIdCard, isAuthenticated, isLoading } = useAuthStore();
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
@@ -32,30 +33,17 @@ export default function ProfileScreen() {
   const [uploadingId, setUploadingId] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated && !isLoading) {
-      router.replace('/(auth)/login');
-    }
+    if (!isAuthenticated && !isLoading) router.replace('/(auth)/login');
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (user) {
-      setName(user.name || '');
-      setPhone(user.phone || '');
-      setAddress(user.address || '');
-    }
+    if (user) { setName(user.name || ''); setPhone(user.phone || ''); setAddress(user.address || ''); }
   }, [user]);
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
-  if (!user) {
-    return (
-      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={C.purple} />
         <Text style={styles.loadingText}>Chargement du profil...</Text>
       </View>
     );
@@ -66,493 +54,196 @@ export default function ProfileScreen() {
     try {
       await updateProfile({ name, phone, address });
       setEditing(false);
-      Alert.alert('Success', 'Profile updated successfully');
+      Alert.alert('Succès', 'Profil mis à jour');
     } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setLoading(false);
-    }
+      Alert.alert('Erreur', error.message);
+    } finally { setLoading(false); }
   };
 
   const handleLogout = async () => {
-    // On web, use window.confirm instead of Alert
     if (Platform.OS === 'web') {
-      const confirmed = window.confirm('Êtes-vous sûr de vouloir vous déconnecter?');
-      if (confirmed) {
-        await logout();
-        router.replace('/');
+      if (window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+        await logout(); router.replace('/');
       }
     } else {
-      Alert.alert(
-        'Déconnexion',
-        'Êtes-vous sûr de vouloir vous déconnecter?',
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Déconnexion',
-            style: 'destructive',
-            onPress: async () => {
-              await logout();
-              router.replace('/');
-            },
-          },
-        ]
-      );
+      Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Déconnexion', style: 'destructive', onPress: async () => { await logout(); router.replace('/'); } },
+      ]);
     }
   };
 
-  const handleUploadLicense = async () => {
+  const pickAndUpload = async (type: 'id' | 'license') => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Please grant camera roll permissions to upload your license.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setUploadingLicense(true);
-      try {
-        await uploadLicense(result.assets[0].uri);
-        Alert.alert('Succès', 'Permis de conduire téléchargé');
-      } catch (error: any) {
-        Alert.alert('Erreur', error.message);
-      } finally {
-        setUploadingLicense(false);
-      }
-    }
-  };
-
-  const handleUploadIdCard = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie pour télécharger votre pièce d\'identité.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
+    if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+    if (result.canceled) return;
+    if (type === 'id') {
       setUploadingId(true);
-      try {
-        await uploadIdCard(result.assets[0].uri);
-        Alert.alert('Succès', 'Pièce d\'identité téléchargée');
-      } catch (error: any) {
-        Alert.alert('Erreur', error.message);
-      } finally {
-        setUploadingId(false);
-      }
+      try { await uploadIdCard(result.assets[0].uri); Alert.alert('Succès', 'Pièce d\'identité téléchargée'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingId(false); }
+    } else {
+      setUploadingLicense(true);
+      try { await uploadLicense(result.assets[0].uri); Alert.alert('Succès', 'Permis de conduire téléchargé'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingLicense(false); }
     }
   };
 
   const menuItems = [
-    { icon: 'card', label: 'Moyens de paiement', onPress: () => {} },
-    { icon: 'notifications', label: 'Notifications', onPress: () => {} },
-    { icon: 'shield-checkmark', label: 'Confidentialité', onPress: () => {} },
-    { icon: 'help-circle', label: 'Aide & Support', onPress: () => {} },
-    { icon: 'document-text', label: 'Conditions d\'utilisation', onPress: () => {} },
+    { icon: 'card', label: 'Moyens de paiement' },
+    { icon: 'notifications', label: 'Notifications' },
+    { icon: 'shield-checkmark', label: 'Confidentialité' },
+    { icon: 'help-circle', label: 'Aide & Support' },
+    { icon: 'document-text', label: 'Conditions d\'utilisation' },
   ];
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
-          </Text>
-        </View>
-        <Text style={styles.userName}>{user?.name}</Text>
-        <Text style={styles.userEmail}>{user?.email}</Text>
-        
-        {!editing && (
-          <TouchableOpacity style={styles.editButton} onPress={() => setEditing(true)}>
-            <Ionicons name="pencil" size={16} color={COLORS.primary} />
-            <Text style={styles.editButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Profile Form */}
-      {editing && (
-        <View style={styles.section}>
-          <Input
-            label="Full Name"
-            value={name}
-            onChangeText={setName}
-            icon="person"
-          />
-          <Input
-            label="Phone"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-            icon="call"
-          />
-          <Input
-            label="Address"
-            value={address}
-            onChangeText={setAddress}
-            icon="location"
-          />
-          
-          <View style={styles.buttonRow}>
-            <Button
-              title="Cancel"
-              onPress={() => setEditing(false)}
-              variant="outline"
-              style={{ flex: 1 }}
-            />
-            <Button
-              title="Save"
-              onPress={handleSave}
-              loading={loading}
-              style={{ flex: 1 }}
-            />
+      <View style={styles.content}>
+        {/* Profile Header */}
+        <View style={styles.header}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>{user.name?.charAt(0).toUpperCase() || 'U'}</Text>
           </View>
-        </View>
-      )}
-
-      {/* Documents Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Documents Obligatoires</Text>
-        
-        {/* Alert if documents missing */}
-        {(!user?.id_photo || !user?.license_photo) && (
-          <View style={styles.alertCard}>
-            <Ionicons name="warning" size={24} color="#F59E0B" />
-            <Text style={styles.alertText}>
-              Veuillez télécharger votre pièce d'identité et votre permis de conduire pour pouvoir effectuer une réservation.
-            </Text>
-          </View>
-        )}
-
-        {/* ID Card */}
-        <View style={styles.documentCard}>
-          <View style={styles.documentHeader}>
-            <Ionicons name="card" size={24} color={COLORS.primary} />
-            <Text style={styles.documentTitle}>Pièce d'Identité</Text>
-            {user?.id_photo && (
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
-                <Text style={styles.verifiedText}>Téléchargée</Text>
-              </View>
-            )}
-          </View>
-          {user?.id_photo ? (
-            <Image
-              source={{ uri: user.id_photo }}
-              style={styles.documentImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.noDocument}>
-              <Ionicons name="card-outline" size={40} color={COLORS.textLight} />
-              <Text style={styles.noDocumentText}>Non téléchargée</Text>
-            </View>
-          )}
-          <Button
-            title={user?.id_photo ? 'Modifier' : 'Télécharger'}
-            onPress={handleUploadIdCard}
-            loading={uploadingId}
-            variant={user?.id_photo ? 'outline' : 'primary'}
-            style={{ marginTop: 12 }}
-          />
-        </View>
-
-        {/* Driving License */}
-        <View style={styles.documentCard}>
-          <View style={styles.documentHeader}>
-            <Ionicons name="car" size={24} color={COLORS.primary} />
-            <Text style={styles.documentTitle}>Permis de Conduire</Text>
-            {user?.license_photo && (
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={16} color={COLORS.success} />
-                <Text style={styles.verifiedText}>Téléchargé</Text>
-              </View>
-            )}
-          </View>
-          {user?.license_photo ? (
-            <Image
-              source={{ uri: user.license_photo }}
-              style={styles.documentImage}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.noDocument}>
-              <Ionicons name="id-card-outline" size={40} color={COLORS.textLight} />
-              <Text style={styles.noDocumentText}>Non téléchargé</Text>
-            </View>
-          )}
-          <Button
-            title={user?.license_photo ? 'Modifier' : 'Télécharger'}
-            onPress={handleUploadLicense}
-            loading={uploadingLicense}
-            variant={user?.license_photo ? 'outline' : 'primary'}
-            style={{ marginTop: 12 }}
-          />
-        </View>
-      </View>
-
-      {/* Menu Items */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Settings</Text>
-        <View style={styles.menuCard}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={item.label}
-              style={[
-                styles.menuItem,
-                index < menuItems.length - 1 && styles.menuItemBorder,
-              ]}
-              onPress={item.onPress}
-            >
-              <View style={styles.menuItemLeft}>
-                <Ionicons name={item.icon as any} size={22} color={COLORS.primary} />
-                <Text style={styles.menuItemText}>{item.label}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
+          {!editing && (
+            <TouchableOpacity style={styles.editBtn} onPress={() => setEditing(true)} data-testid="edit-profile-btn">
+              <Ionicons name="pencil" size={14} color={C.purple} />
+              <Text style={styles.editBtnText}>Modifier le profil</Text>
             </TouchableOpacity>
-          ))}
+          )}
         </View>
-      </View>
 
-      {/* Logout */}
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out" size={22} color={COLORS.error} />
-          <Text style={styles.logoutText}>Logout</Text>
+        {/* Edit Form */}
+        {editing && (
+          <View style={styles.section}>
+            <Input label="Nom complet" value={name} onChangeText={setName} icon="person" />
+            <Input label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" icon="call" />
+            <Input label="Adresse" value={address} onChangeText={setAddress} icon="location" />
+            <View style={styles.btnRow}>
+              <Button title="Annuler" onPress={() => setEditing(false)} variant="outline" style={{ flex: 1 }} />
+              <Button title="Enregistrer" onPress={handleSave} loading={loading} style={{ flex: 1 }} />
+            </View>
+          </View>
+        )}
+
+        {/* Documents */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Documents Obligatoires</Text>
+          {(!user.id_photo || !user.license_photo) && (
+            <View style={styles.alert}>
+              <Ionicons name="warning" size={20} color="#F59E0B" />
+              <Text style={styles.alertText}>Veuillez télécharger votre pièce d'identité et votre permis de conduire pour effectuer une réservation.</Text>
+            </View>
+          )}
+          <View style={styles.docsGrid}>
+            {/* ID Card */}
+            <View style={styles.docCard}>
+              <View style={styles.docHeader}>
+                <Ionicons name="card" size={20} color={C.purple} />
+                <Text style={styles.docTitle}>Pièce d'Identité</Text>
+                {user.id_photo && (
+                  <View style={styles.badge}><Ionicons name="checkmark-circle" size={14} color={C.success} /><Text style={styles.badgeText}>OK</Text></View>
+                )}
+              </View>
+              {user.id_photo ? (
+                <Image source={{ uri: user.id_photo }} style={styles.docImage} resizeMode="cover" />
+              ) : (
+                <View style={styles.noDoc}><Ionicons name="card-outline" size={36} color={C.gray} /><Text style={styles.noDocText}>Non téléchargée</Text></View>
+              )}
+              <TouchableOpacity style={[styles.docBtn, user.id_photo && styles.docBtnOutline]} onPress={() => pickAndUpload('id')} data-testid="upload-id-btn">
+                {uploadingId ? <ActivityIndicator size="small" color={user.id_photo ? C.purple : '#FFF'} /> : (
+                  <Text style={[styles.docBtnText, user.id_photo && styles.docBtnTextOutline]}>{user.id_photo ? 'Modifier' : 'Télécharger'}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {/* License */}
+            <View style={styles.docCard}>
+              <View style={styles.docHeader}>
+                <Ionicons name="car" size={20} color={C.purple} />
+                <Text style={styles.docTitle}>Permis de Conduire</Text>
+                {user.license_photo && (
+                  <View style={styles.badge}><Ionicons name="checkmark-circle" size={14} color={C.success} /><Text style={styles.badgeText}>OK</Text></View>
+                )}
+              </View>
+              {user.license_photo ? (
+                <Image source={{ uri: user.license_photo }} style={styles.docImage} resizeMode="cover" />
+              ) : (
+                <View style={styles.noDoc}><Ionicons name="id-card-outline" size={36} color={C.gray} /><Text style={styles.noDocText}>Non téléchargé</Text></View>
+              )}
+              <TouchableOpacity style={[styles.docBtn, user.license_photo && styles.docBtnOutline]} onPress={() => pickAndUpload('license')} data-testid="upload-license-btn">
+                {uploadingLicense ? <ActivityIndicator size="small" color={user.license_photo ? C.purple : '#FFF'} /> : (
+                  <Text style={[styles.docBtnText, user.license_photo && styles.docBtnTextOutline]}>{user.license_photo ? 'Modifier' : 'Télécharger'}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Menu */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Paramètres</Text>
+          <View style={styles.menuCard}>
+            {menuItems.map((item, i) => (
+              <TouchableOpacity key={item.label} style={[styles.menuItem, i < menuItems.length - 1 && styles.menuBorder]} data-testid={`menu-${i}`}>
+                <View style={styles.menuLeft}>
+                  <View style={styles.menuIcon}><Ionicons name={item.icon as any} size={18} color={C.purple} /></View>
+                  <Text style={styles.menuText}>{item.label}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={C.gray} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} data-testid="logout-btn">
+          <Ionicons name="log-out" size={20} color={C.error} />
+          <Text style={styles.logoutText}>Se déconnecter</Text>
         </TouchableOpacity>
-      </View>
 
-      <View style={{ height: 40 }} />
+        <View style={{ height: 40 }} />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: COLORS.textLight,
-  },
-  header: {
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  avatarText: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  userName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 4,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(30, 58, 138, 0.1)',
-    gap: 6,
-  },
-  editButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
-  section: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  licenseCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 20,
-  },
-  licenseImageContainer: {
-    alignItems: 'center',
-  },
-  licenseImage: {
-    width: '100%',
-    height: 180,
-    borderRadius: 12,
-  },
-  licenseStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-    gap: 6,
-  },
-  licenseStatusText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.success,
-  },
-  noLicense: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  noLicenseText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginTop: 12,
-  },
-  noLicenseSubtext: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 4,
-  },
-  menuCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  menuItemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  menuItemText: {
-    fontSize: 15,
-    color: COLORS.text,
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: COLORS.card,
-    padding: 16,
-    borderRadius: 16,
-    gap: 8,
-  },
-  logoutText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.error,
-  },
-  alertCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FEF3C7',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    alignItems: 'center',
-    gap: 12,
-  },
-  alertText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#92400E',
-    lineHeight: 20,
-  },
-  documentCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  documentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 10,
-  },
-  documentTitle: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  verifiedText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.success,
-  },
-  documentImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 12,
-  },
-  noDocument: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-  },
-  noDocumentText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 8,
-  },
+  container: { flex: 1, backgroundColor: C.bg },
+  content: { maxWidth: 800, width: '100%', alignSelf: 'center' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg, gap: 12 },
+  loadingText: { fontSize: 14, color: C.gray },
+  header: { alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20, backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border },
+  avatar: { width: 72, height: 72, borderRadius: 36, backgroundColor: C.purple, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
+  avatarText: { fontSize: 28, fontWeight: '700', color: '#FFF' },
+  userName: { fontSize: 20, fontWeight: '700', color: C.dark },
+  userEmail: { fontSize: 13, color: C.gray, marginTop: 2 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', marginTop: 14, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: C.purpleLight, gap: 6 },
+  editBtnText: { fontSize: 13, fontWeight: '600', color: C.purple },
+  section: { padding: 20 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: C.dark, marginBottom: 14 },
+  btnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  alert: { flexDirection: 'row', backgroundColor: '#FEF3C7', borderRadius: 12, padding: 14, marginBottom: 16, alignItems: 'center', gap: 10 },
+  alertText: { flex: 1, fontSize: 13, color: '#92400E', lineHeight: 18 },
+  docsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+  docCard: { backgroundColor: C.card, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: C.border, width: 340, maxWidth: '100%', flexGrow: 1 },
+  docHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 },
+  docTitle: { flex: 1, fontSize: 14, fontWeight: '600', color: C.dark },
+  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16,185,129,0.1)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, gap: 4 },
+  badgeText: { fontSize: 11, fontWeight: '600', color: C.success },
+  docImage: { width: '100%', height: 140, borderRadius: 10 },
+  noDoc: { alignItems: 'center', paddingVertical: 24, backgroundColor: C.grayLight, borderRadius: 10 },
+  noDocText: { fontSize: 13, color: C.gray, marginTop: 6 },
+  docBtn: { marginTop: 12, backgroundColor: C.purple, borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  docBtnOutline: { backgroundColor: 'transparent', borderWidth: 1, borderColor: C.purple },
+  docBtnText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
+  docBtnTextOutline: { color: C.purple },
+  menuCard: { backgroundColor: C.card, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: C.border },
+  menuItem: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 },
+  menuBorder: { borderBottomWidth: 1, borderBottomColor: C.border },
+  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  menuIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: C.purpleLight, justifyContent: 'center', alignItems: 'center' },
+  menuText: { fontSize: 14, color: C.dark },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: C.card, marginHorizontal: 20, padding: 14, borderRadius: 14, gap: 8, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
+  logoutText: { fontSize: 14, fontWeight: '600', color: C.error },
 });
