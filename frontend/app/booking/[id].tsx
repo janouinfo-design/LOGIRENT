@@ -34,6 +34,40 @@ export default function BookingScreen() {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [showDatePicker, setShowDatePicker] = useState<'start' | 'end' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cash'>('card');
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+
+  // Mini Calendar logic
+  const WEEKDAYS_SHORT = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
+
+  const calendarDays = useMemo(() => {
+    const monthStart = startOfMonth(calendarMonth);
+    const monthEnd = endOfMonth(calendarMonth);
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+    const days: Date[] = [];
+    let day = calStart;
+    while (day <= calEnd) {
+      days.push(day);
+      day = addDays(day, 1);
+    }
+    return days;
+  }, [calendarMonth]);
+
+  const handleCalendarDateSelect = (date: Date) => {
+    const today = startOfDay(new Date());
+    if (isBefore(date, today)) return;
+
+    if (showDatePicker === 'start') {
+      setStartDate(date);
+      if (date >= endDate) {
+        setEndDate(addDays(date, 1));
+      }
+    } else if (showDatePicker === 'end') {
+      if (date <= startDate) return;
+      setEndDate(date);
+    }
+    setShowDatePicker(null);
+  };
 
   // Check if documents are uploaded
   const hasDocuments = user?.id_photo && user?.license_photo;
