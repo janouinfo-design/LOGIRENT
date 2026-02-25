@@ -796,6 +796,27 @@ const styles = StyleSheet.create({
     color: COLORS.textLight,
     marginTop: 2,
   },
+  feedbackBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin: 16,
+    marginBottom: 0,
+    padding: 14,
+    borderRadius: 12,
+    gap: 10,
+  },
+  feedbackSuccess: {
+    backgroundColor: COLORS.success,
+  },
+  feedbackError: {
+    backgroundColor: COLORS.error,
+  },
+  feedbackText: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   documentsWarning: {
     flexDirection: 'row',
     alignItems: 'center',
