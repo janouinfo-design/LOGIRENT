@@ -59,14 +59,21 @@ export default function AgenciesPage() {
     if (!form.name.trim()) { setError('Le nom est requis'); return; }
     try {
       if (editAgency) {
-        await axios.put(`${API_URL}/api/agencies/${editAgency.id}`, form);
+        await axios.put(`${API_URL}/api/agencies/${editAgency.id}`, { name: form.name, address: form.address, phone: form.phone, email: form.email });
+        setShowModal(false);
+        setEditAgency(null);
+        setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' });
+        fetchAgencies();
       } else {
-        await axios.post(`${API_URL}/api/agencies`, form);
+        if (!form.admin_name || !form.admin_email || !form.admin_password) {
+          setError('Les informations admin sont requises'); return;
+        }
+        const res = await axios.post(`${API_URL}/api/agencies`, form);
+        setShowModal(false);
+        setSuccessInfo({ name: res.data.admin_name, email: res.data.admin_email, password: form.admin_password });
+        setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' });
+        fetchAgencies();
       }
-      setShowModal(false);
-      setEditAgency(null);
-      setForm({ name: '', address: '', phone: '', email: '' });
-      fetchAgencies();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur');
     }
