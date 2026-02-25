@@ -339,9 +339,11 @@ const styles = StyleSheet.create({
   successHeader: { alignItems: 'center', marginBottom: 16, gap: 8 },
   successIcon: { marginBottom: 4 },
   credentialsBox: { backgroundColor: COLORS.background, borderRadius: 12, padding: 16, gap: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.border },
+  linksBox: { backgroundColor: COLORS.background, borderRadius: 12, padding: 16, gap: 10, marginBottom: 12, borderWidth: 1, borderColor: COLORS.border },
   credentialsTitle: { fontSize: 13, fontWeight: '700', color: COLORS.text, marginBottom: 4 },
   credentialRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   credentialLabel: { fontSize: 13, color: COLORS.textLight, width: 100 },
   credentialValue: { fontSize: 14, fontWeight: '700', color: COLORS.text, flex: 1 },
+  linkValue: { fontSize: 13, fontWeight: '600', color: COLORS.accent, flex: 1 },
   credentialsNote: { fontSize: 12, color: COLORS.textLight, textAlign: 'center', marginBottom: 12, fontStyle: 'italic' },
 });
