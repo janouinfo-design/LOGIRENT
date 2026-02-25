@@ -776,12 +776,18 @@ async def create_checkout(request: Request, checkout_data: CheckoutRequest, user
         "user_email": user['email']
     }
     
+    # Determine payment methods based on type
+    payment_methods = ['card']
+    if checkout_data.payment_method_type == 'twint':
+        payment_methods = ['twint']
+    
     checkout_request = CheckoutSessionRequest(
         amount=float(reservation['total_price']),
         currency="chf",
         success_url=success_url,
         cancel_url=cancel_url,
-        metadata=metadata
+        metadata=metadata,
+        payment_methods=payment_methods
     )
     
     session = await stripe_checkout.create_checkout_session(checkout_request)
