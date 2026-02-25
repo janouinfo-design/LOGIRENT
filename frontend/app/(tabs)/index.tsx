@@ -79,11 +79,13 @@ export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const { lang, t, setLang } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
+  const [showNotifications, setShowNotifications] = React.useState(false);
 
-  useEffect(() => { fetchVehicles(); }, []);
+  useEffect(() => { fetchVehicles(); fetchUnreadCount(); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
