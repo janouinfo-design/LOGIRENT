@@ -257,101 +257,15 @@ export default function BookingScreen() {
           </View>
         </View>
 
-        {/* Mini Calendar Modal */}
-        <Modal
+        {/* Mini Calendar */}
+        <MiniCalendar
           visible={showDatePicker !== null}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowDatePicker(null)}
-        >
-          <TouchableOpacity 
-            style={styles.calModalOverlay} 
-            activeOpacity={1} 
-            onPress={() => setShowDatePicker(null)}
-          >
-            <TouchableOpacity activeOpacity={1} style={styles.calModalContent}>
-              <View style={styles.calModalHeader}>
-                <Text style={styles.calModalTitle}>
-                  {showDatePicker === 'start' ? 'Date de départ' : 'Date de retour'}
-                </Text>
-                <TouchableOpacity onPress={() => setShowDatePicker(null)}>
-                  <Ionicons name="close" size={24} color={COLORS.text} />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.calNavRow}>
-                <TouchableOpacity onPress={() => setCalendarMonth(subMonths(calendarMonth, 1))}>
-                  <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
-                </TouchableOpacity>
-                <Text style={styles.calMonthTitle}>
-                  {format(calendarMonth, 'MMMM yyyy', { locale: fr })}
-                </Text>
-                <TouchableOpacity onPress={() => setCalendarMonth(addMonths(calendarMonth, 1))}>
-                  <Ionicons name="chevron-forward" size={22} color={COLORS.primary} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.calWeekRow}>
-                {WEEKDAYS_SHORT.map(d => (
-                  <Text key={d} style={styles.calWeekday}>{d}</Text>
-                ))}
-              </View>
-
-              <View style={styles.calDaysGrid}>
-                {calendarDays.map(date => {
-                  const inMonth = isSameMonth(date, calendarMonth);
-                  const today = isToday(date);
-                  const isPast = isBefore(date, startOfDay(new Date()));
-                  const isStart = isSameDay(date, startDate);
-                  const isEnd = isSameDay(date, endDate);
-                  const isInRange = date > startDate && date < endDate;
-                  const isDisabled = isPast || (showDatePicker === 'end' && date <= startDate);
-
-                  return (
-                    <TouchableOpacity
-                      key={date.toISOString()}
-                      style={[
-                        styles.calDay,
-                        !inMonth && styles.calDayOutside,
-                        isInRange && styles.calDayInRange,
-                        (isStart || isEnd) && styles.calDaySelected,
-                        today && !isStart && !isEnd && styles.calDayToday,
-                        isDisabled && styles.calDayDisabled,
-                      ]}
-                      onPress={() => !isDisabled && inMonth && handleCalendarDateSelect(date)}
-                      disabled={isDisabled || !inMonth}
-                    >
-                      <Text style={[
-                        styles.calDayText,
-                        !inMonth && styles.calDayTextOutside,
-                        (isStart || isEnd) && styles.calDayTextSelected,
-                        today && !isStart && !isEnd && styles.calDayTextToday,
-                        isDisabled && styles.calDayTextDisabled,
-                      ]}>
-                        {format(date, 'd')}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Quick select buttons */}
-              <View style={styles.calQuickSelect}>
-                {showDatePicker === 'end' && [3, 7, 14, 30].map(days => (
-                  <TouchableOpacity
-                    key={days}
-                    style={[styles.calQuickBtn, totalDays === days && styles.calQuickBtnActive]}
-                    onPress={() => { setEndDate(addDays(startDate, days)); setShowDatePicker(null); }}
-                  >
-                    <Text style={[styles.calQuickBtnText, totalDays === days && styles.calQuickBtnTextActive]}>
-                      {days}j
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </Modal>
+          onClose={() => setShowDatePicker(null)}
+          onSelectDate={handleCalendarDateSelect}
+          selectedDate={showDatePicker === 'start' ? startDate : endDate}
+          minDate={showDatePicker === 'end' ? addDays(startDate, 1) : undefined}
+          title={showDatePicker === 'start' ? 'Date de départ' : 'Date de retour'}
+        />
 
         {/* Options */}
         {vehicle.options.length > 0 && (
