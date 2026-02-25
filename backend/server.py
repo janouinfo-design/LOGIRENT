@@ -1687,7 +1687,10 @@ async def get_admin_calendar(
     year: int = None,
     user: dict = Depends(get_admin_user)
 ):
-    """Get reservations formatted for calendar view with departure/return info"""
+    """Get reservations for calendar - scoped by agency"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    
     now = datetime.utcnow()
     if month is None:
         month = now.month
@@ -1700,12 +1703,15 @@ async def get_admin_calendar(
     else:
         end_of_month = datetime(year, month + 1, 1)
     
-    # Get all reservations that overlap with this month
-    reservations = await db.reservations.find({
+    cal_query = {
         "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
         "start_date": {"$lt": end_of_month},
         "end_date": {"$gt": start_of_month}
-    }).to_list(500)
+    }
+    if not is_super:
+        cal_query["agency_id"] = agency_id
+    
+    reservations = await db.reservations.find(cal_query).to_list(500)
     
     events = []
     for res in reservations:
