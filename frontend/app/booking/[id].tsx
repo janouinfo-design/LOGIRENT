@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform }
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { format, addDays, differenceInDays } from 'date-fns';
+import { format, addDays, differenceInDays, startOfDay, isBefore } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import * as WebBrowser from 'expo-web-browser';
 import { useVehicleStore } from '../../src/store/vehicleStore';
