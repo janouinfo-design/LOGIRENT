@@ -185,7 +185,11 @@ export default function AgenciesPage() {
       {/* Create/Edit Modal */}
       <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
         <View style={styles.modalOverlay}>
-          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+          <ScrollView 
+            style={styles.modalScroll}
+            contentContainerStyle={styles.modalScrollContent}
+            showsVerticalScrollIndicator={true}
+          >
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalTitle}>{editAgency ? 'Modifier l\'agence' : 'Nouvelle agence'}</Text>
@@ -213,8 +217,8 @@ export default function AgenciesPage() {
                   <TextInput style={styles.fieldInput} value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} placeholder="contact@agence.ch" placeholderTextColor={COLORS.textLight} data-testid="agency-form-email" />
                 </View>
 
-                {!editAgency && (
-                  <>
+                {editAgency === null && (
+                  <View style={styles.adminSection}>
                     <View style={styles.sectionDivider} />
                     <Text style={styles.sectionLabel}>Compte administrateur</Text>
                     <View style={styles.fieldGroup}>
@@ -229,11 +233,11 @@ export default function AgenciesPage() {
                       <Text style={styles.fieldLabel}>Mot de passe admin *</Text>
                       <TextInput style={styles.fieldInput} value={form.admin_password} onChangeText={(t) => setForm({ ...form, admin_password: t })} placeholder="Mot de passe" placeholderTextColor={COLORS.textLight} secureTextEntry data-testid="agency-form-admin-password" />
                     </View>
-                  </>
+                  </View>
                 )}
 
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave} data-testid="agency-form-save">
-                  <Text style={styles.saveBtnText}>{editAgency ? 'Mettre a jour' : 'Creer l\'agence + admin'}</Text>
+                  <Text style={styles.saveBtnText}>{editAgency !== null ? 'Mettre a jour' : 'Creer l\'agence + admin'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
