@@ -230,6 +230,7 @@ const styles = StyleSheet.create({
   dateBox: { flex: 1 },
   dateLabel: { fontSize: 11, color: C.gray, marginBottom: 2 },
   dateValue: { fontSize: 14, fontWeight: '600', color: C.dark },
+  dateTime: { fontSize: 12, fontWeight: '600', color: C.purple, marginTop: 2 },
   dateArrow: { alignItems: 'center', paddingHorizontal: 12 },
   daysCount: { fontSize: 10, color: C.gray, marginTop: 2 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 },
