@@ -712,6 +712,7 @@ async def create_reservation(
     reservation = Reservation(
         user_id=user['id'],
         vehicle_id=reservation_data.vehicle_id,
+        agency_id=vehicle.get('agency_id'),
         start_date=reservation_data.start_date,
         end_date=reservation_data.end_date,
         options=selected_options,
