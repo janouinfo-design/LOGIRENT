@@ -1987,7 +1987,14 @@ async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin
 @api_router.put("/agencies/{agency_id}")
 async def update_agency(agency_id: str, data: AgencyCreate, user: dict = Depends(get_super_admin)):
     """Update agency (super admin only)"""
-    result = await db.agencies.update_one({"id": agency_id}, {"$set": data.dict()})
+    update_fields = {"name": data.name}
+    if data.address is not None:
+        update_fields["address"] = data.address
+    if data.phone is not None:
+        update_fields["phone"] = data.phone
+    if data.email is not None:
+        update_fields["email"] = data.email
+    result = await db.agencies.update_one({"id": agency_id}, {"$set": update_fields})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Agence non trouvée")
     return {"message": "Agence mise à jour"}
