@@ -1923,6 +1923,130 @@ async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
     created = await _check_overdue_task()
     return {"message": f"Checked overdue reservations. Created {created} new notifications."}
 
+# ==================== AGENCY ROUTES (Super Admin) ====================
+
+@api_router.get("/agencies")
+async def list_agencies(user: dict = Depends(get_agency_admin)):
+    """List agencies - super admin sees all, admin sees own"""
+    is_super = user.get('role') == 'super_admin'
+    if is_super:
+        agencies = await db.agencies.find({}, {"_id": 0}).to_list(100)
+    else:
+        agencies = await db.agencies.find({"id": user.get('agency_id')}, {"_id": 0}).to_list(1)
+    
+    # Enrich with stats
+    for agency in agencies:
+        agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency['id']})
+        agency['reservation_count'] = await db.reservations.count_documents({"agency_id": agency['id']})
+        agency['admin_count'] = await db.users.count_documents({"agency_id": agency['id'], "role": "admin"})
+    
+    return agencies
+
+@api_router.post("/agencies")
+async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin)):
+    """Create a new agency (super admin only)"""
+    agency = Agency(**data.dict())
+    await db.agencies.insert_one(agency.dict())
+    return {"id": agency.id, "name": agency.name, "message": "Agence créée avec succès"}
+
+@api_router.put("/agencies/{agency_id}")
+async def update_agency(agency_id: str, data: AgencyCreate, user: dict = Depends(get_super_admin)):
+    """Update agency (super admin only)"""
+    result = await db.agencies.update_one({"id": agency_id}, {"$set": data.dict()})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Agence non trouvée")
+    return {"message": "Agence mise à jour"}
+
+@api_router.delete("/agencies/{agency_id}")
+async def delete_agency(agency_id: str, user: dict = Depends(get_super_admin)):
+    """Delete agency (super admin only)"""
+    result = await db.agencies.delete_one({"id": agency_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Agence non trouvée")
+    return {"message": "Agence supprimée"}
+
+@api_router.post("/agencies/{agency_id}/admins")
+async def add_admin_to_agency(agency_id: str, user_email: str, user: dict = Depends(get_super_admin)):
+    """Assign an existing user as admin to an agency"""
+    target = await db.users.find_one({"email": user_email.lower()})
+    if not target:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    agency = await db.agencies.find_one({"id": agency_id})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agence non trouvée")
+    await db.users.update_one({"id": target['id']}, {"$set": {"role": "admin", "agency_id": agency_id}})
+    return {"message": f"{target['name']} est maintenant admin de {agency['name']}"}
+
+# ==================== ADMIN LOGIN (legacy support) ====================
+
+class AdminLogin(BaseModel):
+    email: str
+    password: str
+
+@api_router.post("/admin/login")
+async def admin_login(credentials: AdminLogin):
+    """Admin login - checks role"""
+    user = await db.users.find_one({"email": credentials.email.lower()})
+    if not user or not verify_password(credentials.password, user['password_hash']):
+        raise HTTPException(status_code=401, detail="Email ou mot de passe incorrect")
+    
+    role = user.get('role', 'client')
+    if role not in ('admin', 'super_admin'):
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs. Contactez le super-admin pour obtenir les droits.")
+    
+    token = create_token(user['id'], user['email'], role)
+    profile = await build_user_profile(user)
+    
+    return TokenResponse(access_token=token, user=profile)
+
+# ==================== SETUP / MIGRATION ====================
+
+@api_router.post("/setup/init")
+async def setup_init():
+    """Initialize the platform: create default agency, set test user as super_admin"""
+    # Check if already initialized
+    existing_agency = await db.agencies.find_one({})
+    if existing_agency:
+        return {"message": "Plateforme déjà initialisée", "agency_id": existing_agency['id']}
+    
+    # Create default agency
+    agency = Agency(name="LogiRent Geneva", address="Geneva, Switzerland", phone="+41 22 000 0000", email="admin@logirent.ch")
+    await db.agencies.insert_one(agency.dict())
+    
+    # Set the test user as super_admin
+    await db.users.update_one(
+        {"email": "test@example.com"},
+        {"$set": {"role": "super_admin", "agency_id": agency.id}}
+    )
+    
+    # Assign all existing vehicles to this agency
+    await db.vehicles.update_many(
+        {"agency_id": None},
+        {"$set": {"agency_id": agency.id}}
+    )
+    await db.vehicles.update_many(
+        {"agency_id": {"$exists": False}},
+        {"$set": {"agency_id": agency.id}}
+    )
+    
+    # Assign all existing reservations to this agency
+    await db.reservations.update_many(
+        {"agency_id": None},
+        {"$set": {"agency_id": agency.id}}
+    )
+    await db.reservations.update_many(
+        {"agency_id": {"$exists": False}},
+        {"$set": {"agency_id": agency.id}}
+    )
+    
+    # Set all users without a role to 'client'
+    await db.users.update_many(
+        {"role": {"$exists": False}},
+        {"$set": {"role": "client", "agency_id": None}}
+    )
+    
+    return {"message": "Plateforme initialisée", "agency_id": agency.id, "agency_name": agency.name}
+
 # Include router
 app.include_router(api_router)
 
