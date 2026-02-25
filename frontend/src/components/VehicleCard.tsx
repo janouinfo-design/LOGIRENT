@@ -1,199 +1,194 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Vehicle } from '../store/vehicleStore';
+import { useI18n } from '../i18n';
 
 interface Props {
   vehicle: Vehicle;
   onPress: () => void;
+  index?: number;
 }
 
-const CARD_GAP = 12;
-const SCREEN_PADDING = 16;
-const cardWidth = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
-
-const COLORS = {
-  primary: '#0F172A',
-  gold: '#D4A853',
-  goldLight: '#F5E6C8',
+const C = {
+  purple: '#6B21A8',
+  purpleLight: '#7C3AED',
+  dark: '#1A1A2E',
+  gray: '#6B7280',
+  grayLight: '#9CA3AF',
+  bg: '#F3F4F6',
   card: '#FFFFFF',
-  text: '#0F172A',
-  textLight: '#64748B',
+  text: '#111827',
+  border: '#E5E7EB',
   success: '#10B981',
   error: '#EF4444',
-  bg: '#F8FAFC',
-  border: '#E2E8F0',
 };
 
-export default function VehicleCard({ vehicle, onPress }: Props) {
+export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
+  const { t } = useI18n();
   const isAvailable = vehicle.status === 'available';
+  const hasPhoto = vehicle.photos?.length > 0;
 
   return (
-    <TouchableOpacity
-      style={[styles.card, { width: cardWidth > 180 ? cardWidth : '48%' }]}
-      onPress={onPress}
-      activeOpacity={0.92}
+    <View
+      style={[styles.card]}
       data-testid={`vehicle-card-${vehicle.id}`}
     >
-      {/* Square Photo */}
-      <View style={styles.imageBox}>
-        {vehicle.photos.length > 0 ? (
-          <Image source={{ uri: vehicle.photos[0] }} style={styles.image} resizeMode="cover" />
-        ) : (
-          <View style={styles.placeholder}>
-            <Ionicons name="car-sport" size={36} color={COLORS.textLight} />
-          </View>
-        )}
-        {/* Availability Badge */}
-        <View style={[styles.availBadge, { backgroundColor: isAvailable ? COLORS.success : COLORS.error }]}>
-          <View style={[styles.availDot, { backgroundColor: isAvailable ? '#6EE7B7' : '#FCA5A5' }]} />
-          <Text style={styles.availText}>{isAvailable ? 'Disponible' : 'Indisponible'}</Text>
+      {/* Top Row: Price + Details Button */}
+      <View style={styles.topRow}>
+        <View>
+          <Text style={styles.price}>CHF {vehicle.price_per_day}</Text>
+          <Text style={styles.perDay}>{t('perDay')}</Text>
         </View>
-        {/* Type Badge */}
-        <View style={styles.typeBadge}>
-          <Text style={styles.typeText}>{vehicle.type}</Text>
-        </View>
+        <TouchableOpacity style={styles.detailsBtn} onPress={onPress} data-testid={`vehicle-details-${vehicle.id}`}>
+          <Text style={styles.detailsBtnText}>{t('details')}</Text>
+          <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
 
-      {/* Info below */}
-      <View style={styles.info}>
-        <Text style={styles.brand} numberOfLines={1}>{vehicle.brand}</Text>
-        <Text style={styles.model} numberOfLines={1}>{vehicle.model} {vehicle.year}</Text>
-        
-        <View style={styles.specs}>
-          <View style={styles.spec}>
-            <Ionicons name="people-outline" size={12} color={COLORS.textLight} />
-            <Text style={styles.specText}>{vehicle.seats}</Text>
+      {/* Car Image */}
+      <TouchableOpacity style={styles.imageContainer} onPress={onPress} activeOpacity={0.9}>
+        {hasPhoto ? (
+          <Image source={{ uri: vehicle.photos[0] }} style={styles.carImage} resizeMode="contain" />
+        ) : (
+          <View style={styles.placeholder}>
+            <Ionicons name="car-sport" size={48} color={C.grayLight} />
           </View>
-          <View style={styles.spec}>
-            <Ionicons name="cog-outline" size={12} color={COLORS.textLight} />
-            <Text style={styles.specText}>{vehicle.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
+        )}
+        {/* Availability dot */}
+        <View style={[styles.statusDot, { backgroundColor: isAvailable ? C.success : C.error }]} />
+      </TouchableOpacity>
+
+      {/* Bottom Info */}
+      <View style={styles.bottomInfo}>
+        <Text style={styles.brand}>{vehicle.brand}</Text>
+        <Text style={styles.model}>{vehicle.model} {vehicle.year}</Text>
+        <View style={styles.specsRow}>
+          <View style={styles.specChip}>
+            <Ionicons name="people-outline" size={12} color={C.purple} />
+            <Text style={styles.specText}>{vehicle.seats} {t('seats')}</Text>
           </View>
-          <View style={styles.spec}>
-            <Ionicons name="flash-outline" size={12} color={COLORS.textLight} />
+          <View style={styles.specChip}>
+            <Ionicons name="cog-outline" size={12} color={C.purple} />
+            <Text style={styles.specText}>{vehicle.transmission === 'automatic' ? t('automatic') : t('manual')}</Text>
+          </View>
+          <View style={styles.specChip}>
+            <Ionicons name="flash-outline" size={12} color={C.purple} />
             <Text style={styles.specText}>{vehicle.fuel_type}</Text>
           </View>
         </View>
-
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>CHF {vehicle.price_per_day}</Text>
-          <Text style={styles.perDay}>/jour</Text>
-        </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: COLORS.card,
-    borderRadius: 14,
+    backgroundColor: C.card,
+    borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: CARD_GAP,
     borderWidth: 1,
-    borderColor: COLORS.border,
-    maxWidth: 420,
+    borderColor: C.border,
+    width: '31.5%',
+    minWidth: 260,
   },
-  imageBox: {
-    width: '100%',
-    aspectRatio: 1,
-    maxHeight: 280,
-    backgroundColor: '#F1F5F9',
-  },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholder: {
-    flex: 1,
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F1F5F9',
-  },
-  availBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 20,
-  },
-  availDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  availText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  typeBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  typeText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  info: {
-    padding: 10,
-  },
-  brand: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.gold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  model: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 1,
-  },
-  specs: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 6,
-  },
-  spec: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  specText: {
-    fontSize: 10,
-    color: COLORS.textLight,
-    textTransform: 'capitalize',
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 4,
   },
   price: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '800',
-    color: COLORS.primary,
+    color: C.dark,
   },
   perDay: {
     fontSize: 11,
-    color: COLORS.textLight,
-    marginLeft: 2,
+    color: C.grayLight,
+    marginTop: -2,
+  },
+  detailsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: C.purple,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  detailsBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  imageContainer: {
+    width: '100%',
+    aspectRatio: 1.4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+  },
+  carImage: {
+    width: '90%',
+    height: '90%',
+  },
+  placeholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusDot: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: C.card,
+  },
+  bottomInfo: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: C.border,
+  },
+  brand: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: C.purple,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  model: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: C.text,
+    marginTop: 2,
+  },
+  specsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 8,
+    flexWrap: 'wrap',
+  },
+  specChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: C.bg,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  specText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: C.gray,
+    textTransform: 'capitalize',
   },
 });
