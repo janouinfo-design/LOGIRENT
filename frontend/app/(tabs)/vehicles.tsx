@@ -1,38 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Modal, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore, Vehicle } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import Button from '../../src/components/Button';
 
-const COLORS = {
-  primary: '#1E3A8A',
-  secondary: '#F59E0B',
-  background: '#F8FAFC',
+const C = {
+  purple: '#7C3AED',
+  purpleDark: '#5B21B6',
+  purpleLight: '#EDE9FE',
+  dark: '#1A1A2E',
+  gray: '#6B7280',
+  grayLight: '#F3F4F6',
+  border: '#E5E7EB',
   card: '#FFFFFF',
-  text: '#1E293B',
-  textLight: '#64748B',
-  border: '#E2E8F0',
+  bg: '#FAFAFA',
 };
 
-const vehicleTypes = ['All', 'SUV', 'berline', 'citadine', 'utilitaire'];
-const locations = ['All', 'Geneva', 'Zurich', 'Lausanne'];
-const transmissions = ['All', 'automatic', 'manual'];
+const vehicleTypes = ['Tous', 'SUV', 'Berline', 'Citadine', 'Utilitaire'];
+const transmissions = ['Toutes', 'Automatique', 'Manuel'];
 
 export default function VehiclesScreen() {
   const router = useRouter();
-  const { vehicles, fetchVehicles, isLoading, filters, setFilters, clearFilters } = useVehicleStore();
+  const { vehicles, fetchVehicles, isLoading, setFilters, clearFilters } = useVehicleStore();
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  
-  const [selectedType, setSelectedType] = useState('All');
-  const [selectedLocation, setSelectedLocation] = useState('All');
-  const [selectedTransmission, setSelectedTransmission] = useState('All');
+  const [selectedType, setSelectedType] = useState('Tous');
+  const [selectedTransmission, setSelectedTransmission] = useState('Toutes');
 
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
+  useEffect(() => { fetchVehicles(); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -42,69 +39,93 @@ export default function VehiclesScreen() {
 
   const applyFilters = () => {
     const newFilters: any = {};
-    if (selectedType !== 'All') newFilters.type = selectedType;
-    if (selectedLocation !== 'All') newFilters.location = selectedLocation;
-    if (selectedTransmission !== 'All') newFilters.transmission = selectedTransmission;
-    
+    if (selectedType !== 'Tous') newFilters.type = selectedType.toLowerCase();
+    if (selectedTransmission !== 'Toutes') newFilters.transmission = selectedTransmission === 'Automatique' ? 'automatic' : 'manual';
     setFilters(newFilters);
     fetchVehicles(newFilters);
     setShowFilters(false);
   };
 
   const resetFilters = () => {
-    setSelectedType('All');
-    setSelectedLocation('All');
-    setSelectedTransmission('All');
+    setSelectedType('Tous');
+    setSelectedTransmission('Toutes');
     clearFilters();
     fetchVehicles({});
     setShowFilters(false);
   };
 
-  const activeFiltersCount = [selectedType, selectedLocation, selectedTransmission].filter(f => f !== 'All').length;
-
-  const renderItem = ({ item }: { item: Vehicle }) => (
-    <VehicleCard
-      vehicle={item}
-      onPress={() => router.push(`/vehicle/${item.id}`)}
-    />
-  );
+  const activeFiltersCount = [selectedType, selectedTransmission].filter(f => f !== 'Tous' && f !== 'Toutes').length;
 
   return (
     <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Notre Flotte</Text>
+        <Text style={styles.subtitle}>{vehicles.length} véhicules disponibles</Text>
+      </View>
+
       {/* Filter Bar */}
       <View style={styles.filterBar}>
         <TouchableOpacity
           style={styles.filterButton}
           onPress={() => setShowFilters(true)}
+          data-testid="filters-btn"
         >
-          <Ionicons name="options" size={20} color={COLORS.primary} />
-          <Text style={styles.filterButtonText}>Filters</Text>
+          <Ionicons name="options" size={18} color={C.purple} />
+          <Text style={styles.filterButtonText}>Filtres</Text>
           {activeFiltersCount > 0 && (
             <View style={styles.filterBadge}>
               <Text style={styles.filterBadgeText}>{activeFiltersCount}</Text>
             </View>
           )}
         </TouchableOpacity>
-        
-        <Text style={styles.resultsText}>{vehicles.length} vehicles found</Text>
+
+        {/* Quick type filters */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickFilters}>
+          {vehicleTypes.map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[styles.quickChip, selectedType === type && styles.quickChipActive]}
+              onPress={() => {
+                setSelectedType(type);
+                const newFilters: any = {};
+                if (type !== 'Tous') newFilters.type = type.toLowerCase();
+                if (selectedTransmission !== 'Toutes') newFilters.transmission = selectedTransmission === 'Automatique' ? 'automatic' : 'manual';
+                setFilters(newFilters);
+                fetchVehicles(newFilters);
+              }}
+              data-testid={`filter-${type.toLowerCase()}`}
+            >
+              <Text style={[styles.quickChipText, selectedType === type && styles.quickChipTextActive]}>{type}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      <FlatList
-        data={vehicles}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
+      {/* Vehicle Grid */}
+      <ScrollView
+        style={styles.scrollArea}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {vehicles.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="car-outline" size={64} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>No vehicles found</Text>
-            <Text style={styles.emptySubtext}>Try adjusting your filters</Text>
+            <Ionicons name="car-outline" size={64} color={C.gray} />
+            <Text style={styles.emptyText}>Aucun véhicule trouvé</Text>
+            <Text style={styles.emptySubtext}>Essayez d'ajuster vos filtres</Text>
           </View>
-        }
-      />
+        ) : (
+          <View style={styles.vehicleGrid}>
+            {vehicles.map((vehicle, index) => (
+              <VehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                index={index}
+              />
+            ))}
+          </View>
+        )}
+      </ScrollView>
 
       {/* Filter Modal */}
       <Modal
@@ -115,30 +136,23 @@ export default function VehiclesScreen() {
       >
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Filters</Text>
-            <TouchableOpacity onPress={() => setShowFilters(false)}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
+            <Text style={styles.modalTitle}>Filtres</Text>
+            <TouchableOpacity onPress={() => setShowFilters(false)} data-testid="close-filters">
+              <Ionicons name="close" size={24} color={C.dark} />
             </TouchableOpacity>
           </View>
 
           <ScrollView style={styles.modalContent}>
-            {/* Vehicle Type */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Vehicle Type</Text>
+              <Text style={styles.filterLabel}>Type de véhicule</Text>
               <View style={styles.filterOptions}>
                 {vehicleTypes.map((type) => (
                   <TouchableOpacity
                     key={type}
-                    style={[
-                      styles.filterOption,
-                      selectedType === type && styles.filterOptionActive,
-                    ]}
+                    style={[styles.filterOption, selectedType === type && styles.filterOptionActive]}
                     onPress={() => setSelectedType(type)}
                   >
-                    <Text style={[
-                      styles.filterOptionText,
-                      selectedType === type && styles.filterOptionTextActive,
-                    ]}>
+                    <Text style={[styles.filterOptionText, selectedType === type && styles.filterOptionTextActive]}>
                       {type}
                     </Text>
                   </TouchableOpacity>
@@ -146,48 +160,17 @@ export default function VehiclesScreen() {
               </View>
             </View>
 
-            {/* Location */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>Location</Text>
-              <View style={styles.filterOptions}>
-                {locations.map((loc) => (
-                  <TouchableOpacity
-                    key={loc}
-                    style={[
-                      styles.filterOption,
-                      selectedLocation === loc && styles.filterOptionActive,
-                    ]}
-                    onPress={() => setSelectedLocation(loc)}
-                  >
-                    <Text style={[
-                      styles.filterOptionText,
-                      selectedLocation === loc && styles.filterOptionTextActive,
-                    ]}>
-                      {loc}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Transmission */}
             <View style={styles.filterSection}>
               <Text style={styles.filterLabel}>Transmission</Text>
               <View style={styles.filterOptions}>
                 {transmissions.map((trans) => (
                   <TouchableOpacity
                     key={trans}
-                    style={[
-                      styles.filterOption,
-                      selectedTransmission === trans && styles.filterOptionActive,
-                    ]}
+                    style={[styles.filterOption, selectedTransmission === trans && styles.filterOptionActive]}
                     onPress={() => setSelectedTransmission(trans)}
                   >
-                    <Text style={[
-                      styles.filterOptionText,
-                      selectedTransmission === trans && styles.filterOptionTextActive,
-                    ]}>
-                      {trans === 'All' ? 'All' : trans === 'automatic' ? 'Automatic' : 'Manual'}
+                    <Text style={[styles.filterOptionText, selectedTransmission === trans && styles.filterOptionTextActive]}>
+                      {trans}
                     </Text>
                   </TouchableOpacity>
                 ))}
@@ -196,17 +179,8 @@ export default function VehiclesScreen() {
           </ScrollView>
 
           <View style={styles.modalFooter}>
-            <Button
-              title="Reset"
-              onPress={resetFilters}
-              variant="outline"
-              style={{ flex: 1 }}
-            />
-            <Button
-              title="Apply Filters"
-              onPress={applyFilters}
-              style={{ flex: 1 }}
-            />
+            <Button title="Réinitialiser" onPress={resetFilters} variant="outline" style={{ flex: 1 }} />
+            <Button title="Appliquer" onPress={applyFilters} style={{ flex: 1 }} />
           </View>
         </View>
       </Modal>
@@ -215,130 +189,101 @@ export default function VehiclesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+  container: { flex: 1, backgroundColor: C.bg },
+  header: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: C.card,
   },
+  title: { fontSize: 28, fontWeight: '800', color: C.dark },
+  subtitle: { fontSize: 14, color: C.gray, marginTop: 4 },
   filterBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: COLORS.card,
+    paddingVertical: 10,
+    backgroundColor: C.card,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: C.border,
+    gap: 12,
   },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: 'rgba(30, 58, 138, 0.1)',
+    backgroundColor: C.purpleLight,
     borderRadius: 20,
-    gap: 8,
+    gap: 6,
   },
-  filterButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.primary,
-  },
+  filterButtonText: { fontSize: 13, fontWeight: '600', color: C.purple },
   filterBadge: {
-    backgroundColor: COLORS.primary,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    backgroundColor: C.purple,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  filterBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
+  filterBadgeText: { color: '#FFF', fontSize: 11, fontWeight: '700' },
+  quickFilters: { flexDirection: 'row' },
+  quickChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 18,
+    backgroundColor: C.grayLight,
+    marginRight: 8,
   },
-  resultsText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-  },
-  listContent: {
+  quickChipActive: { backgroundColor: C.purple },
+  quickChipText: { fontSize: 13, fontWeight: '500', color: C.gray },
+  quickChipTextActive: { color: '#FFF', fontWeight: '600' },
+  scrollArea: { flex: 1 },
+  vehicleGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     padding: 20,
+    gap: 16,
+    justifyContent: 'center',
+    maxWidth: 1200,
+    alignSelf: 'center',
+    width: '100%',
   },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginTop: 16,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 8,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  emptyContainer: { alignItems: 'center', paddingTop: 80 },
+  emptyText: { fontSize: 18, fontWeight: '600', color: C.dark, marginTop: 16 },
+  emptySubtext: { fontSize: 14, color: C.gray, marginTop: 8 },
+  modalContainer: { flex: 1, backgroundColor: C.bg },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.card,
+    borderBottomColor: C.border,
+    backgroundColor: C.card,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  filterSection: {
-    marginBottom: 24,
-  },
-  filterLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-  filterOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: C.dark },
+  modalContent: { flex: 1, padding: 20 },
+  filterSection: { marginBottom: 24 },
+  filterLabel: { fontSize: 16, fontWeight: '600', color: C.dark, marginBottom: 12 },
+  filterOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   filterOption: {
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: COLORS.card,
+    backgroundColor: C.card,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: C.border,
   },
-  filterOptionActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  filterOptionText: {
-    fontSize: 14,
-    color: COLORS.text,
-  },
-  filterOptionTextActive: {
-    color: '#FFFFFF',
-  },
+  filterOptionActive: { backgroundColor: C.purple, borderColor: C.purple },
+  filterOptionText: { fontSize: 14, color: C.dark },
+  filterOptionTextActive: { color: '#FFF' },
   modalFooter: {
     flexDirection: 'row',
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    backgroundColor: COLORS.card,
+    borderTopColor: C.border,
+    backgroundColor: C.card,
   },
 });
