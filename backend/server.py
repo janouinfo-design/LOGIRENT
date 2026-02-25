@@ -542,8 +542,9 @@ async def get_vehicle_availability(vehicle_id: str, month: int = None, year: int
 
 # Admin routes for vehicles
 @api_router.post("/admin/vehicles", response_model=Vehicle)
-async def create_vehicle(vehicle_data: VehicleCreate, user: dict = Depends(get_current_user)):
+async def create_vehicle(vehicle_data: VehicleCreate, user: dict = Depends(get_agency_admin)):
     vehicle = Vehicle(**vehicle_data.dict())
+    vehicle.agency_id = user.get('agency_id')
     await db.vehicles.insert_one(vehicle.dict())
     return vehicle
 
