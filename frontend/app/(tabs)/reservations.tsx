@@ -27,6 +27,7 @@ const statusLabels: Record<string, string> = {
   confirmed: 'Confirmée',
   active: 'En cours',
   pending: 'En attente',
+  pending_cash: 'Espèces en attente',
   cancelled: 'Annulée',
   completed: 'Terminée',
 };
