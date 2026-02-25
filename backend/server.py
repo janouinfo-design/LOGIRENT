@@ -1309,20 +1309,10 @@ class AdminStats(BaseModel):
     top_vehicles: List[Dict[str, Any]]
     revenue_by_month: List[Dict[str, Any]]
 
-# Admin user check
+# Admin user check - redirect to role-based check
 async def get_admin_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Check if user is admin (for simplicity, first registered user is admin)"""
-    if not credentials:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    payload = decode_token(credentials.credentials)
-    user = await db.users.find_one({"id": payload['user_id']})
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    # Check if user is admin (you could add an is_admin field)
-    # For MVP, allow all authenticated users to access admin
-    return user
+    """Check if user is admin (agency admin or super admin)"""
+    return await get_agency_admin(credentials)
 
 @api_router.get("/admin/stats", response_model=AdminStats)
 async def get_admin_stats(user: dict = Depends(get_admin_user)):
