@@ -399,16 +399,7 @@ async def forgot_password(request: ForgotPasswordRequest):
 
 @api_router.get("/auth/profile", response_model=UserProfile)
 async def get_profile(user: dict = Depends(get_current_user)):
-    return UserProfile(
-        id=user['id'],
-        email=user['email'],
-        name=user['name'],
-        phone=user.get('phone'),
-        address=user.get('address'),
-        id_photo=user.get('id_photo'),
-        license_photo=user.get('license_photo'),
-        created_at=user['created_at']
-    )
+    return await build_user_profile(user)
 
 @api_router.put("/auth/profile", response_model=UserProfile)
 async def update_profile(update_data: UserUpdate, user: dict = Depends(get_current_user)):
@@ -421,17 +412,7 @@ async def update_profile(update_data: UserUpdate, user: dict = Depends(get_curre
         )
     
     updated_user = await db.users.find_one({"id": user['id']})
-    
-    return UserProfile(
-        id=updated_user['id'],
-        email=updated_user['email'],
-        name=updated_user['name'],
-        phone=updated_user.get('phone'),
-        address=updated_user.get('address'),
-        id_photo=updated_user.get('id_photo'),
-        license_photo=updated_user.get('license_photo'),
-        created_at=updated_user['created_at']
-    )
+    return await build_user_profile(updated_user)
 
 @api_router.post("/auth/upload-license")
 async def upload_license(
