@@ -269,16 +269,64 @@ async def get_optional_user(credentials: HTTPAuthorizationCredentials = Depends(
     except:
         return None
 
+async def build_user_profile(user: dict) -> UserProfile:
+    """Build UserProfile from user dict, resolving agency name if needed"""
+    agency_name = None
+    agency_id = user.get('agency_id')
+    if agency_id:
+        agency = await db.agencies.find_one({"id": agency_id})
+        if agency:
+            agency_name = agency.get('name')
+    return UserProfile(
+        id=user['id'],
+        email=user['email'],
+        name=user['name'],
+        phone=user.get('phone'),
+        address=user.get('address'),
+        id_photo=user.get('id_photo'),
+        license_photo=user.get('license_photo'),
+        profile_photo=user.get('profile_photo'),
+        client_rating=user.get('client_rating'),
+        admin_notes=user.get('admin_notes'),
+        role=user.get('role', 'client'),
+        agency_id=agency_id,
+        agency_name=agency_name,
+        created_at=user['created_at']
+    )
+
+async def get_agency_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Check if user is an agency admin and return user with agency_id"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    payload = decode_token(credentials.credentials)
+    user = await db.users.find_one({"id": payload['user_id']})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    role = user.get('role', 'client')
+    if role not in ('admin', 'super_admin'):
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+    return user
+
+async def get_super_admin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Check if user is a super admin"""
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    payload = decode_token(credentials.credentials)
+    user = await db.users.find_one({"id": payload['user_id']})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    if user.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="Accès réservé au super administrateur")
+    return user
+
 # ==================== AUTH ROUTES ====================
 
 @api_router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserCreate):
-    # Check if email exists
     existing = await db.users.find_one({"email": user_data.email.lower()})
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create user
     user = {
         "id": str(uuid.uuid4()),
         "email": user_data.email.lower(),
@@ -288,26 +336,48 @@ async def register(user_data: UserCreate):
         "address": None,
         "id_photo": None,
         "license_photo": None,
+        "role": "client",
+        "agency_id": None,
         "created_at": datetime.utcnow()
     }
     
     await db.users.insert_one(user)
+    token = create_token(user['id'], user['email'], 'client')
+    profile = await build_user_profile(user)
     
-    token = create_token(user['id'], user['email'])
+    return TokenResponse(access_token=token, user=profile)
+
+@api_router.post("/auth/register-admin", response_model=TokenResponse)
+async def register_admin(data: AdminRegister):
+    """Register a new agency admin with a new agency"""
+    existing = await db.users.find_one({"email": data.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
     
-    return TokenResponse(
-        access_token=token,
-        user=UserProfile(
-            id=user['id'],
-            email=user['email'],
-            name=user['name'],
-            phone=user['phone'],
-            address=user['address'],
-            id_photo=user['id_photo'],
-            license_photo=user['license_photo'],
-            created_at=user['created_at']
-        )
-    )
+    # Create agency
+    agency = Agency(name=data.agency_name)
+    await db.agencies.insert_one(agency.dict())
+    
+    # Create admin user
+    user = {
+        "id": str(uuid.uuid4()),
+        "email": data.email.lower(),
+        "password_hash": hash_password(data.password),
+        "name": data.name,
+        "phone": data.phone,
+        "address": None,
+        "id_photo": None,
+        "license_photo": None,
+        "role": "admin",
+        "agency_id": agency.id,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.users.insert_one(user)
+    token = create_token(user['id'], user['email'], 'admin')
+    profile = await build_user_profile(user)
+    
+    return TokenResponse(access_token=token, user=profile)
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
@@ -315,21 +385,11 @@ async def login(credentials: UserLogin):
     if not user or not verify_password(credentials.password, user['password_hash']):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    token = create_token(user['id'], user['email'])
+    role = user.get('role', 'client')
+    token = create_token(user['id'], user['email'], role)
+    profile = await build_user_profile(user)
     
-    return TokenResponse(
-        access_token=token,
-        user=UserProfile(
-            id=user['id'],
-            email=user['email'],
-            name=user['name'],
-            phone=user.get('phone'),
-            address=user.get('address'),
-            id_photo=user.get('id_photo'),
-            license_photo=user.get('license_photo'),
-            created_at=user['created_at']
-        )
-    )
+    return TokenResponse(access_token=token, user=profile)
 
 @api_router.post("/auth/forgot-password")
 async def forgot_password(request: ForgotPasswordRequest):
