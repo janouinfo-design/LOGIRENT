@@ -202,7 +202,7 @@ export default function BookingScreen() {
           <View style={styles.dateRow}>
             <TouchableOpacity 
               style={styles.dateCard}
-              onPress={() => { setCalendarMonth(startDate); setShowDatePicker('start'); }}
+              onPress={() => setShowDatePicker('start')}
               data-testid="pickup-date-card"
             >
               <Text style={styles.dateLabel}>Date de départ</Text>
@@ -228,7 +228,7 @@ export default function BookingScreen() {
 
             <TouchableOpacity 
               style={styles.dateCard}
-              onPress={() => { setCalendarMonth(endDate); setShowDatePicker('end'); }}
+              onPress={() => setShowDatePicker('end')}
               data-testid="return-date-card"
             >
               <Text style={styles.dateLabel}>Date de retour</Text>
