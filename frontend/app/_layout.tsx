@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Stack, usePathname, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../src/store/authStore';
-import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { I18nProvider, useI18n } from '../src/i18n';
 import { useNotificationStore } from '../src/store/notificationStore';
@@ -30,6 +30,8 @@ function TopNavBar() {
   const router = useRouter();
   const { unreadCount } = useNotificationStore();
   const { lang, setLang } = useI18n();
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
   const isActive = (route: string) => {
     if (route === '/') return pathname === '/' || pathname === '';
@@ -40,7 +42,7 @@ function TopNavBar() {
     <View style={styles.topBar}>
       <View style={styles.logoSection}>
         <Image source={{ uri: LOGO_URL }} style={styles.logo} resizeMode="contain" />
-        <Text style={styles.logoText}>Logi<Text style={{ color: C.purple }}>Rent</Text></Text>
+        {!isMobile && <Text style={styles.logoText}>Logi<Text style={{ color: C.purple }}>Rent</Text></Text>}
       </View>
       <View style={styles.navIcons}>
         {navTabs.map((tab) => {
@@ -52,24 +54,24 @@ function TopNavBar() {
               onPress={() => router.push(tab.route as any)}
               data-testid={`nav-${tab.name}`}
             >
-              <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={22} color={active ? C.purple : C.gray} />
-              <Text style={[styles.navLabel, active && styles.navLabelActive]}>{tab.label}</Text>
+              <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={isMobile ? 20 : 22} color={active ? C.purple : C.gray} />
+              {!isMobile && <Text style={[styles.navLabel, active && styles.navLabelActive]}>{tab.label}</Text>}
             </TouchableOpacity>
           );
         })}
       </View>
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/reservations')} data-testid="notification-bell">
-          <Ionicons name="notifications-outline" size={20} color={C.dark} />
+          <Ionicons name="notifications-outline" size={18} color={C.dark} />
           {unreadCount > 0 && (
             <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
           )}
         </TouchableOpacity>
         <TouchableOpacity style={[styles.langBtn, lang === 'fr' && styles.langBtnActive]} onPress={() => setLang('fr')} data-testid="lang-fr">
-          <Text style={styles.langFlag}>🇫🇷</Text>
+          <Text style={styles.langFlag}>FR</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[styles.langBtn, lang === 'en' && styles.langBtnActive]} onPress={() => setLang('en')} data-testid="lang-en">
-          <Text style={styles.langFlag}>🇬🇧</Text>
+          <Text style={styles.langFlag}>EN</Text>
         </TouchableOpacity>
       </View>
     </View>
