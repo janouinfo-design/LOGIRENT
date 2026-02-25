@@ -151,6 +151,7 @@ class Vehicle(BaseModel):
     options: List[VehicleOption] = []  # GPS, baby seat, etc.
     status: str = "available"  # available, rented, maintenance
     location: str = "Geneva"
+    agency_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class VehicleCreate(BaseModel):
