@@ -1321,83 +1321,46 @@ async def get_admin_stats(user: dict = Depends(get_admin_user)):
     agency_id = user.get('agency_id')
     is_super = user.get('role') == 'super_admin'
     
-    # Build query filters
-    vehicle_filter = {} if is_super else {"agency_id": agency_id}
-    reservation_filter = {} if is_super else {"agency_id": agency_id}
+    vf = {} if is_super else {"agency_id": agency_id}
+    rf = {} if is_super else {"agency_id": agency_id}
     
-    total_vehicles = await db.vehicles.count_documents(vehicle_filter)
+    total_vehicles = await db.vehicles.count_documents(vf)
+    total_reservations = await db.reservations.count_documents(rf)
     
-    # For users: count users who have reservations with this agency
     if is_super:
         total_users = await db.users.count_documents({})
+        total_payments = await db.payment_transactions.count_documents({"payment_status": "paid"})
     else:
-        user_ids = await db.reservations.distinct("user_id", {"agency_id": agency_id})
+        user_ids = await db.reservations.distinct("user_id", rf)
         total_users = len(user_ids)
+        total_payments = await db.reservations.count_documents({**rf, "payment_status": "paid"})
     
-    total_reservations = await db.reservations.count_documents(reservation_filter)
-    
-    paid_filter = {**reservation_filter, "payment_status": "paid"}
-    total_payments = await db.payment_transactions.count_documents(
-        {} if is_super else {"reservation_id": {"$in": [r['id'] async for r in db.reservations.find({"agency_id": agency_id}, {"id": 1})]}}
-    ) if not is_super else await db.payment_transactions.count_documents({"payment_status": "paid"})
-    
-    # Total revenue
     revenue_match = {"payment_status": "paid"}
     if not is_super:
         revenue_match["agency_id"] = agency_id
-    pipeline = [
-        {"$match": revenue_match},
-        {"$group": {"_id": None, "total": {"$sum": "$total_price"}}}
-    ]
+    pipeline = [{"$match": revenue_match}, {"$group": {"_id": None, "total": {"$sum": "$total_price"}}}]
     revenue_result = await db.reservations.aggregate(pipeline).to_list(1)
     total_revenue = revenue_result[0]["total"] if revenue_result else 0
     
-    # Reservations by status
-    status_pipeline = [
-        {"$group": {"_id": "$status", "count": {"$sum": 1}}}
-    ]
+    status_pipeline = [{"$match": rf}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}]
     status_result = await db.reservations.aggregate(status_pipeline).to_list(10)
     reservations_by_status = {item["_id"]: item["count"] for item in status_result}
     
-    # Top rented vehicles
-    top_pipeline = [
-        {"$group": {"_id": "$vehicle_id", "rental_count": {"$sum": 1}}},
-        {"$sort": {"rental_count": -1}},
-        {"$limit": 5}
-    ]
+    top_pipeline = [{"$match": rf}, {"$group": {"_id": "$vehicle_id", "rental_count": {"$sum": 1}}}, {"$sort": {"rental_count": -1}}, {"$limit": 5}]
     top_result = await db.reservations.aggregate(top_pipeline).to_list(5)
-    
     top_vehicles = []
     for item in top_result:
         vehicle = await db.vehicles.find_one({"id": item["_id"]})
         if vehicle:
-            top_vehicles.append({
-                "id": vehicle["id"],
-                "name": f"{vehicle['brand']} {vehicle['model']}",
-                "rental_count": item["rental_count"]
-            })
+            top_vehicles.append({"id": vehicle["id"], "name": f"{vehicle['brand']} {vehicle['model']}", "rental_count": item["rental_count"]})
     
-    # Revenue by month (last 6 months)
     six_months_ago = datetime.utcnow() - timedelta(days=180)
-    monthly_pipeline = [
-        {"$match": {"payment_status": "paid", "created_at": {"$gte": six_months_ago}}},
-        {"$group": {
-            "_id": {"year": {"$year": "$created_at"}, "month": {"$month": "$created_at"}},
-            "revenue": {"$sum": "$total_price"},
-            "count": {"$sum": 1}
-        }},
-        {"$sort": {"_id.year": 1, "_id.month": 1}}
-    ]
+    monthly_match = {"payment_status": "paid", "created_at": {"$gte": six_months_ago}}
+    if not is_super:
+        monthly_match["agency_id"] = agency_id
+    monthly_pipeline = [{"$match": monthly_match}, {"$group": {"_id": {"year": {"$year": "$created_at"}, "month": {"$month": "$created_at"}}, "revenue": {"$sum": "$total_price"}, "count": {"$sum": 1}}}, {"$sort": {"_id.year": 1, "_id.month": 1}}]
     monthly_result = await db.reservations.aggregate(monthly_pipeline).to_list(12)
-    
-    revenue_by_month = []
-    for item in monthly_result:
-        month_name = datetime(item["_id"]["year"], item["_id"]["month"], 1).strftime("%b %Y")
-        revenue_by_month.append({
-            "month": month_name,
-            "revenue": item["revenue"],
-            "reservations": item["count"]
-        })
+    revenue_by_month = [{"month": datetime(item["_id"]["year"], item["_id"]["month"], 1).strftime("%b %Y"), "revenue": item["revenue"], "reservations": item["count"]} for item in monthly_result]
     
     return AdminStats(
         total_vehicles=total_vehicles,
