@@ -141,13 +141,14 @@ export default function BookingScreen() {
     }
 
     try {
-      // Create reservation
+      // Create reservation - TWINT goes through Stripe checkout like card
+      const effectivePaymentMethod = paymentMethod === 'twint' ? 'card' : paymentMethod;
       const reservation = await createReservation({
         vehicle_id: id!,
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
         options: selectedOptions,
-        payment_method: paymentMethod,
+        payment_method: effectivePaymentMethod,
       });
 
       // If cash payment, show success and go to reservations
@@ -165,10 +166,10 @@ export default function BookingScreen() {
         return;
       }
 
-      // Initiate card payment
+      // Initiate payment (card or twint via Stripe)
       const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://rental-hub-dev-3.preview.emergentagent.com';
-
-      const paymentData = await initiatePayment(reservation.id, originUrl);
+      const paymentMethodType = paymentMethod === 'twint' ? 'twint' : 'card';
+      const paymentData = await initiatePayment(reservation.id, originUrl, paymentMethodType);
 
       // Open Stripe checkout
       if (Platform.OS === 'web') {
