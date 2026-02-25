@@ -21,6 +21,7 @@ const COLORS = {
   textLight: '#64748B',
   border: '#E2E8F0',
   success: '#10B981',
+  error: '#EF4444',
 };
 
 export default function BookingScreen() {
