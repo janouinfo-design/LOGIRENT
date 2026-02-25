@@ -178,6 +178,7 @@ class Reservation(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
     vehicle_id: str
+    agency_id: Optional[str] = None
     start_date: datetime
     end_date: datetime
     options: List[ReservationOption] = []
