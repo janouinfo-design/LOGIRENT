@@ -60,12 +60,35 @@ logger = logging.getLogger(__name__)
 
 # ==================== MODELS ====================
 
+# Agency Model
+class Agency(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    logo: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class AgencyCreate(BaseModel):
+    name: str
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
 # Auth Models
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
     phone: Optional[str] = None
+
+class AdminRegister(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    phone: Optional[str] = None
+    agency_name: str
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -80,8 +103,11 @@ class UserProfile(BaseModel):
     id_photo: Optional[str] = None
     license_photo: Optional[str] = None
     profile_photo: Optional[str] = None
-    client_rating: Optional[str] = None  # good, bad, neutral, vip, blocked
+    client_rating: Optional[str] = None
     admin_notes: Optional[str] = None
+    role: str = "client"  # client, admin, super_admin
+    agency_id: Optional[str] = None
+    agency_name: Optional[str] = None
     created_at: datetime
 
 class UserUpdate(BaseModel):
