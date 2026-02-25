@@ -39,7 +39,7 @@ export default function TabLayout() {
         options={{
           title: 'Véhicules',
           tabBarIcon: ({ color, size }) => <Ionicons name="car" size={size} color={color} />,
-          headerTitle: 'Notre Flotte',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
