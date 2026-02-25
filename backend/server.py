@@ -1740,6 +1740,106 @@ async def update_vehicle_status(
     
     return {"message": f"Vehicle status updated to {status}"}
 
+# ==================== NOTIFICATIONS ====================
+
+@api_router.get("/notifications")
+async def get_notifications(user: dict = Depends(get_current_user)):
+    """Get notifications for the current user"""
+    notifications = await db.notifications.find(
+        {"user_id": user['id']}
+    ).sort("created_at", -1).to_list(50)
+    
+    for n in notifications:
+        n['_id'] = str(n['_id'])
+    
+    return {"notifications": notifications}
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
+    """Mark a notification as read"""
+    result = await db.notifications.update_one(
+        {"id": notification_id, "user_id": user['id']},
+        {"$set": {"read": True}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    return {"message": "Notification marked as read"}
+
+@api_router.put("/notifications/read-all")
+async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
+    """Mark all notifications as read for the current user"""
+    await db.notifications.update_many(
+        {"user_id": user['id'], "read": False},
+        {"$set": {"read": True}}
+    )
+    return {"message": "All notifications marked as read"}
+
+@api_router.get("/notifications/unread-count")
+async def get_unread_count(user: dict = Depends(get_current_user)):
+    """Get count of unread notifications"""
+    count = await db.notifications.count_documents({"user_id": user['id'], "read": False})
+    return {"count": count}
+
+@api_router.post("/admin/check-overdue")
+async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
+    """Check for overdue reservations and create notifications"""
+    now = datetime.utcnow()
+    
+    overdue_reservations = await db.reservations.find({
+        "status": "active",
+        "end_date": {"$lt": now}
+    }).to_list(100)
+    
+    created = 0
+    for res in overdue_reservations:
+        existing = await db.notifications.find_one({
+            "reservation_id": res['id'],
+            "type": "late_return"
+        })
+        if existing:
+            continue
+        
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        vehicle_name = f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Véhicule'
+        days_overdue = (now - res['end_date']).days
+        
+        notification = {
+            "id": str(uuid.uuid4()),
+            "user_id": res['user_id'],
+            "reservation_id": res['id'],
+            "type": "late_return",
+            "title": "Retour en retard",
+            "message": f"Votre location de {vehicle_name} est en retard de {days_overdue} jour(s). Veuillez retourner le véhicule dès que possible.",
+            "read": False,
+            "created_at": datetime.utcnow()
+        }
+        await db.notifications.insert_one(notification)
+        created += 1
+        
+        # Also send email notification
+        try:
+            res_user = await db.users.find_one({"id": res['user_id']})
+            if res_user:
+                html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                    <div style="background:#EF4444;padding:20px;border-radius:12px 12px 0 0;text-align:center;">
+                        <h2 style="color:#fff;margin:0;">Retour en retard</h2>
+                    </div>
+                    <div style="background:#fff;padding:20px;border-radius:0 0 12px 12px;border:1px solid #E5E7EB;">
+                        <p>Bonjour {res_user['name']},</p>
+                        <p>Votre location de <strong>{vehicle_name}</strong> devait être retournée le <strong>{res['end_date'].strftime('%d/%m/%Y')}</strong>.</p>
+                        <p style="color:#EF4444;font-weight:bold;">Vous avez {days_overdue} jour(s) de retard.</p>
+                        <p>Veuillez retourner le véhicule dès que possible pour éviter des frais supplémentaires.</p>
+                        <p>L'équipe LogiRent</p>
+                    </div>
+                </div>
+                """
+                await send_email(res_user['email'], f"Retour en retard - {vehicle_name}", html)
+        except Exception as e:
+            logger.error(f"Failed to send overdue email: {e}")
+    
+    return {"message": f"Checked overdue reservations. Created {created} new notifications."}
+
 # Include router
 app.include_router(api_router)
 
