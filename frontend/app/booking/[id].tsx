@@ -829,6 +829,27 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: '500',
   },
+  timePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  timeBtn: {
+    padding: 4,
+  },
+  timeText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.text,
+    minWidth: 46,
+    textAlign: 'center',
+  },
   calModalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
