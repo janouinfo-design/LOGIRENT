@@ -1296,10 +1296,6 @@ async def send_cash_reservation_email(user: dict, vehicle: dict, reservation: di
 
 # ==================== ADMIN ROUTES ====================
 
-class AdminLogin(BaseModel):
-    email: EmailStr
-    password: str
-
 class AdminStats(BaseModel):
     total_vehicles: int
     total_users: int
