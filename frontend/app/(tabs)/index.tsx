@@ -290,21 +290,21 @@ const styles = StyleSheet.create({
   heroInner: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    minHeight: 300,
+    minHeight: 280,
   },
   heroLeft: {
     flex: 1,
-    padding: 28,
+    padding: 24,
     justifyContent: 'center',
   },
   heroRight: {
     width: '40%',
-    minHeight: 300,
+    minHeight: 280,
   },
   heroImage: {
     width: '100%',
     height: '100%',
-    minHeight: 300,
+    minHeight: 200,
   },
   heroContent: { padding: 28 },
   heroGreeting: { fontSize: 12, color: C.grayLight, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
