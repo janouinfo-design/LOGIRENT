@@ -44,7 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Accueil',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
@@ -54,31 +54,31 @@ export default function TabLayout() {
       <Tabs.Screen
         name="vehicles"
         options={{
-          title: 'Vehicles',
+          title: 'Véhicules',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="car" size={size} color={color} />
           ),
-          headerTitle: 'Our Fleet',
+          headerTitle: 'Notre Flotte',
         }}
       />
       <Tabs.Screen
         name="reservations"
         options={{
-          title: 'My Rentals',
+          title: 'Locations',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
-          headerTitle: 'My Reservations',
+          headerTitle: 'Mes Réservations',
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: 'Profil',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),
-          headerTitle: 'My Profile',
+          headerTitle: 'Mon Profil',
         }}
       />
     </Tabs>
