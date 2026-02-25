@@ -31,7 +31,7 @@ function TopNavBar() {
   const { unreadCount } = useNotificationStore();
   const { lang, setLang } = useI18n();
   const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const isMobile = width < 1024;
 
   const isActive = (route: string) => {
     if (route === '/') return pathname === '/' || pathname === '';
