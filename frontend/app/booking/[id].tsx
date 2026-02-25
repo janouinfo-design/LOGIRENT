@@ -32,6 +32,10 @@ export default function BookingScreen() {
 
   const [startDate, setStartDate] = useState(addDays(new Date(), 1));
   const [endDate, setEndDate] = useState(addDays(new Date(), 3));
+  const [startHour, setStartHour] = useState(8);
+  const [startMin, setStartMin] = useState(0);
+  const [endHour, setEndHour] = useState(18);
+  const [endMin, setEndMin] = useState(0);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [showDatePicker, setShowDatePicker] = useState<'start' | 'end' | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'twint' | 'cash'>('card');
