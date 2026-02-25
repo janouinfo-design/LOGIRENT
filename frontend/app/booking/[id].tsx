@@ -92,9 +92,10 @@ export default function BookingScreen() {
   };
 
   const incrementDays = (type: 'start' | 'end', increment: number) => {
+    const todayStart = startOfDay(new Date());
     if (type === 'start') {
       const newStart = addDays(startDate, increment);
-      if (newStart >= new Date() && newStart < endDate) {
+      if (newStart >= todayStart && newStart < endDate) {
         setStartDate(newStart);
       }
     } else {
