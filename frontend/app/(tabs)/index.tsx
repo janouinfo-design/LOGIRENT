@@ -1,37 +1,84 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, RefreshControl, Platform } from 'react-native';
+import React, { useEffect, useRef, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Image, Platform, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
+import { useI18n } from '../../src/i18n';
 
-const { width } = Dimensions.get('window');
+const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413e-4204-98d4-1c8f25a6208a/images/6552fb693c88f79e17c59c43f1efe1446e03b6ddd3093a08b690934bdc28ae75.png';
 
-const COLORS = {
-  primary: '#0F172A',
-  gold: '#D4A853',
-  goldLight: '#F5E6C8',
-  bg: '#FAFBFC',
+const C = {
+  purple: '#6B21A8',
+  purpleLight: '#7C3AED',
+  purpleDark: '#4C1D95',
+  dark: '#1A1A2E',
+  gray: '#6B7280',
+  grayLight: '#9CA3AF',
+  bg: '#FAFAFA',
   card: '#FFFFFF',
-  text: '#0F172A',
-  textLight: '#64748B',
-  border: '#E2E8F0',
+  text: '#111827',
+  border: '#E5E7EB',
 };
 
 const vehicleTypes = [
-  { id: 'all', name: 'Tous', icon: 'grid-outline' },
-  { id: 'SUV', name: 'SUV', icon: 'car-sport-outline' },
-  { id: 'berline', name: 'Berline', icon: 'car-outline' },
-  { id: 'citadine', name: 'Citadine', icon: 'car' },
-  { id: 'utilitaire', name: 'Utilitaire', icon: 'cube-outline' },
+  { id: 'all', icon: 'grid-outline' },
+  { id: 'SUV', icon: 'car-sport-outline' },
+  { id: 'berline', icon: 'car-outline' },
+  { id: 'citadine', icon: 'car' },
+  { id: 'utilitaire', icon: 'cube-outline' },
 ];
+
+const typeNameMap: Record<string, Record<string, string>> = {
+  fr: { all: 'Tous', SUV: 'SUV', berline: 'Berline', citadine: 'Citadine', utilitaire: 'Utilitaire' },
+  en: { all: 'All', SUV: 'SUV', berline: 'Sedan', citadine: 'City Car', utilitaire: 'Utility' },
+};
+
+// Animated card wrapper for scroll animations
+function AnimatedCard({ children, index }: { children: React.ReactNode; index: number }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    const delay = index * 80;
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, delay, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      {children}
+    </Animated.View>
+  );
+}
+
+function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(40)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, delay, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, delay, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      {children}
+    </Animated.View>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
+  const { lang, t, setLang } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -50,324 +97,321 @@ export default function HomeScreen() {
     fetchVehicles({ type });
   };
 
-  const firstName = user?.name?.split(' ')[0] || 'Client';
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 30 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {/* Hero Header */}
-        <View style={styles.hero}>
-          <View style={styles.heroTop}>
-            <View>
-              <Text style={styles.greeting}>Bonjour, {firstName}</Text>
-              <Text style={styles.heroTitle}>Trouvez votre{'\n'}voiture idéale</Text>
-            </View>
-            <TouchableOpacity style={styles.profileBtn} onPress={() => router.push('/(tabs)/profile')}>
-              <View style={styles.profileAvatar}>
-                <Text style={styles.profileInitial}>{firstName.charAt(0).toUpperCase()}</Text>
-              </View>
+        {/* Navigation Bar */}
+        <View style={styles.navbar}>
+          <View style={styles.logoRow}>
+            <Image source={{ uri: LOGO_URL }} style={styles.logoImage} resizeMode="contain" />
+            <Text style={styles.logoText}>Logi<Text style={{ color: C.purpleLight }}>Rent</Text></Text>
+          </View>
+          
+          {/* Language Switcher */}
+          <View style={styles.langSwitch}>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'fr' && styles.langBtnActive]}
+              onPress={() => setLang('fr')}
+              data-testid="lang-fr"
+            >
+              <Text style={styles.langFlag}>🇫🇷</Text>
+              <Text style={[styles.langLabel, lang === 'fr' && styles.langLabelActive]}>FR</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.langBtn, lang === 'en' && styles.langBtnActive]}
+              onPress={() => setLang('en')}
+              data-testid="lang-en"
+            >
+              <Text style={styles.langFlag}>🇬🇧</Text>
+              <Text style={[styles.langLabel, lang === 'en' && styles.langLabelActive]}>EN</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Search Bar */}
-          <TouchableOpacity
-            style={styles.searchBar}
-            onPress={() => router.push('/(tabs)/vehicles')}
-            data-testid="search-bar"
-          >
-            <Ionicons name="search" size={18} color={COLORS.gold} />
-            <Text style={styles.searchText}>Rechercher un véhicule...</Text>
-            <View style={styles.searchFilter}>
-              <Ionicons name="options-outline" size={16} color={COLORS.primary} />
-            </View>
-          </TouchableOpacity>
         </View>
+
+        {/* Hero Section */}
+        <AnimatedSection delay={0}>
+          <View style={styles.hero}>
+            <View style={styles.heroBg} />
+            <View style={styles.heroContent}>
+              <Text style={styles.heroGreeting}>{t('greeting')}</Text>
+              <Text style={styles.heroTitle}>LogiRent</Text>
+              <Text style={styles.heroSubtitle}>{t('heroSubtitle')}</Text>
+              <TouchableOpacity
+                style={styles.heroButton}
+                onPress={() => router.push('/(tabs)/vehicles')}
+                data-testid="explore-fleet-btn"
+              >
+                <Text style={styles.heroButtonText}>{t('ourFleet')}</Text>
+                <Ionicons name="arrow-forward" size={16} color={C.dark} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </AnimatedSection>
 
         {/* Categories */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Catégories</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          >
-            {vehicleTypes.map((type) => {
-              const active = selectedType === type.id;
-              return (
-                <TouchableOpacity
-                  key={type.id}
-                  style={[styles.catPill, active && styles.catPillActive]}
-                  onPress={() => handleTypeSelect(type.id)}
-                  data-testid={`category-${type.id}`}
-                >
-                  <Ionicons
-                    name={type.icon as any}
-                    size={18}
-                    color={active ? '#FFFFFF' : COLORS.primary}
-                  />
-                  <Text style={[styles.catText, active && styles.catTextActive]}>
-                    {type.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+        <AnimatedSection delay={200}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('categories')}</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 20 }}
+            >
+              {vehicleTypes.map((type) => {
+                const active = selectedType === type.id;
+                return (
+                  <TouchableOpacity
+                    key={type.id}
+                    style={[styles.catPill, active && styles.catPillActive]}
+                    onPress={() => handleTypeSelect(type.id)}
+                    data-testid={`category-${type.id}`}
+                  >
+                    <Ionicons name={type.icon as any} size={18} color={active ? '#FFFFFF' : C.purple} />
+                    <Text style={[styles.catText, active && styles.catTextActive]}>
+                      {typeNameMap[lang]?.[type.id] || type.id}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </AnimatedSection>
 
-        {/* Vehicle Count + View Toggle */}
-        <View style={styles.resultsRow}>
-          <Text style={styles.resultsText}>
-            {vehicles.length} véhicule{vehicles.length > 1 ? 's' : ''}
-            {selectedType !== 'all' && <Text style={{ color: COLORS.gold }}> - {vehicleTypes.find(t => t.id === selectedType)?.name}</Text>}
-          </Text>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
-            <Text style={styles.viewAll}>Voir tout</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Vehicle Count */}
+        <AnimatedSection delay={350}>
+          <View style={styles.resultsRow}>
+            <Text style={styles.resultsText}>
+              {vehicles.length} {t('vehiclesCount')}
+            </Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
+              <Text style={styles.viewAll}>{t('viewAll')}</Text>
+            </TouchableOpacity>
+          </View>
+        </AnimatedSection>
 
-        {/* Vehicle Grid - Square Cards */}
+        {/* Vehicle Grid - 3 per row */}
         <View style={styles.vehicleGrid}>
-          {vehicles.map((vehicle) => (
-            <VehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-            />
+          {vehicles.map((vehicle, index) => (
+            <AnimatedCard key={vehicle.id} index={index}>
+              <VehicleCard
+                vehicle={vehicle}
+                onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                index={index}
+              />
+            </AnimatedCard>
           ))}
         </View>
 
         {vehicles.length === 0 && (
           <View style={styles.empty}>
-            <Ionicons name="car-outline" size={48} color={COLORS.textLight} />
+            <Ionicons name="car-outline" size={48} color={C.grayLight} />
             <Text style={styles.emptyText}>Aucun véhicule trouvé</Text>
-            <TouchableOpacity onPress={() => handleTypeSelect('all')}>
-              <Text style={styles.emptyAction}>Réinitialiser les filtres</Text>
-            </TouchableOpacity>
           </View>
         )}
 
-        {/* Promo Banner */}
-        <View style={styles.promo}>
-          <View style={styles.promoLeft}>
-            <View style={styles.promoBadge}>
-              <Ionicons name="star" size={12} color={COLORS.gold} />
-              <Text style={styles.promoBadgeText}>Offre spéciale</Text>
+        {/* Why LogiRent Section */}
+        <AnimatedSection delay={500}>
+          <View style={styles.whySection}>
+            <Text style={styles.sectionTitle}>{t('whyUs')}</Text>
+            <View style={styles.benefitsGrid}>
+              {[
+                { icon: 'car-sport', titleKey: 'benefit1Title' as const, descKey: 'benefit1Desc' as const },
+                { icon: 'headset', titleKey: 'benefit2Title' as const, descKey: 'benefit2Desc' as const },
+                { icon: 'pricetag', titleKey: 'benefit3Title' as const, descKey: 'benefit3Desc' as const },
+                { icon: 'calendar-clear', titleKey: 'benefit4Title' as const, descKey: 'benefit4Desc' as const },
+              ].map((benefit, i) => (
+                <View key={i} style={styles.benefitCard}>
+                  <View style={styles.benefitIcon}>
+                    <Ionicons name={benefit.icon as any} size={24} color={C.purpleLight} />
+                  </View>
+                  <Text style={styles.benefitTitle}>{t(benefit.titleKey)}</Text>
+                  <Text style={styles.benefitDesc}>{t(benefit.descKey)}</Text>
+                </View>
+              ))}
             </View>
-            <Text style={styles.promoTitle}>Première location ?</Text>
-            <Text style={styles.promoSub}>Profitez de -15% sur votre première réservation</Text>
-            <TouchableOpacity style={styles.promoBtn}>
-              <Text style={styles.promoBtnText}>Réserver maintenant</Text>
-              <Ionicons name="arrow-forward" size={14} color={COLORS.primary} />
+          </View>
+        </AnimatedSection>
+
+        {/* CTA Banner */}
+        <AnimatedSection delay={650}>
+          <View style={styles.cta}>
+            <Text style={styles.ctaTitle}>{t('ctaTitle')}</Text>
+            <Text style={styles.ctaSub}>{t('ctaSubtitle')}</Text>
+            <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/(tabs)/vehicles')}>
+              <Text style={styles.ctaButtonText}>{t('ctaButton')}</Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-        </View>
+        </AnimatedSection>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.bg,
-  },
-  hero: {
-    backgroundColor: COLORS.primary,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 28,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-  },
-  heroTop: {
+  container: { flex: 1, backgroundColor: C.bg },
+  navbar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 13,
-    color: COLORS.gold,
-    fontWeight: '500',
-    letterSpacing: 0.3,
-  },
-  heroTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginTop: 6,
-    lineHeight: 32,
-  },
-  profileBtn: {
-    marginTop: 4,
-  },
-  profileAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: COLORS.gold,
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: C.card,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
   },
-  profileInitial: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
-  searchBar: {
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  logoImage: { width: 36, height: 36, borderRadius: 8 },
+  logoText: { fontSize: 22, fontWeight: '800', color: C.dark },
+  langSwitch: { flexDirection: 'row', gap: 6 },
+  langBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    gap: 10,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: C.bg,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: C.border,
   },
-  searchText: {
-    flex: 1,
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
+  langBtnActive: { backgroundColor: C.purpleDark, borderColor: C.purpleDark },
+  langFlag: { fontSize: 14 },
+  langLabel: { fontSize: 12, fontWeight: '600', color: C.gray },
+  langLabelActive: { color: '#FFFFFF' },
+  hero: {
+    margin: 20,
+    marginBottom: 0,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: C.dark,
+    minHeight: 200,
   },
-  searchFilter: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: COLORS.gold,
-    justifyContent: 'center',
+  heroBg: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '50%',
+    height: '100%',
+    backgroundColor: C.purpleDark,
+    opacity: 0.3,
+    borderTopLeftRadius: 100,
+  },
+  heroContent: { padding: 28 },
+  heroGreeting: { fontSize: 13, color: C.grayLight, letterSpacing: 1, textTransform: 'uppercase' },
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginTop: 4,
+    marginBottom: 10,
+  },
+  heroSubtitle: { fontSize: 14, color: C.grayLight, lineHeight: 20, maxWidth: 400 },
+  heroButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  section: {
-    marginTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.text,
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    marginBottom: 14,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  heroButtonText: { fontSize: 14, fontWeight: '700', color: C.dark },
+  section: { marginTop: 28 },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: C.text,
+    paddingHorizontal: 20,
+    marginBottom: 16,
   },
   catPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 25,
-    backgroundColor: COLORS.card,
+    backgroundColor: C.card,
     marginRight: 10,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    borderWidth: 1.5,
+    borderColor: C.border,
   },
-  catPillActive: {
-    backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
-  catText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  catTextActive: {
-    color: '#FFFFFF',
-  },
+  catPillActive: { backgroundColor: C.purple, borderColor: C.purple },
+  catText: { fontSize: 13, fontWeight: '600', color: C.text },
+  catTextActive: { color: '#FFFFFF' },
   resultsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 14,
+    marginTop: 28,
+    marginBottom: 16,
   },
-  resultsText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: COLORS.textLight,
-  },
-  viewAll: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.gold,
-  },
+  resultsText: { fontSize: 14, fontWeight: '500', color: C.gray },
+  viewAll: { fontSize: 13, fontWeight: '600', color: C.purpleLight },
   vehicleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 12,
-    maxWidth: 900,
+    paddingHorizontal: 20,
+    gap: 16,
+    maxWidth: 1200,
     alignSelf: 'center',
     width: '100%',
   },
-  empty: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 15,
-    color: COLORS.textLight,
-    marginTop: 10,
-  },
-  emptyAction: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: COLORS.gold,
-    marginTop: 8,
-  },
-  promo: {
-    marginHorizontal: 16,
-    marginTop: 24,
-    backgroundColor: COLORS.primary,
-    borderRadius: 18,
-    padding: 22,
-    overflow: 'hidden',
-  },
-  promoLeft: {},
-  promoBadge: {
+  empty: { alignItems: 'center', paddingVertical: 40 },
+  emptyText: { fontSize: 15, color: C.grayLight, marginTop: 10 },
+  whySection: { marginTop: 40 },
+  benefitsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 20,
+    gap: 14,
+  },
+  benefitCard: {
+    width: '47%',
+    minWidth: 150,
+    backgroundColor: C.card,
+    borderRadius: 14,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  benefitIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(107, 33, 168, 0.08)',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 5,
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(212, 168, 83, 0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
     marginBottom: 12,
   },
-  promoBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: COLORS.gold,
+  benefitTitle: { fontSize: 14, fontWeight: '700', color: C.text, marginBottom: 4 },
+  benefitDesc: { fontSize: 12, color: C.gray, lineHeight: 16 },
+  cta: {
+    margin: 20,
+    backgroundColor: C.purple,
+    borderRadius: 20,
+    padding: 28,
+    alignItems: 'center',
   },
-  promoTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginBottom: 6,
-  },
-  promoSub: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    lineHeight: 18,
-    marginBottom: 16,
-  },
-  promoBtn: {
+  ctaTitle: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' },
+  ctaSub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 8, textAlign: 'center' },
+  ctaButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    alignSelf: 'flex-start',
-    backgroundColor: COLORS.gold,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 20,
   },
-  promoBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: COLORS.primary,
-  },
+  ctaButtonText: { fontSize: 14, fontWeight: '700', color: C.purple },
 });
