@@ -10,6 +10,41 @@ import { useI18n } from '../../src/i18n';
 
 const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413e-4204-98d4-1c8f25a6208a/images/6552fb693c88f79e17c59c43f1efe1446e03b6ddd3093a08b690934bdc28ae75.png';
 
+// Inject CSS for vehicle grid on web
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const id = 'vehicle-grid-css';
+  if (!document.getElementById(id)) {
+    const s = document.createElement('style');
+    s.id = id;
+    s.textContent = `
+      #vehicle-grid {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 16px !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+        padding: 0 20px !important;
+      }
+      @media (max-width: 900px) {
+        #vehicle-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      }
+      @media (max-width: 550px) {
+        #vehicle-grid { grid-template-columns: 1fr !important; }
+      }
+      #vehicle-grid > div {
+        animation: fadeSlideUp 0.5s ease forwards !important;
+        opacity: 0 !important;
+      }
+      ${Array.from({length: 12}, (_, i) => `#vehicle-grid > div:nth-child(${i+1}) { animation-delay: ${i * 0.08}s !important; }`).join('\n')}
+      @keyframes fadeSlideUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+}
+
 const C = {
   purple: '#6B21A8',
   purpleLight: '#7C3AED',
