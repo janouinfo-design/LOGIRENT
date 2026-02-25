@@ -1,102 +1,100 @@
-# RentDrive - Car Rental Solution PRD
+# LogiRent - PRD (Product Requirements Document)
 
 ## Original Problem Statement
-Build a complete car rental solution with:
-- Client Mobile App (iOS & Android) 
+Build a complete car rental solution named "LogiRent" with:
+- Client Mobile App (iOS & Android) and Web App
 - Admin Web Back-office
-- (Optional) Driver/Agent App
+- (Optional future) Driver/Agent App
 
-Target market: Switzerland (TWINT payment important)
+## Branding
+- **Name**: LogiRent
+- **Colors**: Violet, Grey, Black
+- **Language**: French (primary) and English, with flag-based switcher
 
-## Tech Stack
-- **Frontend**: React Native (Expo Router), Zustand, Axios
-- **Backend**: Python FastAPI
-- **Database**: MongoDB (via pymongo)
-- **Authentication**: JWT
-- **Payments**: Stripe (+ cash option)
+## Core Requirements
+
+### Client App Features
+- Email/password registration & login
+- Profile with document upload (ID + license)
+- Vehicle catalog with elegant/luxurious homepage, animated cards, 3 per line
+- Reservation with mini-calendar popup (month/year pickers)
+- Integrated Payment: Stripe (Card, Apple/Google Pay), TWINT (Swiss), Cash
+- Notifications for reservation status and late returns
+
+### Admin Back-office
+- Full CRUD for Vehicles, Reservations, Users
+- Reservation Calendar/Agenda view
+- Statistics & Dashboards
+
+## What's Been Implemented (Feb 2025)
+
+### Client App
+- [x] User authentication (register/login)
+- [x] Profile management with document uploads
+- [x] Homepage redesign: LogiRent branding, violet/grey/black theme, 3-column vehicle grid with scroll animations
+- [x] Internationalization (FR/EN) with flag switcher
+- [x] Vehicle catalog with category filters
+- [x] Booking page with mini-calendar popup and month/year pickers
+- [x] Payment: Stripe (Card), TWINT option, Cash payment
+- [x] Notification system: bell icon, unread count, notification endpoints
+
+### Admin Panel
+- [x] Admin login and dashboard
+- [x] Vehicle CRUD management
+- [x] Reservation management with status updates
+- [x] User management with ratings
+- [x] Reservation Calendar/Agenda page
+- [x] Overdue reservation tracking
+- [x] Statistics dashboard
+
+### Backend (FastAPI + MongoDB)
+- [x] All CRUD endpoints for vehicles, reservations, users
+- [x] Stripe payment integration with TWINT support
+- [x] Notification system (create, read, mark as read)
+- [x] Admin calendar data endpoint
+- [x] Overdue reservation check endpoint
+- [x] Email notifications (Resend)
 
 ## Architecture
 ```
 /app
 ├── backend/
-│   ├── server.py          # FastAPI server, all API logic
-│   ├── requirements.txt
-│   └── .env
+│   └── server.py          # FastAPI server
 └── frontend/
     ├── app/
-    │   ├── (auth)/
-    │   │   ├── admin-login.tsx
-    │   │   └── login.tsx
-    │   ├── (tabs)/
-    │   │   ├── index.tsx, profile.tsx, reservations.tsx
-    │   ├── admin/
-    │   │   ├── _layout.tsx
-    │   │   ├── index.tsx (dashboard)
-    │   │   ├── calendar.tsx (NEW - agenda)
-    │   │   ├── reservations.tsx (fixed ScrollView)
-    │   │   ├── vehicles.tsx
-    │   │   ├── users.tsx
-    │   │   └── payments.tsx
-    │   ├── vehicle/[id].tsx
-    │   └── booking.tsx
-    └── package.json
+    │   ├── (auth)/         # Login/Register screens
+    │   ├── (tabs)/         # Main app tabs (Home, Vehicles, Reservations, Profile)
+    │   ├── admin/          # Admin panel (dashboard, vehicles, reservations, users, calendar)
+    │   ├── booking/        # Booking flow with payment
+    │   └── vehicle/        # Vehicle detail
+    └── src/
+        ├── store/          # Zustand stores (auth, vehicle, reservation, notification)
+        ├── i18n/           # Internationalization
+        └── components/     # Reusable components
 ```
 
-## Tâches complétées (25 Fév 2026)
-- Correction affichage statuts réservations admin (FlatList -> ScrollView)
-- Page Agenda/Calendrier admin avec CSS Grid, indicateurs départs/retours, détection retards
-- Mini calendrier popup sur la page de réservation client
-- Traduction complète en français de la page booking
+## Tech Stack
+- **Frontend**: React Native (Expo), Expo Router, Zustand, Axios, i18next
+- **Backend**: FastAPI, MongoDB (Motor), JWT Auth
+- **Payments**: Stripe via emergentintegrations (Card + TWINT)
+- **Email**: Resend
 
-### Client App
-- [x] Email/password registration & login
-- [x] Vehicle catalog with photos, prices
-- [x] Booking flow with date selection
-- [x] Stripe payment + Cash payment option
-- [x] Profile with mandatory document upload (ID, driving license)
-
-### Admin Panel (Web)
-- [x] Separate admin login (/admin-login)
-- [x] Dashboard with stats (revenue, fleet, bookings)
-- [x] **Calendar/Agenda page** — Monthly grid showing car departures & returns with CSS Grid
-- [x] Vehicle CRUD (add/edit/delete, multi-photo upload, status changes)
-- [x] Reservation management (status changes, payment status, search, date filter)
-- [x] User management (edit info, notes, ratings, document uploads)
-- [x] Payment dashboard
-- [x] Overdue vehicle detection (API + alert banner)
-
-### Bug Fixes (Feb 24, 2026)
-- [x] Fixed reservation status visibility (replaced FlatList with ScrollView+map)
-- [x] Built calendar/agenda page with CSS Grid (React Native Web flex limitation workaround)
-
-## Pending/Upcoming Tasks
+## Prioritized Backlog
 
 ### P1 - High Priority
-- [ ] TWINT payment integration (important for Swiss market, via Stripe)
+- Late return notification triggers (scheduled job to auto-check overdue)
+- TWINT activation in Stripe dashboard (requires real Stripe key)
 
-### P2 - Medium Priority  
-- [ ] Deploy to app stores (Google Play, Apple App Store)
-- [ ] Push/email notifications (reservation confirmations, reminders)
+### P2 - Medium Priority
+- Refactor booking.tsx calendar into reusable component
+- Enhanced notification UI (dedicated notifications page)
 
-### P3 - Low Priority / Future
-- [ ] Driver/Agent application
-- [ ] GDPR + Swiss LPD compliance
-- [ ] Activity logging
-- [ ] Data encryption at rest
-- [ ] Excel/PDF export for reservations and payments
+### P3 - Future
+- Deploy to App Stores (iOS/Android)
+- Driver/Agent application
+- Revenue analytics deep-dive
 
-### Refactoring
-- [ ] Break down large admin files (users.tsx, vehicles.tsx) into smaller components
-- [ ] Extract API calls into custom hooks
-
-## Key API Endpoints
-- `/api/auth/login`, `/api/auth/register`, `/api/auth/profile`
-- `/api/admin/calendar?month=&year=` — Calendar events
-- `/api/admin/overdue` — Overdue reservations
-- `/api/admin/reservations`, `/api/admin/vehicles`, `/api/admin/users`, `/api/admin/payments`
-- `/api/admin/stats`
-
-## Test Credentials
-- Email: test@example.com
-- Password: password123
-- Role: admin
+## Known Limitations
+- TWINT requires activation in Stripe dashboard (test mode returns error)
+- Notification check for overdue is manual (admin triggers), not automated cron
+- Email notifications require valid Resend API key
