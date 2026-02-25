@@ -337,6 +337,7 @@ export default function AdminReservations() {
   );
 
   return (
+  <View style={{ flex: 1 }}>
     <ScrollView style={styles.container} data-testid="admin-reservations-page">
       {/* Search Bar */}
       <View style={styles.searchSection}>
