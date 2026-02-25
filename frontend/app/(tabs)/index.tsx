@@ -82,7 +82,7 @@ export default function HomeScreen() {
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
   const { width } = useWindowDimensions();
-  const isMobile = width < 768;
+  const isMobile = width < 1024;
 
   useEffect(() => { fetchVehicles(); }, []);
 
