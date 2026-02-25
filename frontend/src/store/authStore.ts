@@ -12,6 +12,9 @@ interface User {
   address?: string;
   id_photo?: string;
   license_photo?: string;
+  role?: string;  // client, admin, super_admin
+  agency_id?: string;
+  agency_name?: string;
   created_at: string;
 }
 
@@ -22,6 +25,8 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, phone?: string) => Promise<void>;
+  registerAdmin: (email: string, password: string, name: string, agencyName: string, phone?: string) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
