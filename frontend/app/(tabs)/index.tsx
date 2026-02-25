@@ -287,34 +287,28 @@ const styles = StyleSheet.create({
     borderRadius: 150,
   },
   heroInner: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    minHeight: 280,
+    flexDirection: 'column',
   },
-  heroLeft: {
-    flex: 1,
-    padding: 24,
-    justifyContent: 'center',
-  },
-  heroRight: {
-    width: '40%',
-    minHeight: 280,
+  heroImageWrap: {
+    width: '100%',
+    height: 200,
   },
   heroImage: {
     width: '100%',
     height: '100%',
-    minHeight: 200,
   },
-  heroContent: { padding: 28 },
+  heroContent: {
+    padding: 20,
+  },
   heroGreeting: { fontSize: 12, color: C.grayLight, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
   heroTitle: {
-    fontSize: 42,
+    fontSize: 32,
     fontWeight: '900',
     color: '#FFFFFF',
-    marginTop: 6,
-    marginBottom: 10,
+    marginTop: 4,
+    marginBottom: 8,
   },
-  heroSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22, maxWidth: 380 },
+  heroSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22 },
   heroSearch: {
     flexDirection: 'row',
     alignItems: 'center',
