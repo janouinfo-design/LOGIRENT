@@ -125,6 +125,15 @@ export default function AdminCalendar() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
+
+  const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+  const handleMonthSelect = (monthIndex: number) => {
+    setCurrentMonth(new Date(pickerYear, monthIndex, 1));
+    setShowMonthPicker(false);
+  };
 
   useEffect(() => {
     fetchCalendarData();
