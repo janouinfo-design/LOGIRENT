@@ -54,7 +54,12 @@ export default function AdminVehicles() {
   const fetchVehicles = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/api/vehicles');
+      const params: any = {};
+      // Filter by agency for admin (not super_admin who sees all)
+      if (user?.role === 'admin' && user?.agency_id) {
+        params.agency_id = user.agency_id;
+      }
+      const response = await api.get('/api/vehicles', { params });
       setVehicles(response.data);
     } catch (error: any) {
       console.error('Error fetching vehicles:', error.response?.data || error.message);
