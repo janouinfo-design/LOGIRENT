@@ -23,6 +23,7 @@ export interface Vehicle {
   options: VehicleOption[];
   status: string;
   location: string;
+  agency_id?: string;
   created_at: string;
 }
 
