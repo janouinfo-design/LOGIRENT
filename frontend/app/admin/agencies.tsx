@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 20, fontWeight: '800', color: COLORS.accent },
   statLabel: { fontSize: 11, color: COLORS.textLight, marginTop: 2 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalScrollContent: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalContent: { backgroundColor: COLORS.card, borderRadius: 16, padding: 24, width: '100%', maxWidth: 480, borderWidth: 1, borderColor: COLORS.border },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: '700', color: COLORS.text },
