@@ -12,7 +12,10 @@ const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413
 
 // Inject CSS for vehicle grid on web
 if (Platform.OS === 'web' && typeof document !== 'undefined') {
-  const id = 'vehicle-grid-css';
+  const id = 'vehicle-grid-css-v2';
+  // Remove old version
+  const old = document.getElementById('vehicle-grid-css');
+  if (old) old.remove();
   if (!document.getElementById(id)) {
     const s = document.createElement('style');
     s.id = id;
