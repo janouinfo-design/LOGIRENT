@@ -114,7 +114,7 @@ export default function AgenciesPage() {
           <Text style={styles.pageTitle}>Gestion des Agences</Text>
           <TouchableOpacity
             style={styles.addBtn}
-            onPress={() => { setEditAgency(null); setForm({ name: '', address: '', phone: '', email: '' }); setShowModal(true); }}
+            onPress={() => { setEditAgency(null); setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' }); setError(''); setShowModal(true); }}
             data-testid="add-agency-btn"
           >
             <Ionicons name="add" size={20} color="#FFF" />
