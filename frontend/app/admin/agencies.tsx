@@ -185,63 +185,94 @@ export default function AgenciesPage() {
       {/* Create/Edit Modal */}
       <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
         <View style={styles.modalOverlay}>
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{editAgency ? 'Modifier l\'agence' : 'Nouvelle agence'}</Text>
+                <TouchableOpacity onPress={() => setShowModal(false)}>
+                  <Ionicons name="close" size={24} color={COLORS.textLight} />
+                </TouchableOpacity>
+              </View>
+              {error ? <Text style={styles.modalError}>{error}</Text> : null}
+              <View style={styles.modalForm}>
+                <Text style={styles.sectionLabel}>Informations agence</Text>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Nom de l'agence *</Text>
+                  <TextInput style={styles.fieldInput} value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} placeholder="Nom de l'agence" placeholderTextColor={COLORS.textLight} data-testid="agency-form-name" />
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Adresse</Text>
+                  <TextInput style={styles.fieldInput} value={form.address} onChangeText={(t) => setForm({ ...form, address: t })} placeholder="Adresse" placeholderTextColor={COLORS.textLight} data-testid="agency-form-address" />
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Telephone</Text>
+                  <TextInput style={styles.fieldInput} value={form.phone} onChangeText={(t) => setForm({ ...form, phone: t })} placeholder="+41 22 000 0000" placeholderTextColor={COLORS.textLight} data-testid="agency-form-phone" />
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Email agence</Text>
+                  <TextInput style={styles.fieldInput} value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} placeholder="contact@agence.ch" placeholderTextColor={COLORS.textLight} data-testid="agency-form-email" />
+                </View>
+
+                {!editAgency && (
+                  <>
+                    <View style={styles.sectionDivider} />
+                    <Text style={styles.sectionLabel}>Compte administrateur</Text>
+                    <View style={styles.fieldGroup}>
+                      <Text style={styles.fieldLabel}>Nom de l'admin *</Text>
+                      <TextInput style={styles.fieldInput} value={form.admin_name} onChangeText={(t) => setForm({ ...form, admin_name: t })} placeholder="Jean Dupont" placeholderTextColor={COLORS.textLight} data-testid="agency-form-admin-name" />
+                    </View>
+                    <View style={styles.fieldGroup}>
+                      <Text style={styles.fieldLabel}>Email admin *</Text>
+                      <TextInput style={styles.fieldInput} value={form.admin_email} onChangeText={(t) => setForm({ ...form, admin_email: t })} placeholder="jean@agence.ch" placeholderTextColor={COLORS.textLight} autoCapitalize="none" keyboardType="email-address" data-testid="agency-form-admin-email" />
+                    </View>
+                    <View style={styles.fieldGroup}>
+                      <Text style={styles.fieldLabel}>Mot de passe admin *</Text>
+                      <TextInput style={styles.fieldInput} value={form.admin_password} onChangeText={(t) => setForm({ ...form, admin_password: t })} placeholder="Mot de passe" placeholderTextColor={COLORS.textLight} secureTextEntry data-testid="agency-form-admin-password" />
+                    </View>
+                  </>
+                )}
+
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave} data-testid="agency-form-save">
+                  <Text style={styles.saveBtnText}>{editAgency ? 'Mettre a jour' : 'Creer l\'agence + admin'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Success Confirmation Modal */}
+      <Modal visible={!!successInfo} transparent animationType="fade" onRequestClose={() => setSuccessInfo(null)}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{editAgency ? 'Modifier l\'agence' : 'Nouvelle agence'}</Text>
-              <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color={COLORS.textLight} />
-              </TouchableOpacity>
+            <View style={styles.successHeader}>
+              <View style={styles.successIcon}>
+                <Ionicons name="checkmark-circle" size={48} color={COLORS.success} />
+              </View>
+              <Text style={styles.modalTitle}>Agence creee avec succes !</Text>
             </View>
-            {error ? <Text style={styles.modalError}>{error}</Text> : null}
-            <View style={styles.modalForm}>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Nom *</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={form.name}
-                  onChangeText={(t) => setForm({ ...form, name: t })}
-                  placeholder="Nom de l'agence"
-                  placeholderTextColor={COLORS.textLight}
-                  data-testid="agency-form-name"
-                />
+            <View style={styles.credentialsBox}>
+              <Text style={styles.credentialsTitle}>Identifiants de connexion admin :</Text>
+              <View style={styles.credentialRow}>
+                <Ionicons name="person" size={16} color={COLORS.accent} />
+                <Text style={styles.credentialLabel}>Nom :</Text>
+                <Text style={styles.credentialValue}>{successInfo?.name}</Text>
               </View>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Adresse</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={form.address}
-                  onChangeText={(t) => setForm({ ...form, address: t })}
-                  placeholder="Adresse"
-                  placeholderTextColor={COLORS.textLight}
-                  data-testid="agency-form-address"
-                />
+              <View style={styles.credentialRow}>
+                <Ionicons name="mail" size={16} color={COLORS.accent} />
+                <Text style={styles.credentialLabel}>Email :</Text>
+                <Text style={styles.credentialValue}>{successInfo?.email}</Text>
               </View>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Téléphone</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={form.phone}
-                  onChangeText={(t) => setForm({ ...form, phone: t })}
-                  placeholder="+41 22 000 0000"
-                  placeholderTextColor={COLORS.textLight}
-                  data-testid="agency-form-phone"
-                />
+              <View style={styles.credentialRow}>
+                <Ionicons name="lock-closed" size={16} color={COLORS.accent} />
+                <Text style={styles.credentialLabel}>Mot de passe :</Text>
+                <Text style={styles.credentialValue}>{successInfo?.password}</Text>
               </View>
-              <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>Email</Text>
-                <TextInput
-                  style={styles.fieldInput}
-                  value={form.email}
-                  onChangeText={(t) => setForm({ ...form, email: t })}
-                  placeholder="contact@agence.ch"
-                  placeholderTextColor={COLORS.textLight}
-                  data-testid="agency-form-email"
-                />
-              </View>
-              <TouchableOpacity style={styles.saveBtn} onPress={handleSave} data-testid="agency-form-save">
-                <Text style={styles.saveBtnText}>{editAgency ? 'Mettre à jour' : 'Créer l\'agence'}</Text>
-              </TouchableOpacity>
             </View>
+            <Text style={styles.credentialsNote}>Communiquez ces identifiants a l'administrateur de l'agence.</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={() => setSuccessInfo(null)} data-testid="agency-success-close">
+              <Text style={styles.saveBtnText}>Fermer</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
