@@ -77,7 +77,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
           </View>
         )}
         <View style={styles.cardHeaderInfo}>
-          <Text style={styles.vehicleName}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Vehicule'}</Text>
+          <Text style={styles.vehicleName}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'V\u00e9hicule'}</Text>
           <Text style={styles.vehicleYear}>{vehicle?.year}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
@@ -88,7 +88,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
 
       <View style={styles.datesRow}>
         <View style={styles.dateBox}>
-          <Text style={styles.dateLabel}>Debut</Text>
+          <Text style={styles.dateLabel}>D\u00e9but</Text>
           <Text style={styles.dateValue}>{format(new Date(item.start_date), 'd MMM yyyy', { locale: fr })}</Text>
           <Text style={styles.dateTime}>{format(new Date(item.start_date), 'HH:mm')}</Text>
         </View>
@@ -117,7 +117,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
       {canCancel && (
         <TouchableOpacity style={styles.cancelBtn} onPress={() => onCancel(item.id)} data-testid={`cancel-${item.id}`}>
           <Ionicons name="close-circle-outline" size={16} color={C.error} />
-          <Text style={styles.cancelText}>Annuler la reservation</Text>
+          <Text style={styles.cancelText}>Annuler la r\u00e9servation</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -272,7 +272,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                   <View style={calStyles.eventContent}>
                     <View style={calStyles.eventHeader}>
                       <Text style={calStyles.eventVehicle}>
-                        {vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Vehicule'}
+                        {vehicle ? `${vehicle.brand} ${vehicle.model}` : 'V\u00e9hicule'}
                       </Text>
                       <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
                         <Text style={[styles.badgeText, { color: statusColor }]}>{statusLabels[res.status] || res.status}</Text>
