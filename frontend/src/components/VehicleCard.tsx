@@ -89,8 +89,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: C.border,
-    width: 340,
-    maxWidth: '100%',
+    width: '100%',
+    maxWidth: 340,
   },
   topRow: {
     flexDirection: 'row',
