@@ -75,6 +75,9 @@ class AgencyCreate(BaseModel):
     address: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
+    admin_name: Optional[str] = None
+    admin_email: Optional[str] = None
+    admin_password: Optional[str] = None
 
 # Auth Models
 class UserCreate(BaseModel):
