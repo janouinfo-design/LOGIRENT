@@ -161,6 +161,7 @@ export default function ReservationsScreen() {
                     <View style={styles.dateBox}>
                       <Text style={styles.dateLabel}>Début</Text>
                       <Text style={styles.dateValue}>{format(new Date(item.start_date), 'd MMM yyyy', { locale: fr })}</Text>
+                      <Text style={styles.dateTime}>{format(new Date(item.start_date), 'HH:mm')}</Text>
                     </View>
                     <View style={styles.dateArrow}>
                       <Ionicons name="arrow-forward" size={16} color={C.gray} />
@@ -169,6 +170,7 @@ export default function ReservationsScreen() {
                     <View style={[styles.dateBox, { alignItems: 'flex-end' }]}>
                       <Text style={styles.dateLabel}>Fin</Text>
                       <Text style={styles.dateValue}>{format(new Date(item.end_date), 'd MMM yyyy', { locale: fr })}</Text>
+                      <Text style={styles.dateTime}>{format(new Date(item.end_date), 'HH:mm')}</Text>
                     </View>
                   </View>
 
