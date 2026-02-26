@@ -317,6 +317,35 @@ export default function AgenciesPage() {
           </View>
         </View>
       </Modal>
+
+      {/* QR Code Modal */}
+      <Modal visible={!!qrAgency} transparent animationType="fade" onRequestClose={() => setQrAgency(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { alignItems: 'center' }]}>
+            <TouchableOpacity style={styles.closeBtn} onPress={() => setQrAgency(null)}>
+              <Ionicons name="close" size={22} color={COLORS.text} />
+            </TouchableOpacity>
+            <Ionicons name="qr-code" size={32} color={COLORS.primary} />
+            <Text style={[styles.modalTitle, { marginTop: 8 }]}>QR Code - {qrAgency?.name}</Text>
+            <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 16, textAlign: 'center' }}>
+              Imprimez ce QR code et affichez-le dans votre agence. Les clients le scannent pour s'inscrire.
+            </Text>
+            <View style={styles.qrContainer} data-testid="qr-code-display">
+              <QRCode
+                value={`${API_URL}/a/${qrAgency?.slug || qrAgency?.id}`}
+                size={200}
+                level="H"
+                fgColor="#1A1A2E"
+                bgColor="#FFFFFF"
+              />
+            </View>
+            <Text style={styles.qrUrl} selectable>{API_URL}/a/{qrAgency?.slug || qrAgency?.id}</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={() => setQrAgency(null)} data-testid="qr-modal-close">
+              <Text style={styles.saveBtnText}>Fermer</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
