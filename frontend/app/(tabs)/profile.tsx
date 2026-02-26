@@ -73,12 +73,40 @@ export default function ProfileScreen() {
     }
   };
 
-  const pickAndUpload = async (type: 'id' | 'license') => {
-    // On web, permissions are handled by the browser file picker
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
+  const idInputRef = useRef<HTMLInputElement | null>(null);
+  const licenseInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleWebFileChange = async (e: any, type: 'id' | 'license') => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+    const setter = type === 'id' ? setUploadingId : setUploadingLicense;
+    const uploader = type === 'id' ? uploadIdCard : uploadLicense;
+    const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
+    setter(true);
+    try {
+      const uri = URL.createObjectURL(file);
+      await uploader(uri);
+      if (Platform.OS === 'web') window.alert(successMsg);
+      else Alert.alert('Succès', successMsg);
+    } catch (err: any) {
+      if (Platform.OS === 'web') window.alert(err.message || 'Erreur lors du téléchargement');
+      else Alert.alert('Erreur', err.message);
+    } finally {
+      setter(false);
+      e.target.value = '';
     }
+  };
+
+  const pickAndUpload = async (type: 'id' | 'license') => {
+    if (Platform.OS === 'web') {
+      // Trigger native file input on web
+      const ref = type === 'id' ? idInputRef : licenseInputRef;
+      ref.current?.click();
+      return;
+    }
+    // Native: use expo-image-picker
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
     try {
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.8 });
       if (result.canceled) return;
@@ -90,7 +118,7 @@ export default function ProfileScreen() {
         try { await uploadLicense(result.assets[0].uri); Alert.alert('Succès', 'Permis de conduire téléchargé'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingLicense(false); }
       }
     } catch (err: any) {
-      Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie. Veuillez réessayer.');
+      Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie.');
     }
   };
 
