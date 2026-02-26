@@ -1964,7 +1964,7 @@ async def list_agencies(user: dict = Depends(get_agency_admin)):
     for agency in agencies:
         agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency['id']})
         agency['reservation_count'] = await db.reservations.count_documents({"agency_id": agency['id']})
-        agency['admin_count'] = await db.users.count_documents({"agency_id": agency['id'], "role": "admin"})
+        agency['admin_count'] = await db.users.count_documents({"agency_id": agency['id'], "role": {"$in": ["admin", "super_admin"]}})
     
     return agencies
 
