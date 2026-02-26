@@ -55,13 +55,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  register: async (email: string, password: string, name: string, phone?: string) => {
+  register: async (email: string, password: string, name: string, phone?: string, agencyId?: string) => {
     try {
       const response = await axios.post(`${API_URL}/api/auth/register`, {
         email,
         password,
         name,
         phone,
+        agency_id: agencyId || null,
       });
       const { access_token, user } = response.data;
       await AsyncStorage.setItem('token', access_token);
