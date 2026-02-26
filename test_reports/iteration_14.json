@@ -1,0 +1,61 @@
+{
+  "summary": "Iteration 14: Mobile viewport (400x800) testing for calendar features. All 5 features PASSED. Booking calendar shows availability colors (red/pink=booked, green=free, grey=past) with legend. Client agenda calendar shows hours (HH:MM - HH:MM) with clock icon. Admin calendar grid fits mobile screen with proper CSS grid layout. Admin event cards display clock icons with HH:MM times. Admin event detail modal shows departure and return times in HH:MM format.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "test_1_client_booking_calendar_availability": {
+      "status": "PASS",
+      "viewport": "400x800 (mobile)",
+      "details": "MiniCalendar shows legend with 'Occupé' (red dot), 'Libre' (green dot), 'Passé' (grey dot). Booked dates (Feb 25-28) display with pink/red background. Free future dates show green background. Calendar modal fits mobile screen."
+    },
+    "test_2_client_agenda_hours": {
+      "status": "PASS",
+      "viewport": "400x800 (mobile)",
+      "details": "Client reservations calendar view shows event cards with clock icon and '08:00 - 18:00' time format in purple text. Navigated to October 2026, clicked Oct 15, event card displayed: 'Volkswagen Golf', times '08:00 - 18:00', '15 oct. - 18 oct. 2026', '3 jours', 'CHF 195.00'."
+    },
+    "test_3_admin_calendar_mobile_layout": {
+      "status": "PASS",
+      "viewport": "400x800 (mobile)",
+      "details": "Admin calendar at /admin/calendar displays properly on mobile with CSS grid. 7-column layout (Lun-Dim) fits within 400px viewport. Month navigation, legend (Départ, Retour, Retard, En cours), and day cells with event badges all visible."
+    },
+    "test_4_admin_event_hours": {
+      "status": "PASS",
+      "viewport": "400x800 (mobile)",
+      "details": "Clicked on Feb 26. Départs section shows 'Mercedes Sprinter' with clock icon and '07:46' in blue text. Retours section shows 'Volkswagen Golf' with clock icon and '17:00' in purple text. Event cards correctly display times in HH:MM format."
+    },
+    "test_5_admin_event_detail_modal_hours": {
+      "status": "PASS",
+      "viewport": "400x800 (mobile)",
+      "details": "Clicked on Mercedes Sprinter event. Detail modal shows 'Détail de la réservation' with: DÉPART '26 févr. 2026' and '07:46' (blue), RETOUR '03 mars 2026' and '07:46' (purple). Both departure and return times displayed in HH:MM format."
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A - frontend only testing",
+    "frontend": "100% - 5/5 features passed"
+  },
+  "test_credentials": {
+    "client_user": "client1@test.com / test1234",
+    "admin_user": "test@example.com / password123"
+  },
+  "seed_data_used": {
+    "vehicle": "Volkswagen Golf (id: 4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e)",
+    "reservations": [
+      "Oct 15-18, 2026 for Volkswagen Golf (pending_cash)",
+      "Feb 26 - Mar 3, 2026 for Mercedes Sprinter (confirmed)"
+    ]
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Mobile 400x800 calendar testing complete. All calendar components (MiniCalendar, Admin Calendar, Client Agenda Calendar) work correctly on mobile: 1) Booking calendar shows availability with colored backgrounds and legend, 2) Client agenda shows hours with clock icon in HH:MM - HH:MM format, 3) Admin calendar uses responsive CSS grid that fits 400px viewport, 4) Admin event cards show clock icon with HH:MM times in colored text, 5) Admin detail modal shows both departure and return times under date fields."
+}
