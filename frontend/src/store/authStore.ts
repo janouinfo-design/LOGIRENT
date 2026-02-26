@@ -172,14 +172,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const formData = new FormData();
 
       if (imageUriOrFile instanceof File) {
-        // Web: File object passed directly
-        formData.append('file', imageUriOrFile);
+        // Web: compress before upload
+        const compressed = await compressWebImage(imageUriOrFile);
+        formData.append('file', compressed);
       } else if (typeof window !== 'undefined' && window.document) {
         // Web: string URI (blob: or http)
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
-        const file = new File([blob], 'license.jpg', { type: blob.type || 'image/jpeg' });
-        formData.append('file', file);
+        const compressed = await compressWebImage(blob);
+        formData.append('file', compressed);
       } else {
         // Native: expo-image-picker URI
         const filename = imageUriOrFile.split('/').pop() || 'license.jpg';
@@ -204,14 +205,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const formData = new FormData();
 
       if (imageUriOrFile instanceof File) {
-        // Web: File object passed directly
-        formData.append('file', imageUriOrFile);
+        // Web: compress before upload
+        const compressed = await compressWebImage(imageUriOrFile);
+        formData.append('file', compressed);
       } else if (typeof window !== 'undefined' && window.document) {
         // Web: string URI (blob: or http)
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
-        const file = new File([blob], 'id_card.jpg', { type: blob.type || 'image/jpeg' });
-        formData.append('file', file);
+        const compressed = await compressWebImage(blob);
+        formData.append('file', compressed);
       } else {
         // Native: expo-image-picker URI
         const filename = imageUriOrFile.split('/').pop() || 'id_card.jpg';
