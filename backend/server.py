@@ -2048,6 +2048,32 @@ async def add_admin_to_agency(agency_id: str, user_email: str, user: dict = Depe
     await db.users.update_one({"id": target['id']}, {"$set": {"role": "admin", "agency_id": agency_id}})
     return {"message": f"{target['name']} est maintenant admin de {agency['name']}"}
 
+# ==================== PUBLIC AGENCY ENDPOINT ====================
+
+@api_router.get("/public/agency/{slug}")
+async def get_agency_by_slug(slug: str):
+    """Public endpoint to get agency info by slug"""
+    agency = await db.agencies.find_one({"slug": slug}, {"_id": 0})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agence non trouvée")
+    agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency['id']})
+    return agency
+
+@api_router.post("/migrate-agency-slugs")
+async def migrate_agency_slugs():
+    """One-time migration to add slugs to existing agencies"""
+    agencies = await db.agencies.find({}, {"_id": 0}).to_list(100)
+    updated = 0
+    for agency in agencies:
+        if not agency.get('slug'):
+            slug = generate_slug(agency['name'])
+            existing = await db.agencies.find_one({"slug": slug, "id": {"$ne": agency['id']}})
+            if existing:
+                slug = f"{slug}-{str(uuid.uuid4())[:4]}"
+            await db.agencies.update_one({"id": agency['id']}, {"$set": {"slug": slug}})
+            updated += 1
+    return {"message": f"Updated {updated} agencies with slugs"}
+
 # ==================== ADMIN LOGIN (legacy support) ====================
 
 class AdminLogin(BaseModel):
