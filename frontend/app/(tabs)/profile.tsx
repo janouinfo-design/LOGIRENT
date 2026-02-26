@@ -31,6 +31,8 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
+  const idInputRef = useRef<HTMLInputElement | null>(null);
+  const licenseInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) router.replace('/(auth)/login');
@@ -73,10 +75,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const idInputRef = useRef<HTMLInputElement | null>(null);
-  const licenseInputRef = useRef<HTMLInputElement | null>(null);
-
-  const handleWebFileChange = async (e: any, type: 'id' | 'license') => {
+  const handleSave = async () => {
     const file = e.target?.files?.[0];
     if (!file) return;
     const setter = type === 'id' ? setUploadingId : setUploadingLicense;
