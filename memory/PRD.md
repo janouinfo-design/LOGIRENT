@@ -75,7 +75,8 @@ Build a complete car rental solution named "LogiRent" with:
 
 ### Client Features (Complete)
 - Homepage with hero, search, categories, vehicle cards
-- Vehicle catalog with filtering
+- **Responsive vehicle grid**: 1 full-width card per row on mobile, 3 cards per row on desktop with larger images
+- Vehicle catalog with filtering (same responsive grid)
 - Vehicle detail with availability calendar
 - Booking flow with Stripe payment + cash option
 - **Reservations page with LIST + CALENDAR views**
