@@ -168,7 +168,6 @@ export default function ProfileScreen() {
                 ref={(el: any) => { idInputRef.current = el; }}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 style={{ display: 'none' }}
                 onChange={(e: any) => handleWebFileChange(e, 'id')}
               />
@@ -176,7 +175,6 @@ export default function ProfileScreen() {
                 ref={(el: any) => { licenseInputRef.current = el; }}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 style={{ display: 'none' }}
                 onChange={(e: any) => handleWebFileChange(e, 'license')}
               />

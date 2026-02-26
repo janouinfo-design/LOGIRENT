@@ -158,9 +158,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
       }
 
-      const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData);
       
       const { user } = get();
       if (user) {
@@ -192,9 +190,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
       }
 
-      const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData);
       
       const { user } = get();
       if (user) {
