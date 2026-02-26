@@ -76,7 +76,11 @@ Build a complete car rental solution named "LogiRent" with:
   - Public landing page showing agency name, location, vehicle count, contact
   - "Créer un compte" / "Se connecter" buttons that bind clients to the agency
   - Vehicle grid filtered to agency-only vehicles
-  - Shareable link displayed in super-admin panel
+  - **QR Code System**: 
+    - Admin can generate/print QR codes for each agency from the super-admin panel
+    - Landing page has "Scanner le QR de votre agence" button
+    - `/scan-qr` page uses device camera (html5-qrcode) to scan agency QR codes
+    - Scanned QR redirects to the agency page for registration
   - Client registered via agency URL is permanently bound to that agency
   - Bound clients only see their agency's vehicles in the app
 
