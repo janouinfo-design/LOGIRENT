@@ -116,14 +116,15 @@ export default function VehiclesScreen() {
             <Text style={styles.emptySubtext}>Essayez d'ajuster vos filtres</Text>
           </View>
         ) : (
-          <View style={styles.vehicleGrid}>
+          <View style={[styles.vehicleGrid, isMobile ? styles.vehicleGridMobile : styles.vehicleGridDesktop]}>
             {vehicles.map((vehicle, index) => (
-              <VehicleCard
-                key={vehicle.id}
-                vehicle={vehicle}
-                onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-                index={index}
-              />
+              <View key={vehicle.id} style={isMobile ? { width: '100%' } : { width: '31%', minWidth: 280 }}>
+                <VehicleCard
+                  vehicle={vehicle}
+                  onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                  index={index}
+                />
+              </View>
             ))}
           </View>
         )}
