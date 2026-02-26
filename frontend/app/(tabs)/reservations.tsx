@@ -125,8 +125,11 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
 }
 
 function CalendarView({ reservations, vehicles }: { reservations: Reservation[]; vehicles: any[] }) {
+  const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const isCurrentMonth = isSameMonth(currentMonth, new Date());
 
   const getVehicle = (vehicleId: string) => vehicles.find(v => v.id === vehicleId);
 
