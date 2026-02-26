@@ -48,7 +48,11 @@ resend.api_key = RESEND_API_KEY
 NAVIXY_API_URL = os.environ.get('NAVIXY_API_URL')
 NAVIXY_HASH = os.environ.get('NAVIXY_HASH')
 
+# AI Document Verification
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY')
+
 import httpx
+from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
 
 # Create the main app
 app = FastAPI(title="RentDrive API", version="1.0.0")
