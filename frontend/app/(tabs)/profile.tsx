@@ -98,11 +98,13 @@ export default function ProfileScreen() {
   const uploadFromUri = async (dataUri: string, type: 'id' | 'license') => {
     const setter = type === 'id' ? setUploadingId : setUploadingLicense;
     const uploader = type === 'id' ? uploadIdCard : uploadLicense;
-    const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
     setter(true);
     try {
-      await uploader(dataUri);
-      Alert.alert('Succès', successMsg);
+      const verification = await uploader(dataUri);
+      const v = verification || {};
+      const validIcon = v.is_valid ? 'Document valide' : 'Document rejeté';
+      const msg = v.reason ? `${validIcon}\nConfiance: ${v.confidence}%\n${v.reason}` : 'Document téléchargé';
+      Alert.alert('Vérification IA', msg);
     } catch (e: any) {
       Alert.alert('Erreur', e.message);
     } finally {
