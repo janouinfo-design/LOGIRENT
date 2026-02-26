@@ -527,22 +527,58 @@ async def upload_license_b64(
     body: Base64Upload,
     user: dict = Depends(get_current_user)
 ):
+    # Verify document with AI
+    verification = await verify_document_with_ai(body.image_data, "license")
+    
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 70:
+        raise HTTPException(status_code=400, detail=f"Document rejeté: {verification.get('reason', 'Document invalide')}")
+    
     await db.users.update_one(
         {"id": user['id']},
-        {"$set": {"license_photo": body.image_data}}
+        {"$set": {
+            "license_photo": body.image_data,
+            "license_verification": {
+                "is_valid": verification.get("is_valid", True),
+                "confidence": verification.get("confidence", 0),
+                "reason": verification.get("reason", ""),
+                "verified_at": datetime.utcnow().isoformat(),
+            }
+        }}
     )
-    return {"message": "License uploaded successfully", "license_photo": body.image_data}
+    return {
+        "message": "License uploaded successfully",
+        "license_photo": body.image_data,
+        "verification": verification
+    }
 
 @api_router.post("/auth/upload-id-b64")
 async def upload_id_b64(
     body: Base64Upload,
     user: dict = Depends(get_current_user)
 ):
+    # Verify document with AI
+    verification = await verify_document_with_ai(body.image_data, "id")
+    
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 70:
+        raise HTTPException(status_code=400, detail=f"Document rejeté: {verification.get('reason', 'Document invalide')}")
+    
     await db.users.update_one(
         {"id": user['id']},
-        {"$set": {"id_photo": body.image_data}}
+        {"$set": {
+            "id_photo": body.image_data,
+            "id_verification": {
+                "is_valid": verification.get("is_valid", True),
+                "confidence": verification.get("confidence", 0),
+                "reason": verification.get("reason", ""),
+                "verified_at": datetime.utcnow().isoformat(),
+            }
+        }}
     )
-    return {"message": "ID uploaded successfully", "id_photo": body.image_data}
+    return {
+        "message": "ID uploaded successfully",
+        "id_photo": body.image_data,
+        "verification": verification
+    }
 
 @api_router.post("/auth/upload-id")
 async def upload_id(
