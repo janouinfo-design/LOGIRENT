@@ -23,7 +23,7 @@ const C = {
 };
 
 const WEEKDAYS = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
-const MONTHS_FR = ['Janvier','F\u00e9vrier','Mars','Avril','Mai','Juin','Juillet','Ao\u00fbt','Septembre','Octobre','Novembre','D\u00e9cembre'];
+const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 interface MiniCalendarProps {
   visible: boolean;
@@ -35,7 +35,7 @@ interface MiniCalendarProps {
   vehicleId?: string;
 }
 
-export default function MiniCalendar({ visible, onClose, onSelectDate, selectedDate, minDate, title = 'S\u00e9lectionner une date', vehicleId }: MiniCalendarProps) {
+export default function MiniCalendar({ visible, onClose, onSelectDate, selectedDate, minDate, title = 'Sélectionner une date', vehicleId }: MiniCalendarProps) {
   const [calendarMonth, setCalendarMonth] = React.useState(selectedDate || new Date());
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
@@ -99,7 +99,7 @@ export default function MiniCalendar({ visible, onClose, onSelectDate, selectedD
             <View style={s.legend}>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: C.booked }]} />
-                <Text style={s.legendText}>Occup\u00e9</Text>
+                <Text style={s.legendText}>Occupé</Text>
               </View>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: C.free }]} />
@@ -107,7 +107,7 @@ export default function MiniCalendar({ visible, onClose, onSelectDate, selectedD
               </View>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: '#D1D5DB' }]} />
-                <Text style={s.legendText}>Pass\u00e9</Text>
+                <Text style={s.legendText}>Passé</Text>
               </View>
             </View>
           )}
