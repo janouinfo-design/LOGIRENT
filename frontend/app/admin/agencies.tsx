@@ -187,7 +187,7 @@ export default function AgenciesPage() {
                   <View style={styles.linkItem}>
                     <Ionicons name="globe-outline" size={16} color={COLORS.success} />
                     <Text style={styles.linkLabel}>Client : </Text>
-                    <Text style={styles.linkUrl} selectable>{API_URL}</Text>
+                    <Text style={styles.linkUrl} selectable>{API_URL}/a/{agency.slug || agency.id}</Text>
                   </View>
                 </View>
               </View>
