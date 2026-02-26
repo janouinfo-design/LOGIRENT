@@ -74,16 +74,23 @@ export default function ProfileScreen() {
   };
 
   const pickAndUpload = async (type: 'id' | 'license') => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [4, 3], quality: 0.8 });
-    if (result.canceled) return;
-    if (type === 'id') {
-      setUploadingId(true);
-      try { await uploadIdCard(result.assets[0].uri); Alert.alert('Succès', 'Pièce d\'identité téléchargée'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingId(false); }
-    } else {
-      setUploadingLicense(true);
-      try { await uploadLicense(result.assets[0].uri); Alert.alert('Succès', 'Permis de conduire téléchargé'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingLicense(false); }
+    // On web, permissions are handled by the browser file picker
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
+    }
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+      if (result.canceled) return;
+      if (type === 'id') {
+        setUploadingId(true);
+        try { await uploadIdCard(result.assets[0].uri); Alert.alert('Succès', 'Pièce d\'identité téléchargée'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingId(false); }
+      } else {
+        setUploadingLicense(true);
+        try { await uploadLicense(result.assets[0].uri); Alert.alert('Succès', 'Permis de conduire téléchargé'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingLicense(false); }
+      }
+    } catch (err: any) {
+      Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie. Veuillez réessayer.');
     }
   };
 
