@@ -140,15 +140,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   uploadLicense: async (imageUri: string) => {
     try {
       const formData = new FormData();
-      const filename = imageUri.split('/').pop() || 'license.jpg';
-      const match = /\.([\w]+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
-      
-      formData.append('file', {
-        uri: imageUri,
-        name: filename,
-        type,
-      } as any);
+
+      if (typeof window !== 'undefined' && window.document) {
+        // Web: fetch blob from URI and create File
+        const resp = await fetch(imageUri);
+        const blob = await resp.blob();
+        const file = new File([blob], 'license.jpg', { type: blob.type || 'image/jpeg' });
+        formData.append('file', file);
+      } else {
+        // Native
+        const filename = imageUri.split('/').pop() || 'license.jpg';
+        const match = /\.([\w]+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        formData.append('file', { uri: imageUri, name: filename, type } as any);
+      }
 
       const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -166,15 +171,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   uploadIdCard: async (imageUri: string) => {
     try {
       const formData = new FormData();
-      const filename = imageUri.split('/').pop() || 'id_card.jpg';
-      const match = /\.([\w]+)$/.exec(filename);
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
-      
-      formData.append('file', {
-        uri: imageUri,
-        name: filename,
-        type,
-      } as any);
+
+      if (typeof window !== 'undefined' && window.document) {
+        // Web: fetch blob from URI and create File
+        const resp = await fetch(imageUri);
+        const blob = await resp.blob();
+        const file = new File([blob], 'id_card.jpg', { type: blob.type || 'image/jpeg' });
+        formData.append('file', file);
+      } else {
+        // Native
+        const filename = imageUri.split('/').pop() || 'id_card.jpg';
+        const match = /\.([\w]+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
+        formData.append('file', { uri: imageUri, name: filename, type } as any);
+      }
 
       const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
