@@ -347,6 +347,13 @@ async def register(user_data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Validate agency_id if provided
+    agency_id = user_data.agency_id
+    if agency_id:
+        agency = await db.agencies.find_one({"id": agency_id})
+        if not agency:
+            raise HTTPException(status_code=400, detail="Agency not found")
+    
     user = {
         "id": str(uuid.uuid4()),
         "email": user_data.email.lower(),
@@ -357,7 +364,7 @@ async def register(user_data: UserCreate):
         "id_photo": None,
         "license_photo": None,
         "role": "client",
-        "agency_id": None,
+        "agency_id": agency_id,
         "created_at": datetime.utcnow()
     }
     
