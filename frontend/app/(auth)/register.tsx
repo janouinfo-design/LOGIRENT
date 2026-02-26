@@ -91,7 +91,7 @@ export default function RegisterScreen() {
 
           <View style={styles.header}>
             <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join RentDrive today</Text>
+            <Text style={styles.subtitle}>{agency_name ? `Rejoignez ${decodeURIComponent(agency_name)}` : 'Join LogiRent today'}</Text>
           </View>
 
           <View style={styles.form}>
