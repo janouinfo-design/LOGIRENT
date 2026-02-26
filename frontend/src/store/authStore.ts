@@ -209,6 +209,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
       const { user } = get();
       if (user) set({ user: { ...user, license_photo: response.data.license_photo } });
+      return response.data.verification;
     } catch (error: any) {
       const msg = error.response?.data?.detail || error.message || 'Upload failed';
       throw new Error(msg);
