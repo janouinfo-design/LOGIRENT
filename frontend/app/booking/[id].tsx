@@ -278,6 +278,7 @@ export default function BookingScreen() {
           selectedDate={showDatePicker === 'start' ? startDate : endDate}
           minDate={showDatePicker === 'end' ? addDays(startDate, 1) : undefined}
           title={showDatePicker === 'start' ? 'Date de départ' : 'Date de retour'}
+          vehicleId={id}
         />
 
         {/* Options */}
