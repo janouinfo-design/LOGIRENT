@@ -210,13 +210,15 @@ export default function HomeScreen() {
         {/* Vehicle Grid */}
         <View style={[styles.vehicleGrid, width < 768 ? styles.vehicleGridMobile : styles.vehicleGridDesktop]}>
           {vehicles.map((vehicle, index) => (
-            <AnimatedCard key={vehicle.id} index={index}>
-              <VehicleCard
-                vehicle={vehicle}
-                onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-                index={index}
-              />
-            </AnimatedCard>
+            <View key={vehicle.id} style={width >= 768 ? { width: '31%', minWidth: 280 } : { width: '100%' }}>
+              <AnimatedCard index={index}>
+                <VehicleCard
+                  vehicle={vehicle}
+                  onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                  index={index}
+                />
+              </AnimatedCard>
+            </View>
           ))}
         </View>
 
