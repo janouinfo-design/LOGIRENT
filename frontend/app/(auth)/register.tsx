@@ -62,7 +62,7 @@ export default function RegisterScreen() {
     
     setLoading(true);
     try {
-      await register(email, password, name, phone || undefined);
+      await register(email, password, name, phone || undefined, agency_id || undefined);
       router.replace('/(tabs)');
     } catch (error: any) {
       Alert.alert('Registration Failed', error.message);
