@@ -75,7 +75,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSave = async () => {
+  const handleWebFileChange = async (e: any, type: 'id' | 'license') => {
     const file = e.target?.files?.[0];
     if (!file) return;
     const setter = type === 'id' ? setUploadingId : setUploadingLicense;
