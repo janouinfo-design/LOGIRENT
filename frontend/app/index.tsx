@@ -83,6 +83,17 @@ export default function WelcomeScreen() {
             size="large"
           />
         </View>
+
+        <TouchableOpacity style={styles.scanBtn} onPress={() => router.push('/scan-qr')} data-testid="scan-qr-btn">
+          <View style={styles.scanIcon}>
+            <Ionicons name="qr-code-outline" size={20} color={COLORS.primary} />
+          </View>
+          <View>
+            <Text style={styles.scanTitle}>Scanner le QR de votre agence</Text>
+            <Text style={styles.scanSub}>Rejoignez votre agence en un scan</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} />
+        </TouchableOpacity>
       </View>
     </View>
   );
