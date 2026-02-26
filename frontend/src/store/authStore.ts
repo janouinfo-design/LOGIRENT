@@ -188,7 +188,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         imageData = await compressToBase64(imageUriOrFile);
       } else if (typeof imageUriOrFile === 'string' && Platform.OS !== 'web') {
         // Native: read file as base64 via FileSystem
-        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: FileSystem.EncodingType.Base64 });
+        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: 'base64' });
         imageData = `data:image/jpeg;base64,${b64}`;
       } else if (typeof imageUriOrFile === 'string') {
         // Web: string URI → fetch blob → compress
@@ -219,7 +219,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         imageData = await compressToBase64(imageUriOrFile);
       } else if (typeof imageUriOrFile === 'string' && Platform.OS !== 'web') {
         // Native: read file as base64 via FileSystem
-        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: FileSystem.EncodingType.Base64 });
+        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: 'base64' });
         imageData = `data:image/jpeg;base64,${b64}`;
       } else if (typeof imageUriOrFile === 'string') {
         // Web: string URI → fetch blob → compress
