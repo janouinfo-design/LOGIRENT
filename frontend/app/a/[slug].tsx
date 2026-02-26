@@ -109,7 +109,7 @@ export default function AgencyPage() {
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statNum}>{agency.vehicle_count}</Text>
-              <Text style={styles.statLabel}>V\u00e9hicules</Text>
+              <Text style={styles.statLabel}>Véhicules</Text>
             </View>
             {agency.phone && (
               <View style={styles.stat}>
@@ -125,14 +125,14 @@ export default function AgencyPage() {
       {!isAuthenticated && (
         <View style={styles.authSection} data-testid="agency-auth-section">
           <Text style={styles.authTitle}>Rejoignez {agency.name}</Text>
-          <Text style={styles.authSub}>Cr\u00e9ez votre compte pour r\u00e9server nos v\u00e9hicules</Text>
+          <Text style={styles.authSub}>Créez votre compte pour réserver nos véhicules</Text>
           <View style={styles.authBtns}>
             <TouchableOpacity style={styles.registerBtn} onPress={handleRegister} data-testid="agency-register-btn">
               <Ionicons name="person-add-outline" size={16} color="#FFF" />
-              <Text style={styles.registerBtnText}>Cr\u00e9er un compte</Text>
+              <Text style={styles.registerBtnText}>Créer un compte</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} data-testid="agency-login-btn">
-              <Text style={styles.loginBtnText}>D\u00e9j\u00e0 inscrit ? Se connecter</Text>
+              <Text style={styles.loginBtnText}>Déjà inscrit ? Se connecter</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -147,7 +147,7 @@ export default function AgencyPage() {
 
       {/* Vehicles */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Nos v\u00e9hicules</Text>
+        <Text style={styles.sectionTitle}>Nos véhicules</Text>
         <Text style={styles.sectionCount}>{vehicles.length} disponibles</Text>
       </View>
 
@@ -166,7 +166,7 @@ export default function AgencyPage() {
       {vehicles.length === 0 && (
         <View style={styles.empty}>
           <Ionicons name="car-outline" size={48} color={C.gray} />
-          <Text style={styles.emptyText}>Aucun v\u00e9hicule disponible</Text>
+          <Text style={styles.emptyText}>Aucun véhicule disponible</Text>
         </View>
       )}
 
