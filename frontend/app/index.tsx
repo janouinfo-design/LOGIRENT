@@ -185,4 +185,33 @@ const styles = StyleSheet.create({
   buttons: {
     gap: 12,
   },
+  scanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 20,
+    gap: 12,
+  },
+  scanIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: 'rgba(30, 58, 138, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scanTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.text,
+  },
+  scanSub: {
+    fontSize: 11,
+    color: COLORS.textLight,
+    marginTop: 1,
+  },
 });
