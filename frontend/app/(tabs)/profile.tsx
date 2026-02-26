@@ -84,13 +84,10 @@ export default function ProfileScreen() {
     const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
     setter(true);
     try {
-      const uri = URL.createObjectURL(file);
-      await uploader(uri);
-      if (Platform.OS === 'web') window.alert(successMsg);
-      else Alert.alert('Succès', successMsg);
+      await uploader(file);
+      window.alert(successMsg);
     } catch (err: any) {
-      if (Platform.OS === 'web') window.alert(err.message || 'Erreur lors du téléchargement');
-      else Alert.alert('Erreur', err.message);
+      window.alert(err.message || 'Erreur lors du téléchargement');
     } finally {
       setter(false);
       e.target.value = '';
