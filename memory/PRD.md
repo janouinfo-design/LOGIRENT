@@ -72,6 +72,13 @@ Build a complete car rental solution named "LogiRent" with:
 - Full multi-tenancy with super_admin, admin, client roles
 - Data scoping by agency_id
 - Super-admin dashboard at /admin/agencies
+- **Agency slug URLs**: Each agency has a unique URL like `/a/logirent-geneva`
+  - Public landing page showing agency name, location, vehicle count, contact
+  - "Créer un compte" / "Se connecter" buttons that bind clients to the agency
+  - Vehicle grid filtered to agency-only vehicles
+  - Shareable link displayed in super-admin panel
+  - Client registered via agency URL is permanently bound to that agency
+  - Bound clients only see their agency's vehicles in the app
 
 ### Client Features (Complete)
 - Homepage with hero, search, categories, vehicle cards
