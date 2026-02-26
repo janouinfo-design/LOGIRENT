@@ -94,13 +94,23 @@ export default function ProfileScreen() {
     }
   };
 
+  const compressNativeImage = async (uri: string): Promise<string> => {
+    const result = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 1200 } }],
+      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+    );
+    return result.uri;
+  };
+
   const uploadFromUri = async (uri: string, type: 'id' | 'license') => {
     const setter = type === 'id' ? setUploadingId : setUploadingLicense;
     const uploader = type === 'id' ? uploadIdCard : uploadLicense;
     const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
     setter(true);
     try {
-      await uploader(uri);
+      const compressedUri = await compressNativeImage(uri);
+      await uploader(compressedUri);
       Alert.alert('Succès', successMsg);
     } catch (e: any) {
       Alert.alert('Erreur', e.message);
