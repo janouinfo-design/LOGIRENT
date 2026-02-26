@@ -65,12 +65,12 @@ export default function ProfileScreen() {
   const handleLogout = async () => {
     if (Platform.OS === 'web') {
       if (window.confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-        await logout(); router.replace('/');
+        await logout();
       }
     } else {
       Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Déconnexion', style: 'destructive', onPress: async () => { await logout(); router.replace('/'); } },
+        { text: 'Déconnexion', style: 'destructive', onPress: async () => { await logout(); } },
       ]);
     }
   };
