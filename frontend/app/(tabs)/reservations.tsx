@@ -176,13 +176,31 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
         <TouchableOpacity onPress={() => setCurrentMonth(subMonths(currentMonth, 1))} style={calStyles.navBtn} data-testid="cal-prev-month">
           <Ionicons name="chevron-back" size={20} color={C.purple} />
         </TouchableOpacity>
-        <Text style={calStyles.monthTitle}>
-          {format(currentMonth, 'MMMM yyyy', { locale: fr })}
-        </Text>
+        <TouchableOpacity
+          onPress={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
+          disabled={isCurrentMonth}
+          data-testid="cal-today-btn"
+        >
+          <Text style={calStyles.monthTitle}>
+            {format(currentMonth, 'MMMM yyyy', { locale: fr })}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => setCurrentMonth(addMonths(currentMonth, 1))} style={calStyles.navBtn} data-testid="cal-next-month">
           <Ionicons name="chevron-forward" size={20} color={C.purple} />
         </TouchableOpacity>
       </View>
+
+      {/* Today Button */}
+      {!isCurrentMonth && (
+        <TouchableOpacity
+          style={calStyles.todayBtn}
+          onPress={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
+          data-testid="cal-goto-today"
+        >
+          <Ionicons name="today-outline" size={14} color={C.purple} />
+          <Text style={calStyles.todayBtnText}>Aujourd'hui</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Weekday Headers */}
       <View style={calStyles.weekRow}>
