@@ -66,6 +66,7 @@ logger = logging.getLogger(__name__)
 class Agency(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
+    slug: str = ""
     address: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -87,6 +88,7 @@ class UserCreate(BaseModel):
     password: str
     name: str
     phone: Optional[str] = None
+    agency_id: Optional[str] = None
 
 class AdminRegister(BaseModel):
     email: EmailStr
