@@ -40,7 +40,7 @@ export default function ScanQR() {
           () => {}
         );
       } catch (err: any) {
-        setError("Impossible d'acc\u00e9der \u00e0 la cam\u00e9ra. V\u00e9rifiez les permissions.");
+        setError("Impossible d'accéder à la caméra. Vérifiez les permissions.");
       }
     };
 
@@ -81,7 +81,7 @@ export default function ScanQR() {
             {!scanning && !error && (
               <View style={styles.loadingOverlay}>
                 <Ionicons name="camera-outline" size={48} color="#FFF" />
-                <Text style={styles.loadingText}>Chargement de la cam\u00e9ra...</Text>
+                <Text style={styles.loadingText}>Chargement de la caméra...</Text>
               </View>
             )}
           </View>
@@ -97,7 +97,7 @@ export default function ScanQR() {
             <Ionicons name="alert-circle" size={24} color="#EF4444" />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryBtn} onPress={() => { setError(''); router.replace('/scan-qr'); }}>
-              <Text style={styles.retryText}>R\u00e9essayer</Text>
+              <Text style={styles.retryText}>Réessayer</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -106,7 +106,7 @@ export default function ScanQR() {
       <View style={styles.instructions}>
         <Ionicons name="scan-outline" size={24} color={C.purple} />
         <Text style={styles.instructionText}>
-          Pointez votre cam\u00e9ra vers le QR code affich\u00e9 dans l'agence
+          Pointez votre caméra vers le QR code affiché dans l'agence
         </Text>
       </View>
     </View>
