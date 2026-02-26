@@ -512,6 +512,10 @@ export default function AdminCalendar() {
                   <View style={{ flex: 1, padding: 10 }}>
                     <Text style={styles.eventVehicle}>{event.vehicle_name}</Text>
                     <Text style={styles.eventClient}>{event.user_name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <Ionicons name="time-outline" size={12} color={COLORS.success} />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: COLORS.success }}>{format(new Date(event.start_date), 'HH:mm')} - {format(new Date(event.end_date), 'HH:mm')}</Text>
+                    </View>
                     <Text style={styles.eventDates}>
                       {format(new Date(event.start_date), 'dd/MM', { locale: fr })} - {format(new Date(event.end_date), 'dd/MM', { locale: fr })}
                     </Text>
