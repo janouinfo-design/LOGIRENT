@@ -19,6 +19,7 @@ const COLORS = {
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { agency_id, agency_name } = useLocalSearchParams<{ agency_id?: string; agency_name?: string }>();
   const { register } = useAuthStore();
   
   const [name, setName] = useState('');
