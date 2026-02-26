@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Vehicle } from '../store/vehicleStore';
 import { useI18n } from '../i18n';
@@ -26,18 +26,20 @@ const C = {
 
 export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
   const { t } = useI18n();
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
   const isAvailable = vehicle.status === 'available';
   const hasPhoto = vehicle.photos?.length > 0;
 
   return (
     <View
-      style={[styles.card]}
+      style={[styles.card, isMobile && styles.cardMobile]}
       data-testid={`vehicle-card-${vehicle.id}`}
     >
       {/* Top Row: Price + Details Button */}
       <View style={styles.topRow}>
         <View>
-          <Text style={styles.price}>CHF {vehicle.price_per_day}</Text>
+          <Text style={[styles.price, isMobile && styles.priceMobile]}>CHF {vehicle.price_per_day}</Text>
           <Text style={styles.perDay}>{t('perDay')}</Text>
         </View>
         <TouchableOpacity style={styles.detailsBtn} onPress={onPress} data-testid={`vehicle-details-${vehicle.id}`}>
@@ -47,9 +49,9 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
       </View>
 
       {/* Car Image */}
-      <TouchableOpacity style={styles.imageContainer} onPress={onPress} activeOpacity={0.9}>
+      <TouchableOpacity style={[styles.imageContainer, isMobile && styles.imageContainerMobile]} onPress={onPress} activeOpacity={0.9}>
         {hasPhoto ? (
-          <Image source={{ uri: vehicle.photos[0] }} style={styles.carImage} resizeMode="contain" />
+          <Image source={{ uri: vehicle.photos[0] }} style={styles.carImage} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
             <Ionicons name="car-sport" size={48} color={C.grayLight} />
@@ -62,7 +64,7 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
       {/* Bottom Info */}
       <View style={styles.bottomInfo}>
         <Text style={styles.brand}>{vehicle.brand}</Text>
-        <Text style={styles.model}>{vehicle.model} {vehicle.year}</Text>
+        <Text style={[styles.model, isMobile && styles.modelMobile]}>{vehicle.model} {vehicle.year}</Text>
         <View style={styles.specsRow}>
           <View style={styles.specChip}>
             <Ionicons name="people-outline" size={12} color={C.purple} />
@@ -90,13 +92,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     width: '100%',
-    maxWidth: 340,
+    maxWidth: 380,
+  },
+  cardMobile: {
+    maxWidth: '100%',
   },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 4,
   },
@@ -104,6 +109,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '800',
     color: C.dark,
+  },
+  priceMobile: {
+    fontSize: 22,
   },
   perDay: {
     fontSize: 11,
@@ -126,14 +134,15 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
+    aspectRatio: 1.5,
+    overflow: 'hidden',
+  },
+  imageContainerMobile: {
     aspectRatio: 1.4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 10,
   },
   carImage: {
-    width: '90%',
-    height: '90%',
+    width: '100%',
+    height: '100%',
   },
   placeholder: {
     flex: 1,
@@ -151,9 +160,9 @@ const styles = StyleSheet.create({
     borderColor: C.card,
   },
   bottomInfo: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     paddingBottom: 14,
-    paddingTop: 4,
+    paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: C.border,
   },
@@ -169,6 +178,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: C.text,
     marginTop: 2,
+  },
+  modelMobile: {
+    fontSize: 18,
   },
   specsRow: {
     flexDirection: 'row',
