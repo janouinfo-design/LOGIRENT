@@ -233,6 +233,19 @@ class CheckoutRequest(BaseModel):
 
 # ==================== HELPERS ====================
 
+def generate_slug(name: str) -> str:
+    """Generate a URL-friendly slug from agency name"""
+    slug = name.lower().strip()
+    slug = re.sub(r'[àáâãäå]', 'a', slug)
+    slug = re.sub(r'[èéêë]', 'e', slug)
+    slug = re.sub(r'[ìíîï]', 'i', slug)
+    slug = re.sub(r'[òóôõö]', 'o', slug)
+    slug = re.sub(r'[ùúûü]', 'u', slug)
+    slug = re.sub(r'[ç]', 'c', slug)
+    slug = re.sub(r'[^a-z0-9]+', '-', slug)
+    slug = slug.strip('-')
+    return slug
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
