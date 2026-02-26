@@ -488,6 +488,10 @@ export default function AdminCalendar() {
                       )}
                     </View>
                     <Text style={styles.eventClient}>{event.user_name}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                      <Ionicons name="time-outline" size={12} color={COLORS.return} />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: COLORS.return }}>{format(new Date(event.end_date), 'HH:mm')}</Text>
+                    </View>
                   </View>
                   <Text style={{ fontSize: 14, fontWeight: '700', color: COLORS.primary, marginRight: 12 }}>CHF {event.total_price.toFixed(0)}</Text>
                 </TouchableOpacity>
