@@ -4,29 +4,44 @@ import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
-// Compress image on web using Canvas and return base64 data URI
-const compressToBase64 = (file: File | Blob, maxSize = 800, quality = 0.6): Promise<string> => {
+// Read file as base64 data URI - works on all mobile browsers
+const fileToBase64 = (file: File | Blob): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxSize || height > maxSize) {
-        if (width > height) { height = Math.round((height * maxSize) / width); width = maxSize; }
-        else { width = Math.round((width * maxSize) / height); height = maxSize; }
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) { reject(new Error('Canvas not supported')); return; }
-      ctx.drawImage(img, 0, 0, width, height);
-      const dataUri = canvas.toDataURL('image/jpeg', quality);
-      URL.revokeObjectURL(img.src);
-      resolve(dataUri);
-    };
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Erreur de lecture du fichier'));
+    reader.readAsDataURL(file);
   });
+};
+
+// Compress via Canvas if possible, fallback to raw base64
+const compressToBase64 = async (file: File | Blob, maxSize = 800, quality = 0.6): Promise<string> => {
+  try {
+    if (typeof document === 'undefined') return fileToBase64(file);
+    const blobUrl = URL.createObjectURL(file);
+    const img = document.createElement('img');
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = blobUrl;
+    });
+    let { width, height } = img;
+    if (width > maxSize || height > maxSize) {
+      if (width > height) { height = Math.round((height * maxSize) / width); width = maxSize; }
+      else { width = Math.round((width * maxSize) / height); height = maxSize; }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return fileToBase64(file);
+    ctx.drawImage(img, 0, 0, width, height);
+    URL.revokeObjectURL(blobUrl);
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch {
+    // Fallback: send raw base64 without compression
+    return fileToBase64(file);
+  }
 };
 
 interface User {
