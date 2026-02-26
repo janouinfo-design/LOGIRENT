@@ -118,7 +118,7 @@ export default function VehiclesScreen() {
         ) : (
           <View style={[styles.vehicleGrid, isMobile ? styles.vehicleGridMobile : styles.vehicleGridDesktop]}>
             {vehicles.map((vehicle, index) => (
-              <View key={vehicle.id} style={isMobile ? { width: '100%' } : { width: '31%', minWidth: 280 }}>
+              <View key={vehicle.id} style={isMobile ? { width: '100%' } : { width: '32%', minWidth: 300 }}>
                 <VehicleCard
                   vehicle={vehicle}
                   onPress={() => router.push(`/vehicle/${vehicle.id}`)}

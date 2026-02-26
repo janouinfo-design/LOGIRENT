@@ -210,7 +210,7 @@ export default function HomeScreen() {
         {/* Vehicle Grid */}
         <View style={[styles.vehicleGrid, width < 768 ? styles.vehicleGridMobile : styles.vehicleGridDesktop]}>
           {vehicles.map((vehicle, index) => (
-            <View key={vehicle.id} style={width >= 768 ? { width: '31%', minWidth: 280 } : { width: '100%' }}>
+            <View key={vehicle.id} style={width >= 768 ? { width: '32%', minWidth: 300 } : { width: '100%' }}>
               <AnimatedCard index={index}>
                 <VehicleCard
                   vehicle={vehicle}
