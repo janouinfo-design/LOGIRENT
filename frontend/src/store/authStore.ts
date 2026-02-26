@@ -30,8 +30,8 @@ interface AuthState {
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  uploadLicense: (imageUri: string) => Promise<void>;
-  uploadIdCard: (imageUri: string) => Promise<void>;
+  uploadLicense: (imageUriOrFile: string | File) => Promise<void>;
+  uploadIdCard: (imageUriOrFile: string | File) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -137,22 +137,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  uploadLicense: async (imageUri: string) => {
+  uploadLicense: async (imageUriOrFile: string | File) => {
     try {
       const formData = new FormData();
 
-      if (typeof window !== 'undefined' && window.document) {
-        // Web: fetch blob from URI and create File
-        const resp = await fetch(imageUri);
+      if (imageUriOrFile instanceof File) {
+        // Web: File object passed directly
+        formData.append('file', imageUriOrFile);
+      } else if (typeof window !== 'undefined' && window.document) {
+        // Web: string URI (blob: or http)
+        const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
         const file = new File([blob], 'license.jpg', { type: blob.type || 'image/jpeg' });
         formData.append('file', file);
       } else {
-        // Native
-        const filename = imageUri.split('/').pop() || 'license.jpg';
+        // Native: expo-image-picker URI
+        const filename = imageUriOrFile.split('/').pop() || 'license.jpg';
         const match = /\.([\w]+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image/jpeg';
-        formData.append('file', { uri: imageUri, name: filename, type } as any);
+        formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
       }
 
       const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData, {
@@ -168,22 +171,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  uploadIdCard: async (imageUri: string) => {
+  uploadIdCard: async (imageUriOrFile: string | File) => {
     try {
       const formData = new FormData();
 
-      if (typeof window !== 'undefined' && window.document) {
-        // Web: fetch blob from URI and create File
-        const resp = await fetch(imageUri);
+      if (imageUriOrFile instanceof File) {
+        // Web: File object passed directly
+        formData.append('file', imageUriOrFile);
+      } else if (typeof window !== 'undefined' && window.document) {
+        // Web: string URI (blob: or http)
+        const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
         const file = new File([blob], 'id_card.jpg', { type: blob.type || 'image/jpeg' });
         formData.append('file', file);
       } else {
-        // Native
-        const filename = imageUri.split('/').pop() || 'id_card.jpg';
+        // Native: expo-image-picker URI
+        const filename = imageUriOrFile.split('/').pop() || 'id_card.jpg';
         const match = /\.([\w]+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image/jpeg';
-        formData.append('file', { uri: imageUri, name: filename, type } as any);
+        formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
       }
 
       const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData, {
