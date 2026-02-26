@@ -309,6 +309,12 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                         <Text style={[styles.badgeText, { color: statusColor }]}>{statusLabels[res.status] || res.status}</Text>
                       </View>
                     </View>
+                    <View style={calStyles.eventTimeRow}>
+                      <Ionicons name="time-outline" size={13} color={C.purple} />
+                      <Text style={calStyles.eventTime}>
+                        {format(new Date(res.start_date), 'HH:mm')} - {format(new Date(res.end_date), 'HH:mm')}
+                      </Text>
+                    </View>
                     <Text style={calStyles.eventDates}>
                       {format(new Date(res.start_date), 'd MMM', { locale: fr })} - {format(new Date(res.end_date), 'd MMM yyyy', { locale: fr })}
                     </Text>
