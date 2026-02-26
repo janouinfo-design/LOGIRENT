@@ -84,19 +84,27 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
 
-  useEffect(() => { fetchVehicles(); }, []);
+  useEffect(() => {
+    const filters: any = {};
+    if (user?.agency_id) filters.agency_id = user.agency_id;
+    fetchVehicles(filters);
+  }, [user?.agency_id]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchVehicles();
+    const filters: any = {};
+    if (user?.agency_id) filters.agency_id = user.agency_id;
+    await fetchVehicles(filters);
     setRefreshing(false);
   };
 
   const handleTypeSelect = (typeId: string) => {
     setSelectedType(typeId);
     const type = typeId === 'all' ? undefined : typeId;
-    setFilters({ type });
-    fetchVehicles({ type });
+    const filters: any = { type };
+    if (user?.agency_id) filters.agency_id = user.agency_id;
+    setFilters(filters);
+    fetchVehicles(filters);
   };
 
   return (
