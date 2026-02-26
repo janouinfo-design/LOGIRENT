@@ -28,6 +28,8 @@ export default function VehiclesScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedType, setSelectedType] = useState('Tous');
   const [selectedTransmission, setSelectedTransmission] = useState('Toutes');
+  const { width } = useWindowDimensions();
+  const isMobile = width < 768;
 
   useEffect(() => { fetchVehicles(); }, []);
 
