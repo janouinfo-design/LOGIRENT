@@ -93,23 +93,13 @@ export default function ProfileScreen() {
     }
   };
 
-  const compressNativeImage = async (uri: string): Promise<string> => {
-    const result = await ImageManipulator.manipulateAsync(
-      uri,
-      [{ resize: { width: 1200 } }],
-      { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
-    );
-    return result.uri;
-  };
-
-  const uploadFromUri = async (uri: string, type: 'id' | 'license') => {
+  const uploadFromUri = async (dataUri: string, type: 'id' | 'license') => {
     const setter = type === 'id' ? setUploadingId : setUploadingLicense;
     const uploader = type === 'id' ? uploadIdCard : uploadLicense;
     const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
     setter(true);
     try {
-      const compressedUri = await compressNativeImage(uri);
-      await uploader(compressedUri);
+      await uploader(dataUri);
       Alert.alert('Succès', successMsg);
     } catch (e: any) {
       Alert.alert('Erreur', e.message);
@@ -122,9 +112,11 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la caméra.'); return; }
     try {
-      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.5, base64: true });
       if (result.canceled) return;
-      await uploadFromUri(result.assets[0].uri, type);
+      const asset = result.assets[0];
+      const dataUri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+      await uploadFromUri(dataUri, type);
     } catch (err: any) {
       Alert.alert('Erreur', 'Impossible d\'ouvrir la caméra.');
     }
@@ -134,9 +126,11 @@ export default function ProfileScreen() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.5, base64: true });
       if (result.canceled) return;
-      await uploadFromUri(result.assets[0].uri, type);
+      const asset = result.assets[0];
+      const dataUri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+      await uploadFromUri(dataUri, type);
     } catch (err: any) {
       Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie.');
     }
