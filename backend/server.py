@@ -2175,6 +2175,182 @@ async def setup_init():
     
     return {"message": "Plateforme initialisée", "agency_id": agency.id, "agency_name": agency.name}
 
+# ==================== NAVIXY GPS TRACKING ====================
+
+@api_router.get("/navixy/trackers")
+async def get_navixy_trackers(user: dict = Depends(get_current_user)):
+    """Get all trackers from Navixy with their GPS state"""
+    if user.get('role') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    if not NAVIXY_API_URL or not NAVIXY_HASH:
+        raise HTTPException(status_code=500, detail="Navixy not configured")
+    
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(f"{NAVIXY_API_URL}/tracker/list", json={"hash": NAVIXY_HASH})
+        data = resp.json()
+    
+    if not data.get("success"):
+        raise HTTPException(status_code=502, detail="Navixy API error")
+    
+    trackers = []
+    for t in data.get("list", []):
+        trackers.append({
+            "id": t["id"],
+            "label": t.get("label", ""),
+            "model": t.get("source", {}).get("model", ""),
+            "status": t.get("status", {}).get("listing", ""),
+        })
+    return trackers
+
+@api_router.get("/navixy/tracker/{tracker_id}/state")
+async def get_navixy_tracker_state(tracker_id: int, user: dict = Depends(get_current_user)):
+    """Get GPS position of a single tracker"""
+    if user.get('role') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    if not NAVIXY_API_URL or not NAVIXY_HASH:
+        raise HTTPException(status_code=500, detail="Navixy not configured")
+    
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(f"{NAVIXY_API_URL}/tracker/get_state",
+            json={"hash": NAVIXY_HASH, "tracker_id": tracker_id})
+        data = resp.json()
+    
+    if not data.get("state"):
+        raise HTTPException(status_code=404, detail="Tracker not found")
+    
+    state = data["state"]
+    gps = state.get("gps", {})
+    loc = gps.get("location", {})
+    return {
+        "tracker_id": tracker_id,
+        "lat": loc.get("lat"),
+        "lng": loc.get("lng"),
+        "speed": gps.get("speed", 0),
+        "heading": gps.get("heading", 0),
+        "altitude": gps.get("alt", 0),
+        "gps_updated": gps.get("updated"),
+        "connection_status": state.get("connection_status"),
+        "movement_status": state.get("movement_status"),
+        "ignition": state.get("ignition"),
+        "last_update": state.get("last_update"),
+    }
+
+@api_router.get("/navixy/positions")
+async def get_navixy_all_positions(user: dict = Depends(get_current_user)):
+    """Get GPS positions of ALL trackers in one call"""
+    if user.get('role') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    if not NAVIXY_API_URL or not NAVIXY_HASH:
+        raise HTTPException(status_code=500, detail="Navixy not configured")
+    
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(f"{NAVIXY_API_URL}/tracker/list", json={"hash": NAVIXY_HASH})
+        data = resp.json()
+    
+    if not data.get("success"):
+        raise HTTPException(status_code=502, detail="Navixy API error")
+    
+    tracker_ids = [t["id"] for t in data.get("list", [])]
+    positions = []
+    
+    async with httpx.AsyncClient(timeout=30) as client:
+        tasks = []
+        for tid in tracker_ids:
+            tasks.append(client.post(f"{NAVIXY_API_URL}/tracker/get_state",
+                json={"hash": NAVIXY_HASH, "tracker_id": tid}))
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    tracker_map = {t["id"]: t for t in data.get("list", [])}
+    for tid, resp in zip(tracker_ids, responses):
+        if isinstance(resp, Exception):
+            continue
+        try:
+            state_data = resp.json()
+            state = state_data.get("state", {})
+            gps = state.get("gps", {})
+            loc = gps.get("location", {})
+            tracker = tracker_map.get(tid, {})
+            positions.append({
+                "tracker_id": tid,
+                "label": tracker.get("label", ""),
+                "lat": loc.get("lat"),
+                "lng": loc.get("lng"),
+                "speed": gps.get("speed", 0),
+                "heading": gps.get("heading", 0),
+                "connection_status": state.get("connection_status"),
+                "movement_status": state.get("movement_status"),
+                "ignition": state.get("ignition"),
+                "last_update": state.get("last_update"),
+            })
+        except Exception:
+            continue
+    
+    return positions
+
+@api_router.post("/navixy/sync-vehicles")
+async def sync_navixy_vehicles(user: dict = Depends(get_current_user)):
+    """Sync Navixy trackers into LogiRent vehicles database"""
+    if user.get('role') not in ['admin', 'super_admin']:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    if not NAVIXY_API_URL or not NAVIXY_HASH:
+        raise HTTPException(status_code=500, detail="Navixy not configured")
+    
+    # Get user's agency
+    agency_id = user.get('agency_id')
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="No agency assigned")
+    
+    # Fetch trackers from Navixy
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.post(f"{NAVIXY_API_URL}/tracker/list", json={"hash": NAVIXY_HASH})
+        data = resp.json()
+    
+    if not data.get("success"):
+        raise HTTPException(status_code=502, detail="Navixy API error")
+    
+    created = 0
+    updated = 0
+    for tracker in data.get("list", []):
+        label = tracker.get("label", "")
+        navixy_id = tracker["id"]
+        
+        # Check if vehicle with this navixy_tracker_id already exists
+        existing = await db.vehicles.find_one({"navixy_tracker_id": navixy_id}, {"_id": 0})
+        
+        if existing:
+            # Update the label if changed
+            await db.vehicles.update_one(
+                {"navixy_tracker_id": navixy_id},
+                {"$set": {"navixy_label": label}}
+            )
+            updated += 1
+        else:
+            # Create a new vehicle entry
+            vehicle = {
+                "id": str(uuid.uuid4()),
+                "brand": label.split("-")[1].strip().split(" ")[0] if "-" in label else "Véhicule",
+                "model": " ".join(label.split("-")[1].strip().split(" ")[1:]) if "-" in label else label,
+                "year": 2024,
+                "price_per_day": 0,
+                "description": f"Synchronisé depuis Navixy (Tracker: {label})",
+                "photos": [],
+                "available": True,
+                "category": "berline",
+                "fuel_type": "essence",
+                "transmission": "automatique",
+                "seats": 5,
+                "agency_id": agency_id,
+                "navixy_tracker_id": navixy_id,
+                "navixy_label": label,
+                "created_at": datetime.utcnow().isoformat(),
+            }
+            await db.vehicles.insert_one(vehicle)
+            created += 1
+    
+    return {"message": f"Synchronisation terminée: {created} créés, {updated} mis à jour", "created": created, "updated": updated}
+
+
+
 # Include router
 app.include_router(api_router)
 
