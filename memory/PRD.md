@@ -114,7 +114,12 @@ Build a complete car rental solution named "LogiRent" with:
 - Vehicle CRUD management
 - Reservation management
 - User management
-- Calendar/agenda view for reservations
+- **Calendar/agenda view for reservations with hours (HH:MM)** on event cards
+  - Departure time shown in blue
+  - Return time shown in purple
+  - Ongoing reservation time range shown in green
+  - Detail modal shows departure + return times
+  - CSS grid responsive for mobile (46px cells on mobile, 56px on desktop)
 - Overdue rental alerts
 - Agency management (super-admin)
 
