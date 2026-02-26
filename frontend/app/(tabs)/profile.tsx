@@ -80,11 +80,13 @@ export default function ProfileScreen() {
     if (!file) return;
     const setter = type === 'id' ? setUploadingId : setUploadingLicense;
     const uploader = type === 'id' ? uploadIdCard : uploadLicense;
-    const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
     setter(true);
     try {
-      await uploader(file);
-      window.alert(successMsg);
+      const verification = await uploader(file);
+      const v = verification || {};
+      const validIcon = v.is_valid ? 'Document valide' : 'Document rejeté';
+      const msg = v.reason ? `${validIcon}\nConfiance: ${v.confidence}%\n${v.reason}` : 'Document téléchargé';
+      window.alert(msg);
     } catch (err: any) {
       window.alert(err.message || 'Erreur lors du téléchargement');
     } finally {
