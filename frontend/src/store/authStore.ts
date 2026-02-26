@@ -164,32 +164,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   uploadLicense: async (imageUriOrFile: string | File) => {
     try {
-      const formData = new FormData();
+      let imageData: string;
 
       if (imageUriOrFile instanceof File) {
-        // Web: compress before upload
-        const compressed = await compressWebImage(imageUriOrFile);
-        formData.append('file', compressed);
+        // Web: compress and convert to base64 data URI
+        imageData = await compressToBase64(imageUriOrFile);
       } else if (typeof window !== 'undefined' && window.document) {
-        // Web: string URI (blob: or http)
+        // Web: string URI → fetch blob → compress
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
-        const compressed = await compressWebImage(blob);
-        formData.append('file', compressed);
+        imageData = await compressToBase64(blob);
       } else {
-        // Native: expo-image-picker URI
+        // Native: send via multipart (old way)
+        const formData = new FormData();
         const filename = imageUriOrFile.split('/').pop() || 'license.jpg';
         const match = /\.([\w]+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image/jpeg';
         formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
+        const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData);
+        const { user } = get();
+        if (user) set({ user: { ...user, license_photo: response.data.license_photo } });
+        return;
       }
 
-      const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData);
-      
+      // Web: send as JSON with base64
+      const response = await axios.post(`${API_URL}/api/auth/upload-license-b64`, {
+        image_data: imageData
+      });
       const { user } = get();
-      if (user) {
-        set({ user: { ...user, license_photo: response.data.license_photo } });
-      }
+      if (user) set({ user: { ...user, license_photo: response.data.license_photo } });
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Upload failed');
     }
@@ -197,32 +200,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   uploadIdCard: async (imageUriOrFile: string | File) => {
     try {
-      const formData = new FormData();
+      let imageData: string;
 
       if (imageUriOrFile instanceof File) {
-        // Web: compress before upload
-        const compressed = await compressWebImage(imageUriOrFile);
-        formData.append('file', compressed);
+        // Web: compress and convert to base64 data URI
+        imageData = await compressToBase64(imageUriOrFile);
       } else if (typeof window !== 'undefined' && window.document) {
-        // Web: string URI (blob: or http)
+        // Web: string URI → fetch blob → compress
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
-        const compressed = await compressWebImage(blob);
-        formData.append('file', compressed);
+        imageData = await compressToBase64(blob);
       } else {
-        // Native: expo-image-picker URI
+        // Native: send via multipart (old way)
+        const formData = new FormData();
         const filename = imageUriOrFile.split('/').pop() || 'id_card.jpg';
         const match = /\.([\w]+)$/.exec(filename);
         const type = match ? `image/${match[1]}` : 'image/jpeg';
         formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
+        const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData);
+        const { user } = get();
+        if (user) set({ user: { ...user, id_photo: response.data.id_photo } });
+        return;
       }
 
-      const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData);
-      
+      // Web: send as JSON with base64
+      const response = await axios.post(`${API_URL}/api/auth/upload-id-b64`, {
+        image_data: imageData
+      });
       const { user } = get();
-      if (user) {
-        set({ user: { ...user, id_photo: response.data.id_photo } });
-      }
+      if (user) set({ user: { ...user, id_photo: response.data.id_photo } });
     } catch (error: any) {
       throw new Error(error.response?.data?.detail || 'Upload failed');
     }
