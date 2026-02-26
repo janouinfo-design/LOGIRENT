@@ -208,7 +208,7 @@ export default function HomeScreen() {
         </AnimatedSection>
 
         {/* Vehicle Grid */}
-        <View style={styles.vehicleGrid}>
+        <View style={[styles.vehicleGrid, width < 768 ? styles.vehicleGridMobile : styles.vehicleGridDesktop]}>
           {vehicles.map((vehicle, index) => (
             <AnimatedCard key={vehicle.id} index={index}>
               <VehicleCard
