@@ -523,6 +523,8 @@ const calStyles = StyleSheet.create({
   eventHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   eventVehicle: { fontSize: 14, fontWeight: '600', color: C.dark },
   eventDates: { fontSize: 12, color: C.gray, marginTop: 4 },
+  eventTimeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  eventTime: { fontSize: 13, fontWeight: '600', color: C.purple },
   eventFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
   eventDays: { fontSize: 11, color: C.gray },
   eventPrice: { fontSize: 15, fontWeight: '700', color: C.purple },
