@@ -247,10 +247,17 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     padding: 20,
     gap: 16,
-    justifyContent: 'center',
     maxWidth: 1200,
     alignSelf: 'center',
     width: '100%',
+  },
+  vehicleGridMobile: {
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    gap: 14,
+  },
+  vehicleGridDesktop: {
+    justifyContent: 'flex-start',
   },
   emptyContainer: { alignItems: 'center', paddingTop: 80 },
   emptyText: { fontSize: 18, fontWeight: '600', color: C.dark, marginTop: 16 },
