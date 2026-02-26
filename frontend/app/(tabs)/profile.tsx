@@ -93,29 +93,58 @@ export default function ProfileScreen() {
     }
   };
 
-  const pickAndUpload = async (type: 'id' | 'license') => {
-    if (Platform.OS === 'web') {
-      // Trigger native file input on web
-      const ref = type === 'id' ? idInputRef : licenseInputRef;
-      ref.current?.click();
-      return;
+  const uploadFromUri = async (uri: string, type: 'id' | 'license') => {
+    const setter = type === 'id' ? setUploadingId : setUploadingLicense;
+    const uploader = type === 'id' ? uploadIdCard : uploadLicense;
+    const successMsg = type === 'id' ? 'Pièce d\'identité téléchargée' : 'Permis de conduire téléchargé';
+    setter(true);
+    try {
+      await uploader(uri);
+      Alert.alert('Succès', successMsg);
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message);
+    } finally {
+      setter(false);
     }
-    // Native: use expo-image-picker
+  };
+
+  const takePhoto = async (type: 'id' | 'license') => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la caméra.'); return; }
+    try {
+      const result = await ImagePicker.launchCameraAsync({ allowsEditing: true, aspect: [4, 3], quality: 0.8 });
+      if (result.canceled) return;
+      await uploadFromUri(result.assets[0].uri, type);
+    } catch (err: any) {
+      Alert.alert('Erreur', 'Impossible d\'ouvrir la caméra.');
+    }
+  };
+
+  const pickFromGallery = async (type: 'id' | 'license') => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
     try {
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [4, 3], quality: 0.8 });
       if (result.canceled) return;
-      if (type === 'id') {
-        setUploadingId(true);
-        try { await uploadIdCard(result.assets[0].uri); Alert.alert('Succès', 'Pièce d\'identité téléchargée'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingId(false); }
-      } else {
-        setUploadingLicense(true);
-        try { await uploadLicense(result.assets[0].uri); Alert.alert('Succès', 'Permis de conduire téléchargé'); } catch (e: any) { Alert.alert('Erreur', e.message); } finally { setUploadingLicense(false); }
-      }
+      await uploadFromUri(result.assets[0].uri, type);
     } catch (err: any) {
       Alert.alert('Erreur', 'Impossible d\'ouvrir la galerie.');
     }
+  };
+
+  const pickAndUpload = async (type: 'id' | 'license') => {
+    if (Platform.OS === 'web') {
+      const ref = type === 'id' ? idInputRef : licenseInputRef;
+      ref.current?.click();
+      return;
+    }
+    // Native: show choice between camera and gallery
+    const title = type === 'id' ? 'Pièce d\'identité' : 'Permis de conduire';
+    Alert.alert(title, 'Comment souhaitez-vous ajouter votre document ?', [
+      { text: 'Prendre une photo', onPress: () => takePhoto(type) },
+      { text: 'Choisir depuis la galerie', onPress: () => pickFromGallery(type) },
+      { text: 'Annuler', style: 'cancel' },
+    ]);
   };
 
   const menuItems = [
