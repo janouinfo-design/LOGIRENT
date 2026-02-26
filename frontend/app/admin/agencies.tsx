@@ -191,6 +191,14 @@ export default function AgenciesPage() {
                     <Text style={styles.linkLabel}>Client : </Text>
                     <Text style={styles.linkUrl} selectable>{API_URL}/a/{agency.slug || agency.id}</Text>
                   </View>
+                  <TouchableOpacity
+                    style={styles.qrBtn}
+                    onPress={() => setQrAgency(agency)}
+                    data-testid={`qr-agency-${agency.id}`}
+                  >
+                    <Ionicons name="qr-code-outline" size={16} color="#FFF" />
+                    <Text style={styles.qrBtnText}>QR Code Client</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))}
