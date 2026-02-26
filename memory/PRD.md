@@ -66,7 +66,14 @@ Build a complete car rental solution named "LogiRent" with:
 - **reservations**: `{id, user_id, vehicle_id, agency_id, start_date, end_date, total_days, total_price, status, payment_status, ...}`
 - **notifications**: `{user_id, type, message, read, created_at}`
 
-## What's Been Implemented (as of Feb 25, 2026)
+## What's Been Implemented (as of Feb 26, 2026)
+
+### Document Upload Fix (Feb 26, 2026)
+- **FIXED**: Critical document upload bug on web/mobile-web platforms
+  - Root cause: Blob URL roundtrip + manual Content-Type header breaking FormData boundary
+  - Solution: Pass File object directly, let browser auto-set Content-Type
+  - Both ID card and license uploads working on web
+- **FIXED**: Agency admin count now includes super_admin in stats
 
 ### Multi-Agency Architecture (Complete)
 - Full multi-tenancy with super_admin, admin, client roles
@@ -135,6 +142,11 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## Prioritized Backlog
 
+### P1 - Navixy API Integration
+- Synchronize vehicle list from Navixy GPS tracking platform
+- Fetch last known GPS position of vehicles
+- Requires Navixy API key from user
+
 ### P2 - Push Notifications
 - Enhance notification system with real push notifications
 
@@ -148,5 +160,4 @@ Build a complete car rental solution named "LogiRent" with:
 - Advanced dashboards for revenue and fleet utilization
 
 ### Minor
-- Agency admin count doesn't include super_admin in stats
 - Availability calendar component could be extracted as reusable
