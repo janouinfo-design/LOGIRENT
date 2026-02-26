@@ -78,12 +78,14 @@ Build a complete car rental solution named "LogiRent" with:
 - Vehicle catalog with filtering
 - Vehicle detail with availability calendar
 - Booking flow with Stripe payment + cash option
-- **Reservations page with LIST + CALENDAR views** (NEW - Feb 25)
+- **Reservations page with LIST + CALENDAR views**
   - Toggle between list and calendar modes
   - Calendar shows monthly grid with reservation dots
   - Date selection shows reservation details
   - Month navigation (forward/backward)
-  - French localization
+  - **"Aujourd'hui" button** - returns to current month (hidden when already on current month)
+  - **"Réserver un véhicule" button** - appears on free future dates, redirects to vehicles page
+  - French localization with proper accents
 - Profile management
 - Notifications (bell icon)
 - FR/EN language switching
