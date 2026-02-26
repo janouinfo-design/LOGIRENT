@@ -35,6 +35,7 @@ interface VehicleFilters {
   transmission?: string;
   start_date?: string;
   end_date?: string;
+  agency_id?: string;
 }
 
 interface VehicleState {
