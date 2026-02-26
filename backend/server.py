@@ -16,6 +16,8 @@ import bcrypt
 import base64
 import resend
 
+import re
+
 # Stripe integration
 from emergentintegrations.payments.stripe.checkout import (
     StripeCheckout, CheckoutSessionResponse, CheckoutStatusResponse, CheckoutSessionRequest
