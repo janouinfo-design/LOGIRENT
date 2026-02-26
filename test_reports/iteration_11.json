@@ -1,0 +1,89 @@
+{
+  "summary": "Iteration 11: Agency Slug URLs Feature - 8/9 tests PASSED. Backend APIs fully working. Frontend has Unicode encoding issue displaying French accented characters as escape sequences (e.g., 'Véhicules' shows as 'V\\u00e9hicules').",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/public/agency/{slug}",
+        "issue": "vehicle_count returns 15 but actual vehicles filtered by agency_id returns 11. Minor discrepancy in count.",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "app/a/[slug].tsx",
+        "issue": "French accented characters display as Unicode escape sequences (e.g., 'Véhicules' shows as 'V\\u00e9hicules', 'Créer' as 'Cr\\u00e9er'). This is a React Native Web/Metro bundling encoding issue.",
+        "selector": "Text elements with French characters",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "test_1_agency_page_loads": {
+      "status": "PASS",
+      "details": "Agency page /a/logirent-geneva loads correctly showing 'LogiRent Geneva', location 'Geneva, Switzerland', vehicle count 15, and phone number"
+    },
+    "test_2_agency_auth_section": {
+      "status": "PASS",
+      "details": "'Créer un compte' and 'Se connecter' buttons visible for non-logged users with data-testid attributes"
+    },
+    "test_3_agency_vehicle_count": {
+      "status": "PASS",
+      "details": "Vehicles page shows 11 vehicles filtered by LogiRent Geneva agency_id (API filter works correctly)"
+    },
+    "test_4_backend_api_valid_slug": {
+      "status": "PASS",
+      "details": "GET /api/public/agency/logirent-geneva returns agency data with slug field"
+    },
+    "test_5_backend_api_invalid_slug": {
+      "status": "PASS",
+      "details": "GET /api/public/agency/nonexistent returns 404 with 'Agence non trouvée'"
+    },
+    "test_6_register_with_agency_id": {
+      "status": "PASS",
+      "details": "POST /api/auth/register with agency_id creates user bound to that agency with agency_name resolved"
+    },
+    "test_7_super_admin_agencies_page": {
+      "status": "PASS",
+      "details": "Admin agencies page shows client links like '.../a/logirent-geneva' for each agency. Visible agencies: LogiRent Geneva, LogiRent Lausanne, TEST_Agency_b5c2b5"
+    },
+    "test_8_invalid_slug_error_page": {
+      "status": "PASS",
+      "details": "Navigating to /a/invalid-slug shows 'Agence introuvable' error page with Retour button"
+    },
+    "test_9_french_accents": {
+      "status": "FAIL",
+      "details": "French accented characters display as Unicode escape sequences on /a/logirent-geneva page. Source code has proper UTF-8 but render shows \\u00e9 instead of é"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_agency_slugs.py",
+    "/app/test_reports/pytest/pytest_agency_slugs.xml"
+  ],
+  "action_items": [
+    "FIX CRITICAL: French accented characters showing as Unicode escape sequences (\\u00e9 instead of é) in /app/frontend/app/a/[slug].tsx. This is a Metro/React Native Web bundling issue - check babel config or metro.config.js for charset handling"
+  ],
+  "critical_code_review_comments": [
+    "Frontend encoding issue: The source files have proper UTF-8 characters but the bundled output shows escape sequences. This affects user experience significantly as all French text is unreadable."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_agency_slugs.py"
+  ],
+  "success_rate": {
+    "backend": "100% - 6/6 pytest tests passed",
+    "frontend": "88% - 8/9 features working, 1 encoding bug"
+  },
+  "test_credentials": {
+    "super_admin": "test@example.com / password123",
+    "client_user": "client1@test.com / test1234"
+  },
+  "seed_data_used": "LogiRent Geneva agency (id: 63683791-8741-445a-be42-9e74861bee89, slug: logirent-geneva)",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Agency slug feature mostly working. Backend API at /api/public/agency/{slug} returns agency info including vehicle_count. Registration with agency_id binds users to agencies. The critical issue is French UTF-8 characters displaying as escape sequences in the agency landing page - this needs Metro/Babel config investigation.",
+  "rca_of_the_issue": "French Unicode encoding issue: Source files (app/a/[slug].tsx) contain proper UTF-8 characters (verified with od -c showing é as 303 251). However, React Native Web/Metro bundler is converting these to JavaScript Unicode escape sequences during build. Likely cause: Missing charset declaration or babel transform issue. Fix: Check babel.config.js exists and has proper UTF-8 handling, or add charset meta to web index.html."
+}
