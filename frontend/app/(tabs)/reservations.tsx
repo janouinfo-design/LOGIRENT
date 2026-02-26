@@ -24,18 +24,18 @@ const C = {
 };
 
 const statusLabels: Record<string, string> = {
-  confirmed: 'Confirm\u00e9e',
+  confirmed: 'Confirmée',
   active: 'En cours',
   pending: 'En attente',
-  pending_cash: 'Esp\u00e8ces en attente',
-  cancelled: 'Annul\u00e9e',
-  completed: 'Termin\u00e9e',
+  pending_cash: 'Espèces en attente',
+  cancelled: 'Annulée',
+  completed: 'Terminée',
 };
 
 const paymentLabels: Record<string, string> = {
-  paid: 'Pay\u00e9',
+  paid: 'Payé',
   pending: 'En attente',
-  unpaid: 'Non pay\u00e9',
+  unpaid: 'Non payé',
 };
 
 const getStatusColor = (status: string) => {
@@ -77,7 +77,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
           </View>
         )}
         <View style={styles.cardHeaderInfo}>
-          <Text style={styles.vehicleName}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'V\u00e9hicule'}</Text>
+          <Text style={styles.vehicleName}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}</Text>
           <Text style={styles.vehicleYear}>{vehicle?.year}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
@@ -88,7 +88,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
 
       <View style={styles.datesRow}>
         <View style={styles.dateBox}>
-          <Text style={styles.dateLabel}>D\u00e9but</Text>
+          <Text style={styles.dateLabel}>Début</Text>
           <Text style={styles.dateValue}>{format(new Date(item.start_date), 'd MMM yyyy', { locale: fr })}</Text>
           <Text style={styles.dateTime}>{format(new Date(item.start_date), 'HH:mm')}</Text>
         </View>
@@ -117,7 +117,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
       {canCancel && (
         <TouchableOpacity style={styles.cancelBtn} onPress={() => onCancel(item.id)} data-testid={`cancel-${item.id}`}>
           <Ionicons name="close-circle-outline" size={16} color={C.error} />
-          <Text style={styles.cancelText}>Annuler la r\u00e9servation</Text>
+          <Text style={styles.cancelText}>Annuler la réservation</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -268,7 +268,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: C.success }]} />
-          <Text style={calStyles.legendText}>Confirm\u00e9e</Text>
+          <Text style={calStyles.legendText}>Confirmée</Text>
         </View>
       </View>
 
@@ -281,7 +281,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
           {selectedReservations.length === 0 ? (
             <View style={calStyles.emptyDay}>
               <Ionicons name="calendar-outline" size={28} color={C.gray} />
-              <Text style={calStyles.emptyDayText}>Aucune r\u00e9servation</Text>
+              <Text style={calStyles.emptyDayText}>Aucune réservation</Text>
               {!isBefore(startOfDay(selectedDate), startOfDay(new Date())) && (
                 <TouchableOpacity
                   style={calStyles.bookBtn}
@@ -289,7 +289,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                   data-testid="cal-book-vehicle-btn"
                 >
                   <Ionicons name="add-circle-outline" size={16} color="#FFF" />
-                  <Text style={calStyles.bookBtnText}>R\u00e9server un v\u00e9hicule</Text>
+                  <Text style={calStyles.bookBtnText}>Réserver un véhicule</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -303,7 +303,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                   <View style={calStyles.eventContent}>
                     <View style={calStyles.eventHeader}>
                       <Text style={calStyles.eventVehicle}>
-                        {vehicle ? `${vehicle.brand} ${vehicle.model}` : 'V\u00e9hicule'}
+                        {vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}
                       </Text>
                       <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
                         <Text style={[styles.badgeText, { color: statusColor }]}>{statusLabels[res.status] || res.status}</Text>
@@ -345,11 +345,11 @@ export default function ReservationsScreen() {
 
   const handleCancel = (id: string) => {
     if (Platform.OS === 'web') {
-      if (window.confirm('Voulez-vous annuler cette r\u00e9servation ?')) {
+      if (window.confirm('Voulez-vous annuler cette réservation ?')) {
         cancelReservation(id).then(() => fetchReservations());
       }
     } else {
-      Alert.alert('Annuler la r\u00e9servation', 'Voulez-vous annuler cette r\u00e9servation ?', [
+      Alert.alert('Annuler la réservation', 'Voulez-vous annuler cette réservation ?', [
         { text: 'Non', style: 'cancel' },
         { text: 'Oui, annuler', style: 'destructive', onPress: () => cancelReservation(id).then(() => fetchReservations()) },
       ]);
@@ -365,9 +365,9 @@ export default function ReservationsScreen() {
   const filters = [
     { id: 'all', label: 'Toutes' },
     { id: 'pending', label: 'En attente' },
-    { id: 'confirmed', label: 'Confirm\u00e9es' },
+    { id: 'confirmed', label: 'Confirmées' },
     { id: 'active', label: 'En cours' },
-    { id: 'completed', label: 'Termin\u00e9es' },
+    { id: 'completed', label: 'Terminées' },
   ];
 
   return (
@@ -377,7 +377,7 @@ export default function ReservationsScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.title}>Mes Locations</Text>
-            <Text style={styles.subtitle}>{reservations.length} r\u00e9servation{reservations.length !== 1 ? 's' : ''}</Text>
+            <Text style={styles.subtitle}>{reservations.length} réservation{reservations.length !== 1 ? 's' : ''}</Text>
           </View>
           {/* View Mode Toggle */}
           <View style={styles.viewToggle} data-testid="view-mode-toggle">
@@ -421,9 +421,9 @@ export default function ReservationsScreen() {
               {filteredReservations.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="calendar-outline" size={56} color={C.gray} />
-                  <Text style={styles.emptyText}>Aucune r\u00e9servation</Text>
-                  <Text style={styles.emptySubtext}>R\u00e9servez votre premier v\u00e9hicule</Text>
-                  <Button title="Voir les v\u00e9hicules" onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
+                  <Text style={styles.emptyText}>Aucune réservation</Text>
+                  <Text style={styles.emptySubtext}>Réservez votre premier véhicule</Text>
+                  <Button title="Voir les véhicules" onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
                 </View>
               ) : (
                 filteredReservations.map((item) => (
