@@ -282,6 +282,16 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
             <View style={calStyles.emptyDay}>
               <Ionicons name="calendar-outline" size={28} color={C.gray} />
               <Text style={calStyles.emptyDayText}>Aucune r\u00e9servation</Text>
+              {!isBefore(startOfDay(selectedDate), startOfDay(new Date())) && (
+                <TouchableOpacity
+                  style={calStyles.bookBtn}
+                  onPress={() => router.push('/(tabs)/vehicles')}
+                  data-testid="cal-book-vehicle-btn"
+                >
+                  <Ionicons name="add-circle-outline" size={16} color="#FFF" />
+                  <Text style={calStyles.bookBtnText}>R\u00e9server un v\u00e9hicule</Text>
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             selectedReservations.map(res => {
