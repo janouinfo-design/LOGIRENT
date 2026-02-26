@@ -10,7 +10,7 @@ import json
 def test_pending_cash_to_paid():
     """Test pending_cash reservation marked as paid changes status to confirmed"""
     
-    base_url = "https://rental-hub-dev-4.preview.emergentagent.com"
+    base_url = "https://logirent-build.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     # Login
