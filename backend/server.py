@@ -44,6 +44,12 @@ RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
 SENDER_EMAIL = os.environ.get('SENDER_EMAIL', 'contact@logitrak.ch')
 resend.api_key = RESEND_API_KEY
 
+# Navixy Configuration
+NAVIXY_API_URL = os.environ.get('NAVIXY_API_URL')
+NAVIXY_HASH = os.environ.get('NAVIXY_HASH')
+
+import httpx
+
 # Create the main app
 app = FastAPI(title="RentDrive API", version="1.0.0")
 
