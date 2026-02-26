@@ -183,35 +183,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       let imageData: string;
 
-      if (imageUriOrFile instanceof File) {
-        // Web: compress and convert to base64 data URI
+      if (typeof imageUriOrFile === 'object' && imageUriOrFile instanceof File) {
+        // Web: File object - compress and convert to base64
         imageData = await compressToBase64(imageUriOrFile);
-      } else if (typeof window !== 'undefined' && window.document) {
+      } else if (typeof imageUriOrFile === 'string' && Platform.OS !== 'web') {
+        // Native: read file as base64 via FileSystem
+        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: FileSystem.EncodingType.Base64 });
+        imageData = `data:image/jpeg;base64,${b64}`;
+      } else if (typeof imageUriOrFile === 'string') {
         // Web: string URI → fetch blob → compress
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
         imageData = await compressToBase64(blob);
       } else {
-        // Native: send via multipart (old way)
-        const formData = new FormData();
-        const filename = imageUriOrFile.split('/').pop() || 'license.jpg';
-        const match = /\.([\w]+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
-        formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
-        const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData);
-        const { user } = get();
-        if (user) set({ user: { ...user, license_photo: response.data.license_photo } });
-        return;
+        throw new Error('Format de fichier non supporté');
       }
 
-      // Web: send as JSON with base64
       const response = await axios.post(`${API_URL}/api/auth/upload-license-b64`, {
         image_data: imageData
       });
       const { user } = get();
       if (user) set({ user: { ...user, license_photo: response.data.license_photo } });
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Upload failed');
+      const msg = error.response?.data?.detail || error.message || 'Upload failed';
+      throw new Error(msg);
     }
   },
 
@@ -219,35 +214,30 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       let imageData: string;
 
-      if (imageUriOrFile instanceof File) {
-        // Web: compress and convert to base64 data URI
+      if (typeof imageUriOrFile === 'object' && imageUriOrFile instanceof File) {
+        // Web: File object - compress and convert to base64
         imageData = await compressToBase64(imageUriOrFile);
-      } else if (typeof window !== 'undefined' && window.document) {
+      } else if (typeof imageUriOrFile === 'string' && Platform.OS !== 'web') {
+        // Native: read file as base64 via FileSystem
+        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: FileSystem.EncodingType.Base64 });
+        imageData = `data:image/jpeg;base64,${b64}`;
+      } else if (typeof imageUriOrFile === 'string') {
         // Web: string URI → fetch blob → compress
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
         imageData = await compressToBase64(blob);
       } else {
-        // Native: send via multipart (old way)
-        const formData = new FormData();
-        const filename = imageUriOrFile.split('/').pop() || 'id_card.jpg';
-        const match = /\.([\w]+)$/.exec(filename);
-        const type = match ? `image/${match[1]}` : 'image/jpeg';
-        formData.append('file', { uri: imageUriOrFile, name: filename, type } as any);
-        const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData);
-        const { user } = get();
-        if (user) set({ user: { ...user, id_photo: response.data.id_photo } });
-        return;
+        throw new Error('Format de fichier non supporté');
       }
 
-      // Web: send as JSON with base64
       const response = await axios.post(`${API_URL}/api/auth/upload-id-b64`, {
         image_data: imageData
       });
       const { user } = get();
       if (user) set({ user: { ...user, id_photo: response.data.id_photo } });
     } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Upload failed');
+      const msg = error.response?.data?.detail || error.message || 'Upload failed';
+      throw new Error(msg);
     }
   },
 }));
