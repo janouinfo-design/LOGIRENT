@@ -21,6 +21,7 @@ const COLORS = {
 interface Agency {
   id: string;
   name: string;
+  slug?: string;
   address?: string;
   phone?: string;
   email?: string;
