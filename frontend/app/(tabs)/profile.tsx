@@ -164,6 +164,27 @@ export default function ProfileScreen() {
         {/* Documents */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Documents Obligatoires</Text>
+          {/* Hidden file inputs for web */}
+          {Platform.OS === 'web' && (
+            <>
+              <input
+                ref={(el: any) => { idInputRef.current = el; }}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: 'none' }}
+                onChange={(e: any) => handleWebFileChange(e, 'id')}
+              />
+              <input
+                ref={(el: any) => { licenseInputRef.current = el; }}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                style={{ display: 'none' }}
+                onChange={(e: any) => handleWebFileChange(e, 'license')}
+              />
+            </>
+          )}
           {(!user.id_photo || !user.license_photo) && (
             <View style={styles.alert}>
               <Ionicons name="warning" size={20} color="#F59E0B" />
