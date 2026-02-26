@@ -462,6 +462,31 @@ async def upload_license(
     
     return {"message": "License uploaded successfully", "license_photo": data_uri}
 
+class Base64Upload(BaseModel):
+    image_data: str  # base64 data URI like "data:image/jpeg;base64,..."
+
+@api_router.post("/auth/upload-license-b64")
+async def upload_license_b64(
+    body: Base64Upload,
+    user: dict = Depends(get_current_user)
+):
+    await db.users.update_one(
+        {"id": user['id']},
+        {"$set": {"license_photo": body.image_data}}
+    )
+    return {"message": "License uploaded successfully", "license_photo": body.image_data}
+
+@api_router.post("/auth/upload-id-b64")
+async def upload_id_b64(
+    body: Base64Upload,
+    user: dict = Depends(get_current_user)
+):
+    await db.users.update_one(
+        {"id": user['id']},
+        {"$set": {"id_photo": body.image_data}}
+    )
+    return {"message": "ID uploaded successfully", "id_photo": body.image_data}
+
 @api_router.post("/auth/upload-id")
 async def upload_id(
     file: UploadFile = File(...),
