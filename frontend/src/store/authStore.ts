@@ -185,17 +185,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof imageUriOrFile === 'object' && imageUriOrFile instanceof File) {
         // Web: File object - compress and convert to base64
         imageData = await compressToBase64(imageUriOrFile);
-      } else if (typeof imageUriOrFile === 'string' && Platform.OS !== 'web') {
-        // Native: read file as base64 via FileSystem
-        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: 'base64' });
-        imageData = `data:image/jpeg;base64,${b64}`;
-      } else if (typeof imageUriOrFile === 'string') {
+      } else if (typeof imageUriOrFile === 'string' && imageUriOrFile.startsWith('data:')) {
+        // Already base64 data URI (from native with base64: true)
+        imageData = imageUriOrFile;
+      } else if (typeof imageUriOrFile === 'string' && Platform.OS === 'web') {
         // Web: string URI → fetch blob → compress
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
         imageData = await compressToBase64(blob);
       } else {
-        throw new Error('Format de fichier non supporté');
+        // Native fallback: use multipart upload
+        const formData = new FormData();
+        const filename = imageUriOrFile.split('/').pop() || 'license.jpg';
+        formData.append('file', { uri: imageUriOrFile, name: filename, type: 'image/jpeg' } as any);
+        const response = await axios.post(`${API_URL}/api/auth/upload-license`, formData);
+        const { user } = get();
+        if (user) set({ user: { ...user, license_photo: response.data.license_photo } });
+        return;
       }
 
       const response = await axios.post(`${API_URL}/api/auth/upload-license-b64`, {
@@ -216,17 +222,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (typeof imageUriOrFile === 'object' && imageUriOrFile instanceof File) {
         // Web: File object - compress and convert to base64
         imageData = await compressToBase64(imageUriOrFile);
-      } else if (typeof imageUriOrFile === 'string' && Platform.OS !== 'web') {
-        // Native: read file as base64 via FileSystem
-        const b64 = await FileSystem.readAsStringAsync(imageUriOrFile, { encoding: 'base64' });
-        imageData = `data:image/jpeg;base64,${b64}`;
-      } else if (typeof imageUriOrFile === 'string') {
+      } else if (typeof imageUriOrFile === 'string' && imageUriOrFile.startsWith('data:')) {
+        // Already base64 data URI (from native with base64: true)
+        imageData = imageUriOrFile;
+      } else if (typeof imageUriOrFile === 'string' && Platform.OS === 'web') {
         // Web: string URI → fetch blob → compress
         const resp = await fetch(imageUriOrFile);
         const blob = await resp.blob();
         imageData = await compressToBase64(blob);
       } else {
-        throw new Error('Format de fichier non supporté');
+        // Native fallback: use multipart upload
+        const formData = new FormData();
+        const filename = imageUriOrFile.split('/').pop() || 'id_card.jpg';
+        formData.append('file', { uri: imageUriOrFile, name: filename, type: 'image/jpeg' } as any);
+        const response = await axios.post(`${API_URL}/api/auth/upload-id`, formData);
+        const { user } = get();
+        if (user) set({ user: { ...user, id_photo: response.data.id_photo } });
+        return;
       }
 
       const response = await axios.post(`${API_URL}/api/auth/upload-id-b64`, {
