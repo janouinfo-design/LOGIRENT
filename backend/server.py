@@ -1981,7 +1981,12 @@ async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin
         raise HTTPException(status_code=400, detail=f"L'email {data.admin_email} est déjà utilisé")
     
     # Create agency
-    agency = Agency(name=data.name, address=data.address, phone=data.phone, email=data.email)
+    slug = generate_slug(data.name)
+    # Ensure slug uniqueness
+    existing_slug = await db.agencies.find_one({"slug": slug})
+    if existing_slug:
+        slug = f"{slug}-{str(uuid.uuid4())[:4]}"
+    agency = Agency(name=data.name, slug=slug, address=data.address, phone=data.phone, email=data.email)
     await db.agencies.insert_one(agency.dict())
     
     # Create admin user for this agency
