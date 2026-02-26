@@ -89,6 +89,13 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
         flex-shrink: 0 !important;
         flex-grow: 0 !important;
       }
+      @media (max-width: 600px) {
+        #cal-grid-container > div {
+          min-height: 46px !important;
+          max-height: 46px !important;
+          padding: 3px 1px !important;
+        }
+      }
       #cal-grid-container > div:hover {
         background: #f0f5ff !important;
       }
