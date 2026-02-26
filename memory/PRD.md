@@ -90,6 +90,12 @@ Build a complete car rental solution named "LogiRent" with:
 - Vehicle catalog with filtering (same responsive grid)
 - Vehicle detail with availability calendar
 - Booking flow with Stripe payment + cash option
+- **MiniCalendar with availability indicators**: 
+  - Red/pink = booked dates (cannot be selected)
+  - Green = free dates (available for booking)
+  - Grey = past dates (disabled)
+  - Legend displayed at top
+  - Fetches vehicle availability per month
 - **Reservations page with LIST + CALENDAR views**
   - Toggle between list and calendar modes
   - Calendar shows monthly grid with reservation dots
@@ -97,6 +103,7 @@ Build a complete car rental solution named "LogiRent" with:
   - Month navigation (forward/backward)
   - **"Aujourd'hui" button** - returns to current month (hidden when already on current month)
   - **"Réserver un véhicule" button** - appears on free future dates, redirects to vehicles page
+  - **Heures affichées** - chaque événement montre l'heure de début/fin (HH:MM - HH:MM) avec icône horloge
   - French localization with proper accents
 - Profile management
 - Notifications (bell icon)
