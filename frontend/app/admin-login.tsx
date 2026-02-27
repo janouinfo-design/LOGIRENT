@@ -50,10 +50,11 @@ export default function AdminLogin() {
           return;
         }
         await registerAdmin(email, password, name, agencyName);
+        router.replace('/admin');
       } else {
         await adminLogin(email, password);
+        // Role-based redirect handled by useEffect after state update
       }
-      router.replace('/admin');
     } catch (err: any) {
       setError(err.message || 'Erreur de connexion');
     } finally {
