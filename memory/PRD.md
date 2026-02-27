@@ -15,38 +15,38 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Light/Dark Theme System (Feb 27, 2026) - NEW
-- Default theme changed from dark to LIGHT
-- ALL screens (client + agency admin) now use dynamic theme colors via useThemeStore()
-- Toggle button (moon/sun icon) in both app headers
-- Theme persisted to AsyncStorage/localStorage
-- Consistent white backgrounds, dark text, purple accents in light mode
+### Agency Admin Profile Page (Feb 27, 2026) - NEW
+- New "Profil" tab (7th tab) in agency admin app
+- Admin info card (name, email, Admin Agence badge)
+- Agency info section (name, address, phone, email)
+- Links & QR Codes section with Copier/Partager/QR Code buttons for both App Client and App Admin
+- Settings: Mode sombre toggle + Configuration GPS Navixy link
+- Logout button
+- Links/QR section removed from home page (Accueil)
+
+### Light/Dark Theme System (Feb 27, 2026)
+- Default theme: LIGHT (white backgrounds, dark text)
+- ALL screens use dynamic theme colors via useThemeStore()
+- Toggle in both app headers, persisted to storage
 
 ### GPS Tracking per Agency Admin (Feb 27, 2026)
-- GPS tab in agency-app (6th tab, scrollable navigation)
-- Per-agency Navixy config with self-service setup modal
-- Backend: GET/PUT /api/admin/my-agency/navixy endpoints
+- GPS tab, per-agency Navixy config, self-service setup
 
 ### Client Import with Photos (Feb 27, 2026)
 - ZIP import (Excel/CSV + photos), photos matched by filename
-- Import modal with format instructions
 
 ### In-App Notifications (Feb 27, 2026)
-- Notification bell with unread badge, mark-as-read panel
+- Notification bell with unread badge
 
 ### Previously Completed
 - Agency Admin Mobile App, Admin Interface Separation, QR Codes
-- AI Document Verification, Per-Agency Navixy GPS, Excel Client Import
-- Multi-Agency Architecture, Calendar, Auth, Vehicles, Reservations
+- AI Document Verification, Multi-Agency Architecture, Calendar, Auth, Vehicles, Reservations
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase)
 - P3: Driver/Agent Application
 - P4: Advanced Statistics & Dashboards
 - P5: App Store Deployment
-
-## Refactoring Needs
-- server.py should be split into smaller route modules
 
 ## Credentials
 - Super Admin: test@example.com / password123
