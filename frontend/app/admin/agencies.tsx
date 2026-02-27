@@ -186,6 +186,19 @@ export default function AgenciesPage() {
                 </View>
                 <View style={styles.linksSection}>
                   <Text style={styles.linksSectionTitle}>Liens d'acces</Text>
+                  {agency.admin_email && (
+                    <View style={styles.linkItem}>
+                      <Ionicons name="person-circle" size={16} color={COLORS.accent} />
+                      <Text style={styles.linkLabel}>Admin : </Text>
+                      <Text style={styles.linkUrl} selectable>{agency.admin_name || 'Admin'} ({agency.admin_email})</Text>
+                    </View>
+                  )}
+                  {!agency.admin_email && (
+                    <View style={styles.linkItem}>
+                      <Ionicons name="warning" size={16} color={COLORS.error} />
+                      <Text style={[styles.linkLabel, { color: COLORS.error }]}>Aucun admin assigne</Text>
+                    </View>
+                  )}
                   <View style={styles.linkItem}>
                     <Ionicons name="phone-portrait" size={16} color={COLORS.warning} />
                     <Text style={styles.linkLabel}>App Admin Mobile : </Text>
