@@ -162,45 +162,41 @@ export default function RootLayout() {
   useEffect(() => { loadUser(); loadTheme(); }, []);
 
   if (isLoading) {
-    return <View style={styles.loadingBox}><ActivityIndicator size="large" color={C.purple} /></View>;
+    return <View style={styles.loadingBox}><ActivityIndicator size="large" color="#7C3AED" /></View>;
   }
 
   return (
     <I18nProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="auto" />
       <AppContent />
     </I18nProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg },
-  topBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, paddingHorizontal: 12, paddingTop: 4, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border, gap: 4, ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100 } : {}) },
+  loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FAFAFA' },
+  topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 4, paddingBottom: 6, borderBottomWidth: 1, gap: 4, ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100 } : {}) },
   logoSection: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   logo: { width: 24, height: 24 },
-  logoText: { fontSize: 16, fontWeight: '800', color: C.dark },
+  logoText: { fontSize: 16, fontWeight: '800' },
   navIcons: { flex: 1, flexDirection: 'row', justifyContent: 'center', gap: 2 },
   navItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 20, gap: 4 },
-  navItemActive: { backgroundColor: 'rgba(124, 58, 237, 0.08)' },
-  navLabel: { fontSize: 13, fontWeight: '500', color: C.gray },
-  navLabelActive: { color: C.purple, fontWeight: '600' },
+  navLabel: { fontSize: 13, fontWeight: '500' },
   rightSection: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   iconBtn: { position: 'relative', padding: 6 },
   badge: { position: 'absolute', top: 2, right: 2, backgroundColor: '#EF4444', borderRadius: 7, minWidth: 14, height: 14, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3 },
   badgeText: { color: '#FFF', fontSize: 8, fontWeight: '700' },
   langBtn: { paddingHorizontal: 6, paddingVertical: 4, borderRadius: 6, opacity: 0.5 },
-  langBtnActive: { opacity: 1, backgroundColor: 'rgba(124, 58, 237, 0.1)' },
   langFlag: { fontSize: 16 },
   notifOverlay: { position: 'absolute' as any, top: '100%', right: 0, zIndex: 1000 },
   notifBackdrop: { position: 'fixed' as any, top: 0, left: 0, right: 0, bottom: 0 },
-  notifDropdown: { position: 'absolute' as any, right: 8, top: 4, width: 340, backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: C.border, maxHeight: 400, overflow: 'hidden' as any },
-  notifHeader: { flexDirection: 'row' as any, justifyContent: 'space-between', alignItems: 'center', padding: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  notifTitle: { fontSize: 15, fontWeight: '700' as any, color: C.dark },
+  notifDropdown: { position: 'absolute' as any, right: 8, top: 4, width: 340, borderRadius: 12, borderWidth: 1, maxHeight: 400, overflow: 'hidden' as any },
+  notifHeader: { flexDirection: 'row' as any, justifyContent: 'space-between', alignItems: 'center', padding: 12, borderBottomWidth: 1 },
+  notifTitle: { fontSize: 15, fontWeight: '700' as any },
   notifEmpty: { padding: 24, alignItems: 'center' as any },
-  notifItem: { flexDirection: 'row' as any, alignItems: 'flex-start' as any, gap: 8, padding: 10, borderBottomWidth: 1, borderBottomColor: C.border },
-  notifUnread: { backgroundColor: 'rgba(124,58,237,0.05)' },
+  notifItem: { flexDirection: 'row' as any, alignItems: 'flex-start' as any, gap: 8, padding: 10, borderBottomWidth: 1 },
   notifDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5, backgroundColor: 'transparent' },
-  notifItemTitle: { fontSize: 13, fontWeight: '700' as any, color: C.dark },
-  notifItemMsg: { fontSize: 12, color: C.gray, marginTop: 2 },
-  notifTime: { fontSize: 11, color: C.gray, marginTop: 3 },
+  notifItemTitle: { fontSize: 13, fontWeight: '700' as any },
+  notifItemMsg: { fontSize: 12, marginTop: 2 },
+  notifTime: { fontSize: 11, marginTop: 3 },
 });
