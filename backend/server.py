@@ -2147,45 +2147,7 @@ async def update_vehicle_status(
     
     return {"message": f"Vehicle status updated to {status}"}
 
-# ==================== NOTIFICATIONS ====================
-
-@api_router.get("/notifications")
-async def get_notifications(user: dict = Depends(get_current_user)):
-    """Get notifications for the current user"""
-    notifications = await db.notifications.find(
-        {"user_id": user['id']}
-    ).sort("created_at", -1).to_list(50)
-    
-    for n in notifications:
-        n['_id'] = str(n['_id'])
-    
-    return {"notifications": notifications}
-
-@api_router.put("/notifications/{notification_id}/read")
-async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
-    """Mark a notification as read"""
-    result = await db.notifications.update_one(
-        {"id": notification_id, "user_id": user['id']},
-        {"$set": {"read": True}}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    return {"message": "Notification marked as read"}
-
-@api_router.put("/notifications/read-all")
-async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
-    """Mark all notifications as read for the current user"""
-    await db.notifications.update_many(
-        {"user_id": user['id'], "read": False},
-        {"$set": {"read": True}}
-    )
-    return {"message": "All notifications marked as read"}
-
-@api_router.get("/notifications/unread-count")
-async def get_unread_count(user: dict = Depends(get_current_user)):
-    """Get count of unread notifications"""
-    count = await db.notifications.count_documents({"user_id": user['id'], "read": False})
-    return {"count": count}
+# ==================== NOTIFICATIONS (duplicate removed, primary at line ~1008) ====================
 
 # ==================== BACKGROUND CRON: OVERDUE CHECK ====================
 
