@@ -48,6 +48,7 @@ export default function AgencyAppLayout() {
     { key: 'vehicles', label: 'Véhicules', icon: 'car', iconO: 'car-outline' },
     { key: 'tracking', label: 'GPS', icon: 'navigate', iconO: 'navigate-outline' },
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
+    { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
   ];
 
   const isTabActive = (key: string) => {
@@ -114,6 +115,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
           <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
+          <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
         </Tabs>
       </View>
 
