@@ -22,7 +22,7 @@ function TopNavBar() {
   const pathname = usePathname();
   const router = useRouter();
   const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
-  const { mode, toggleTheme } = useThemeStore();
+  const { mode, colors: T, toggleTheme } = useThemeStore();
   const { lang, setLang } = useI18n();
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
@@ -50,10 +50,10 @@ function TopNavBar() {
   };
 
   return (
-    <View style={styles.topBar}>
+    <View style={[styles.topBar, { backgroundColor: T.navBg, borderBottomColor: T.navBorder }]}>
       <View style={styles.logoSection}>
         <Image source={{ uri: LOGO_URL }} style={styles.logo} resizeMode="contain" />
-        {!isMobile && <Text style={styles.logoText}>Logi<Text style={{ color: C.purple }}>Rent</Text></Text>}
+        {!isMobile && <Text style={[styles.logoText, { color: T.text }]}>Logi<Text style={{ color: T.accent }}>Rent</Text></Text>}
       </View>
       <View style={styles.navIcons}>
         {navTabs.map((tab) => {
@@ -61,31 +61,31 @@ function TopNavBar() {
           return (
             <TouchableOpacity
               key={tab.name}
-              style={[styles.navItem, active && styles.navItemActive]}
+              style={[styles.navItem, active && { backgroundColor: T.accent + '14' }]}
               onPress={() => router.push(tab.route as any)}
               data-testid={`nav-${tab.name}`}
             >
-              <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={isMobile ? 20 : 22} color={active ? C.purple : C.gray} />
-              {!isMobile && <Text style={[styles.navLabel, active && styles.navLabelActive]}>{tab.label}</Text>}
+              <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={isMobile ? 20 : 22} color={active ? T.accent : T.textLight} />
+              {!isMobile && <Text style={[styles.navLabel, { color: active ? T.accent : T.textLight }, active && { fontWeight: '600' }]}>{tab.label}</Text>}
             </TouchableOpacity>
           );
         })}
       </View>
       <View style={styles.rightSection}>
         <TouchableOpacity style={styles.iconBtn} onPress={toggleTheme} data-testid="client-theme-toggle">
-          <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={18} color={C.dark} />
+          <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={18} color={T.textLight} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconBtn} onPress={() => { fetchNotifications(); setShowNotifs(true); }} data-testid="notification-bell">
-          <Ionicons name="notifications-outline" size={18} color={C.dark} />
+          <Ionicons name="notifications-outline" size={18} color={T.textLight} />
           {unreadCount > 0 && (
-            <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
+            <View style={styles.badge} data-testid="client-notif-badge"><Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.langBtn, lang === 'fr' && styles.langBtnActive]} onPress={() => setLang('fr')} data-testid="lang-fr">
-          <Text style={styles.langFlag}>FR</Text>
+        <TouchableOpacity style={[styles.langBtn, lang === 'fr' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('fr')} data-testid="lang-fr">
+          <Text style={[styles.langFlag, { color: T.text }]}>FR</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.langBtn, lang === 'en' && styles.langBtnActive]} onPress={() => setLang('en')} data-testid="lang-en">
-          <Text style={styles.langFlag}>EN</Text>
+        <TouchableOpacity style={[styles.langBtn, lang === 'en' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('en')} data-testid="lang-en">
+          <Text style={[styles.langFlag, { color: T.text }]}>EN</Text>
         </TouchableOpacity>
       </View>
 
@@ -93,23 +93,23 @@ function TopNavBar() {
       {showNotifs && (
         <View style={styles.notifOverlay}>
           <TouchableOpacity style={styles.notifBackdrop} onPress={() => setShowNotifs(false)} />
-          <View style={styles.notifDropdown}>
-            <View style={styles.notifHeader}>
-              <Text style={styles.notifTitle}>Notifications</Text>
+          <View style={[styles.notifDropdown, { backgroundColor: T.card, borderColor: T.border }]}>
+            <View style={[styles.notifHeader, { borderBottomColor: T.border }]}>
+              <Text style={[styles.notifTitle, { color: T.text }]}>Notifications</Text>
               {unreadCount > 0 && (
-                <TouchableOpacity onPress={markAllAsRead}><Text style={{ color: C.purple, fontSize: 12 }}>Tout lire</Text></TouchableOpacity>
+                <TouchableOpacity onPress={markAllAsRead}><Text style={{ color: T.accent, fontSize: 12 }}>Tout lire</Text></TouchableOpacity>
               )}
             </View>
             {notifications.length === 0 ? (
-              <View style={styles.notifEmpty}><Text style={{ color: C.gray }}>Aucune notification</Text></View>
+              <View style={styles.notifEmpty}><Text style={{ color: T.textLight }}>Aucune notification</Text></View>
             ) : (
               notifications.slice(0, 10).map(n => (
-                <TouchableOpacity key={n.id} style={[styles.notifItem, !n.read && styles.notifUnread]} onPress={() => { if (!n.read) markAsRead(n.id); }}>
-                  <View style={[styles.notifDot, !n.read && { backgroundColor: C.purple }]} />
+                <TouchableOpacity key={n.id} style={[styles.notifItem, { borderBottomColor: T.border }, !n.read && { backgroundColor: T.accent + '08' }]} onPress={() => { if (!n.read) markAsRead(n.id); }}>
+                  <View style={[styles.notifDot, !n.read && { backgroundColor: T.accent }]} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.notifItemTitle}>{n.title}</Text>
-                    <Text style={styles.notifItemMsg}>{n.message}</Text>
-                    <Text style={styles.notifTime}>{timeAgo(n.created_at)}</Text>
+                    <Text style={[styles.notifItemTitle, { color: T.text }]}>{n.title}</Text>
+                    <Text style={[styles.notifItemMsg, { color: T.textLight }]}>{n.message}</Text>
+                    <Text style={[styles.notifTime, { color: T.textLight }]}>{timeAgo(n.created_at)}</Text>
                   </View>
                 </TouchableOpacity>
               ))
