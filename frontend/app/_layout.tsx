@@ -124,21 +124,21 @@ function TopNavBar() {
 function AppContent() {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
+  const { colors: T } = useThemeStore();
 
-  // Admin users should never see the client nav bar
   const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
   const isLanding = pathname === '/' && !isAuthenticated;
   const isAuth = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.includes('admin-login');
   const showNav = !isLanding && !isAuth && !isAdminUser && isAuthenticated;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.white }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: C.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: T.navBg }} edges={['top']}>
+      <View style={{ flex: 1, backgroundColor: T.bg }}>
         {showNav && <TopNavBar />}
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: C.bg },
+            contentStyle: { backgroundColor: T.bg },
           }}
         >
           <Stack.Screen name="index" />
