@@ -279,13 +279,12 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: _C.bg },
+  container: { flex: 1 },
   hero: {
     margin: 20,
     marginBottom: 0,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: _C.dark,
     minHeight: 300,
   },
   heroBg: {
@@ -294,7 +293,6 @@ const styles = StyleSheet.create({
     right: -50,
     width: 300,
     height: 300,
-    backgroundColor: _C.purpleDark,
     opacity: 0.15,
     borderRadius: 150,
   },
@@ -312,7 +310,7 @@ const styles = StyleSheet.create({
   heroContent: {
     padding: 20,
   },
-  heroGreeting: { fontSize: 12, color: _C.grayLight, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
+  heroGreeting: { fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
   heroTitle: {
     fontSize: 32,
     fontWeight: '900',
@@ -341,8 +339,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     fontSize: 13,
   },
-  heroSearchBtn: {
-    backgroundColor: _C.purple,
+  heroSearchBtn: {,
     width: 38,
     height: 38,
     borderRadius: 10,
@@ -381,7 +378,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: _C.text,
     paddingHorizontal: 20,
     marginBottom: 16,
   },
@@ -392,13 +388,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 25,
-    backgroundColor: _C.card,
     marginRight: 10,
     borderWidth: 1.5,
-    borderColor: _C.border,
   },
-  catPillActive: { backgroundColor: _C.purple, borderColor: _C.purple },
-  catText: { fontSize: 13, fontWeight: '600', color: _C.text },
+  catPillActive: { },
+  catText: { fontSize: 13, fontWeight: '600' },
   catTextActive: { color: '#FFFFFF' },
   resultsRow: {
     flexDirection: 'row',
@@ -408,8 +402,8 @@ const styles = StyleSheet.create({
     marginTop: 28,
     marginBottom: 16,
   },
-  resultsText: { fontSize: 14, fontWeight: '500', color: _C.gray },
-  viewAll: { fontSize: 13, fontWeight: '600', color: _C.purpleLight },
+  resultsText: { fontSize: 14, fontWeight: '500' },
+  viewAll: { fontSize: 13, fontWeight: '600' },
   vehicleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -428,7 +422,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   empty: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { fontSize: 15, color: _C.grayLight, marginTop: 10 },
+  emptyText: { fontSize: 15, marginTop: 10 },
   whySection: { marginTop: 40 },
   benefitsGrid: {
     flexDirection: 'row',
@@ -439,11 +433,9 @@ const styles = StyleSheet.create({
   benefitCard: {
     width: '47%',
     minWidth: 150,
-    backgroundColor: _C.card,
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: _C.border,
   },
   benefitIcon: {
     width: 44,
@@ -454,11 +446,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  benefitTitle: { fontSize: 14, fontWeight: '700', color: _C.text, marginBottom: 4 },
-  benefitDesc: { fontSize: 12, color: _C.gray, lineHeight: 16 },
+  benefitTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
+  benefitDesc: { fontSize: 12, lineHeight: 16 },
   cta: {
     margin: 20,
-    backgroundColor: _C.purple,
     borderRadius: 20,
     padding: 28,
     alignItems: 'center',
@@ -475,5 +466,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 20,
   },
-  ctaButtonText: { fontSize: 14, fontWeight: '700', color: _C.purple },
+  ctaButtonText: { fontSize: 14, fontWeight: '700' },
 });
