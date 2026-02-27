@@ -25,10 +25,6 @@ const NAV_ITEMS = [
   { key: '/admin/users', label: 'Clients', icon: 'people-outline' as const },
 ];
 
-const SUPER_NAV_ITEMS = [
-  { key: '/admin/agencies', label: 'Agences', icon: 'business-outline' as const },
-];
-
 export default function AdminLayout() {
   const router = useRouter();
   const pathname = usePathname();
