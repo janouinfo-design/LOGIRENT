@@ -98,57 +98,6 @@ export default function AgencyAppHome() {
         </View>
       </View>
 
-      {agency && (
-        <View style={[s.linksCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid="agency-links-section">
-          <Text style={[s.sectionTitle, { color: C.text }]}>Liens de mon agence</Text>
-          <View style={s.linkRow}>
-            <Ionicons name="person-circle" size={16} color={C.accent} />
-            <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Admin : </Text>
-            <Text style={{ color: C.accent, fontSize: 12, flex: 1 }} selectable>{user?.email}</Text>
-          </View>
-          <View style={s.linkRow}>
-            <Ionicons name="phone-portrait" size={16} color={C.warning} />
-            <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>App Admin : </Text>
-            <Text style={{ color: C.accent, fontSize: 12, flex: 1 }} selectable>{API_URL}/admin-login</Text>
-          </View>
-          <View style={s.linkRow}>
-            <Ionicons name="globe-outline" size={16} color={C.success} />
-            <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>App Client : </Text>
-            <Text style={{ color: C.accent, fontSize: 12, flex: 1 }} selectable>{API_URL}/a/{agency.slug || agency.id}</Text>
-          </View>
-          <TouchableOpacity style={[s.qrBtn, { backgroundColor: C.primary }]} onPress={() => setShowQR(true)} data-testid="show-qr-btn">
-            <Ionicons name="qr-code" size={18} color="#fff" />
-            <Text style={s.qrBtnText}>Afficher les QR Codes</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <Modal visible={showQR} transparent animationType="slide" onRequestClose={() => setShowQR(false)}>
-        <View style={s.modalOverlay}>
-          <View style={[s.modal, { backgroundColor: C.card }]}>
-            <View style={s.modalHeader}>
-              <Text style={[s.modalTitle, { color: C.text }]}>QR Codes - {agency?.name}</Text>
-              <TouchableOpacity onPress={() => setShowQR(false)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
-            </View>
-            <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 24 }}>
-              <View style={s.qrSection}>
-                <View style={s.qrLabel}><Ionicons name="phone-portrait-outline" size={16} color={C.success} /><Text style={[s.qrLabelText, { color: C.success }]}>App Client</Text></View>
-                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 10 }}>Le client scanne pour s'inscrire</Text>
-                <View style={s.qrBox}><QRCode value={`${API_URL}/a/${agency?.slug || agency?.id}`} size={160} level="H" fgColor="#1A1A2E" bgColor="#FFFFFF" /></View>
-                <Text style={{ color: C.textLight, fontSize: 11, textAlign: 'center' }} selectable>{API_URL}/a/{agency?.slug || agency?.id}</Text>
-              </View>
-              <View style={[s.qrDivider, { backgroundColor: C.border }]} />
-              <View style={s.qrSection}>
-                <View style={s.qrLabel}><Ionicons name="shield-checkmark-outline" size={16} color={C.warning} /><Text style={[s.qrLabelText, { color: C.warning }]}>App Admin</Text></View>
-                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 10 }}>L'admin scanne pour gerer l'agence</Text>
-                <View style={s.qrBox}><QRCode value={`${API_URL}/admin-login`} size={160} level="H" fgColor="#1A1A2E" bgColor="#FFFFFF" /></View>
-                <Text style={{ color: C.textLight, fontSize: 11, textAlign: 'center' }} selectable>{API_URL}/admin-login</Text>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
-
       <Text style={[s.sectionTitle, { color: C.text }]}>Dernières réservations</Text>
       {recentReservations.length === 0 ? (
         <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}><Text style={{ color: C.textLight, fontSize: 14 }}>Aucune réservation récente</Text></View>
