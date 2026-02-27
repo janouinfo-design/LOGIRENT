@@ -82,13 +82,23 @@ function TopNavBar() {
 function AppContent() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
+  const [webPath, setWebPath] = React.useState('');
 
-  // Use window.location for more reliable path detection on web
-  const fullPath = Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.pathname : pathname;
+  React.useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      setWebPath(window.location.pathname);
+      const onPopState = () => setWebPath(window.location.pathname);
+      window.addEventListener('popstate', onPopState);
+      const interval = setInterval(() => setWebPath(window.location.pathname), 500);
+      return () => { window.removeEventListener('popstate', onPopState); clearInterval(interval); };
+    }
+  }, [pathname]);
+
+  const fullPath = webPath || pathname;
 
   // Show top nav on client pages only (not on landing, auth, admin)
   const isLanding = (pathname === '/' || fullPath === '/') && !isAuthenticated;
-  const isAuth = fullPath.startsWith('/login') || fullPath.startsWith('/register');
+  const isAuth = fullPath.includes('/login') || fullPath.includes('/register');
   const isAdmin = fullPath.includes('/admin') || fullPath.includes('/super-admin') || fullPath.includes('/agency-app');
   const showNav = !isLanding && !isAuth && !isAdmin && isAuthenticated;
 
