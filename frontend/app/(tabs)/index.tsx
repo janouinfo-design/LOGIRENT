@@ -11,7 +11,7 @@ import { useThemeStore } from '../../src/store/themeStore';
 
 const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413e-4204-98d4-1c8f25a6208a/images/6552fb693c88f79e17c59c43f1efe1446e03b6ddd3093a08b690934bdc28ae75.png';
 
-const C = {
+const _C = {
   purple: '#6B21A8',
   purpleLight: '#7C3AED',
   purpleDark: '#4C1D95',
@@ -279,13 +279,13 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1, backgroundColor: _C.bg },
   hero: {
     margin: 20,
     marginBottom: 0,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: C.dark,
+    backgroundColor: _C.dark,
     minHeight: 300,
   },
   heroBg: {
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
     right: -50,
     width: 300,
     height: 300,
-    backgroundColor: C.purpleDark,
+    backgroundColor: _C.purpleDark,
     opacity: 0.15,
     borderRadius: 150,
   },
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   heroContent: {
     padding: 20,
   },
-  heroGreeting: { fontSize: 12, color: C.grayLight, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
+  heroGreeting: { fontSize: 12, color: _C.grayLight, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
   heroTitle: {
     fontSize: 32,
     fontWeight: '900',
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   heroSearchBtn: {
-    backgroundColor: C.purple,
+    backgroundColor: _C.purple,
     width: 38,
     height: 38,
     borderRadius: 10,
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: C.text,
+    color: _C.text,
     paddingHorizontal: 20,
     marginBottom: 16,
   },
@@ -392,13 +392,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 25,
-    backgroundColor: C.card,
+    backgroundColor: _C.card,
     marginRight: 10,
     borderWidth: 1.5,
-    borderColor: C.border,
+    borderColor: _C.border,
   },
-  catPillActive: { backgroundColor: C.purple, borderColor: C.purple },
-  catText: { fontSize: 13, fontWeight: '600', color: C.text },
+  catPillActive: { backgroundColor: _C.purple, borderColor: _C.purple },
+  catText: { fontSize: 13, fontWeight: '600', color: _C.text },
   catTextActive: { color: '#FFFFFF' },
   resultsRow: {
     flexDirection: 'row',
@@ -408,8 +408,8 @@ const styles = StyleSheet.create({
     marginTop: 28,
     marginBottom: 16,
   },
-  resultsText: { fontSize: 14, fontWeight: '500', color: C.gray },
-  viewAll: { fontSize: 13, fontWeight: '600', color: C.purpleLight },
+  resultsText: { fontSize: 14, fontWeight: '500', color: _C.gray },
+  viewAll: { fontSize: 13, fontWeight: '600', color: _C.purpleLight },
   vehicleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   empty: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { fontSize: 15, color: C.grayLight, marginTop: 10 },
+  emptyText: { fontSize: 15, color: _C.grayLight, marginTop: 10 },
   whySection: { marginTop: 40 },
   benefitsGrid: {
     flexDirection: 'row',
@@ -439,11 +439,11 @@ const styles = StyleSheet.create({
   benefitCard: {
     width: '47%',
     minWidth: 150,
-    backgroundColor: C.card,
+    backgroundColor: _C.card,
     borderRadius: 14,
     padding: 18,
     borderWidth: 1,
-    borderColor: C.border,
+    borderColor: _C.border,
   },
   benefitIcon: {
     width: 44,
@@ -454,11 +454,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  benefitTitle: { fontSize: 14, fontWeight: '700', color: C.text, marginBottom: 4 },
-  benefitDesc: { fontSize: 12, color: C.gray, lineHeight: 16 },
+  benefitTitle: { fontSize: 14, fontWeight: '700', color: _C.text, marginBottom: 4 },
+  benefitDesc: { fontSize: 12, color: _C.gray, lineHeight: 16 },
   cta: {
     margin: 20,
-    backgroundColor: C.purple,
+    backgroundColor: _C.purple,
     borderRadius: 20,
     padding: 28,
     alignItems: 'center',
@@ -475,5 +475,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 20,
   },
-  ctaButtonText: { fontSize: 14, fontWeight: '700', color: C.purple },
+  ctaButtonText: { fontSize: 14, fontWeight: '700', color: _C.purple },
 });
