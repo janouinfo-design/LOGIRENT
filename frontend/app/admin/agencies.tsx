@@ -33,6 +33,7 @@ interface Agency {
   admin_count: number;
   admin_email?: string;
   admin_name?: string;
+  admin_password_display?: string;
 }
 
 export default function AgenciesPage() {
@@ -187,10 +188,17 @@ export default function AgenciesPage() {
                 <View style={styles.linksSection}>
                   <Text style={styles.linksSectionTitle}>Liens d'acces</Text>
                   {agency.admin_email && (
-                    <View style={styles.linkItem}>
-                      <Ionicons name="person-circle" size={16} color={COLORS.accent} />
-                      <Text style={styles.linkLabel}>Admin : </Text>
-                      <Text style={styles.linkUrl} selectable>{agency.admin_name || 'Admin'} ({agency.admin_email})</Text>
+                    <View style={{ gap: 4 }}>
+                      <View style={styles.linkItem}>
+                        <Ionicons name="person-circle" size={16} color={COLORS.accent} />
+                        <Text style={styles.linkLabel}>Admin : </Text>
+                        <Text style={styles.linkUrl} selectable>{agency.admin_name || 'Admin'} ({agency.admin_email})</Text>
+                      </View>
+                      <View style={styles.linkItem}>
+                        <Ionicons name="lock-closed" size={16} color={COLORS.accent} />
+                        <Text style={styles.linkLabel}>Mot de passe : </Text>
+                        <Text style={[styles.linkUrl, { fontFamily: 'monospace' }]} selectable data-testid={`agency-password-${agency.id}`}>{agency.admin_password_display || 'N/A'}</Text>
+                      </View>
                     </View>
                   )}
                   {!agency.admin_email && (
