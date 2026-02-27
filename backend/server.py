@@ -970,6 +970,73 @@ async def cancel_reservation(reservation_id: str, user: dict = Depends(get_curre
     
     return {"message": "Reservation cancelled"}
 
+# ==================== NOTIFICATIONS ====================
+
+NOTIFICATION_TYPES = {
+    'reservation_confirmed': {'title_fr': 'Réservation confirmée', 'icon': 'checkmark-circle'},
+    'reservation_cancelled': {'title_fr': 'Réservation annulée', 'icon': 'close-circle'},
+    'reservation_active': {'title_fr': 'Réservation active', 'icon': 'car'},
+    'reservation_completed': {'title_fr': 'Réservation terminée', 'icon': 'flag'},
+    'payment_received': {'title_fr': 'Paiement reçu', 'icon': 'cash'},
+    'new_reservation': {'title_fr': 'Nouvelle réservation', 'icon': 'calendar'},
+    'payment_link_sent': {'title_fr': 'Lien de paiement envoyé', 'icon': 'link'},
+}
+
+async def create_notification(user_id: str, notif_type: str, message: str, reservation_id: str = None):
+    """Create an in-app notification for a user"""
+    meta = NOTIFICATION_TYPES.get(notif_type, {'title_fr': 'Notification', 'icon': 'notifications'})
+    notif = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "reservation_id": reservation_id,
+        "type": notif_type,
+        "title": meta['title_fr'],
+        "message": message,
+        "icon": meta.get('icon', 'notifications'),
+        "read": False,
+        "created_at": datetime.utcnow(),
+    }
+    await db.notifications.insert_one(notif)
+    return notif
+
+async def notify_admins_of_agency(agency_id: str, notif_type: str, message: str, reservation_id: str = None):
+    """Notify all admins of a specific agency"""
+    admins = await db.users.find({"agency_id": agency_id, "role": "admin"}).to_list(50)
+    for admin in admins:
+        await create_notification(admin['id'], notif_type, message, reservation_id)
+
+@api_router.get("/notifications")
+async def get_notifications(limit: int = 50, user: dict = Depends(get_current_user)):
+    """Get notifications for the current user"""
+    notifs = await db.notifications.find(
+        {"user_id": user['id']}, {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    return {"notifications": notifs}
+
+@api_router.get("/notifications/unread-count")
+async def get_unread_count(user: dict = Depends(get_current_user)):
+    """Get unread notification count"""
+    count = await db.notifications.count_documents({"user_id": user['id'], "read": False})
+    return {"count": count}
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
+    """Mark a single notification as read"""
+    await db.notifications.update_one(
+        {"id": notification_id, "user_id": user['id']},
+        {"$set": {"read": True}}
+    )
+    return {"message": "Notification marquée comme lue"}
+
+@api_router.put("/notifications/read-all")
+async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
+    """Mark all notifications as read"""
+    await db.notifications.update_many(
+        {"user_id": user['id'], "read": False},
+        {"$set": {"read": True}}
+    )
+    return {"message": "Toutes les notifications marquées comme lues"}
+
 # ==================== PAYMENT ROUTES ====================
 
 @api_router.post("/payments/checkout")
