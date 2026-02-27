@@ -196,11 +196,11 @@ export default function AgenciesPage() {
                   </View>
                   <TouchableOpacity
                     style={styles.qrBtn}
-                    onPress={() => setQrAgency(agency)}
+                    onPress={() => { setQrAgency(agency); setQrType('both'); }}
                     data-testid={`qr-agency-${agency.id}`}
                   >
                     <Ionicons name="qr-code-outline" size={16} color="#FFF" />
-                    <Text style={styles.qrBtnText}>QR Code Client</Text>
+                    <Text style={styles.qrBtnText}>QR Codes</Text>
                   </TouchableOpacity>
                 </View>
               </View>
