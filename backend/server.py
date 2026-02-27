@@ -2508,6 +2508,13 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     await db.reservations.insert_one(reservation)
     reservation.pop('_id', None)
     
+    # Notify client
+    await create_notification(
+        data.client_id, 'new_reservation',
+        f"Une réservation a été créée pour vous : {vehicle['brand']} {vehicle['model']} du {data.start_date.strftime('%d/%m/%Y')} au {data.end_date.strftime('%d/%m/%Y')}.",
+        reservation['id']
+    )
+    
     # Send email based on payment method
     if data.payment_method == "cash":
         try:
