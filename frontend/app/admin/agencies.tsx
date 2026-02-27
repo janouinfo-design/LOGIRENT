@@ -286,52 +286,67 @@ export default function AgenciesPage() {
         </View>
       </Modal>
 
-      {/* Success Confirmation Modal */}
+      {/* Success Confirmation Modal with QR Codes */}
       <Modal visible={!!successInfo} transparent animationType="fade" onRequestClose={() => setSuccessInfo(null)}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.successHeader}>
-              <View style={styles.successIcon}>
-                <Ionicons name="checkmark-circle" size={48} color={COLORS.success} />
+          <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent}>
+            <View style={styles.modalContent}>
+              <View style={styles.successHeader}>
+                <View style={styles.successIcon}>
+                  <Ionicons name="checkmark-circle" size={48} color={COLORS.success} />
+                </View>
+                <Text style={styles.modalTitle}>Agence creee avec succes !</Text>
               </View>
-              <Text style={styles.modalTitle}>Agence creee avec succes !</Text>
+              <View style={styles.credentialsBox}>
+                <Text style={styles.credentialsTitle}>Identifiants de connexion admin :</Text>
+                <View style={styles.credentialRow}>
+                  <Ionicons name="person" size={16} color={COLORS.accent} />
+                  <Text style={styles.credentialLabel}>Nom :</Text>
+                  <Text style={styles.credentialValue}>{successInfo?.name}</Text>
+                </View>
+                <View style={styles.credentialRow}>
+                  <Ionicons name="mail" size={16} color={COLORS.accent} />
+                  <Text style={styles.credentialLabel}>Email :</Text>
+                  <Text style={styles.credentialValue}>{successInfo?.email}</Text>
+                </View>
+                <View style={styles.credentialRow}>
+                  <Ionicons name="lock-closed" size={16} color={COLORS.accent} />
+                  <Text style={styles.credentialLabel}>Mot de passe :</Text>
+                  <Text style={styles.credentialValue}>{successInfo?.password}</Text>
+                </View>
+              </View>
+
+              {/* QR Codes in success modal */}
+              <View style={styles.credentialsBox}>
+                <Text style={styles.credentialsTitle}>QR Codes de l'agence :</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={styles.qrSectionHeader}>
+                      <Ionicons name="phone-portrait-outline" size={14} color={COLORS.success} />
+                      <Text style={{ color: COLORS.success, fontSize: 12, fontWeight: '700' }}>App Client</Text>
+                    </View>
+                    <View style={[styles.qrContainer, { padding: 12 }]}>
+                      <QRCode value={`${API_URL}`} size={120} level="H" fgColor="#1A1A2E" bgColor="#FFFFFF" />
+                    </View>
+                  </View>
+                  <View style={{ alignItems: 'center' }}>
+                    <View style={styles.qrSectionHeader}>
+                      <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.warning} />
+                      <Text style={{ color: COLORS.warning, fontSize: 12, fontWeight: '700' }}>App Admin</Text>
+                    </View>
+                    <View style={[styles.qrContainer, { padding: 12 }]}>
+                      <QRCode value={`${API_URL}/admin-login`} size={120} level="H" fgColor="#1A1A2E" bgColor="#FFFFFF" />
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              <Text style={styles.credentialsNote}>Communiquez ces identifiants et QR codes a l'administrateur de l'agence.</Text>
+              <TouchableOpacity style={styles.saveBtn} onPress={() => setSuccessInfo(null)} data-testid="agency-success-close">
+                <Text style={styles.saveBtnText}>Fermer</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.credentialsBox}>
-              <Text style={styles.credentialsTitle}>Identifiants de connexion admin :</Text>
-              <View style={styles.credentialRow}>
-                <Ionicons name="person" size={16} color={COLORS.accent} />
-                <Text style={styles.credentialLabel}>Nom :</Text>
-                <Text style={styles.credentialValue}>{successInfo?.name}</Text>
-              </View>
-              <View style={styles.credentialRow}>
-                <Ionicons name="mail" size={16} color={COLORS.accent} />
-                <Text style={styles.credentialLabel}>Email :</Text>
-                <Text style={styles.credentialValue}>{successInfo?.email}</Text>
-              </View>
-              <View style={styles.credentialRow}>
-                <Ionicons name="lock-closed" size={16} color={COLORS.accent} />
-                <Text style={styles.credentialLabel}>Mot de passe :</Text>
-                <Text style={styles.credentialValue}>{successInfo?.password}</Text>
-              </View>
-            </View>
-            <View style={styles.linksBox}>
-              <Text style={styles.credentialsTitle}>Liens a communiquer :</Text>
-              <View style={styles.credentialRow}>
-                <Ionicons name="shield-checkmark" size={16} color={COLORS.warning} />
-                <Text style={styles.credentialLabel}>Panel Admin :</Text>
-                <Text style={styles.linkValue} selectable>{API_URL}/admin-login</Text>
-              </View>
-              <View style={styles.credentialRow}>
-                <Ionicons name="globe-outline" size={16} color={COLORS.success} />
-                <Text style={styles.credentialLabel}>App Client :</Text>
-                <Text style={styles.linkValue} selectable>{API_URL}</Text>
-              </View>
-            </View>
-            <Text style={styles.credentialsNote}>Communiquez ces identifiants et liens a l'administrateur de l'agence.</Text>
-            <TouchableOpacity style={styles.saveBtn} onPress={() => setSuccessInfo(null)} data-testid="agency-success-close">
-              <Text style={styles.saveBtnText}>Fermer</Text>
-            </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
 
