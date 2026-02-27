@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Slot, useRouter, usePathname } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
@@ -12,22 +12,58 @@ const C = {
   text: '#FFFFFF',
   textLight: '#8B95A8',
   border: '#1E2536',
-  success: '#10B981',
-  warning: '#F59E0B',
 };
 
-const TABS = [
-  { key: 'index', route: '/agency-app', label: 'Accueil', icon: 'home', iconOutline: 'home-outline' },
-  { key: 'book', route: '/agency-app/book', label: 'Réserver', icon: 'add-circle', iconOutline: 'add-circle-outline' },
-  { key: 'reservations', route: '/agency-app/reservations', label: 'Réservations', icon: 'calendar', iconOutline: 'calendar-outline' },
-  { key: 'vehicles', route: '/agency-app/vehicles', label: 'Véhicules', icon: 'car', iconOutline: 'car-outline' },
-  { key: 'clients', route: '/agency-app/clients', label: 'Clients', icon: 'people', iconOutline: 'people-outline' },
-];
+function TopTabBar({ state, descriptors, navigation }: any) {
+  const { user, logout } = useAuthStore();
+  const router = useRouter();
+
+  return (
+    <View style={s.stickyHeader}>
+      <View style={s.headerRow}>
+        <View style={s.headerLeft}>
+          <Ionicons name="car-sport" size={20} color={C.accent} />
+          <Text style={s.headerTitle}>LogiRent</Text>
+          <View style={s.agencyBadge}>
+            <Text style={s.agencyText}>{user?.agency_name || 'Agence'}</Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="agency-app-logout">
+          <Ionicons name="log-out-outline" size={20} color={C.textLight} />
+        </TouchableOpacity>
+      </View>
+      <View style={s.tabRow}>
+        {state.routes.map((route: any, index: number) => {
+          const { options } = descriptors[route.key];
+          const label = options.title || route.name;
+          const isFocused = state.index === index;
+          const icon = options.tabBarIcon;
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              style={[s.tabItem, isFocused && s.tabItemActive]}
+              onPress={() => {
+                const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+                if (!isFocused && !event.defaultPrevented) {
+                  navigation.navigate(route.name);
+                }
+              }}
+              data-testid={`tab-${route.name}`}
+            >
+              {icon && icon({ color: isFocused ? C.accent : C.textLight, size: 20, focused: isFocused })}
+              <Text style={[s.tabLabel, isFocused && s.tabLabelActive]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 export default function AgencyAppLayout() {
   const router = useRouter();
-  const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -41,50 +77,48 @@ export default function AgencyAppLayout() {
 
   if (!isAuthenticated || !user || user.role !== 'admin') return null;
 
-  const isActive = (tab: typeof TABS[0]) => {
-    if (tab.key === 'index') return pathname === '/' || pathname === '' || pathname === '/agency-app';
-    return pathname.includes(tab.key);
-  };
-
   return (
     <View style={s.container}>
-      {/* Sticky top bar - Facebook style */}
-      <View style={s.stickyHeader}>
-        {/* Row 1: Logo + Agency + Logout */}
-        <View style={s.headerRow}>
-          <View style={s.headerLeft}>
-            <Ionicons name="car-sport" size={20} color={C.accent} />
-            <Text style={s.headerTitle}>LogiRent</Text>
-            <View style={s.agencyBadge}>
-              <Text style={s.agencyText}>{user.agency_name || 'Agence'}</Text>
-            </View>
-          </View>
-          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="agency-app-logout">
-            <Ionicons name="log-out-outline" size={20} color={C.textLight} />
-          </TouchableOpacity>
-        </View>
-        {/* Row 2: Tab navigation */}
-        <View style={s.tabRow}>
-          {TABS.map((tab) => {
-            const active = isActive(tab);
-            return (
-              <TouchableOpacity
-                key={tab.key}
-                style={[s.tabItem, active && s.tabItemActive]}
-                onPress={() => router.push(tab.route as any)}
-                data-testid={`tab-${tab.key}`}
-              >
-                <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={20} color={active ? C.accent : C.textLight} />
-                <Text style={[s.tabLabel, active && s.tabLabelActive]}>{tab.label}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
-      {/* Content */}
-      <View style={s.content}>
-        <Slot />
-      </View>
+      <Tabs
+        tabBar={(props) => <TopTabBar {...props} />}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Accueil',
+            tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="book"
+          options={{
+            title: 'Réserver',
+            tabBarIcon: ({ color, size }) => <Ionicons name="add-circle" size={size} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="reservations"
+          options={{
+            title: 'Réservations',
+            tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="vehicles"
+          options={{
+            title: 'Véhicules',
+            tabBarIcon: ({ color, size }) => <Ionicons name="car" size={size} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="clients"
+          options={{
+            title: 'Clients',
+            tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
+          }}
+        />
+      </Tabs>
     </View>
   );
 }
@@ -123,10 +157,7 @@ const s = StyleSheet.create({
     borderBottomColor: 'transparent',
     gap: 2,
   },
-  tabItemActive: {
-    borderBottomColor: C.accent,
-  },
+  tabItemActive: { borderBottomColor: C.accent },
   tabLabel: { fontSize: 11, fontWeight: '600', color: C.textLight },
   tabLabelActive: { color: C.accent },
-  content: { flex: 1 },
 });
