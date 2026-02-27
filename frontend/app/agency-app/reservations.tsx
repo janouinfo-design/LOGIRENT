@@ -110,11 +110,11 @@ export default function AgencyReservations() {
   if (loading) return <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
-    <View style={s.container}>
+    <View style={[s.container, { backgroundColor: C.bg }]}>
       {/* Search */}
-      <View style={s.searchBar}>
+      <View style={[s.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
         <Ionicons name="search" size={18} color={C.textLight} />
-        <TextInput style={s.searchInput} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
+        <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
       </View>
 
       {/* Filters */}
@@ -131,25 +131,25 @@ export default function AgencyReservations() {
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-        ListEmptyComponent={<View style={s.empty}><Ionicons name="calendar-outline" size={40} color={C.textLight} /><Text style={s.emptyText}>Aucune réservation</Text></View>}
+        ListEmptyComponent={<View style={s.empty}><Ionicons name="calendar-outline" size={40} color={C.textLight} /><Text style={[s.emptyText, { color: C.textLight }]}>Aucune réservation</Text></View>}
         renderItem={({ item }) => (
-          <TouchableOpacity style={s.card} onPress={() => setActionModal(item)} data-testid={`res-${item.id}`}>
+          <TouchableOpacity style={[s.card, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => setActionModal(item)} data-testid={`res-${item.id}`}>
             <View style={s.cardHeader}>
-              <Text style={s.clientName}>{item.user_name}</Text>
+              <Text style={[s.clientName, { color: C.text }]}>{item.user_name}</Text>
               <View style={[s.badge, { backgroundColor: statusColor(item.status) + '20' }]}>
                 <Text style={[s.badgeText, { color: statusColor(item.status) }]}>{statusLabel(item.status)}</Text>
               </View>
             </View>
-            <Text style={s.vehicleName}>{item.vehicle_name}</Text>
+            <Text style={[s.vehicleName, { color: C.textLight }]}>{item.vehicle_name}</Text>
             <View style={s.cardFooter}>
-              <Text style={s.dateText}>
+              <Text style={[s.dateText, { color: C.textLight }]}>
                 {item.start_date ? format(new Date(item.start_date), 'dd MMM', { locale: fr }) : ''} - {item.end_date ? format(new Date(item.end_date), 'dd MMM', { locale: fr }) : ''}
               </Text>
               <View style={s.payInfo}>
                 <Text style={[s.payBadge, { color: item.payment_status === 'paid' ? C.success : C.warning }]}>
                   {item.payment_status === 'paid' ? 'Payé' : 'Non payé'}
                 </Text>
-                <Text style={s.price}>CHF {item.total_price?.toFixed(2)}</Text>
+                <Text style={[s.price, { color: C.accent }]}>CHF {item.total_price?.toFixed(2)}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -159,9 +159,9 @@ export default function AgencyReservations() {
       {/* Action Modal */}
       <Modal visible={!!actionModal} transparent animationType="slide" onRequestClose={() => setActionModal(null)}>
         <View style={s.modalOverlay}>
-          <View style={s.modal}>
+          <View style={[s.modal, { backgroundColor: C.card }]}>
             <View style={s.modalHeader}>
-              <Text style={s.modalTitle}>Actions</Text>
+              <Text style={[s.modalTitle, { color: C.text }]}>Actions</Text>
               <TouchableOpacity onPress={() => setActionModal(null)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
             </View>
             {actionModal && (

@@ -91,7 +91,7 @@ export default function VehicleDetailScreen() {
   const fuelIcon = v.fuel_type?.toLowerCase() === 'electric' ? 'flash' : v.fuel_type?.toLowerCase() === 'hybrid' ? 'leaf' : 'water';
 
   return (
-    <View style={s.container}>
+    <View style={[s.container, { backgroundColor: C.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Image */}
         <View style={s.imgBox}>
@@ -116,7 +116,7 @@ export default function VehicleDetailScreen() {
           {/* Header */}
           <View style={s.header}>
             <View style={{ flex: 1 }}>
-              <Text style={s.title}>{v.brand} {v.model}</Text>
+              <Text style={[s.title, { color: C.text }]}>{v.brand} {v.model}</Text>
               <Text style={s.year}>{v.year}</Text>
             </View>
             <View style={s.typeBadge}><Text style={s.typeText}>{v.type}</Text></View>
@@ -131,14 +131,14 @@ export default function VehicleDetailScreen() {
 
           {v.description && (
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Description</Text>
-              <Text style={s.desc}>{v.description}</Text>
+              <Text style={[s.sectionTitle, { color: C.text }]}>Description</Text>
+              <Text style={[s.desc, { color: C.textLight }]}>{v.description}</Text>
             </View>
           )}
 
           {/* Specs */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Caractéristiques</Text>
+            <Text style={[s.sectionTitle, { color: C.text }]}>Caractéristiques</Text>
             <View style={s.specsRow}>
               <View style={s.spec}><Ionicons name="people" size={18} color={C.purple} /><Text style={s.specVal}>{v.seats}</Text><Text style={s.specLbl}>Places</Text></View>
               <View style={s.spec}><Ionicons name="cog" size={18} color={C.purple} /><Text style={s.specVal}>{transLabel}</Text><Text style={s.specLbl}>Transmission</Text></View>
@@ -148,7 +148,7 @@ export default function VehicleDetailScreen() {
 
           {/* Availability Calendar */}
           <View style={s.section}>
-            <Text style={s.sectionTitle}>Disponibilité</Text>
+            <Text style={[s.sectionTitle, { color: C.text }]}>Disponibilité</Text>
             <View style={s.calCard}>
               {/* Month Nav */}
               <View style={s.calNav}>
@@ -213,7 +213,7 @@ export default function VehicleDetailScreen() {
           {/* Options */}
           {v.options.length > 0 && (
             <View style={s.section}>
-              <Text style={s.sectionTitle}>Options disponibles</Text>
+              <Text style={[s.sectionTitle, { color: C.text }]}>Options disponibles</Text>
               {v.options.map((opt, i) => (
                 <View key={i} style={s.optionItem}>
                   <View style={s.optionLeft}><Ionicons name="add-circle" size={18} color={C.purple} /><Text style={s.optionName}>{opt.name}</Text></View>
@@ -231,7 +231,7 @@ export default function VehicleDetailScreen() {
       <View style={s.bottomBar}>
         <View>
           <Text style={s.priceLbl}>Prix par jour</Text>
-          <Text style={s.price}>CHF {v.price_per_day}</Text>
+          <Text style={[s.price, { color: C.accent }]}>CHF {v.price_per_day}</Text>
         </View>
         <Button title="Réserver" onPress={handleBookNow} style={s.bookBtn} data-testid="book-now-btn" />
       </View>

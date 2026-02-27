@@ -132,7 +132,7 @@ export default function BookingFlow() {
   // Success screen
   if (success) {
     return (
-      <ScrollView style={s.container} contentContainerStyle={[s.content, { alignItems: 'center', justifyContent: 'center', paddingTop: 60 }]}>
+      <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={[s.content, { alignItems: 'center', justifyContent: 'center', paddingTop: 60 }]}>
         <View style={s.successIcon}><Ionicons name="checkmark-circle" size={64} color={C.success} /></View>
         <Text style={s.successTitle}>Réservation créée</Text>
         <Text style={s.successSub}>
@@ -150,9 +150,9 @@ export default function BookingFlow() {
   }
 
   return (
-    <ScrollView style={s.container} contentContainerStyle={s.content}>
+    <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content}>
       {/* Steps indicator */}
-      <View style={s.steps}>
+      <View style={[s.steps, { backgroundColor: C.card, borderColor: C.border }]}>
         {(['client', 'vehicle', 'dates', 'confirm'] as Step[]).map((st, i) => {
           const labels = ['Client', 'Véhicule', 'Dates', 'Confirmer'];
           const icons: any[] = ['person', 'car', 'calendar', 'checkmark'];
@@ -172,7 +172,7 @@ export default function BookingFlow() {
       {/* STEP: Client */}
       {step === 'client' && (
         <View>
-          <Text style={s.title}>Sélectionner un client</Text>
+          <Text style={[s.title, { color: C.text }]}>Sélectionner un client</Text>
 
           {selectedClient ? (
             <View style={s.selectedCard}>
@@ -187,7 +187,7 @@ export default function BookingFlow() {
               <View style={s.searchBox}>
                 <Ionicons name="search" size={18} color={C.textLight} />
                 <TextInput
-                  style={s.searchInput}
+                  style={[s.searchInput, { color: C.text }]}
                   placeholder="Rechercher par nom, email, téléphone..."
                   placeholderTextColor={C.textLight}
                   value={searchQuery}
@@ -215,9 +215,9 @@ export default function BookingFlow() {
 
               {showNewClient && (
                 <View style={s.newClientForm}>
-                  <TextInput style={s.input} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="new-client-name" />
-                  <TextInput style={s.input} placeholder="Téléphone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="new-client-phone" />
-                  <TextInput style={s.input} placeholder="Email" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" autoCapitalize="none" data-testid="new-client-email" />
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="new-client-name" />
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Téléphone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="new-client-phone" />
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Email" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" autoCapitalize="none" data-testid="new-client-email" />
                   <TouchableOpacity style={s.createBtn} onPress={createClient} disabled={creatingClient} data-testid="create-client-btn">
                     <Text style={s.createBtnText}>{creatingClient ? 'Création...' : 'Créer et continuer'}</Text>
                   </TouchableOpacity>
@@ -238,16 +238,16 @@ export default function BookingFlow() {
       {/* STEP: Dates (moved before vehicle to filter availability) */}
       {step === 'vehicle' && (
         <View>
-          <Text style={s.title}>Dates & Véhicule</Text>
-          <Text style={s.subtitle}>Choisissez les dates pour voir les véhicules disponibles</Text>
+          <Text style={[s.title, { color: C.text }]}>Dates & Véhicule</Text>
+          <Text style={[s.subtitle, { color: C.textLight }]}>Choisissez les dates pour voir les véhicules disponibles</Text>
           <View style={s.dateRow}>
             <View style={{ flex: 1 }}>
-              <Text style={s.label}>Date début</Text>
-              <TextInput style={s.input} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={startDate} onChangeText={setStartDate} data-testid="start-date-input" />
+              <Text style={[s.label, { color: C.textLight }]}>Date début</Text>
+              <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={startDate} onChangeText={setStartDate} data-testid="start-date-input" />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={s.label}>Date fin</Text>
-              <TextInput style={s.input} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={endDate} onChangeText={setEndDate} data-testid="end-date-input" />
+              <Text style={[s.label, { color: C.textLight }]}>Date fin</Text>
+              <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={endDate} onChangeText={setEndDate} data-testid="end-date-input" />
             </View>
           </View>
 
@@ -268,7 +268,7 @@ export default function BookingFlow() {
               data-testid={`vehicle-${v.id}`}
             >
               <View style={s.vehicleInfo}>
-                <Text style={s.vehicleName}>{v.brand} {v.model} ({v.year})</Text>
+                <Text style={[s.vehicleName, { color: C.textLight }]}>{v.brand} {v.model} ({v.year})</Text>
                 <Text style={s.vehicleDetail}>{v.type} | {v.seats} places | {v.transmission} | {v.fuel_type}</Text>
               </View>
               <View style={s.vehiclePrice}>
@@ -291,11 +291,11 @@ export default function BookingFlow() {
       {/* STEP: Options & Payment */}
       {step === 'dates' && selectedVehicle && (
         <View>
-          <Text style={s.title}>Options & Paiement</Text>
+          <Text style={[s.title, { color: C.text }]}>Options & Paiement</Text>
 
           {(selectedVehicle.options || []).length > 0 && (
             <>
-              <Text style={s.label}>Options disponibles</Text>
+              <Text style={[s.label, { color: C.textLight }]}>Options disponibles</Text>
               {selectedVehicle.options!.map((opt: any) => (
                 <TouchableOpacity
                   key={opt.name}
@@ -339,7 +339,7 @@ export default function BookingFlow() {
       {/* STEP: Confirm */}
       {step === 'confirm' && selectedClient && selectedVehicle && (
         <View>
-          <Text style={s.title}>Récapitulatif</Text>
+          <Text style={[s.title, { color: C.text }]}>Récapitulatif</Text>
 
           <View style={s.summaryCard}>
             <View style={s.summaryRow}><Text style={s.summaryLabel}>Client</Text><Text style={s.summaryValue}>{selectedClient.name}</Text></View>
