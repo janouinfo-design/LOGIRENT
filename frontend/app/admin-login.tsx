@@ -31,7 +31,9 @@ export default function AdminLogin() {
   useEffect(() => {
     if (isAuthenticated && user) {
       const role = user.role || 'client';
-      if (role === 'admin' || role === 'super_admin') {
+      if (role === 'super_admin') {
+        router.replace('/super-admin');
+      } else if (role === 'admin') {
         router.replace('/admin');
       }
     }
