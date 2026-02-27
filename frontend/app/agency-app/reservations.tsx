@@ -25,6 +25,7 @@ const STATUS_FILTERS = [
 ];
 
 export default function AgencyReservations() {
+  const { colors: C } = useThemeStore();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

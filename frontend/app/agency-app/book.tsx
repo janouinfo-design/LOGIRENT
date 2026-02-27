@@ -13,6 +13,7 @@ interface Vehicle { id: string; brand: string; model: string; year: number; pric
 type Step = 'client' | 'vehicle' | 'dates' | 'confirm';
 
 export default function BookingFlow() {
+  const { colors: C } = useThemeStore();
   const [step, setStep] = useState<Step>('client');
 
   // Client
