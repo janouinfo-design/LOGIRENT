@@ -14,19 +14,25 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function AgencyAppHome() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
+  const [agency, setAgency] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsResp, resResp] = await Promise.all([
+      const [statsResp, resResp, agenciesResp] = await Promise.all([
         api.get('/api/admin/stats'),
         api.get('/api/admin/reservations?limit=5'),
+        api.get('/api/agencies'),
       ]);
       setStats(statsResp.data);
       setRecentReservations(resResp.data.reservations || []);
+      const agencies = agenciesResp.data;
+      if (agencies?.length > 0) setAgency(agencies[0]);
     } catch (err) {
       console.error(err);
     } finally {
