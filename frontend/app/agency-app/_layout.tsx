@@ -67,16 +67,16 @@ export default function AgencyAppLayout() {
             </View>
           </View>
           <View style={s.headerRight}>
-            <TouchableOpacity onPress={toggleTheme} style={s.iconBtn}>
+            <TouchableOpacity onPress={toggleTheme} style={s.iconBtn} data-testid="agency-theme-toggle">
               <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { fetchNotifications(); setShowNotifs(true); }} style={s.iconBtn}>
+            <TouchableOpacity onPress={() => { fetchNotifications(); setShowNotifs(true); }} style={s.iconBtn} data-testid="agency-notification-bell">
               <Ionicons name="notifications" size={20} color={C.textLight} />
               {unreadCount > 0 && (
-                <View style={s.notifBadge}><Text style={s.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
+                <View style={s.notifBadge} data-testid="agency-notif-badge"><Text style={s.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
               )}
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} style={s.iconBtn}>
+            <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} style={s.iconBtn} data-testid="agency-logout-btn">
               <Ionicons name="log-out-outline" size={20} color={C.textLight} />
             </TouchableOpacity>
           </View>
@@ -89,6 +89,7 @@ export default function AgencyAppLayout() {
                 key={tab.key}
                 style={[s.tab, active && { borderBottomColor: C.accent }]}
                 onPress={() => router.push(tab.key === 'index' ? '/agency-app' as any : `/agency-app/${tab.key}` as any)}
+                data-testid={`agency-tab-${tab.key}`}
               >
                 <Ionicons name={(active ? tab.icon : tab.iconO) as any} size={20} color={active ? C.accent : C.textLight} />
                 <Text style={[s.tabText, { color: active ? C.accent : C.textLight }]}>{tab.label}</Text>
