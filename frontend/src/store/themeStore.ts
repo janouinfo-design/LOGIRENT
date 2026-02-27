@@ -45,8 +45,8 @@ interface ThemeState {
 }
 
 export const useThemeStore = create<ThemeState>((set, get) => ({
-  mode: 'dark',
-  colors: darkTheme,
+  mode: 'light',
+  colors: lightTheme,
 
   toggleTheme: async () => {
     const newMode = get().mode === 'dark' ? 'light' : 'dark';
