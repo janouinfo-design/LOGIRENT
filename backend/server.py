@@ -2215,7 +2215,7 @@ async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin
     existing_slug = await db.agencies.find_one({"slug": slug})
     if existing_slug:
         slug = f"{slug}-{str(uuid.uuid4())[:4]}"
-    agency = Agency(name=data.name, slug=slug, address=data.address, phone=data.phone, email=data.email)
+    agency = Agency(name=data.name, slug=slug, address=data.address, phone=data.phone, email=data.email, navixy_api_url=data.navixy_api_url, navixy_hash=data.navixy_hash)
     await db.agencies.insert_one(agency.dict())
     
     # Create admin user for this agency
@@ -2252,6 +2252,10 @@ async def update_agency(agency_id: str, data: AgencyCreate, user: dict = Depends
         update_fields["phone"] = data.phone
     if data.email is not None:
         update_fields["email"] = data.email
+    if data.navixy_api_url is not None:
+        update_fields["navixy_api_url"] = data.navixy_api_url
+    if data.navixy_hash is not None:
+        update_fields["navixy_hash"] = data.navixy_hash
     result = await db.agencies.update_one({"id": agency_id}, {"$set": update_fields})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Agence non trouvée")
