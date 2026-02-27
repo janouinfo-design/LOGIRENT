@@ -1915,6 +1915,29 @@ async def update_reservation_status(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Reservation not found")
     
+    # Create notifications
+    reservation = await db.reservations.find_one({"id": reservation_id})
+    if reservation:
+        client = await db.users.find_one({"id": reservation.get('user_id')})
+        vehicle = await db.vehicles.find_one({"id": reservation.get('vehicle_id')})
+        vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Véhicule"
+        cname = client.get('name', 'Client') if client else 'Client'
+        
+        status_msgs = {
+            'confirmed': f"Votre réservation pour {vname} a été confirmée.",
+            'active': f"Votre réservation pour {vname} est maintenant active. Bon trajet !",
+            'completed': f"Votre location de {vname} est terminée. Merci !",
+            'cancelled': f"Votre réservation pour {vname} a été annulée.",
+        }
+        notif_types = {
+            'confirmed': 'reservation_confirmed',
+            'active': 'reservation_active',
+            'completed': 'reservation_completed',
+            'cancelled': 'reservation_cancelled',
+        }
+        if status in status_msgs and client:
+            await create_notification(client['id'], notif_types[status], status_msgs[status], reservation_id)
+    
     return {"message": f"Reservation status updated to {status}"}
 
 @api_router.put("/admin/reservations/{reservation_id}/payment-status")
