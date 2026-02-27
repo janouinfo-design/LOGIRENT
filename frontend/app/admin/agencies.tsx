@@ -39,7 +39,7 @@ export default function AgenciesPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editAgency, setEditAgency] = useState<Agency | null>(null);
-  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' });
+  const [form, setForm] = useState({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '', navixy_api_url: '', navixy_hash: '' });
   const [error, setError] = useState('');
   const [successInfo, setSuccessInfo] = useState<{name: string, email: string, password: string} | null>(null);
   const [qrAgency, setQrAgency] = useState<Agency | null>(null);
