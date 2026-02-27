@@ -41,22 +41,22 @@ const paymentLabels: Record<string, string> = {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'confirmed': return C.success;
-    case 'active': return C.purple;
-    case 'pending': return C.warning;
-    case 'pending_cash': return C.warning;
-    case 'cancelled': return C.error;
-    case 'completed': return C.gray;
-    default: return C.gray;
+    case 'confirmed': return _C.success;
+    case 'active': return _C.purple;
+    case 'pending': return _C.warning;
+    case 'pending_cash': return _C.warning;
+    case 'cancelled': return _C.error;
+    case 'completed': return _C.gray;
+    default: return _C.gray;
   }
 };
 
 const getPaymentColor = (status: string) => {
   switch (status) {
-    case 'paid': return C.success;
-    case 'pending': return C.warning;
-    case 'unpaid': return C.error;
-    default: return C.gray;
+    case 'paid': return _C.success;
+    case 'pending': return _C.warning;
+    case 'unpaid': return _C.error;
+    default: return _C.gray;
   }
 };
 
