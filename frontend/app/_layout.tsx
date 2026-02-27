@@ -81,26 +81,13 @@ function TopNavBar() {
 
 function AppContent() {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuthStore();
-  const [webPath, setWebPath] = React.useState('');
+  const { isAuthenticated, user } = useAuthStore();
 
-  React.useEffect(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      setWebPath(window.location.pathname);
-      const onPopState = () => setWebPath(window.location.pathname);
-      window.addEventListener('popstate', onPopState);
-      const interval = setInterval(() => setWebPath(window.location.pathname), 500);
-      return () => { window.removeEventListener('popstate', onPopState); clearInterval(interval); };
-    }
-  }, [pathname]);
-
-  const fullPath = webPath || pathname;
-
-  // Show top nav on client pages only (not on landing, auth, admin)
-  const isLanding = (pathname === '/' || fullPath === '/') && !isAuthenticated;
-  const isAuth = fullPath.includes('/login') || fullPath.includes('/register');
-  const isAdmin = fullPath.includes('/admin') || fullPath.includes('/super-admin') || fullPath.includes('/agency-app');
-  const showNav = !isLanding && !isAuth && !isAdmin && isAuthenticated;
+  // Admin users should never see the client nav bar
+  const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+  const isLanding = pathname === '/' && !isAuthenticated;
+  const isAuth = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.includes('admin-login');
+  const showNav = !isLanding && !isAuth && !isAdminUser && isAuthenticated;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.white }} edges={['top']}>
