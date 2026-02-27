@@ -126,10 +126,10 @@ export default function AgencyClients() {
           <Ionicons name="search" size={18} color={C.textLight} />
           <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
         </View>
-        <TouchableOpacity style={[s.iconActionBtn, { backgroundColor: C.accent + '20' }]} onPress={() => setShowImportModal(true)} data-testid="import-clients-btn">
-          <Ionicons name="cloud-upload" size={20} color={C.accent} />
+        <TouchableOpacity style={[s.iconActionBtn, { backgroundColor: C.success + '30', borderWidth: 1, borderColor: C.success + '50' }]} onPress={() => setShowImportModal(true)} testID="import-clients-btn">
+          <Ionicons name="cloud-upload" size={20} color={C.success} />
         </TouchableOpacity>
-        <TouchableOpacity style={[s.addBtn, { backgroundColor: C.primary }]} onPress={() => setShowNewModal(true)} data-testid="new-client-btn">
+        <TouchableOpacity style={[s.addBtn, { backgroundColor: C.primary }]} onPress={() => setShowNewModal(true)} testID="new-client-btn">
           <Ionicons name="person-add" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
