@@ -30,14 +30,32 @@ const navTabs = [
 function TopNavBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { unreadCount } = useNotificationStore();
+  const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+  const { mode, toggleTheme } = useThemeStore();
   const { lang, setLang } = useI18n();
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
+  const [showNotifs, setShowNotifs] = React.useState(false);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const isActive = (route: string) => {
     if (route === '/') return pathname === '/' || pathname === '';
     return pathname.startsWith(route);
+  };
+
+  const timeAgo = (dateStr: string) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "A l'instant";
+    if (mins < 60) return `Il y a ${mins}m`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `Il y a ${hours}h`;
+    return `Il y a ${Math.floor(hours / 24)}j`;
   };
 
   return (
@@ -63,7 +81,10 @@ function TopNavBar() {
         })}
       </View>
       <View style={styles.rightSection}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => router.push('/(tabs)/reservations')} data-testid="notification-bell">
+        <TouchableOpacity style={styles.iconBtn} onPress={toggleTheme} data-testid="client-theme-toggle">
+          <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={18} color={C.dark} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => { fetchNotifications(); setShowNotifs(true); }} data-testid="notification-bell">
           <Ionicons name="notifications-outline" size={18} color={C.dark} />
           {unreadCount > 0 && (
             <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
@@ -76,6 +97,35 @@ function TopNavBar() {
           <Text style={styles.langFlag}>EN</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Notification Panel Modal */}
+      {showNotifs && (
+        <View style={styles.notifOverlay}>
+          <TouchableOpacity style={styles.notifBackdrop} onPress={() => setShowNotifs(false)} />
+          <View style={styles.notifDropdown}>
+            <View style={styles.notifHeader}>
+              <Text style={styles.notifTitle}>Notifications</Text>
+              {unreadCount > 0 && (
+                <TouchableOpacity onPress={markAllAsRead}><Text style={{ color: C.purple, fontSize: 12 }}>Tout lire</Text></TouchableOpacity>
+              )}
+            </View>
+            {notifications.length === 0 ? (
+              <View style={styles.notifEmpty}><Text style={{ color: C.gray }}>Aucune notification</Text></View>
+            ) : (
+              notifications.slice(0, 10).map(n => (
+                <TouchableOpacity key={n.id} style={[styles.notifItem, !n.read && styles.notifUnread]} onPress={() => { if (!n.read) markAsRead(n.id); }}>
+                  <View style={[styles.notifDot, !n.read && { backgroundColor: C.purple }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.notifItemTitle}>{n.title}</Text>
+                    <Text style={styles.notifItemMsg}>{n.message}</Text>
+                    <Text style={styles.notifTime}>{timeAgo(n.created_at)}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
