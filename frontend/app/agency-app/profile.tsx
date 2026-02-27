@@ -15,7 +15,7 @@ export default function AgencyProfile() {
   const { colors: C, mode, toggleTheme } = useThemeStore();
   const [agency, setAgency] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showQR, setShowQR] = useState<'client' | 'admin' | null>(null);
+  const [showQR, setShowQR] = useState<'client' | 'admin' | 'super' | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -224,29 +224,29 @@ export default function AgencyProfile() {
           <View style={[s.modal, { backgroundColor: C.card }]}>
             <View style={s.modalHeader}>
               <Text style={[s.modalTitle, { color: C.text }]}>
-                {showQR === 'client' ? 'QR Code - App Client' : 'QR Code - App Admin'}
+                {showQR === 'client' ? 'QR Code - App Client' : showQR === 'admin' ? 'QR Code - App Admin' : 'QR Code - Super Admin'}
               </Text>
               <TouchableOpacity onPress={() => setShowQR(null)}>
                 <Ionicons name="close-circle" size={28} color={C.error} />
               </TouchableOpacity>
             </View>
             <View style={s.qrCenter}>
-              <View style={[s.qrIconBadge, { backgroundColor: showQR === 'client' ? C.success + '15' : C.warning + '15' }]}>
+              <View style={[s.qrIconBadge, { backgroundColor: showQR === 'client' ? C.success + '15' : showQR === 'admin' ? C.warning + '15' : C.error + '15' }]}>
                 <Ionicons
-                  name={showQR === 'client' ? 'globe-outline' : 'shield-checkmark-outline'}
+                  name={showQR === 'client' ? 'globe-outline' : showQR === 'admin' ? 'shield-checkmark-outline' : 'key-outline'}
                   size={24}
-                  color={showQR === 'client' ? C.success : C.warning}
+                  color={showQR === 'client' ? C.success : showQR === 'admin' ? C.warning : C.error}
                 />
               </View>
               <Text style={[s.qrLabel, { color: C.text }]}>
-                {showQR === 'client' ? 'App Client' : 'App Admin Agence'}
+                {showQR === 'client' ? 'App Client' : showQR === 'admin' ? 'App Admin Agence' : 'Super Admin'}
               </Text>
               <Text style={[s.qrDesc, { color: C.textLight }]}>
-                {showQR === 'client' ? 'Le client scanne ce code pour s\'inscrire et réserver' : 'L\'admin scanne pour gérer l\'agence'}
+                {showQR === 'client' ? 'Le client scanne ce code pour s\'inscrire et réserver' : showQR === 'admin' ? 'L\'admin scanne pour gérer l\'agence' : 'Accès à la gestion globale de toutes les agences'}
               </Text>
               <View style={s.qrBox}>
                 <QRCode
-                  value={showQR === 'client' ? clientLink : adminLink}
+                  value={showQR === 'client' ? clientLink : showQR === 'admin' ? adminLink : superAdminLink}
                   size={200}
                   level="H"
                   fgColor="#1A1A2E"
@@ -254,19 +254,22 @@ export default function AgencyProfile() {
                 />
               </View>
               <Text style={[s.qrUrl, { color: C.accent }]} selectable>
-                {showQR === 'client' ? clientLink : adminLink}
+                {showQR === 'client' ? clientLink : showQR === 'admin' ? adminLink : superAdminLink}
               </Text>
               <View style={s.qrActions}>
                 <TouchableOpacity
                   style={[s.qrActionBtn, { backgroundColor: C.primary }]}
-                  onPress={() => copyToClipboard(showQR === 'client' ? clientLink : adminLink)}
+                  onPress={() => copyToClipboard(showQR === 'client' ? clientLink : showQR === 'admin' ? adminLink : superAdminLink)}
                 >
                   <Ionicons name="copy" size={16} color="#fff" />
                   <Text style={s.qrActionText}>Copier le lien</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[s.qrActionBtn, { backgroundColor: C.success }]}
-                  onPress={() => shareLink(showQR === 'client' ? 'App Client' : 'App Admin', showQR === 'client' ? clientLink : adminLink)}
+                  onPress={() => shareLink(
+                    showQR === 'client' ? 'App Client' : showQR === 'admin' ? 'App Admin' : 'Super Admin',
+                    showQR === 'client' ? clientLink : showQR === 'admin' ? adminLink : superAdminLink
+                  )}
                 >
                   <Ionicons name="share" size={16} color="#fff" />
                   <Text style={s.qrActionText}>Partager</Text>
