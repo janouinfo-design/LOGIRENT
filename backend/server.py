@@ -1767,18 +1767,54 @@ async def import_users_from_excel(
     file: UploadFile = File(...),
     user: dict = Depends(get_admin_user)
 ):
-    """Import clients from an Excel (.xlsx) or CSV file"""
+    """Import clients from an Excel (.xlsx), CSV, or ZIP (Excel + photos) file"""
     import io
+    import zipfile
     
     filename = file.filename or ""
     content = await file.read()
+    
+    photos_map = {}  # filename -> base64 data URI
+    excel_content = None
+    excel_filename = ""
+    
+    # Handle ZIP files containing Excel + photos
+    if filename.endswith(".zip"):
+        try:
+            zf = zipfile.ZipFile(io.BytesIO(content))
+        except zipfile.BadZipFile:
+            raise HTTPException(status_code=400, detail="Fichier ZIP invalide")
+        
+        for name in zf.namelist():
+            if name.startswith("__MACOSX") or name.startswith("."):
+                continue
+            lower = name.lower()
+            basename = name.split("/")[-1]
+            if not basename:
+                continue
+            if lower.endswith((".xlsx", ".xls", ".csv")):
+                excel_content = zf.read(name)
+                excel_filename = basename
+            elif lower.endswith((".jpg", ".jpeg", ".png", ".webp")):
+                photo_data = zf.read(name)
+                ext = lower.rsplit(".", 1)[-1]
+                mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}[ext]
+                b64 = base64.b64encode(photo_data).decode("utf-8")
+                data_uri = f"data:{mime};base64,{b64}"
+                # Store by filename without extension and full basename for matching
+                photos_map[basename.lower()] = data_uri
+                photos_map[basename.rsplit(".", 1)[0].lower()] = data_uri
+        
+        if not excel_content:
+            raise HTTPException(status_code=400, detail="Aucun fichier Excel/CSV trouvé dans le ZIP")
+        content = excel_content
+        filename = excel_filename
     
     rows = []
     if filename.endswith(".csv"):
         import csv
         text = content.decode("utf-8-sig")
         reader = csv.DictReader(io.StringIO(text), delimiter=";")
-        # Try comma if semicolon gives only 1 column
         first_row = next(csv.DictReader(io.StringIO(text), delimiter=";"), None)
         if first_row and len(first_row) <= 1:
             reader = csv.DictReader(io.StringIO(text), delimiter=",")
@@ -1798,12 +1834,11 @@ async def import_users_from_excel(
                     row_dict[headers[i]] = str(val).strip() if val is not None else ""
             rows.append(row_dict)
     else:
-        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez .xlsx ou .csv")
+        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez .xlsx, .csv ou .zip")
     
     if not rows:
         raise HTTPException(status_code=400, detail="Le fichier est vide")
     
-    # Map column names (flexible matching)
     def find_col(row, candidates):
         for c in candidates:
             for key in row.keys():
@@ -1816,6 +1851,7 @@ async def import_users_from_excel(
     
     created = 0
     skipped = 0
+    photos_matched = 0
     errors = []
     
     for i, row in enumerate(rows):
@@ -1823,8 +1859,8 @@ async def import_users_from_excel(
         email = find_col(row, ["email", "mail", "e-mail", "courriel"])
         phone = find_col(row, ["tel", "téléphone", "telephone", "phone", "mobile", "portable"])
         address = find_col(row, ["adresse", "address", "ville", "city"])
+        photo_ref = find_col(row, ["photo", "image", "avatar", "picture", "profil"])
         
-        # Try combining nom + prenom if separate columns
         prenom = find_col(row, ["prenom", "prénom", "firstname", "first_name"])
         nom = find_col(row, ["nom", "lastname", "last_name", "family"])
         if prenom and nom and not name:
@@ -1838,11 +1874,26 @@ async def import_users_from_excel(
         
         email = email.lower().strip()
         
-        # Check if already exists
         existing = await db.users.find_one({"email": email})
         if existing:
             skipped += 1
             continue
+        
+        # Match photo from ZIP
+        profile_photo = None
+        if photo_ref and photos_map:
+            ref_lower = photo_ref.lower().strip()
+            profile_photo = photos_map.get(ref_lower) or photos_map.get(ref_lower.rsplit(".", 1)[0])
+        if not profile_photo and photos_map:
+            # Try matching by name or email
+            name_key = (name or "").lower().replace(" ", "_").replace(" ", "")
+            email_key = email.split("@")[0].lower()
+            for key in [name_key, email_key]:
+                if key and key in photos_map:
+                    profile_photo = photos_map[key]
+                    break
+        if profile_photo:
+            photos_matched += 1
         
         new_user = {
             "id": str(uuid.uuid4()),
@@ -1853,6 +1904,7 @@ async def import_users_from_excel(
             "address": address or None,
             "id_photo": None,
             "license_photo": None,
+            "profile_photo": profile_photo,
             "role": "client",
             "agency_id": agency_id,
             "created_at": datetime.utcnow(),
@@ -1861,9 +1913,10 @@ async def import_users_from_excel(
         created += 1
     
     return {
-        "message": f"Import terminé: {created} clients créés, {skipped} déjà existants, {len(errors)} erreurs",
+        "message": f"Import terminé: {created} créés, {skipped} existants, {photos_matched} photos, {len(errors)} erreurs",
         "created": created,
         "skipped": skipped,
+        "photos_matched": photos_matched,
         "errors": errors[:20],
     }
 
