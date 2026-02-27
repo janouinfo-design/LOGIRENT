@@ -89,10 +89,6 @@ function AppContent() {
   const isAuth = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.includes('admin-login');
   const showNav = !isLanding && !isAuth && !isAdminUser && isAuthenticated;
 
-  if (Platform.OS === 'web' && typeof console !== 'undefined') {
-    console.log('[NAV DEBUG] role:', user?.role, 'isAdminUser:', isAdminUser, 'showNav:', showNav, 'isAuth:', isAuthenticated, 'path:', pathname);
-  }
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.white }} edges={['top']}>
       <View style={{ flex: 1, backgroundColor: C.bg }}>
