@@ -26,6 +26,8 @@ interface Agency {
   address?: string;
   phone?: string;
   email?: string;
+  navixy_api_url?: string;
+  navixy_hash?: string;
   vehicle_count: number;
   reservation_count: number;
   admin_count: number;
