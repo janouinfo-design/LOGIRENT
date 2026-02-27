@@ -76,7 +76,7 @@ export default function AdminLayout() {
 
       {/* Navigation Tabs */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.navTabs} contentContainerStyle={styles.navTabsContent}>
-        {allNavItems.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.key || (item.key !== '/admin' && pathname.startsWith(item.key));
           return (
             <TouchableOpacity
