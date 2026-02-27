@@ -166,8 +166,9 @@ function AppContent() {
 
 export default function RootLayout() {
   const { loadUser, isLoading } = useAuthStore();
+  const { loadTheme } = useThemeStore();
 
-  useEffect(() => { loadUser(); }, []);
+  useEffect(() => { loadUser(); loadTheme(); }, []);
 
   if (isLoading) {
     return <View style={styles.loadingBox}><ActivityIndicator size="large" color={C.purple} /></View>;
