@@ -3,8 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Act
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
-
-const C = { bg: '#0B0F1A', card: '#141926', primary: '#6C2BD9', accent: '#A78BFA', text: '#fff', textLight: '#8B95A8', border: '#1E2536', success: '#10B981', warning: '#F59E0B', error: '#EF4444' };
+import { useThemeStore } from '../../src/store/themeStore';
 
 interface Vehicle {
   id: string; brand: string; model: string; year: number; price_per_day: number;
@@ -13,6 +12,7 @@ interface Vehicle {
 
 export default function AgencyVehicles() {
   const { user } = useAuthStore();
+  const { colors: C } = useThemeStore();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,13 +48,13 @@ export default function AgencyVehicles() {
     }
   };
 
-  if (loading) return <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
+  if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
-    <View style={s.container}>
-      <View style={s.searchBar}>
+    <View style={[s.container, { backgroundColor: C.bg }]}>
+      <View style={[s.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
         <Ionicons name="search" size={18} color={C.textLight} />
-        <TextInput style={s.searchInput} placeholder="Rechercher un véhicule..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
+        <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher un véhicule..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
       </View>
 
       <FlatList
@@ -62,15 +62,15 @@ export default function AgencyVehicles() {
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-        ListEmptyComponent={<View style={s.empty}><Ionicons name="car-outline" size={40} color={C.textLight} /><Text style={s.emptyText}>Aucun véhicule</Text></View>}
+        ListEmptyComponent={<View style={s.empty}><Ionicons name="car-outline" size={40} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 14 }}>Aucun véhicule</Text></View>}
         renderItem={({ item }) => {
           const st = statusIcon(item.status);
           return (
-            <View style={s.card} data-testid={`vehicle-${item.id}`}>
+            <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-${item.id}`}>
               <View style={s.cardHeader}>
                 <View>
-                  <Text style={s.vehicleName}>{item.brand} {item.model}</Text>
-                  <Text style={s.vehicleYear}>{item.year} | {item.type}</Text>
+                  <Text style={[s.vehicleName, { color: C.text }]}>{item.brand} {item.model}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 2 }}>{item.year} | {item.type}</Text>
                 </View>
                 <View style={[s.statusBadge, { backgroundColor: st.color + '20' }]}>
                   <Ionicons name={st.icon} size={14} color={st.color} />
@@ -78,21 +78,12 @@ export default function AgencyVehicles() {
                 </View>
               </View>
               <View style={s.cardDetails}>
-                <View style={s.detail}>
-                  <Ionicons name="people-outline" size={14} color={C.textLight} />
-                  <Text style={s.detailText}>{item.seats} places</Text>
-                </View>
-                <View style={s.detail}>
-                  <Ionicons name="cog-outline" size={14} color={C.textLight} />
-                  <Text style={s.detailText}>{item.transmission === 'automatic' ? 'Auto' : 'Manuel'}</Text>
-                </View>
-                <View style={s.detail}>
-                  <Ionicons name="flash-outline" size={14} color={C.textLight} />
-                  <Text style={s.detailText}>{item.fuel_type}</Text>
-                </View>
+                <View style={s.detail}><Ionicons name="people-outline" size={14} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 12 }}>{item.seats} places</Text></View>
+                <View style={s.detail}><Ionicons name="cog-outline" size={14} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 12 }}>{item.transmission === 'automatic' ? 'Auto' : 'Manuel'}</Text></View>
+                <View style={s.detail}><Ionicons name="flash-outline" size={14} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 12 }}>{item.fuel_type}</Text></View>
               </View>
               <View style={s.cardFooter}>
-                <Text style={s.price}>CHF {item.price_per_day}<Text style={s.priceLabel}>/jour</Text></Text>
+                <Text style={[s.price, { color: C.accent }]}>CHF {item.price_per_day}<Text style={{ fontSize: 12, fontWeight: '500', color: C.textLight }}>/jour</Text></Text>
               </View>
             </View>
           );
@@ -103,21 +94,17 @@ export default function AgencyVehicles() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
-  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, margin: 16, marginBottom: 0, borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1, borderColor: C.border },
-  searchInput: { flex: 1, color: C.text, fontSize: 14, paddingVertical: 10 },
+  container: { flex: 1 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1 },
+  searchInput: { flex: 1, fontSize: 14, paddingVertical: 10 },
   empty: { alignItems: 'center', paddingTop: 60, gap: 8 },
-  emptyText: { color: C.textLight, fontSize: 14 },
-  card: { backgroundColor: C.card, borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+  card: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  vehicleName: { color: C.text, fontSize: 16, fontWeight: '700' },
-  vehicleYear: { color: C.textLight, fontSize: 12, marginTop: 2 },
+  vehicleName: { fontSize: 16, fontWeight: '700' },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   statusText: { fontSize: 11, fontWeight: '600' },
   cardDetails: { flexDirection: 'row', gap: 16, marginBottom: 10 },
   detail: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  detailText: { color: C.textLight, fontSize: 12 },
   cardFooter: { flexDirection: 'row', justifyContent: 'flex-end' },
-  price: { color: C.accent, fontSize: 18, fontWeight: '800' },
-  priceLabel: { fontSize: 12, fontWeight: '500', color: C.textLight },
+  price: { fontSize: 18, fontWeight: '800' },
 });
