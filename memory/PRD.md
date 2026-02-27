@@ -15,53 +15,38 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Client Import with Photos (Feb 27, 2026) - NEW
-- Enhanced import endpoint supports ZIP files (Excel/CSV + photos)
+### GPS Tracking per Agency Admin (Feb 27, 2026) - NEW
+- GPS tab added to agency-app (6th tab, scrollable navigation)
+- Full tracking page: vehicle list with positions, speed, status (en route/stationné/hors ligne), stats
+- Map integration (OpenStreetMap) on vehicle click
+- Per-agency Navixy config: each admin configures their own API URL + hash via settings modal
+- Backend: GET/PUT /api/admin/my-agency/navixy endpoints for self-service config
+- Setup prompt for agencies without Navixy config
+- NOT in super admin - each agency manages independently
+
+### Client Import with Photos (Feb 27, 2026)
+- Import endpoint supports ZIP files (Excel/CSV + photos)
 - Photos matched by filename column in Excel or by client name/email
 - Import modal in agency admin clients page with format instructions
-- Client list now displays profile photos from imports
-- Agency admin users query updated to show imported clients (with or without reservations)
+- Client list displays profile photos from imports
 
-### In-App Notifications & Theme Toggle (Feb 27, 2026) - NEW
+### In-App Notifications & Theme Toggle (Feb 27, 2026)
 - Dark/light theme toggle in both client and agency admin apps
-- Theme store (Zustand + AsyncStorage) applies colors dynamically to both layouts
-- Notification bell with unread badge in both apps
-- Notification panel (modal) with mark-as-read, mark-all-as-read
-- Backend notification endpoints: GET/PUT notifications, unread-count, read-all
-- Removed duplicate notification routes from server.py
+- Notification bell with unread badge, mark-as-read
 
 ### Agency Admin Sticky Header (Feb 27, 2026) - FIXED
-- Facebook-style sticky header at TOP of page (was broken, now fixed)
-- Header: LogiRent logo, agency name badge, theme toggle, notification bell, logout
-- Tab navigation below header: Accueil, Réserver, Réservations, Véhicules, Clients
-
-### QR Codes per Agency (Feb 27, 2026)
-- Each agency displays 2 QR codes: App Client + App Admin Agence
-- QR codes shown in agency profile modal (Super Admin > Agences > QR Codes)
-
-### Agency Admin Mobile App (Feb 27, 2026)
-- Mobile-optimized interface at `/agency-app` with custom tab navigation
-- 5 tabs: Accueil, Réserver, Réservations, Véhicules, Clients
-- Phone Booking Flow: 4-step wizard
-- Quick Client Creation, Client Search, Vehicle Availability
-- Payment Options: Cash or Send Payment Link (Stripe via email)
-
-### Admin Interface Separation (Feb 27, 2026)
-- Super Admin at `/super-admin`, Agency Admin at `/admin`
-- Role-based login redirect
+- Facebook-style sticky header at TOP with scrollable tab navigation
 
 ### Previously Completed
+- Admin Interface Separation, Agency Admin Mobile App, QR Codes
 - AI Document Verification, Per-Agency Navixy GPS, Excel Client Import
-- Base64/JSON Document Upload, Multi-Agency Architecture, Calendar, Auth, Vehicles, Reservations
+- Multi-Agency Architecture, Calendar, Auth, Vehicles, Reservations
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase)
 - P3: Driver/Agent Application
 - P4: Advanced Statistics & Dashboards
 - P5: App Store Deployment
-
-## Refactoring Needs
-- server.py should be split into smaller route modules
 
 ## Credentials
 - Super Admin: test@example.com / password123
@@ -70,4 +55,4 @@ Build a complete car rental solution named "LogiRent" with:
 - Client: client1@test.com / test1234
 
 ## 3rd Party Integrations
-- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (AI doc verification)
+- Stripe (Payments), Resend (Email), Navixy (GPS per-agency), OpenAI GPT-5.2 (AI doc verification)
