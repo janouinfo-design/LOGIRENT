@@ -425,4 +425,6 @@ const styles = StyleSheet.create({
   qrContainer: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12 },
   qrUrl: { fontSize: 12, color: COLORS.textLight, textAlign: 'center', marginBottom: 16 },
   closeBtn: { position: 'absolute', top: 12, right: 12, zIndex: 1 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 4 },
+  sectionTitle: { fontSize: 14, fontWeight: '700', color: '#06b6d4' },
 });
