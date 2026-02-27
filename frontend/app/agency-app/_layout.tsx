@@ -56,7 +56,7 @@ export default function AgencyAppLayout() {
 
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>
-      {/* Sticky Header */}
+      {/* Sticky Header - MUST be before Tabs */}
       <View style={[s.header, { backgroundColor: C.navBg, borderBottomColor: C.navBorder }]}>
         <View style={s.headerTop}>
           <View style={s.headerLeft}>
@@ -98,19 +98,21 @@ export default function AgencyAppLayout() {
         </View>
       </View>
 
-      {/* Tab Content */}
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: { display: 'none' },
-        }}
-      >
-        <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
-        <Tabs.Screen name="book" options={{ title: 'Réserver' }} />
-        <Tabs.Screen name="reservations" options={{ title: 'Réservations' }} />
-        <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
-        <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
-      </Tabs>
+      {/* Tab Content - hidden native tab bar */}
+      <View style={{ flex: 1 }}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: { display: 'none' },
+          }}
+        >
+          <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
+          <Tabs.Screen name="book" options={{ title: 'Réserver' }} />
+          <Tabs.Screen name="reservations" options={{ title: 'Réservations' }} />
+          <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
+          <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
+        </Tabs>
+      </View>
 
       {/* Notification Panel */}
       <Modal visible={showNotifs} transparent animationType="slide" onRequestClose={() => setShowNotifs(false)}>
