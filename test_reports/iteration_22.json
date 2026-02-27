@@ -1,0 +1,75 @@
+{
+  "summary": "Iteration 22: Profil Tab Testing Complete. All features verified: Admin info, Agency info, Links & QR Codes, Settings, Logout. Fixed API endpoint bug in profile.tsx (was calling non-existent /api/agencies/{id}, changed to /api/agencies).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "bugs_fixed": [
+      {
+        "file": "/app/frontend/app/agency-app/profile.tsx",
+        "issue": "API call to non-existent endpoint /api/agencies/{user.agency_id} returned 405 Method Not Allowed",
+        "fix": "Changed to /api/agencies and use first result from array (admin sees own agency)"
+      }
+    ]
+  },
+  "features_tested": {
+    "profil_tab_navigation": {
+      "status": "PASS",
+      "details": "Profil tab visible in horizontal scrollable tab bar, navigates correctly to /agency-app/profile"
+    },
+    "admin_info_section": {
+      "status": "PASS",
+      "details": "Shows admin name (Admin Geneva), email (admin-geneva@logirent.ch), and 'Admin Agence' badge with shield icon"
+    },
+    "mon_agence_section": {
+      "status": "PASS",
+      "details": "Shows agency info after API fix: Nom (LogiRent Geneva), Adresse (Geneva, Switzerland), Téléphone (+41 22 000 0000), Email agence (admin@logirent.ch)"
+    },
+    "liens_qr_codes_section": {
+      "status": "PASS",
+      "details": "Shows App Client card (with agency slug URL) and App Admin Agence card (with /admin-login URL). Each has Copier, Partager, QR Code buttons"
+    },
+    "qr_code_client_modal": {
+      "status": "PASS",
+      "details": "Opens modal with 'QR Code - App Client' title, globe icon, QR code image, URL, Copier/Partager buttons"
+    },
+    "qr_code_admin_modal": {
+      "status": "PASS",
+      "details": "Opens modal with 'QR Code - App Admin' title, shield icon, QR code image, admin-login URL, Copier/Partager buttons"
+    },
+    "settings_section": {
+      "status": "PASS",
+      "details": "Shows 'Mode sombre' theme toggle and 'Configuration GPS Navixy' menu item"
+    },
+    "logout_button": {
+      "status": "PASS",
+      "details": "Red 'Se déconnecter' button - clicking logs out and redirects to /admin-login"
+    },
+    "home_page_no_links": {
+      "status": "PASS",
+      "details": "Home page (Accueil) no longer shows Liens & QR Codes section - correctly moved to Profile page"
+    }
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/frontend/app/agency-app/profile.tsx"
+  ],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "agency_admin": "admin-geneva@logirent.ch / LogiRent2024"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Profile tab fully functional. All agency links and QR codes work. API fix applied: profile.tsx now calls /api/agencies (list) instead of non-existent /api/agencies/{id}. Agency info displays correctly after fix.",
+  "rca_of_the_issue": "Root cause: profile.tsx called GET /api/agencies/{user.agency_id} but this endpoint doesn't exist (only GET /api/agencies exists which returns array of agencies). Fix: Changed to call /api/agencies and use res.data[0] to get the admin's own agency."
+}
