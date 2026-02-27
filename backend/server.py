@@ -2758,6 +2758,41 @@ async def setup_init():
     
     return {"message": "Plateforme initialisée", "agency_id": agency.id, "agency_name": agency.name}
 
+
+# ==================== AGENCY ADMIN: OWN NAVIXY CONFIG ====================
+
+class NavixyConfig(BaseModel):
+    navixy_api_url: Optional[str] = None
+    navixy_hash: Optional[str] = None
+
+@api_router.get("/admin/my-agency/navixy")
+async def get_my_navixy_config(user: dict = Depends(get_admin_user)):
+    """Get the Navixy config for the current admin's agency"""
+    agency_id = user.get('agency_id')
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="Aucune agence associée")
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "navixy_api_url": 1, "navixy_hash": 1})
+    return {
+        "navixy_api_url": agency.get("navixy_api_url", "") if agency else "",
+        "navixy_hash": agency.get("navixy_hash", "") if agency else "",
+        "configured": bool(agency and agency.get("navixy_api_url") and agency.get("navixy_hash"))
+    }
+
+@api_router.put("/admin/my-agency/navixy")
+async def update_my_navixy_config(data: NavixyConfig, user: dict = Depends(get_admin_user)):
+    """Agency admin updates their own Navixy API config"""
+    agency_id = user.get('agency_id')
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="Aucune agence associée")
+    update = {}
+    if data.navixy_api_url is not None:
+        update["navixy_api_url"] = data.navixy_api_url.strip()
+    if data.navixy_hash is not None:
+        update["navixy_hash"] = data.navixy_hash.strip()
+    if update:
+        await db.agencies.update_one({"id": agency_id}, {"$set": update})
+    return {"message": "Configuration Navixy mise à jour"}
+
 # ==================== NAVIXY GPS TRACKING ====================
 
 async def get_agency_navixy_config(user: dict) -> tuple:
