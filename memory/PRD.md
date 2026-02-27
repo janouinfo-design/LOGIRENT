@@ -3,60 +3,53 @@
 ## Original Problem Statement
 Build a complete car rental solution named "LogiRent" with:
 - Client Mobile App (iOS & Android) and Web App
+- Agency Admin Mobile App for phone bookings
 - Admin Web Back-office with Super Admin and Agency Admin roles
 - French/English internationalization, violet/grey/black branding
 
+## Architecture
+- **3 Interfaces**: Client App (`/`), Agency Admin Mobile App (`/agency-app`), Super Admin (`/super-admin`), Web Admin (`/admin`)
+- **Backend**: FastAPI + MongoDB
+- **Frontend**: React Native (Expo Router)
+- **Auth**: JWT-based, role-based routing
+
 ## What's Been Implemented
 
+### Agency Admin Mobile App (Feb 27, 2026) - NEW
+- Mobile-optimized interface at `/agency-app` with bottom tab navigation
+- **5 tabs**: Accueil, Réserver, Réservations, Véhicules, Clients
+- **Phone Booking Flow**: 4-step wizard (Client → Vehicle → Options/Payment → Confirm)
+- **Quick Client Creation**: Create new clients during phone calls (name, phone, email)
+- **Client Search**: Real-time search by name, email, or phone
+- **Vehicle Availability**: Date-based search for available vehicles
+- **Payment Options**: Cash (pay at pickup) or Send Payment Link (Stripe checkout link via email)
+- **Backend Endpoints**: /api/admin/quick-client, /api/admin/search-clients, /api/admin/available-vehicles, /api/admin/create-reservation-for-client, /api/admin/reservations/{id}/send-payment-link
+- Client nav bar hidden for admin users
+
 ### Admin Interface Separation (Feb 27, 2026)
-- Super Admin interface at `/super-admin` (red/dark theme, "SUPER ADMIN" badge)
-- Agency Admin interface at `/admin` (purple theme, agency-scoped)
-- Role-based login redirect: super_admin → /super-admin, admin → /admin
-- Super admin sees global data, agency admin sees only their agency's data
-- Route guards prevent cross-access between interfaces
-
-### Navixy Per-Agency Config (Feb 27, 2026)
-- Each agency has its own `navixy_api_url` and `navixy_hash` fields
-- Editable from Super Admin → Agences → edit → "Configuration Navixy GPS" section
-- Tracking page uses agency-specific config, falls back to global .env config
-
-### Excel Client Import (Feb 27, 2026)
-- Admin → Utilisateurs → "Importer Excel" button
-- Supports .xlsx, .xls, .csv with flexible column mapping
-- Default password: LogiRent2024
-
-### AI Document Verification (Feb 26, 2026)
-- GPT-5.2 Vision auto-verifies ID cards and driver's licenses
-- Rejects fake/invalid documents with explanation
-
-### Navixy GPS Integration (Feb 26, 2026)
-- Real-time GPS tracking of fleet vehicles
-- Admin "Suivi GPS Flotte" page with OpenStreetMap
-
-### Document Upload Fix (Feb 26, 2026)
-- Base64/JSON upload (web + native), camera option, compression
+- Super Admin at `/super-admin` (red/dark theme, global data)
+- Agency Admin web at `/admin` (purple theme, agency-scoped)
+- Role-based login redirect
 
 ### Previously Completed
-- Multi-Agency Architecture, Calendar System, Core Features (Auth, Vehicles, Reservations, Stripe, Email)
+- AI Document Verification (GPT-5.2 Vision)
+- Per-Agency Navixy GPS Integration
+- Excel Client Import
+- Base64/JSON Document Upload
+- Multi-Agency Architecture, Calendar, Auth, Vehicles, Reservations
 
-## Remaining Tasks (Prioritized Backlog)
-- P1: Push Notifications (in-app + push for reservation status changes)
-- P2: Client Import with Photos (include photos during Excel import)
-- P3: Driver/Agent Application (separate mobile app)
+## Remaining Tasks
+- P1: Push Notifications
+- P2: Client Import with Photos
+- P3: Driver/Agent Application
 - P4: Advanced Statistics & Dashboards
 - P5: App Store Deployment
-
-## Refactoring Needed
-- Break down server.py into separate FastAPI routers (auth, admin, navixy, etc.)
 
 ## Credentials
 - Super Admin: test@example.com / password123
 - Agency Admin: admin@test.com / admin123 (LogiRent Lausanne)
 - Client: client1@test.com / test1234
-- Imported clients: LogiRent2024
+- Test Client: jean@test.com (Jean Dupont)
 
 ## 3rd Party Integrations
-- Stripe (Payments)
-- Resend (Email)
-- Navixy (GPS Tracking) - per-agency
-- OpenAI GPT-5.2 via emergentintegrations (AI doc verification)
+- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (AI doc verification)
