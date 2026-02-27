@@ -335,32 +335,65 @@ export default function AgenciesPage() {
         </View>
       </Modal>
 
-      {/* QR Code Modal */}
+      {/* QR Code Modal - Both Client & Admin */}
       <Modal visible={!!qrAgency} transparent animationType="fade" onRequestClose={() => setQrAgency(null)}>
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { alignItems: 'center' }]}>
-            <TouchableOpacity style={styles.closeBtn} onPress={() => setQrAgency(null)}>
-              <Ionicons name="close" size={22} color={COLORS.text} />
-            </TouchableOpacity>
-            <Ionicons name="qr-code" size={32} color={COLORS.primary} />
-            <Text style={[styles.modalTitle, { marginTop: 8 }]}>QR Code - {qrAgency?.name}</Text>
-            <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 16, textAlign: 'center' }}>
-              Imprimez ce QR code et affichez-le dans votre agence. Les clients le scannent pour s'inscrire.
-            </Text>
-            <View style={styles.qrContainer} data-testid="qr-code-display">
-              <QRCode
-                value={`${API_URL}/a/${qrAgency?.slug || qrAgency?.id}`}
-                size={200}
-                level="H"
-                fgColor="#1A1A2E"
-                bgColor="#FFFFFF"
-              />
+          <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent}>
+            <View style={[styles.modalContent, { alignItems: 'center' }]}>
+              <TouchableOpacity style={styles.closeBtn} onPress={() => setQrAgency(null)}>
+                <Ionicons name="close" size={22} color={COLORS.text} />
+              </TouchableOpacity>
+              <Ionicons name="qr-code" size={32} color={COLORS.primary} />
+              <Text style={[styles.modalTitle, { marginTop: 8 }]}>QR Codes - {qrAgency?.name}</Text>
+              <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 20, textAlign: 'center' }}>
+                Imprimez ces QR codes et affichez-les dans votre agence.
+              </Text>
+
+              {/* Client QR Code */}
+              <View style={styles.qrSection} data-testid="qr-client-section">
+                <View style={styles.qrSectionHeader}>
+                  <Ionicons name="phone-portrait-outline" size={18} color={COLORS.success} />
+                  <Text style={[styles.qrSectionTitle, { color: COLORS.success }]}>App Client</Text>
+                </View>
+                <Text style={styles.qrDescription}>Le client scanne ce code pour s'inscrire et acceder au catalogue de l'agence.</Text>
+                <View style={styles.qrContainer} data-testid="qr-code-client">
+                  <QRCode
+                    value={`${API_URL}/a/${qrAgency?.slug || qrAgency?.id}`}
+                    size={180}
+                    level="H"
+                    fgColor="#1A1A2E"
+                    bgColor="#FFFFFF"
+                  />
+                </View>
+                <Text style={styles.qrUrl} selectable>{API_URL}/a/{qrAgency?.slug || qrAgency?.id}</Text>
+              </View>
+
+              <View style={styles.qrDivider} />
+
+              {/* Admin QR Code */}
+              <View style={styles.qrSection} data-testid="qr-admin-section">
+                <View style={styles.qrSectionHeader}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.warning} />
+                  <Text style={[styles.qrSectionTitle, { color: COLORS.warning }]}>App Admin Agence</Text>
+                </View>
+                <Text style={styles.qrDescription}>L'admin scanne ce code pour acceder a l'application mobile de gestion de l'agence.</Text>
+                <View style={styles.qrContainer} data-testid="qr-code-admin">
+                  <QRCode
+                    value={`${API_URL}/admin-login`}
+                    size={180}
+                    level="H"
+                    fgColor="#1A1A2E"
+                    bgColor="#FFFFFF"
+                  />
+                </View>
+                <Text style={styles.qrUrl} selectable>{API_URL}/admin-login</Text>
+              </View>
+
+              <TouchableOpacity style={styles.saveBtn} onPress={() => setQrAgency(null)} data-testid="qr-modal-close">
+                <Text style={styles.saveBtnText}>Fermer</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.qrUrl} selectable>{API_URL}/a/{qrAgency?.slug || qrAgency?.id}</Text>
-            <TouchableOpacity style={styles.saveBtn} onPress={() => setQrAgency(null)} data-testid="qr-modal-close">
-              <Text style={styles.saveBtnText}>Fermer</Text>
-            </TouchableOpacity>
-          </View>
+          </ScrollView>
         </View>
       </Modal>
     </View>
