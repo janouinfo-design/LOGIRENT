@@ -34,7 +34,7 @@ export default function AdminLogin() {
       if (role === 'super_admin') {
         router.replace('/super-admin');
       } else if (role === 'admin') {
-        router.replace('/admin');
+        router.replace('/agency-app');
       }
     }
   }, [isAuthenticated, user]);
