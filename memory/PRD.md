@@ -15,7 +15,12 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Agency Admin Profile Page (Feb 27, 2026) - NEW
+### Super Admin Agencies - Password Display & GPS Tab Removal (Feb 27, 2026) - NEW
+- Mot de passe admin affiché à côté de l'email de chaque agence dans Super Admin > Agences
+- Mots de passe stockés en clair lors de la création d'une agence (admin_password_plain)
+- Onglet "Suivi GPS" supprimé du menu Super Admin (GPS exclusif à l'admin agence)
+
+### Agency Admin Profile Page (Feb 27, 2026)
 - New "Profil" tab (7th tab) in agency admin app
 - Admin info card (name, email, Admin Agence badge)
 - Agency info section (name, address, phone, email)
