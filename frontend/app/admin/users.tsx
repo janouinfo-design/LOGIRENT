@@ -91,6 +91,40 @@ export default function AdminUsers() {
     setRefreshing(false);
   };
 
+  const handleImportFile = async (e: any) => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const resp = await api.post('/api/admin/import-users', formData);
+      const d = resp.data;
+      let msg = d.message;
+      if (d.errors && d.errors.length > 0) {
+        msg += '\n\nErreurs:\n' + d.errors.join('\n');
+      }
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Import', msg);
+      await fetchUsers();
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Erreur lors de l\'import';
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Erreur', msg);
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const triggerImport = () => {
+    if (Platform.OS === 'web') {
+      importInputRef.current?.click();
+    } else {
+      Alert.alert('Import', 'L\'import Excel est disponible uniquement sur la version web.');
+    }
+  };
+
   const openUserModal = (user: User) => {
     setSelectedUser(user);
     setAdminNotes(user.admin_notes || '');
