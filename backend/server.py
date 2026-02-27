@@ -2379,16 +2379,29 @@ async def setup_init():
 
 # ==================== NAVIXY GPS TRACKING ====================
 
+async def get_agency_navixy_config(user: dict) -> tuple:
+    """Get Navixy API URL and hash for the admin's agency. Falls back to global config."""
+    agency_id = user.get('agency_id')
+    if agency_id:
+        agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+        if agency and agency.get('navixy_api_url') and agency.get('navixy_hash'):
+            return agency['navixy_api_url'], agency['navixy_hash']
+    # Fallback to global config
+    if NAVIXY_API_URL and NAVIXY_HASH:
+        return NAVIXY_API_URL, NAVIXY_HASH
+    return None, None
+
 @api_router.get("/navixy/trackers")
 async def get_navixy_trackers(user: dict = Depends(get_current_user)):
     """Get all trackers from Navixy with their GPS state"""
     if user.get('role') not in ['admin', 'super_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
-    if not NAVIXY_API_URL or not NAVIXY_HASH:
-        raise HTTPException(status_code=500, detail="Navixy not configured")
+    api_url, api_hash = await get_agency_navixy_config(user)
+    if not api_url or not api_hash:
+        raise HTTPException(status_code=500, detail="Navixy non configuré pour cette agence")
     
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(f"{NAVIXY_API_URL}/tracker/list", json={"hash": NAVIXY_HASH})
+        resp = await client.post(f"{api_url}/tracker/list", json={"hash": api_hash})
         data = resp.json()
     
     if not data.get("success"):
@@ -2409,12 +2422,13 @@ async def get_navixy_tracker_state(tracker_id: int, user: dict = Depends(get_cur
     """Get GPS position of a single tracker"""
     if user.get('role') not in ['admin', 'super_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
-    if not NAVIXY_API_URL or not NAVIXY_HASH:
-        raise HTTPException(status_code=500, detail="Navixy not configured")
+    api_url, api_hash = await get_agency_navixy_config(user)
+    if not api_url or not api_hash:
+        raise HTTPException(status_code=500, detail="Navixy non configuré pour cette agence")
     
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(f"{NAVIXY_API_URL}/tracker/get_state",
-            json={"hash": NAVIXY_HASH, "tracker_id": tracker_id})
+        resp = await client.post(f"{api_url}/tracker/get_state",
+            json={"hash": api_hash, "tracker_id": tracker_id})
         data = resp.json()
     
     if not data.get("state"):
@@ -2442,11 +2456,12 @@ async def get_navixy_all_positions(user: dict = Depends(get_current_user)):
     """Get GPS positions of ALL trackers in one call"""
     if user.get('role') not in ['admin', 'super_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
-    if not NAVIXY_API_URL or not NAVIXY_HASH:
-        raise HTTPException(status_code=500, detail="Navixy not configured")
+    api_url, api_hash = await get_agency_navixy_config(user)
+    if not api_url or not api_hash:
+        raise HTTPException(status_code=500, detail="Navixy non configuré pour cette agence")
     
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(f"{NAVIXY_API_URL}/tracker/list", json={"hash": NAVIXY_HASH})
+        resp = await client.post(f"{api_url}/tracker/list", json={"hash": api_hash})
         data = resp.json()
     
     if not data.get("success"):
@@ -2458,8 +2473,8 @@ async def get_navixy_all_positions(user: dict = Depends(get_current_user)):
     async with httpx.AsyncClient(timeout=30) as client:
         tasks = []
         for tid in tracker_ids:
-            tasks.append(client.post(f"{NAVIXY_API_URL}/tracker/get_state",
-                json={"hash": NAVIXY_HASH, "tracker_id": tid}))
+            tasks.append(client.post(f"{api_url}/tracker/get_state",
+                json={"hash": api_hash, "tracker_id": tid}))
         responses = await asyncio.gather(*tasks, return_exceptions=True)
     
     tracker_map = {t["id"]: t for t in data.get("list", [])}
@@ -2494,8 +2509,9 @@ async def sync_navixy_vehicles(user: dict = Depends(get_current_user)):
     """Sync Navixy trackers into LogiRent vehicles database"""
     if user.get('role') not in ['admin', 'super_admin']:
         raise HTTPException(status_code=403, detail="Admin access required")
-    if not NAVIXY_API_URL or not NAVIXY_HASH:
-        raise HTTPException(status_code=500, detail="Navixy not configured")
+    api_url, api_hash = await get_agency_navixy_config(user)
+    if not api_url or not api_hash:
+        raise HTTPException(status_code=500, detail="Navixy non configuré pour cette agence")
     
     # Get user's agency
     agency_id = user.get('agency_id')
