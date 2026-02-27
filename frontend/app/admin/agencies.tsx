@@ -31,6 +31,8 @@ interface Agency {
   vehicle_count: number;
   reservation_count: number;
   admin_count: number;
+  admin_email?: string;
+  admin_name?: string;
 }
 
 export default function AgenciesPage() {
