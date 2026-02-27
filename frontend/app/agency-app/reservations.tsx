@@ -197,8 +197,9 @@ export default function AgencyReservations() {
   );
 }
 
-const s = 
-StyleSheet.create({
+const _C = { bg: '#0B0F1A', card: '#141926', primary: '#6C2BD9', accent: '#A78BFA', text: '#fff', textLight: '#8B95A8', border: '#1E2536', success: '#10B981', warning: '#F59E0B', error: '#EF4444' };
+
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: _C.bg },
   searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: _C.card, margin: 16, marginBottom: 0, borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1, borderColor: _C.border },
   searchInput: { flex: 1, color: _C.text, fontSize: 14, paddingVertical: 10 },
