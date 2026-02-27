@@ -1,0 +1,110 @@
+{
+  "summary": "Agency Admin Mobile App testing complete. Backend: 15/16 tests passed (1 skip expected). Frontend: All 5 tabs functional, booking flow works, client search/create works. CRITICAL BUG: Client navigation bar appearing on agency-app pages despite logic to hide it.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Root Layout (_layout.tsx)",
+        "issue": "Client top navigation bar (home/car/calendar/person icons + FR/EN language buttons) appears on /agency-app routes despite isAdmin check at line 89 including '/agency-app'. The showNav conditional should hide TopNavBar but it still renders.",
+        "selector": "Top navigation bar at the top of page",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Agency App pages",
+        "issues": ["Two navigation headers stacked - client nav at top + agency app header below. Should only show agency app header."]
+      }
+    ]
+  },
+  "features_tested": {
+    "agency_admin_login_redirect": {
+      "status": "PASS",
+      "credentials": "admin@test.com / admin123",
+      "details": "Login correctly redirects to /agency-app (NOT /admin)"
+    },
+    "super_admin_login_redirect": {
+      "status": "PASS", 
+      "credentials": "test@example.com / password123",
+      "details": "Login correctly redirects to /super-admin (NOT /agency-app)"
+    },
+    "agency_app_dashboard": {
+      "status": "PASS",
+      "details": "Dashboard shows stats (0 for new agency - expected), 'Nouvelle réservation' button, 'Dernières réservations' section"
+    },
+    "agency_app_bottom_tabs": {
+      "status": "PASS",
+      "tabs": ["Accueil", "Réserver", "Réservations", "Véhicules", "Clients"],
+      "details": "All 5 tabs navigate correctly to their respective pages"
+    },
+    "booking_flow_client_step": {
+      "status": "PASS",
+      "details": "Step indicator shows Client→Véhicule→Dates→Confirmer. Search for clients works (found Dupont, Jean Dupont for 'jean' query)"
+    },
+    "booking_flow_new_client": {
+      "status": "PASS",
+      "details": "'Créer un nouveau client' expands form with Name*, Phone, Email fields. 'Créer et continuer' button works."
+    },
+    "clients_tab_list": {
+      "status": "PASS",
+      "details": "Shows 'Aucun client' empty state (expected for agency-scoped view). Has search input and add client button."
+    },
+    "clients_tab_quick_create": {
+      "status": "PASS",
+      "details": "Purple add button opens 'Nouveau client' modal with Name*, Phone, Email fields and 'Créer le client' button"
+    },
+    "api_admin_login": {
+      "status": "PASS",
+      "details": "POST /api/admin/login returns correct role (admin vs super_admin)"
+    },
+    "api_quick_client": {
+      "status": "PASS",
+      "details": "POST /api/admin/quick-client creates client with name only, name+phone+email, or returns existing if email matches"
+    },
+    "api_search_clients": {
+      "status": "PASS",
+      "details": "GET /api/admin/search-clients?q=test returns matching clients. Short queries (<2 chars) return empty array."
+    },
+    "api_available_vehicles": {
+      "status": "PASS",
+      "details": "GET /api/admin/available-vehicles returns vehicles for given dates scoped by agency. Lausanne has 0 vehicles (expected)."
+    },
+    "client_nav_hidden": {
+      "status": "FAIL",
+      "details": "Client navigation bar appears on /agency-app despite pathname check in _layout.tsx line 89"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_agency_app.py",
+    "/app/test_reports/pytest/pytest_agency_app.xml"
+  ],
+  "action_items": [
+    "FIX CRITICAL: Client navigation bar showing on /agency-app routes. Check _layout.tsx line 89-95 - isAdmin check includes '/agency-app' but TopNavBar still renders. Possible timing issue with usePathname() hook or component re-render order.",
+    "Optional: Test create reservation flow end-to-end once agency has vehicles assigned"
+  ],
+  "critical_code_review_comments": [
+    "The showNav logic at line 90 of _layout.tsx should hide TopNavBar for agency-app routes, but it's not working. The pathname is correctly '/agency-app' at runtime. May need to add a loading state or use useEffect to delay navigation render.",
+    "data-testid attributes on React Native Web components don't pass through to DOM (known RN Web limitation - documented in iteration_16)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_agency_app.py"
+  ],
+  "success_rate": {
+    "backend": "94% (15/16 passed, 1 skipped - no vehicles for agency)",
+    "frontend": "92% (12/13 features work, 1 bug with client nav visibility)"
+  },
+  "test_credentials": {
+    "agency_admin": "admin@test.com / admin123 (LogiRent Lausanne agency)",
+    "super_admin": "test@example.com / password123",
+    "test_client": "jean@test.com (Jean Dupont)"
+  },
+  "seed_data_creation": "Created multiple TEST_ prefixed quick clients for API testing",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Agency Admin Mobile App is mostly functional. All 5 bottom tabs work, booking flow works, API endpoints work. ONE BUG: Client navigation bar (home/car/calendar icons + FR/EN) appears at top of agency-app pages when it should be hidden. The isAdmin check at _layout.tsx:89 includes '/agency-app' but TopNavBar still renders. Lausanne agency has 0 vehicles so vehicle-related tests are skipped - this is expected. All backend APIs (quick-client, search-clients, available-vehicles) work correctly.",
+  "rca_of_the_issue": "The client TopNavBar appears on agency-app pages despite logic to hide it. Line 89 checks `pathname.startsWith('/agency-app')` and line 90 sets `showNav = false` for admin routes. However, the navigation still renders. Possible causes: 1) usePathname() returns undefined or empty on first render before hydration, 2) SafeAreaView or Stack render before pathname is set, 3) Race condition between navigation state and render cycle. The pathname IS correctly '/agency-app' when checked via window.location.pathname at runtime."
+}
