@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import QRCode from 'react-qr-code';
 import api from '../../src/api/axios';
+import { useAuthStore } from '../../src/store/authStore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const C = { bg: '#0B0F1A', card: '#141926', primary: '#6C2BD9', accent: '#A78BFA', text: '#fff', textLight: '#8B95A8', border: '#1E2536', success: '#10B981', warning: '#F59E0B', error: '#EF4444', info: '#06b6d4' };
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 export default function AgencyAppHome() {
   const router = useRouter();
