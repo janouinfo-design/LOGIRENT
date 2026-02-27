@@ -1,28 +1,35 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal, ScrollView, FlatList } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal, FlatList, ScrollView } from 'react-native';
+import { Tabs, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
 import { useThemeStore } from '../../src/store/themeStore';
 
-function TopTabBar({ state, descriptors, navigation }: any) {
-  const { user, logout } = useAuthStore();
-  const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
-  const { mode, colors: C, toggleTheme } = useThemeStore();
+export default function AgencyAppLayout() {
   const router = useRouter();
-  const [showNotifs, setShowNotifs] = React.useState(false);
+  const pathname = usePathname();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+  const { mode, colors: C, toggleTheme, loadTheme } = useThemeStore();
+  const [showNotifs, setShowNotifs] = useState(false);
+
+  useEffect(() => { loadTheme(); }, []);
 
   useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!isAuthenticated) { router.replace('/admin-login'); return; }
+    if (user?.role !== 'admin') router.replace('/admin-login');
+  }, [isAuthenticated, user]);
 
-  const openNotifs = () => {
-    fetchNotifications();
-    setShowNotifs(true);
-  };
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUnreadCount();
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated || !user || user.role !== 'admin') return null;
 
   const timeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -34,52 +41,76 @@ function TopTabBar({ state, descriptors, navigation }: any) {
     return `Il y a ${Math.floor(hours / 24)}j`;
   };
 
+  const TABS = [
+    { key: 'index', label: 'Accueil', icon: 'home', iconO: 'home-outline' },
+    { key: 'book', label: 'Réserver', icon: 'add-circle', iconO: 'add-circle-outline' },
+    { key: 'reservations', label: 'Réservations', icon: 'calendar', iconO: 'calendar-outline' },
+    { key: 'vehicles', label: 'Véhicules', icon: 'car', iconO: 'car-outline' },
+    { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
+  ];
+
+  const isTabActive = (key: string) => {
+    if (key === 'index') return pathname === '/' || pathname === '';
+    return pathname.includes(key);
+  };
+
   return (
-    <View style={[s.stickyHeader, { backgroundColor: C.navBg, borderBottomColor: C.navBorder }]}>
-      <View style={s.headerRow}>
-        <View style={s.headerLeft}>
-          <Ionicons name="car-sport" size={20} color={C.accent} />
-          <Text style={[s.headerTitle, { color: C.text }]}>LogiRent</Text>
-          <View style={[s.agencyBadge, { backgroundColor: C.accent + '20' }]}>
-            <Text style={[s.agencyText, { color: C.accent }]}>{user?.agency_name || 'Agence'}</Text>
+    <View style={[s.container, { backgroundColor: C.bg }]}>
+      {/* Sticky Header */}
+      <View style={[s.header, { backgroundColor: C.navBg, borderBottomColor: C.navBorder }]}>
+        <View style={s.headerTop}>
+          <View style={s.headerLeft}>
+            <Ionicons name="car-sport" size={20} color={C.accent} />
+            <Text style={[s.title, { color: C.text }]}>LogiRent</Text>
+            <View style={[s.badge_agency, { backgroundColor: C.accent + '20' }]}>
+              <Text style={[s.badgeText_agency, { color: C.accent }]}>{user.agency_name || 'Agence'}</Text>
+            </View>
+          </View>
+          <View style={s.headerRight}>
+            <TouchableOpacity onPress={toggleTheme} style={s.iconBtn}>
+              <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { fetchNotifications(); setShowNotifs(true); }} style={s.iconBtn}>
+              <Ionicons name="notifications" size={20} color={C.textLight} />
+              {unreadCount > 0 && (
+                <View style={s.notifBadge}><Text style={s.notifBadgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} style={s.iconBtn}>
+              <Ionicons name="log-out-outline" size={20} color={C.textLight} />
+            </TouchableOpacity>
           </View>
         </View>
-        <View style={s.headerRight}>
-          <TouchableOpacity onPress={toggleTheme} data-testid="theme-toggle">
-            <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={openNotifs} data-testid="notif-bell">
-            <Ionicons name="notifications" size={20} color={C.textLight} />
-            {unreadCount > 0 && (
-              <View style={s.badge}><Text style={s.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="agency-app-logout">
-            <Ionicons name="log-out-outline" size={20} color={C.textLight} />
-          </TouchableOpacity>
+        <View style={s.tabsRow}>
+          {TABS.map(tab => {
+            const active = isTabActive(tab.key);
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[s.tab, active && { borderBottomColor: C.accent }]}
+                onPress={() => router.push(tab.key === 'index' ? '/agency-app' as any : `/agency-app/${tab.key}` as any)}
+              >
+                <Ionicons name={(active ? tab.icon : tab.iconO) as any} size={20} color={active ? C.accent : C.textLight} />
+                <Text style={[s.tabText, { color: active ? C.accent : C.textLight }]}>{tab.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
-      <View style={s.tabRow}>
-        {state.routes.map((route: any, index: number) => {
-          const { options } = descriptors[route.key];
-          const label = options.title || route.name;
-          const isFocused = state.index === index;
-          const icon = options.tabBarIcon;
-          return (
-            <TouchableOpacity
-              key={route.key}
-              style={[s.tabItem, isFocused && { borderBottomColor: C.accent }]}
-              onPress={() => {
-                const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-                if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
-              }}
-            >
-              {icon && icon({ color: isFocused ? C.accent : C.textLight, size: 20, focused: isFocused })}
-              <Text style={[s.tabLabel, { color: isFocused ? C.accent : C.textLight }]}>{label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
+
+      {/* Tab Content */}
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarStyle: { display: 'none' },
+        }}
+      >
+        <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
+        <Tabs.Screen name="book" options={{ title: 'Réserver' }} />
+        <Tabs.Screen name="reservations" options={{ title: 'Réservations' }} />
+        <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
+        <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
+      </Tabs>
 
       {/* Notification Panel */}
       <Modal visible={showNotifs} transparent animationType="slide" onRequestClose={() => setShowNotifs(false)}>
@@ -119,47 +150,21 @@ function TopTabBar({ state, descriptors, navigation }: any) {
   );
 }
 
-export default function AgencyAppLayout() {
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  const { colors: C, loadTheme } = useThemeStore();
-
-  useEffect(() => { loadTheme(); }, []);
-
-  useEffect(() => {
-    if (!isAuthenticated) { router.replace('/admin-login'); return; }
-    if (user?.role !== 'admin') router.replace('/admin-login');
-  }, [isAuthenticated, user]);
-
-  if (!isAuthenticated || !user || user.role !== 'admin') return null;
-
-  return (
-    <View style={[s.container, { backgroundColor: C.bg }]}>
-      <Tabs tabBar={(props) => <TopTabBar {...props} />} screenOptions={{ headerShown: false }}>
-        <Tabs.Screen name="index" options={{ title: 'Accueil', tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> }} />
-        <Tabs.Screen name="book" options={{ title: 'Réserver', tabBarIcon: ({ color, size }) => <Ionicons name="add-circle" size={size} color={color} /> }} />
-        <Tabs.Screen name="reservations" options={{ title: 'Réservations', tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} /> }} />
-        <Tabs.Screen name="vehicles" options={{ title: 'Véhicules', tabBarIcon: ({ color, size }) => <Ionicons name="car" size={size} color={color} /> }} />
-        <Tabs.Screen name="clients" options={{ title: 'Clients', tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} /> }} />
-      </Tabs>
-    </View>
-  );
-}
-
 const s = StyleSheet.create({
   container: { flex: 1 },
-  stickyHeader: { borderBottomWidth: 1, ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100 } : {}) },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
+  header: { borderBottomWidth: 1, ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100 } : {}) },
+  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  headerTitle: { fontSize: 17, fontWeight: '800' },
-  agencyBadge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6 },
-  agencyText: { fontSize: 11, fontWeight: '700' },
-  badge: { position: 'absolute', top: -6, right: -8, backgroundColor: '#EF4444', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  tabRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 8, paddingBottom: 2 },
-  tabItem: { alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', gap: 2 },
-  tabLabel: { fontSize: 11, fontWeight: '600' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  title: { fontSize: 17, fontWeight: '800' },
+  badge_agency: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6 },
+  badgeText_agency: { fontSize: 11, fontWeight: '700' },
+  iconBtn: { position: 'relative' as any, padding: 4 },
+  notifBadge: { position: 'absolute', top: -2, right: -4, backgroundColor: '#EF4444', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
+  notifBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  tabsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 8, paddingBottom: 2 },
+  tab: { alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', gap: 2 },
+  tabText: { fontSize: 11, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   notifPanel: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '70%', paddingTop: 16 },
   notifHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 12 },
