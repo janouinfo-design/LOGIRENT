@@ -1,40 +1,31 @@
-# LogiRent - PRD (Product Requirements Document)
-
-## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with:
-- Client Mobile App (iOS & Android) and Web App
-- Admin Web Back-office
-- Multi-agency support
-- Branding: violet, grey, black. Languages: French/English
+# LogiRent - PRD
 
 ## What's Been Implemented
 
+### Navixy Per-Agency Config (Feb 27, 2026)
+- Each agency has its own `navixy_api_url` and `navixy_hash` fields
+- Editable from Super Admin → Agences → edit pencil icon → "Configuration Navixy GPS" section
+- Tracking page uses agency-specific config, falls back to global .env config
+- LogiRent Geneva configured with live Navixy connection (26 trackers)
+
 ### Excel Client Import (Feb 27, 2026)
-- Admin can import clients from .xlsx or .csv files
-- Flexible column mapping (Nom, Prénom, Email, Téléphone, Adresse)
-- Duplicate detection by email, error reporting
+- Admin → Utilisateurs → "Importer Excel" button
+- Supports .xlsx, .xls, .csv with flexible column mapping
 - Default password: LogiRent2024
-- Button "Importer Excel" in admin users page
 
 ### AI Document Verification (Feb 26, 2026)
-- GPT-5.2 Vision verifies uploaded documents (ID card / driver's license)
-- Detects fake documents, screenshots, non-documents with confidence score
-- Rejects invalid uploads with explanation; results saved in DB
+- GPT-5.2 Vision auto-verifies ID cards and driver's licenses
+- Rejects fake/invalid documents with explanation
 
 ### Navixy GPS Integration (Feb 26, 2026)
-- Full Navixy GPS tracking (26 trackers, real-time positions)
-- Admin "Suivi GPS Flotte" page, auto-refresh 30s, OpenStreetMap
-- Vehicle sync from Navixy to LogiRent DB
+- Real-time GPS tracking of 26 vehicles
+- Admin "Suivi GPS Flotte" page with OpenStreetMap
 
 ### Document Upload Fix (Feb 26, 2026)
-- Fixed upload via base64/JSON (web + native)
-- Camera photo option for native app
-- Fixed logout crash, agency admin count
+- Base64/JSON upload (web + native), camera option, compression
 
 ### Previously Completed
-- Multi-Agency Architecture (URLs, QR codes, slug-based routing)
-- Calendar System (availability, HH:MM times, mobile-responsive)
-- Core: Auth, Vehicle CRUD, Reservations, Stripe, Email, Responsive UI
+- Multi-Agency Architecture, Calendar System, Core Features (Auth, Vehicles, Reservations, Stripe, Email)
 
 ## Remaining Tasks
 - P2: Notifications (in-app + push)
@@ -42,13 +33,7 @@ Build a complete car rental solution named "LogiRent" with:
 - P4: Driver/Agent Application
 - P5: Advanced Statistics & Dashboards
 
-## Key Integrations
-- GPT-5.2 Vision (Emergent LLM Key): Document verification
-- Navixy GPS: login.logitrak.fr/api-v2
-- Stripe: Payments
-- Resend: Email
-
 ## Credentials
 - Super Admin: test@example.com / password123
 - Client: client1@test.com / test1234
-- Imported clients default password: LogiRent2024
+- Imported clients: LogiRent2024
