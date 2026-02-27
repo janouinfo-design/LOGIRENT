@@ -395,6 +395,24 @@ export default function AdminUsers() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>{total} utilisateurs au total</Text>
+        <TouchableOpacity
+          style={[styles.importBtn, importing && { opacity: 0.6 }]}
+          onPress={triggerImport}
+          disabled={importing}
+          data-testid="import-excel-btn"
+        >
+          <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
+          <Text style={styles.importBtnText}>{importing ? 'Import...' : 'Importer Excel'}</Text>
+        </TouchableOpacity>
+        {Platform.OS === 'web' && (
+          <input
+            ref={(el: any) => { importInputRef.current = el; }}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            style={{ display: 'none' } as any}
+            onChange={(e: any) => handleImportFile(e)}
+          />
+        )}
       </View>
 
       <FlatList
