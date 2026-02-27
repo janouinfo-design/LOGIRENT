@@ -368,11 +368,9 @@ export default function BookingFlow() {
   );
 }
 
-const s = 
-// Fallback colors for StyleSheet (overridden by theme in component)
 const _C = { bg: '#0B0F1A', card: '#141926', primary: '#6C2BD9', accent: '#A78BFA', text: '#fff', textLight: '#8B95A8', border: '#1E2536', success: '#10B981', warning: '#F59E0B', error: '#EF4444' };
 
-StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: _C.bg },
   content: { padding: 16, paddingBottom: 40 },
   steps: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24, backgroundColor: _C.card, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: _C.border },
