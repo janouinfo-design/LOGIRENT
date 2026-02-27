@@ -43,6 +43,7 @@ export default function AgenciesPage() {
   const [error, setError] = useState('');
   const [successInfo, setSuccessInfo] = useState<{name: string, email: string, password: string} | null>(null);
   const [qrAgency, setQrAgency] = useState<Agency | null>(null);
+  const [qrType, setQrType] = useState<'both' | 'client' | 'admin'>('both');
 
   const isSuperAdmin = user?.role === 'super_admin';
 
