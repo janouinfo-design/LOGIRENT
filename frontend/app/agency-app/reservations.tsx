@@ -4,8 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-const C = { bg: '#0B0F1A', card: '#141926', primary: '#6C2BD9', accent: '#A78BFA', text: '#fff', textLight: '#8B95A8', border: '#1E2536', success: '#10B981', warning: '#F59E0B', error: '#EF4444' };
+import { useThemeStore } from '../../src/store/themeStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
