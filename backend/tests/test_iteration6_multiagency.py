@@ -16,7 +16,7 @@ import os
 from datetime import datetime, timedelta
 import uuid
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-ops-portal-2.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://agency-control-4.preview.emergentagent.com').rstrip('/')
 
 # Credentials from test context
 SUPER_ADMIN_EMAIL = "test@example.com"
