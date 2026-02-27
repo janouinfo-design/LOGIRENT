@@ -22,7 +22,6 @@ const NAV_ITEMS = [
   { key: '/super-admin/vehicles', label: 'Véhicules', icon: 'car-outline' as const },
   { key: '/super-admin/reservations', label: 'Réservations', icon: 'calendar-outline' as const },
   { key: '/super-admin/users', label: 'Utilisateurs', icon: 'people-outline' as const },
-  { key: '/super-admin/tracking', label: 'Suivi GPS', icon: 'locate-outline' as const },
 ];
 
 export default function SuperAdminLayout() {

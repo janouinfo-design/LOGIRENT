@@ -2307,6 +2307,7 @@ async def list_agencies(user: dict = Depends(get_agency_admin)):
         admin_user = await db.users.find_one({"agency_id": agency['id'], "role": "admin"}, {"email": 1, "name": 1, "_id": 0})
         agency['admin_email'] = admin_user['email'] if admin_user else None
         agency['admin_name'] = admin_user.get('name') if admin_user else None
+        agency['admin_password_display'] = agency.get('admin_password_plain', 'N/A')
     return agencies
 
 @api_router.post("/agencies")
@@ -2329,6 +2330,9 @@ async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin
         slug = f"{slug}-{str(uuid.uuid4())[:4]}"
     agency = Agency(name=data.name, slug=slug, address=data.address, phone=data.phone, email=data.email, navixy_api_url=data.navixy_api_url, navixy_hash=data.navixy_hash)
     await db.agencies.insert_one(agency.dict())
+    
+    # Store initial admin password on the agency for super admin reference
+    await db.agencies.update_one({"id": agency.id}, {"$set": {"admin_password_plain": data.admin_password}})
     
     # Create admin user for this agency
     admin_user = {
