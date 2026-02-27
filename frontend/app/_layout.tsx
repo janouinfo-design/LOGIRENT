@@ -86,7 +86,7 @@ function AppContent() {
   // Show top nav on client pages only (not on landing, auth, admin)
   const isLanding = pathname === '/' && !isAuthenticated;
   const isAuth = pathname.startsWith('/login') || pathname.startsWith('/register');
-  const isAdmin = pathname.startsWith('/admin');
+  const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/super-admin') || pathname.startsWith('/agency-app');
   const showNav = !isLanding && !isAuth && !isAdmin && isAuthenticated;
 
   return (
