@@ -81,6 +81,8 @@ class Agency(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     logo: Optional[str] = None
+    navixy_api_url: Optional[str] = None
+    navixy_hash: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class AgencyCreate(BaseModel):
@@ -91,6 +93,8 @@ class AgencyCreate(BaseModel):
     admin_name: Optional[str] = None
     admin_email: Optional[str] = None
     admin_password: Optional[str] = None
+    navixy_api_url: Optional[str] = None
+    navixy_hash: Optional[str] = None
 
 # Auth Models
 class UserCreate(BaseModel):
