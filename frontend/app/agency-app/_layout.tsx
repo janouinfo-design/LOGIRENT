@@ -46,6 +46,7 @@ export default function AgencyAppLayout() {
     { key: 'book', label: 'Réserver', icon: 'add-circle', iconO: 'add-circle-outline' },
     { key: 'reservations', label: 'Réservations', icon: 'calendar', iconO: 'calendar-outline' },
     { key: 'vehicles', label: 'Véhicules', icon: 'car', iconO: 'car-outline' },
+    { key: 'tracking', label: 'GPS', icon: 'navigate', iconO: 'navigate-outline' },
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
   ];
 
