@@ -2520,7 +2520,7 @@ async def sync_navixy_vehicles(user: dict = Depends(get_current_user)):
     
     # Fetch trackers from Navixy
     async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(f"{NAVIXY_API_URL}/tracker/list", json={"hash": NAVIXY_HASH})
+        resp = await client.post(f"{api_url}/tracker/list", json={"hash": api_hash})
         data = resp.json()
     
     if not data.get("success"):
