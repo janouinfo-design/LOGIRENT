@@ -56,6 +56,8 @@ export default function AdminUsers() {
   const [uploadingIdPhoto, setUploadingIdPhoto] = useState(false);
   const [uploadingLicensePhoto, setUploadingLicensePhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importInputRef = React.useRef<HTMLInputElement | null>(null);
   
   // Edit user info
   const [editMode, setEditMode] = useState(false);
