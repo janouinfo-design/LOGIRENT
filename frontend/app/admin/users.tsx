@@ -689,10 +689,27 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   headerText: {
     fontSize: 14,
     color: COLORS.textLight,
+  },
+  importBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#7c3aed',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 6,
+  },
+  importBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   listContent: {
     padding: 16,
