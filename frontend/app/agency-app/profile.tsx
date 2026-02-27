@@ -34,6 +34,7 @@ export default function AgencyProfile() {
 
   const clientLink = agency ? `${API_URL}/a/${agency.slug || agency.id}` : '';
   const adminLink = `${API_URL}/admin-login`;
+  const superAdminLink = `${API_URL}/super-admin`;
 
   const copyToClipboard = (text: string) => {
     if (Platform.OS === 'web') {
@@ -158,6 +159,34 @@ export default function AgencyProfile() {
               <Text style={[s.linkBtnText, { color: C.primary }]}>Partager</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[s.linkBtn, { backgroundColor: C.accent + '15' }]} onPress={() => setShowQR('admin')} testID="qr-admin-link">
+              <Ionicons name="qr-code-outline" size={16} color={C.accent} />
+              <Text style={[s.linkBtnText, { color: C.accent }]}>QR Code</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Super Admin Link */}
+        <View style={[s.linkCard, { backgroundColor: C.bg, borderColor: C.border }]}>
+          <View style={s.linkHeader}>
+            <View style={[s.linkIcon, { backgroundColor: C.error + '15' }]}>
+              <Ionicons name="key-outline" size={18} color={C.error} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[s.linkTitle, { color: C.text }]}>Super Admin</Text>
+              <Text style={[s.linkDesc, { color: C.textLight }]}>Gestion globale de toutes les agences</Text>
+            </View>
+          </View>
+          <Text style={[s.linkUrl, { color: C.accent }]} selectable numberOfLines={2}>{superAdminLink}</Text>
+          <View style={s.linkActions}>
+            <TouchableOpacity style={[s.linkBtn, { backgroundColor: C.error + '15' }]} onPress={() => copyToClipboard(superAdminLink)} testID="copy-super-link">
+              <Ionicons name="copy-outline" size={16} color={C.error} />
+              <Text style={[s.linkBtnText, { color: C.error }]}>Copier</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.linkBtn, { backgroundColor: C.primary + '15' }]} onPress={() => shareLink('Super Admin LogiRent', superAdminLink)} testID="share-super-link">
+              <Ionicons name="share-outline" size={16} color={C.primary} />
+              <Text style={[s.linkBtnText, { color: C.primary }]}>Partager</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[s.linkBtn, { backgroundColor: C.accent + '15' }]} onPress={() => setShowQR('super')} testID="qr-super-link">
               <Ionicons name="qr-code-outline" size={16} color={C.accent} />
               <Text style={[s.linkBtnText, { color: C.accent }]}>QR Code</Text>
             </TouchableOpacity>
