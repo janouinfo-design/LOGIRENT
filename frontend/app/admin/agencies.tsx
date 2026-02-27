@@ -262,6 +262,20 @@ export default function AgenciesPage() {
                   </View>
                 )}
 
+                {/* Navixy GPS Configuration */}
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="locate" size={18} color="#06b6d4" />
+                  <Text style={styles.sectionTitle}>Configuration Navixy GPS</Text>
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>URL API Navixy</Text>
+                  <TextInput style={styles.fieldInput} value={form.navixy_api_url} onChangeText={(t) => setForm({ ...form, navixy_api_url: t })} placeholder="https://login.logitrak.fr/api-v2" placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-url" />
+                </View>
+                <View style={styles.fieldGroup}>
+                  <Text style={styles.fieldLabel}>Clé API (Hash) Navixy</Text>
+                  <TextInput style={styles.fieldInput} value={form.navixy_hash} onChangeText={(t) => setForm({ ...form, navixy_hash: t })} placeholder="a6a4d4c91182..." placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-hash" />
+                </View>
+
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave} data-testid="agency-form-save">
                   <Text style={styles.saveBtnText}>{editAgency !== null ? 'Mettre a jour' : 'Creer l\'agence + admin'}</Text>
                 </TouchableOpacity>
