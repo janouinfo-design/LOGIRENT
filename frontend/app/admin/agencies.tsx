@@ -67,7 +67,7 @@ export default function AgenciesPage() {
         await axios.put(`${API_URL}/api/agencies/${editAgency.id}`, { name: form.name, address: form.address, phone: form.phone, email: form.email });
         setShowModal(false);
         setEditAgency(null);
-        setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' });
+        setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '', navixy_api_url: '', navixy_hash: '' });
         fetchAgencies();
       } else {
         if (!form.admin_name || !form.admin_email || !form.admin_password) {
@@ -76,7 +76,7 @@ export default function AgenciesPage() {
         const res = await axios.post(`${API_URL}/api/agencies`, form);
         setShowModal(false);
         setSuccessInfo({ name: res.data.admin_name, email: res.data.admin_email, password: form.admin_password });
-        setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' });
+        setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '', navixy_api_url: '', navixy_hash: '' });
         fetchAgencies();
       }
     } catch (err: any) {
