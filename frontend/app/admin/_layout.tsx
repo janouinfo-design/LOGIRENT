@@ -66,9 +66,7 @@ export default function AdminLayout() {
             <Text style={styles.agencyText}>{user.agency_name || 'N/A'}</Text>
           </View>
           <View style={styles.roleBadge} data-testid="admin-role-badge">
-            <Text style={styles.roleText}>
-              {isSuperAdmin ? 'Super Admin' : 'Admin'}
-            </Text>
+            <Text style={styles.roleText}>Admin</Text>
           </View>
           <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="admin-logout-btn">
             <Ionicons name="log-out-outline" size={22} color={COLORS.textLight} />
