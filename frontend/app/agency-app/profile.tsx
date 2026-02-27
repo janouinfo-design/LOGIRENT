@@ -21,8 +21,11 @@ export default function AgencyProfile() {
     (async () => {
       try {
         if (user?.agency_id) {
-          const res = await api.get(`/api/agencies/${user.agency_id}`);
-          setAgency(res.data);
+          const res = await api.get('/api/agencies');
+          // API returns array, get the first (own agency for admin)
+          if (res.data && res.data.length > 0) {
+            setAgency(res.data[0]);
+          }
         }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
