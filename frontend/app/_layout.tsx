@@ -90,13 +90,13 @@ function AppContent() {
   const showNav = !isLanding && !isAuth && !isAdminUser && isAuthenticated;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: C.white }} edges={['top']}>
-      <View style={{ flex: 1, backgroundColor: C.bg }}>
-        {showNav && <TopNavBar />}
+    <SafeAreaView style={{ flex: 1, backgroundColor: showNav ? C.white : 'transparent' }} edges={['top']}>
+      <View style={{ flex: 1, backgroundColor: showNav ? C.bg : 'transparent' }}>
+        {showNav ? <TopNavBar /> : null}
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: C.bg },
+            contentStyle: { backgroundColor: 'transparent' },
           }}
         >
           <Stack.Screen name="index" />
