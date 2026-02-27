@@ -68,17 +68,17 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
   const paymentColor = getPaymentColor(item.payment_status);
 
   return (
-    <View style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]} data-testid={`reservation-${item.id}`}>
+    <View style={[styles.card, { backgroundColor: _C.card, borderColor: _C.border }]} data-testid={`reservation-${item.id}`}>
       <View style={styles.cardHeader}>
         {vehicle?.image_url ? (
           <Image source={{ uri: vehicle.image_url }} style={styles.vehicleThumb} resizeMode="cover" />
         ) : (
           <View style={[styles.vehicleThumb, styles.vehicleThumbPlaceholder]}>
-            <Ionicons name="car" size={20} color={C.gray} />
+            <Ionicons name="car" size={20} color={_C.gray} />
           </View>
         )}
         <View style={styles.cardHeaderInfo}>
-          <Text style={[styles.vehicleName, { color: C.text }]}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}</Text>
+          <Text style={[styles.vehicleName, { color: _C.text }]}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}</Text>
           <Text style={styles.vehicleYear}>{vehicle?.year}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
@@ -94,7 +94,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
           <Text style={styles.dateTime}>{format(new Date(item.start_date), 'HH:mm')}</Text>
         </View>
         <View style={styles.dateArrow}>
-          <Ionicons name="arrow-forward" size={16} color={C.gray} />
+          <Ionicons name="arrow-forward" size={16} color={_C.gray} />
           <Text style={styles.daysCount}>{item.total_days} jour{item.total_days > 1 ? 's' : ''}</Text>
         </View>
         <View style={[styles.dateBox, { alignItems: 'flex-end' }]}>
@@ -117,7 +117,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
 
       {canCancel && (
         <TouchableOpacity style={styles.cancelBtn} onPress={() => onCancel(item.id)} data-testid={`cancel-${item.id}`}>
-          <Ionicons name="close-circle-outline" size={16} color={C.error} />
+          <Ionicons name="close-circle-outline" size={16} color={_C.error} />
           <Text style={styles.cancelText}>Annuler la réservation</Text>
         </TouchableOpacity>
       )}
@@ -175,7 +175,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
       {/* Month Navigation */}
       <View style={calStyles.monthNav} data-testid="calendar-month-nav">
         <TouchableOpacity onPress={() => setCurrentMonth(subMonths(currentMonth, 1))} style={calStyles.navBtn} data-testid="cal-prev-month">
-          <Ionicons name="chevron-back" size={20} color={C.purple} />
+          <Ionicons name="chevron-back" size={20} color={_C.purple} />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
@@ -187,7 +187,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
           </Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setCurrentMonth(addMonths(currentMonth, 1))} style={calStyles.navBtn} data-testid="cal-next-month">
-          <Ionicons name="chevron-forward" size={20} color={C.purple} />
+          <Ionicons name="chevron-forward" size={20} color={_C.purple} />
         </TouchableOpacity>
       </View>
 
@@ -198,7 +198,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
           onPress={() => { setCurrentMonth(new Date()); setSelectedDate(new Date()); }}
           data-testid="cal-goto-today"
         >
-          <Ionicons name="today-outline" size={14} color={C.purple} />
+          <Ionicons name="today-outline" size={14} color={_C.purple} />
           <Text style={calStyles.todayBtnText}>Aujourd'hui</Text>
         </TouchableOpacity>
       )}
@@ -246,9 +246,9 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                 </Text>
                 {hasRes && (
                   <View style={calStyles.dotsRow}>
-                    {hasActive && <View style={[calStyles.dot, { backgroundColor: C.purple }]} />}
-                    {hasPending && <View style={[calStyles.dot, { backgroundColor: C.warning }]} />}
-                    {!hasActive && !hasPending && <View style={[calStyles.dot, { backgroundColor: C.success }]} />}
+                    {hasActive && <View style={[calStyles.dot, { backgroundColor: _C.purple }]} />}
+                    {hasPending && <View style={[calStyles.dot, { backgroundColor: _C.warning }]} />}
+                    {!hasActive && !hasPending && <View style={[calStyles.dot, { backgroundColor: _C.success }]} />}
                   </View>
                 )}
               </TouchableOpacity>
@@ -260,15 +260,15 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
       {/* Legend */}
       <View style={calStyles.legend}>
         <View style={calStyles.legendItem}>
-          <View style={[calStyles.legendDot, { backgroundColor: C.purple }]} />
+          <View style={[calStyles.legendDot, { backgroundColor: _C.purple }]} />
           <Text style={calStyles.legendText}>En cours</Text>
         </View>
         <View style={calStyles.legendItem}>
-          <View style={[calStyles.legendDot, { backgroundColor: C.warning }]} />
+          <View style={[calStyles.legendDot, { backgroundColor: _C.warning }]} />
           <Text style={calStyles.legendText}>En attente</Text>
         </View>
         <View style={calStyles.legendItem}>
-          <View style={[calStyles.legendDot, { backgroundColor: C.success }]} />
+          <View style={[calStyles.legendDot, { backgroundColor: _C.success }]} />
           <Text style={calStyles.legendText}>Confirmée</Text>
         </View>
       </View>
@@ -281,7 +281,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
           </Text>
           {selectedReservations.length === 0 ? (
             <View style={calStyles.emptyDay}>
-              <Ionicons name="calendar-outline" size={28} color={C.gray} />
+              <Ionicons name="calendar-outline" size={28} color={_C.gray} />
               <Text style={calStyles.emptyDayText}>Aucune réservation</Text>
               {!isBefore(startOfDay(selectedDate), startOfDay(new Date())) && (
                 <TouchableOpacity
@@ -311,7 +311,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                       </View>
                     </View>
                     <View style={calStyles.eventTimeRow}>
-                      <Ionicons name="time-outline" size={13} color={C.purple} />
+                      <Ionicons name="time-outline" size={13} color={_C.purple} />
                       <Text style={calStyles.eventTime}>
                         {format(new Date(res.start_date), 'HH:mm')} - {format(new Date(res.end_date), 'HH:mm')}
                       </Text>
