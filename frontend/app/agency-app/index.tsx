@@ -1,14 +1,12 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator, Modal } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import QRCode from 'react-qr-code';
 import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
+import { useThemeStore } from '../../src/store/themeStore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-import { useThemeStore } from '../../src/store/themeStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
