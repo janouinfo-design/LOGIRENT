@@ -47,9 +47,6 @@ export default function AdminLayout() {
 
   if (!isAuthenticated || !user) return null;
 
-  const isSuperAdmin = user.role === 'super_admin';
-  const allNavItems = isSuperAdmin ? [...NAV_ITEMS, ...SUPER_NAV_ITEMS] : NAV_ITEMS;
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Top Admin Bar */}
