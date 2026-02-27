@@ -132,7 +132,7 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   loadingBox: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg },
-  topBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, paddingHorizontal: 12, paddingTop: 4, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border, gap: 4 },
+  topBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, paddingHorizontal: 12, paddingTop: 4, paddingBottom: 6, borderBottomWidth: 1, borderBottomColor: C.border, gap: 4, ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100 } : {}) },
   logoSection: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   logo: { width: 24, height: 24 },
   logoText: { fontSize: 16, fontWeight: '800', color: C.dark },
