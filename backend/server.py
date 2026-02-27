@@ -2796,15 +2796,12 @@ async def update_my_navixy_config(data: NavixyConfig, user: dict = Depends(get_a
 # ==================== NAVIXY GPS TRACKING ====================
 
 async def get_agency_navixy_config(user: dict) -> tuple:
-    """Get Navixy API URL and hash for the admin's agency. Falls back to global config."""
+    """Get Navixy API URL and hash for the admin's agency. No global fallback - each agency must configure its own."""
     agency_id = user.get('agency_id')
     if agency_id:
         agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
         if agency and agency.get('navixy_api_url') and agency.get('navixy_hash'):
             return agency['navixy_api_url'], agency['navixy_hash']
-    # Fallback to global config
-    if NAVIXY_API_URL and NAVIXY_HASH:
-        return NAVIXY_API_URL, NAVIXY_HASH
     return None, None
 
 @api_router.get("/navixy/trackers")
