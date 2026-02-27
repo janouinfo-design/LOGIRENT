@@ -11,15 +11,6 @@ import { useThemeStore } from '../src/store/themeStore';
 
 const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413e-4204-98d4-1c8f25a6208a/images/6552fb693c88f79e17c59c43f1efe1446e03b6ddd3093a08b690934bdc28ae75.png';
 
-const C = {
-  purple: '#7C3AED',
-  dark: '#1A1A2E',
-  gray: '#9CA3AF',
-  bg: '#FAFAFA',
-  white: '#FFFFFF',
-  border: '#E5E7EB',
-};
-
 const navTabs = [
   { name: 'index', route: '/', icon: 'home', iconOutline: 'home-outline', label: 'Accueil' },
   { name: 'vehicles', route: '/vehicles', icon: 'car', iconOutline: 'car-outline', label: 'Véhicules' },
