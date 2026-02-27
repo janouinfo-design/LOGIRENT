@@ -2194,7 +2194,10 @@ async def list_agencies(user: dict = Depends(get_agency_admin)):
         agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency['id']})
         agency['reservation_count'] = await db.reservations.count_documents({"agency_id": agency['id']})
         agency['admin_count'] = await db.users.count_documents({"agency_id": agency['id'], "role": {"$in": ["admin", "super_admin"]}})
-    
+        # Get admin email for the agency
+        admin_user = await db.users.find_one({"agency_id": agency['id'], "role": "admin"}, {"email": 1, "name": 1, "_id": 0})
+        agency['admin_email'] = admin_user['email'] if admin_user else None
+        agency['admin_name'] = admin_user.get('name') if admin_user else None
     return agencies
 
 @api_router.post("/agencies")
