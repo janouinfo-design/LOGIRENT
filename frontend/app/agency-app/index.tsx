@@ -21,7 +21,6 @@ export default function AgencyAppHome() {
   const [agency, setAgency] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [showQR, setShowQR] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
