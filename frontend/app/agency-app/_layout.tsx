@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Tabs, useRouter } from 'expo-router';
+import { Slot, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 
@@ -16,8 +16,17 @@ const C = {
   warning: '#F59E0B',
 };
 
+const TABS = [
+  { key: 'index', route: '/agency-app', label: 'Accueil', icon: 'home', iconOutline: 'home-outline' },
+  { key: 'book', route: '/agency-app/book', label: 'Réserver', icon: 'add-circle', iconOutline: 'add-circle-outline' },
+  { key: 'reservations', route: '/agency-app/reservations', label: 'Réservations', icon: 'calendar', iconOutline: 'calendar-outline' },
+  { key: 'vehicles', route: '/agency-app/vehicles', label: 'Véhicules', icon: 'car', iconOutline: 'car-outline' },
+  { key: 'clients', route: '/agency-app/clients', label: 'Clients', icon: 'people', iconOutline: 'people-outline' },
+];
+
 export default function AgencyAppLayout() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuthStore();
 
   useEffect(() => {
@@ -32,81 +41,92 @@ export default function AgencyAppLayout() {
 
   if (!isAuthenticated || !user || user.role !== 'admin') return null;
 
+  const isActive = (tab: typeof TABS[0]) => {
+    if (tab.key === 'index') return pathname === '/' || pathname === '' || pathname === '/agency-app';
+    return pathname.includes(tab.key);
+  };
+
   return (
     <View style={s.container}>
-      <View style={s.header}>
-        <View style={s.headerLeft}>
-          <Ionicons name="car-sport" size={22} color={C.accent} />
-          <Text style={s.headerTitle}>LogiRent</Text>
-          <View style={s.agencyBadge}>
-            <Text style={s.agencyText}>{user.agency_name || 'Agence'}</Text>
+      {/* Sticky top bar - Facebook style */}
+      <View style={s.stickyHeader}>
+        {/* Row 1: Logo + Agency + Logout */}
+        <View style={s.headerRow}>
+          <View style={s.headerLeft}>
+            <Ionicons name="car-sport" size={20} color={C.accent} />
+            <Text style={s.headerTitle}>LogiRent</Text>
+            <View style={s.agencyBadge}>
+              <Text style={s.agencyText}>{user.agency_name || 'Agence'}</Text>
+            </View>
           </View>
+          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="agency-app-logout">
+            <Ionicons name="log-out-outline" size={20} color={C.textLight} />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="agency-app-logout">
-          <Ionicons name="log-out-outline" size={22} color={C.textLight} />
-        </TouchableOpacity>
+        {/* Row 2: Tab navigation */}
+        <View style={s.tabRow}>
+          {TABS.map((tab) => {
+            const active = isActive(tab);
+            return (
+              <TouchableOpacity
+                key={tab.key}
+                style={[s.tabItem, active && s.tabItemActive]}
+                onPress={() => router.push(tab.route as any)}
+                data-testid={`tab-${tab.key}`}
+              >
+                <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={20} color={active ? C.accent : C.textLight} />
+                <Text style={[s.tabLabel, active && s.tabLabelActive]}>{tab.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </View>
-      <Tabs
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: C.card,
-            borderTopColor: C.border,
-            borderTopWidth: 1,
-            height: Platform.OS === 'web' ? 60 : 80,
-            paddingBottom: Platform.OS === 'web' ? 8 : 20,
-            paddingTop: 8,
-          },
-          tabBarActiveTintColor: C.accent,
-          tabBarInactiveTintColor: C.textLight,
-          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-        }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: 'Accueil',
-            tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="book"
-          options={{
-            title: 'Réserver',
-            tabBarIcon: ({ color, size }) => <Ionicons name="add-circle" size={size} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="reservations"
-          options={{
-            title: 'Réservations',
-            tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={size} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="vehicles"
-          options={{
-            title: 'Véhicules',
-            tabBarIcon: ({ color, size }) => <Ionicons name="car" size={size} color={color} />,
-          }}
-        />
-        <Tabs.Screen
-          name="clients"
-          options={{
-            title: 'Clients',
-            tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
-          }}
-        />
-      </Tabs>
+      {/* Content */}
+      <View style={s.content}>
+        <Slot />
+      </View>
     </View>
   );
 }
 
 const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: C.bg },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border },
+  stickyHeader: {
+    backgroundColor: C.card,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
+    ...(Platform.OS === 'web' ? { position: 'sticky' as any, top: 0, zIndex: 100 } : {}),
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 6,
+  },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerTitle: { color: C.text, fontSize: 18, fontWeight: '800' },
+  headerTitle: { color: C.text, fontSize: 17, fontWeight: '800' },
   agencyBadge: { backgroundColor: 'rgba(108,43,217,0.2)', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 6 },
   agencyText: { color: C.accent, fontSize: 11, fontWeight: '700' },
+  tabRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
+    paddingBottom: 2,
+  },
+  tabItem: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+    gap: 2,
+  },
+  tabItemActive: {
+    borderBottomColor: C.accent,
+  },
+  tabLabel: { fontSize: 11, fontWeight: '600', color: C.textLight },
+  tabLabelActive: { color: C.accent },
+  content: { flex: 1 },
 });
