@@ -61,9 +61,9 @@ export default function VehiclesScreen() {
   const activeFiltersCount = [selectedType, selectedTransmission].filter(f => f !== 'Tous' && f !== 'Toutes').length;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: C.bg }]}>
         <Text style={styles.title}>Notre Flotte</Text>
         <Text style={styles.subtitle}>{vehicles.length} véhicules disponibles</Text>
       </View>
@@ -114,7 +114,7 @@ export default function VehiclesScreen() {
         {vehicles.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Ionicons name="car-outline" size={64} color={C.gray} />
-            <Text style={styles.emptyText}>Aucun véhicule trouvé</Text>
+            <Text style={[styles.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
             <Text style={styles.emptySubtext}>Essayez d'ajuster vos filtres</Text>
           </View>
         ) : (

@@ -166,10 +166,10 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: C.bg }]} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
         {/* Profile Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: C.bg }]}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>{user.name?.charAt(0).toUpperCase() || 'U'}</Text>
           </View>
@@ -198,7 +198,7 @@ export default function ProfileScreen() {
 
         {/* Documents */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents Obligatoires</Text>
+          <Text style={[styles.sectionTitle, { color: C.text }]}>Documents Obligatoires</Text>
           {/* Hidden file inputs for web */}
           {Platform.OS === 'web' && (
             <>
@@ -271,8 +271,8 @@ export default function ProfileScreen() {
 
         {/* Menu */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Paramètres</Text>
-          <View style={styles.menuCard}>
+          <Text style={[styles.sectionTitle, { color: C.text }]}>Paramètres</Text>
+          <View style={[styles.menuCard, { backgroundColor: C.card, borderColor: C.border }]}>
             {menuItems.map((item, i) => (
               <TouchableOpacity key={item.label} style={[styles.menuItem, i < menuItems.length - 1 && styles.menuBorder]} data-testid={`menu-${i}`}>
                 <View style={styles.menuLeft}>
@@ -286,7 +286,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} data-testid="logout-btn">
+        <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: C.error }]} onPress={handleLogout} data-testid="logout-btn">
           <Ionicons name="log-out" size={20} color={C.error} />
           <Text style={styles.logoutText}>Se déconnecter</Text>
         </TouchableOpacity>

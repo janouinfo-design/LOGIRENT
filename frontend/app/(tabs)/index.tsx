@@ -110,7 +110,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: C.bg }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -119,8 +119,8 @@ export default function HomeScreen() {
 
         {/* Hero Section */}
         <AnimatedSection delay={0}>
-          <View style={styles.hero}>
-            <View style={styles.heroBg} />
+          <View style={[styles.hero, { backgroundColor: C.bg }]}>
+            <View style={[styles.heroBg, { backgroundColor: C.primary }]} />
             <View style={styles.heroInner}>
               {/* Image on top */}
               <View style={styles.heroImageWrap}>
@@ -132,19 +132,19 @@ export default function HomeScreen() {
               </View>
               {/* Content below */}
               <View style={styles.heroContent}>
-                <Text style={styles.heroGreeting}>{t('greeting')}</Text>
-                <Text style={styles.heroTitle}>LogiRent</Text>
-                <Text style={styles.heroSubtitle}>{t('heroSubtitle')}</Text>
+                <Text style={[styles.heroGreeting, { color: C.text }]}>{t('greeting')}</Text>
+                <Text style={[styles.heroTitle, { color: C.text }]}>LogiRent</Text>
+                <Text style={[styles.heroSubtitle, { color: C.textLight }]}>{t('heroSubtitle')}</Text>
 
                 {/* Search Bar */}
-                <View style={styles.heroSearch}>
+                <View style={[styles.heroSearch, { backgroundColor: C.card, borderColor: C.border }]}>
                   <Ionicons name="search" size={18} color={C.gray} />
                   <TouchableOpacity
-                    style={styles.heroSearchInput}
+                    style={[styles.heroSearchInput, { color: C.text }]}
                     onPress={() => router.push('/(tabs)/vehicles')}
                     data-testid="hero-search"
                   >
-                    <Text style={styles.heroSearchPlaceholder}>{t('searchPlaceholder')}</Text>
+                    <Text style={[styles.heroSearchPlaceholder, { color: C.textLight }]}>{t('searchPlaceholder')}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.heroSearchBtn}
@@ -179,7 +179,7 @@ export default function HomeScreen() {
         {/* Categories */}
         <AnimatedSection delay={200}>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('categories')}</Text>
+            <Text style={[styles.sectionTitle, { color: C.text }]}>{t('categories')}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -235,14 +235,14 @@ export default function HomeScreen() {
         {vehicles.length === 0 && (
           <View style={styles.empty}>
             <Ionicons name="car-outline" size={48} color={C.grayLight} />
-            <Text style={styles.emptyText}>Aucun véhicule trouvé</Text>
+            <Text style={[styles.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
           </View>
         )}
 
         {/* Why LogiRent Section */}
         <AnimatedSection delay={500}>
           <View style={styles.whySection}>
-            <Text style={styles.sectionTitle}>{t('whyUs')}</Text>
+            <Text style={[styles.sectionTitle, { color: C.text }]}>{t('whyUs')}</Text>
             <View style={styles.benefitsGrid}>
               {[
                 { icon: 'car-sport', titleKey: 'benefit1Title' as const, descKey: 'benefit1Desc' as const },

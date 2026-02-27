@@ -68,7 +68,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
   const paymentColor = getPaymentColor(item.payment_status);
 
   return (
-    <View style={styles.card} data-testid={`reservation-${item.id}`}>
+    <View style={[styles.card, { backgroundColor: C.card, borderColor: C.border }]} data-testid={`reservation-${item.id}`}>
       <View style={styles.cardHeader}>
         {vehicle?.image_url ? (
           <Image source={{ uri: vehicle.image_url }} style={styles.vehicleThumb} resizeMode="cover" />
@@ -78,7 +78,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
           </View>
         )}
         <View style={styles.cardHeaderInfo}>
-          <Text style={styles.vehicleName}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}</Text>
+          <Text style={[styles.vehicleName, { color: C.text }]}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}</Text>
           <Text style={styles.vehicleYear}>{vehicle?.year}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
@@ -379,9 +379,9 @@ export default function ReservationsScreen() {
   ];
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: C.bg }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: C.bg }]}>
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.title}>Mes Locations</Text>
@@ -429,7 +429,7 @@ export default function ReservationsScreen() {
               {filteredReservations.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="calendar-outline" size={56} color={C.gray} />
-                  <Text style={styles.emptyText}>Aucune réservation</Text>
+                  <Text style={[styles.emptyText, { color: C.textLight }]}>Aucune réservation</Text>
                   <Text style={styles.emptySubtext}>Réservez votre premier véhicule</Text>
                   <Button title="Voir les véhicules" onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
                 </View>

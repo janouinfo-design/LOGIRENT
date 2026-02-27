@@ -114,7 +114,7 @@ export default function VehicleDetailScreen() {
 
         <View style={s.content}>
           {/* Header */}
-          <View style={s.header}>
+          <View style={[s.header, { backgroundColor: C.bg }]}>
             <View style={{ flex: 1 }}>
               <Text style={[s.title, { color: C.text }]}>{v.brand} {v.model}</Text>
               <Text style={s.year}>{v.year}</Text>
