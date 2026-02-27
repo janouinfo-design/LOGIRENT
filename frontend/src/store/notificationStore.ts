@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import axios from 'axios';
-
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+import api from '../api/axios';
 
 export interface Notification {
   id: string;
@@ -10,6 +8,7 @@ export interface Notification {
   type: string;
   title: string;
   message: string;
+  icon?: string;
   read: boolean;
   created_at: string;
 }
@@ -32,46 +31,39 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   fetchNotifications: async () => {
     set({ isLoading: true });
     try {
-      const response = await axios.get(`${API_URL}/api/notifications`);
-      set({ notifications: response.data.notifications, isLoading: false });
-    } catch (error) {
+      const response = await api.get('/api/notifications');
+      set({ notifications: response.data.notifications || [], isLoading: false });
+    } catch {
       set({ isLoading: false });
-      console.error('Error fetching notifications:', error);
     }
   },
 
   fetchUnreadCount: async () => {
     try {
-      const response = await axios.get(`${API_URL}/api/notifications/unread-count`);
-      set({ unreadCount: response.data.count });
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
+      const response = await api.get('/api/notifications/unread-count');
+      set({ unreadCount: response.data.count || 0 });
+    } catch {}
   },
 
   markAsRead: async (id: string) => {
     try {
-      await axios.put(`${API_URL}/api/notifications/${id}/read`);
+      await api.put(`/api/notifications/${id}/read`);
       const { notifications } = get();
       set({
         notifications: notifications.map(n => n.id === id ? { ...n, read: true } : n),
         unreadCount: Math.max(0, get().unreadCount - 1),
       });
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
+    } catch {}
   },
 
   markAllAsRead: async () => {
     try {
-      await axios.put(`${API_URL}/api/notifications/read-all`);
+      await api.put('/api/notifications/read-all');
       const { notifications } = get();
       set({
         notifications: notifications.map(n => ({ ...n, read: true })),
         unreadCount: 0,
       });
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    }
+    } catch {}
   },
 }));
