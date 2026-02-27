@@ -82,7 +82,7 @@ export default function AgencyAppLayout() {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={s.tabsRow}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabsRow} contentContainerStyle={s.tabsContent}>
           {TABS.map(tab => {
             const active = isTabActive(tab.key);
             return (
@@ -97,7 +97,7 @@ export default function AgencyAppLayout() {
               </TouchableOpacity>
             );
           })}
-        </View>
+        </ScrollView>
       </View>
 
       {/* Tab Content - hidden native tab bar */}
@@ -112,6 +112,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="book" options={{ title: 'Réserver' }} />
           <Tabs.Screen name="reservations" options={{ title: 'Réservations' }} />
           <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
+          <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
         </Tabs>
       </View>
@@ -166,7 +167,8 @@ const s = StyleSheet.create({
   iconBtn: { position: 'relative' as any, padding: 4 },
   notifBadge: { position: 'absolute', top: -2, right: -4, backgroundColor: '#EF4444', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3 },
   notifBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  tabsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 8, paddingBottom: 2 },
+  tabsRow: { paddingHorizontal: 4, paddingBottom: 2 },
+  tabsContent: { flexDirection: 'row', gap: 2 },
   tab: { alignItems: 'center', paddingVertical: 8, paddingHorizontal: 12, borderBottomWidth: 2, borderBottomColor: 'transparent', gap: 2 },
   tabText: { fontSize: 11, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
