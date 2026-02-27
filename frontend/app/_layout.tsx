@@ -83,10 +83,13 @@ function AppContent() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuthStore();
 
+  // Use window.location for more reliable path detection on web
+  const fullPath = Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.pathname : pathname;
+
   // Show top nav on client pages only (not on landing, auth, admin)
-  const isLanding = pathname === '/' && !isAuthenticated;
-  const isAuth = pathname.startsWith('/login') || pathname.startsWith('/register');
-  const isAdmin = pathname.startsWith('/admin') || pathname.startsWith('/super-admin') || pathname.includes('agency-app');
+  const isLanding = (pathname === '/' || fullPath === '/') && !isAuthenticated;
+  const isAuth = fullPath.startsWith('/login') || fullPath.startsWith('/register');
+  const isAdmin = fullPath.includes('/admin') || fullPath.includes('/super-admin') || fullPath.includes('/agency-app');
   const showNav = !isLanding && !isAuth && !isAdmin && isAuthenticated;
 
   return (
