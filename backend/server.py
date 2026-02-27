@@ -1602,10 +1602,14 @@ async def get_admin_users(
         users = await db.users.find({}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
         total = await db.users.count_documents({})
     else:
-        # Get user IDs who have reservations with this agency
-        user_ids = await db.reservations.distinct("user_id", {"agency_id": agency_id})
-        users = await db.users.find({"id": {"$in": user_ids}}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
-        total = len(user_ids)
+        # Get users: those with reservations at this agency OR those directly assigned to this agency
+        user_ids_from_reservations = await db.reservations.distinct("user_id", {"agency_id": agency_id})
+        query = {"$or": [
+            {"id": {"$in": user_ids_from_reservations}},
+            {"agency_id": agency_id, "role": "client"}
+        ]}
+        users = await db.users.find(query, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+        total = await db.users.count_documents(query)
     
     for u in users:
         u['reservation_count'] = await db.reservations.count_documents(
