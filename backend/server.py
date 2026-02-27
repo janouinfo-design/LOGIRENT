@@ -1690,6 +1690,113 @@ async def get_user_details_admin(
     
     return target_user
 
+
+@api_router.post("/admin/import-users")
+async def import_users_from_excel(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_admin_user)
+):
+    """Import clients from an Excel (.xlsx) or CSV file"""
+    import io
+    
+    filename = file.filename or ""
+    content = await file.read()
+    
+    rows = []
+    if filename.endswith(".csv"):
+        import csv
+        text = content.decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text), delimiter=";")
+        # Try comma if semicolon gives only 1 column
+        first_row = next(csv.DictReader(io.StringIO(text), delimiter=";"), None)
+        if first_row and len(first_row) <= 1:
+            reader = csv.DictReader(io.StringIO(text), delimiter=",")
+        else:
+            reader = csv.DictReader(io.StringIO(text), delimiter=";")
+        for row in reader:
+            rows.append(row)
+    elif filename.endswith(".xlsx") or filename.endswith(".xls"):
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(content))
+        ws = wb.active
+        headers = [str(cell.value or "").strip().lower() for cell in ws[1]]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            row_dict = {}
+            for i, val in enumerate(row):
+                if i < len(headers):
+                    row_dict[headers[i]] = str(val).strip() if val is not None else ""
+            rows.append(row_dict)
+    else:
+        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez .xlsx ou .csv")
+    
+    if not rows:
+        raise HTTPException(status_code=400, detail="Le fichier est vide")
+    
+    # Map column names (flexible matching)
+    def find_col(row, candidates):
+        for c in candidates:
+            for key in row.keys():
+                if c in key.lower():
+                    return row[key]
+        return ""
+    
+    agency_id = user.get("agency_id")
+    default_password = hash_password("LogiRent2024")
+    
+    created = 0
+    skipped = 0
+    errors = []
+    
+    for i, row in enumerate(rows):
+        name = find_col(row, ["nom", "name", "prenom", "prénom", "client"])
+        email = find_col(row, ["email", "mail", "e-mail", "courriel"])
+        phone = find_col(row, ["tel", "téléphone", "telephone", "phone", "mobile", "portable"])
+        address = find_col(row, ["adresse", "address", "ville", "city"])
+        
+        # Try combining nom + prenom if separate columns
+        prenom = find_col(row, ["prenom", "prénom", "firstname", "first_name"])
+        nom = find_col(row, ["nom", "lastname", "last_name", "family"])
+        if prenom and nom and not name:
+            name = f"{prenom} {nom}"
+        elif nom and not name:
+            name = nom
+        
+        if not email:
+            errors.append(f"Ligne {i+2}: email manquant")
+            continue
+        
+        email = email.lower().strip()
+        
+        # Check if already exists
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            skipped += 1
+            continue
+        
+        new_user = {
+            "id": str(uuid.uuid4()),
+            "email": email,
+            "password_hash": default_password,
+            "name": name or email.split("@")[0],
+            "phone": phone or None,
+            "address": address or None,
+            "id_photo": None,
+            "license_photo": None,
+            "role": "client",
+            "agency_id": agency_id,
+            "created_at": datetime.utcnow(),
+        }
+        await db.users.insert_one(new_user)
+        created += 1
+    
+    return {
+        "message": f"Import terminé: {created} clients créés, {skipped} déjà existants, {len(errors)} erreurs",
+        "created": created,
+        "skipped": skipped,
+        "errors": errors[:20],
+    }
+
+
 @api_router.get("/admin/reservations")
 async def get_admin_reservations(
     skip: int = 0,
