@@ -92,7 +92,9 @@ function AppContent() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: showNav ? C.white : 'transparent' }} edges={['top']}>
       <View style={{ flex: 1, backgroundColor: showNav ? C.bg : 'transparent' }}>
-        {showNav ? <TopNavBar /> : null}
+        <View style={showNav ? styles.topBar : { display: 'none' as any }}>
+          {showNav && <TopNavBar />}
+        </View>
         <Stack
           screenOptions={{
             headerShown: false,
