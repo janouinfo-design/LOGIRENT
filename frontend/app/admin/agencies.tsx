@@ -185,11 +185,6 @@ export default function AgenciesPage() {
                 <View style={styles.linksSection}>
                   <Text style={styles.linksSectionTitle}>Liens d'acces</Text>
                   <View style={styles.linkItem}>
-                    <Ionicons name="shield-checkmark" size={16} color="#EF4444" />
-                    <Text style={styles.linkLabel}>Super Admin : </Text>
-                    <Text style={styles.linkUrl} selectable>{API_URL}/super-admin</Text>
-                  </View>
-                  <View style={styles.linkItem}>
                     <Ionicons name="phone-portrait" size={16} color={COLORS.warning} />
                     <Text style={styles.linkLabel}>App Admin Mobile : </Text>
                     <Text style={styles.linkUrl} selectable>{API_URL}/admin-login</Text>
