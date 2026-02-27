@@ -6,6 +6,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../src/store/authStore';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const C = {
   purple: '#7C3AED',
@@ -22,6 +23,7 @@ const C = {
 };
 
 export default function ProfileScreen() {
+  const { colors: C } = useThemeStore();
   const router = useRouter();
   const { user, logout, updateProfile, uploadLicense, uploadIdCard, isAuthenticated, isLoading } = useAuthStore();
   const [name, setName] = useState(user?.name || '');

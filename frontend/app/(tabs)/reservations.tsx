@@ -7,6 +7,7 @@ import { useVehicleStore } from '../../src/store/vehicleStore';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths, isBefore, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Button from '../../src/components/Button';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const C = {
   purple: '#7C3AED',
@@ -334,6 +335,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
 }
 
 export default function ReservationsScreen() {
+  const { colors: C } = useThemeStore();
   const router = useRouter();
   const { reservations, fetchReservations, cancelReservation, isLoading } = useReservationStore();
   const { vehicles, fetchVehicles } = useVehicleStore();

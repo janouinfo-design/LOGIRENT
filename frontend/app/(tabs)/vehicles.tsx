@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore, Vehicle } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import Button from '../../src/components/Button';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const C = {
   purple: '#7C3AED',
@@ -22,6 +23,7 @@ const vehicleTypes = ['Tous', 'SUV', 'Berline', 'Citadine', 'Utilitaire'];
 const transmissions = ['Toutes', 'Automatique', 'Manuel'];
 
 export default function VehiclesScreen() {
+  const { colors: C } = useThemeStore();
   const router = useRouter();
   const { vehicles, fetchVehicles, isLoading, setFilters, clearFilters } = useVehicleStore();
   const [refreshing, setRefreshing] = useState(false);

@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -30,6 +31,7 @@ const WEEKDAYS = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
 const MONTHS_FR = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
 
 export default function VehicleDetailScreen() {
+  const { colors: C } = useThemeStore();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { selectedVehicle, fetchVehicle, isLoading } = useVehicleStore();

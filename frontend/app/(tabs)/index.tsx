@@ -7,6 +7,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import { useI18n } from '../../src/i18n';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413e-4204-98d4-1c8f25a6208a/images/6552fb693c88f79e17c59c43f1efe1446e03b6ddd3093a08b690934bdc28ae75.png';
 
@@ -75,6 +76,7 @@ function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; d
 }
 
 export default function HomeScreen() {
+  const { colors: C } = useThemeStore();
   const router = useRouter();
   const { user } = useAuthStore();
   const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
