@@ -49,12 +49,12 @@ export default function SuperAdminDashboard() {
   const totalReservations = agencies.reduce((s, a) => s + (a.reservation_count || 0), 0);
   const totalAdmins = agencies.reduce((s, a) => s + (a.admin_count || 0), 0);
 
-  if (loading) return <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
+  if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
-    <ScrollView style={s.container} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <Text style={s.title}>Vue Globale</Text>
-      <Text style={s.subtitle}>{agencies.length} agences actives</Text>
+    <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
+      <Text style={[s.title, { color: C.text }]}>Vue Globale</Text>
+      <Text style={[s.subtitle, { color: C.textLight }]}>{agencies.length} agences actives</Text>
 
       {/* Global Stats */}
       <View style={s.statsRow}>
