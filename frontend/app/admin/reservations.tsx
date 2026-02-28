@@ -334,6 +334,14 @@ export default function AdminReservations() {
             <Text style={styles.cashText}>Espèces</Text>
           </View>
         )}
+        <TouchableOpacity
+          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: COLORS.primary + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}
+          onPress={() => handleContractAction(item.id)}
+          data-testid={`contract-btn-${item.id}`}
+        >
+          <Ionicons name="document-text" size={14} color={COLORS.primary} />
+          <Text style={{ color: COLORS.primary, fontSize: 11, fontWeight: '600' }}>Contrat</Text>
+        </TouchableOpacity>
         <Text style={styles.price}>CHF {item.total_price.toFixed(2)}</Text>
       </View>
     </View>
