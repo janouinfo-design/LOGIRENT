@@ -1,0 +1,133 @@
+{
+  "summary": "Iteration 25: Contract System Testing - All backend and frontend features verified. 16 backend tests passed. Frontend contract view, signature modal, and Contrat button on reservations all working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "backend": {
+      "POST /api/admin/contracts/generate": {
+        "status": "PASS",
+        "details": "Creates contract with FR or EN language, returns contract_id. Updates existing contract if one exists for reservation."
+      },
+      "GET /api/contracts/{id}": {
+        "status": "PASS",
+        "details": "Returns complete contract with all fields: id, reservation_id, status, language, signature_client, contract_data"
+      },
+      "GET /api/contracts/by-reservation/{reservation_id}": {
+        "status": "PASS",
+        "details": "Returns contract for specific reservation, 404 if none exists"
+      },
+      "PUT /api/contracts/{id}/send": {
+        "status": "PASS",
+        "details": "Updates status to 'sent', creates notification for client"
+      },
+      "PUT /api/contracts/{id}/sign": {
+        "status": "PASS",
+        "details": "Accepts signature_data base64, updates status to 'signed', stores signature_date. Returns 400 for already signed contracts"
+      },
+      "GET /api/contracts/{id}/pdf": {
+        "status": "PASS",
+        "details": "Generates valid PDF binary (starts with %PDF header), Content-Type: application/pdf"
+      },
+      "GET /api/admin/contracts": {
+        "status": "PASS",
+        "details": "Lists all contracts for agency, sorted by created_at desc"
+      }
+    },
+    "frontend": {
+      "contract_view_page_sections": {
+        "status": "PASS",
+        "route": "/contract/{id}",
+        "details": "All 7 sections visible: 1.Tenant Info, 2.Vehicle, 3.Price, 4.Deposit, 5.Insurance, 6.Debt, 7.Jurisdiction. Plus General Conditions section."
+      },
+      "contract_signed_badge": {
+        "status": "PASS",
+        "details": "'Signé' badge shown with green checkmark when contract status=signed"
+      },
+      "contract_pending_badge": {
+        "status": "PASS",
+        "details": "'En attente' / 'Pending' badge shown when status=sent"
+      },
+      "sign_button_visibility": {
+        "status": "PASS",
+        "details": "'Signer le contrat' button visible only when status=sent"
+      },
+      "signature_canvas_modal": {
+        "status": "PASS",
+        "details": "Modal opens on Sign button click, contains HTML5 canvas, 'Effacer' clear button, 'Confirmer la signature' submit button"
+      },
+      "signature_canvas_drawing": {
+        "status": "PASS",
+        "details": "Canvas accepts mouse/touch drawing input, Confirm button enabled after drawing"
+      },
+      "contrat_button_reservations": {
+        "status": "PASS",
+        "route": "/admin/reservations",
+        "details": "Each reservation card has 'Contrat' button with document-text icon in card footer"
+      },
+      "download_pdf_button": {
+        "status": "PASS",
+        "testID": "contract-download-btn",
+        "details": "'Télécharger PDF' / 'Download PDF' button visible at bottom of contract page"
+      },
+      "language_support": {
+        "status": "PASS",
+        "details": "Contract displays in FR or EN based on language field. Template text changes accordingly."
+      }
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_contracts.py",
+    "/app/test_reports/pytest/pytest_contracts.xml"
+  ],
+  "pytest_results": {
+    "total_tests": 16,
+    "passed": 16,
+    "failed": 0,
+    "test_classes": [
+      "TestContractSystem - 13 tests",
+      "TestContractDataIntegrity - 2 tests",
+      "TestContractClientAccess - 1 test"
+    ]
+  },
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_contracts.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": "admin-geneva@logirent.ch / LogiRent2024",
+    "super_admin": "test@example.com / password123"
+  },
+  "seed_data_creation": "Created/updated contracts during testing: 3bc6d869 (EN), 889e73f1 (FR signed), 89cd20f3 (signed via UI test)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Contract system fully functional. Status flow: draft -> sent -> signed. Sign button only appears when status=sent. Signature uses HTML5 canvas on web. PDF generation uses reportlab. Contract data is stored in MongoDB 'contracts' collection. Frontend route is /contract/{id}. Admin reserves can use 'Contrat' button (uses window.prompt for language selection).",
+  "existing_contracts": [
+    {
+      "id": "1ae05704-4032-492c-826f-21fa9eea804a",
+      "status": "signed",
+      "language": "fr"
+    },
+    {
+      "id": "11b6455b-d0f4-4373-83b4-10e6db7c5e39",
+      "status": "signed",
+      "language": "fr"
+    },
+    {
+      "id": "89cd20f3-768c-4f6c-9de4-2bff3e09dd1b",
+      "status": "signed",
+      "language": "en"
+    }
+  ]
+}
