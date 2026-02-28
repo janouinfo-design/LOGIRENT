@@ -26,7 +26,7 @@ interface AdvancedStats {
   weekly_trends: Array<{ week: number; bookings: number; revenue: number }>;
 }
 
-function BarChart({ data, labelKey, valueKey, color, height = 150 }: any) {
+function BarChart({ data, labelKey, valueKey, color, height = 150, C }: any) {
   if (!data || data.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>;
   const chartW = SCREEN_W - 80;
   const maxVal = Math.max(...data.map((d: any) => d[valueKey]), 1);
@@ -54,7 +54,7 @@ function BarChart({ data, labelKey, valueKey, color, height = 150 }: any) {
   );
 }
 
-function DonutChart({ segments, size = 120 }: any) {
+function DonutChart({ segments, size = 120, C }: any) {
   const total = segments.reduce((s: number, seg: any) => s + seg.value, 0) || 1;
   const r = (size - 20) / 2; const cx = size / 2; const cy = size / 2;
   let cum = -90;
