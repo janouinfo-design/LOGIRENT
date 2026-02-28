@@ -15,37 +15,43 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Dark/Light Mode Toggle Everywhere (Feb 28, 2026) - NEW
-- Theme toggle (moon/sun icon) added to Admin and Super Admin headers
-- All admin pages (`/admin/*`) now use `useThemeStore()` for dynamic theming
-- All super-admin pages (`/super-admin/*`) now use `useThemeStore()` for dynamic theming
-- Agency-app already had full theme support (maintained)
-- Client app already had theme support (maintained)
-- Theme persists via AsyncStorage across sessions
-- testID props: `admin-theme-toggle`, `sa-theme-toggle`
+### Contract System with Digital Signature (Feb 28, 2026) - NEW
+- **Backend**: Full contract API: generate, get, list, send, sign, PDF download
+- **Contract Template**: Based on user's DOCX template with 7 sections: Tenant Info, Vehicle, Price, Deposit, Insurance, Debt Acknowledgment, Jurisdiction + General Conditions + Vehicle Inspection + Final Statement
+- **Bilingual**: Full FR + EN support for contract content
+- **Digital Signature**: HTML5 canvas-based signature pad for clients (web)
+- **PDF Generation**: Uses reportlab to generate professional multi-page PDF with signature
+- **Workflow**: Admin generates contract → Sends to client → Client signs → PDF available
+- **Client Access**: "Voir le contrat" button on client's reservation cards
+- **Admin Access**: "Contrat" button on admin reservation cards with generate/view/send/download options
+- **MongoDB**: `contracts` collection with status flow: draft → sent → signed
+
+### Dark/Light Mode Toggle Everywhere (Feb 28, 2026)
+- Theme toggle (moon/sun icon) in Admin and Super Admin headers
+- All admin/super-admin pages use `useThemeStore()` for dynamic theming
+- Agency-app and client app maintained existing theme support
 
 ### Email Notifications on Reservation Status Change (Feb 28, 2026)
-- Backend sends branded HTML email via Resend when admin changes reservation status (confirmed, active, completed, cancelled)
-- Email + in-app notification triggered simultaneously
-- Note: Resend domain must be verified for emails to be delivered
+- Branded HTML email via Resend when status changes (confirmed/active/completed/cancelled)
+- In-app + email notifications triggered simultaneously
 
 ### Advanced Statistics Dashboards - P3 (Feb 28, 2026)
-- New `/api/admin/stats/advanced` endpoint with comprehensive metrics
-- `/admin/statistics` page: KPI cards with trends, bar charts, vehicle utilization, payment donut chart
-- `/agency-app/statistics` page: theme-aware mobile dashboard
-- `/super-admin/statistics` page: global view across all agencies
-- Navigation tab "Statistiques" added to all 3 admin interfaces
+- `/api/admin/stats/advanced` endpoint with comprehensive metrics
+- 3 Statistics pages: Admin, Agency App, Super Admin with SVG charts
 
 ### Previously Completed
-- Super Admin Agencies - Password Display & GPS Tab Removal
-- Agency Admin Profile Page with dark mode toggle
-- Light/Dark Theme System (agency-app + client)
-- GPS Tracking per Agency Admin (Navixy)
-- Client Import with Photos (ZIP)
-- In-App Notifications (bell with unread badge)
-- Agency Admin Mobile App, Admin Interface Separation, QR Codes
-- AI Document Verification, Multi-Agency Architecture, Calendar, Auth, Vehicles, Reservations
-- Stripe Payments, Resend Email
+- Super Admin Agencies, GPS Tab, Password Display
+- Agency Admin Profile Page, Theme System
+- GPS Tracking (Navixy), Client Import (ZIP)
+- In-App Notifications, QR Codes, Calendar
+- AI Document Verification, Multi-Agency Architecture
+- Auth, Vehicles, Reservations, Stripe Payments, Resend Email
+
+## Key Files - Contract System
+- Backend: `/app/backend/server.py` (Contract endpoints at end of file)
+- Contract View: `/app/frontend/app/contract/[id].tsx`
+- Signature Canvas: `/app/frontend/src/components/SignatureCanvas.tsx`
+- Admin Reservations: `/app/frontend/app/admin/reservations.tsx` (Contrat button)
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase) for mobile apps
@@ -53,7 +59,7 @@ Build a complete car rental solution named "LogiRent" with:
 - P4: App Store Deployment
 
 ## Refactoring Needs
-- `server.py` monolith (3000+ lines) → split into routers
+- `server.py` monolith (3500+ lines) → split into routers
 - Security: password stored in plain text (initial_password field)
 
 ## Credentials
@@ -63,13 +69,7 @@ Build a complete car rental solution named "LogiRent" with:
 - Client: client1@test.com / test1234
 
 ## 3rd Party Integrations
-- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (AI doc verification)
+- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (AI doc verification), reportlab (PDF generation)
 
-## Key Files
-- Backend: `/app/backend/server.py`
-- Theme Store: `/app/frontend/src/store/themeStore.ts`
-- Admin Layout: `/app/frontend/app/admin/_layout.tsx`
-- Super Admin Layout: `/app/frontend/app/super-admin/_layout.tsx`
-- Admin Stats: `/app/frontend/app/admin/statistics.tsx`
-- Agency Stats: `/app/frontend/app/agency-app/statistics.tsx`
-- Super Admin Stats: `/app/frontend/app/super-admin/statistics.tsx`
+## DB Collections
+- users, agencies, vehicles, reservations, notifications, contracts
