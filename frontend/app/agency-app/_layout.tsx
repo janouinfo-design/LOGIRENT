@@ -114,6 +114,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="book" options={{ title: 'Réserver' }} />
           <Tabs.Screen name="reservations" options={{ title: 'Réservations' }} />
           <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
+          <Tabs.Screen name="statistics" options={{ title: 'Stats' }} />
           <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
           <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
