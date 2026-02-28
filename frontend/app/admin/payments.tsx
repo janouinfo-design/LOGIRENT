@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, RefreshControl, Alert } from 'react-n
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { format } from 'date-fns';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const COLORS = {
   primary: '#1E3A8A',

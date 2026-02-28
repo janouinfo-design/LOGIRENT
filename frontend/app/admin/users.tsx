@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/api/axios';
 import { format } from 'date-fns';
 import Button from '../../src/components/Button';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const COLORS = {
   primary: '#1E3A8A',

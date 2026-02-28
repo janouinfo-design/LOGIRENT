@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { format, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const COLORS = {
   primary: '#1E3A8A',

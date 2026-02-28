@@ -7,6 +7,7 @@ import api from '../../src/api/axios';
 import { Vehicle } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
+import { useThemeStore } from '../../src/store/themeStore';
 
 const COLORS = {
   primary: '#1E3A8A',
