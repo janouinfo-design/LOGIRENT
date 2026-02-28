@@ -19,6 +19,8 @@ interface AgencyStats {
 
 export default function SuperAdminDashboard() {
   const router = useRouter();
+  const { colors: _t } = useThemeStore();
+  const C = { bg: _t.bg, card: _t.card, text: _t.text, textLight: _t.textLight, border: _t.border, accent: '#f87171', gold: '#fbbf24', success: _t.success, info: _t.info, purple: _t.accent };
   const [agencies, setAgencies] = useState<AgencyStats[]>([]);
   const [globalStats, setGlobalStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
