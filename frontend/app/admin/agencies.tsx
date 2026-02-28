@@ -38,6 +38,8 @@ interface Agency {
 }
 
 export default function AgenciesPage() {
+  const { colors: _c } = useThemeStore();
+  const COLORS = { primary: _c.accent, primaryDark: _c.primary, background: _c.bg, card: _c.card, text: _c.text, textLight: _c.textLight, border: _c.border, accent: _c.accent, success: _c.success, warning: _c.warning, error: _c.error };
   const { user } = useAuthStore();
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [loading, setLoading] = useState(true);

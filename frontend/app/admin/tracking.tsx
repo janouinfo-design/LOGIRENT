@@ -22,6 +22,8 @@ type Position = {
 };
 
 export default function TrackingScreen() {
+  const { colors: _c } = useThemeStore();
+  const C = { bg: _c.bg, card: _c.card, accent: _c.accent, accentLight: _c.primary, border: _c.border, text: _c.text, textSecondary: _c.textLight, success: _c.success, warning: _c.warning, error: _c.error };
   const router = useRouter();
   const { token, user } = useAuthStore();
   const [positions, setPositions] = useState<Position[]>([]);

@@ -126,6 +126,8 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 }
 
 export default function AdminCalendar() {
+  const { colors: _c } = useThemeStore();
+  const COLORS = { primary: _c.accent, secondary: _c.warning, background: _c.bg, card: _c.card, text: _c.text, textLight: _c.textLight, border: _c.border, success: _c.success, warning: _c.warning, error: _c.error, overdue: _c.error, info: _c.info };
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [overdue, setOverdue] = useState<OverdueItem[]>([]);
