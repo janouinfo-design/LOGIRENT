@@ -147,7 +147,7 @@ export default function SuperAdminStatistics() {
       <View style={s.section}>
         <Text style={s.sectionTitle}>Revenu Journalier (30 derniers jours)</Text>
         <View style={s.chartCard}>
-          <BarChart data={stats.daily_revenue} labelKey="date" valueKey="revenue" color={C.accent} />
+          <BarChart data={stats.daily_revenue} labelKey="date" valueKey="revenue" color={C.accent} C={C} />
         </View>
       </View>
 
@@ -155,7 +155,7 @@ export default function SuperAdminStatistics() {
       <View style={s.section}>
         <Text style={s.sectionTitle}>Tendances Hebdomadaires</Text>
         <View style={s.chartCard}>
-          <BarChart data={stats.weekly_trends} labelKey="week" valueKey="revenue" color={C.info} height={120} />
+          <BarChart data={stats.weekly_trends} labelKey="week" valueKey="revenue" color={C.info} height={120} C={C} />
         </View>
       </View>
 
@@ -201,7 +201,7 @@ export default function SuperAdminStatistics() {
               label: pm.method === 'cash' ? 'Espèces' : pm.method === 'card' ? 'Carte' : pm.method,
               value: pm.count,
               color: pmColors[pm.method] || C.textLight,
-            }))} />
+            }))} C={C} />
           </View>
 
           <View style={[s.chartCard, { marginTop: 12, alignItems: 'center', paddingVertical: 16 }]}>
@@ -217,7 +217,7 @@ export default function SuperAdminStatistics() {
         <View style={s.section}>
           <Text style={s.sectionTitle}>Revenu Mensuel (6 mois)</Text>
           <View style={s.chartCard}>
-            <BarChart data={basicStats.revenue_by_month} labelKey="month" valueKey="revenue" color={C.success} height={130} />
+            <BarChart data={basicStats.revenue_by_month} labelKey="month" valueKey="revenue" color={C.success} height={130} C={C} />
           </View>
         </View>
       )}
