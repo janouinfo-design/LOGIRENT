@@ -3,8 +3,9 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
+import { useThemeStore } from '../../src/store/themeStore';
 
-const C = { bg: '#0a0a12', card: '#14141f', text: '#fff', textLight: '#9ca3af', border: '#1f1f2e', accent: '#f87171', gold: '#fbbf24', success: '#22c55e', info: '#06b6d4', purple: '#a78bfa' };
+const _C = { bg: '#0a0a12', card: '#14141f', text: '#fff', textLight: '#9ca3af', border: '#1f1f2e', accent: '#f87171', gold: '#fbbf24', success: '#22c55e', info: '#06b6d4', purple: '#a78bfa' };
 
 interface AgencyStats {
   id: string;
