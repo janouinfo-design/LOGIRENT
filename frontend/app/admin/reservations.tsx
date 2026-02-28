@@ -196,6 +196,57 @@ export default function AdminReservations() {
     setActionModal({ type: 'payment', reservation });
   };
 
+  const handleContractAction = async (reservationId: string) => {
+    try {
+      // Check if contract already exists
+      const resp = await api.get(`/api/contracts/by-reservation/${reservationId}`);
+      const contract = resp.data;
+      // Contract exists - show action choices
+      if (Platform.OS === 'web') {
+        const action = window.prompt(
+          `Contrat existant (${contract.status === 'signed' ? 'Signé' : contract.status === 'sent' ? 'Envoyé' : 'Brouillon'})\n\n1 = Voir le contrat\n2 = Envoyer au client\n3 = Télécharger PDF\n\nChoisissez (1/2/3):`,
+          '1'
+        );
+        if (action === '1') {
+          router.push(`/contract/${contract.id}` as any);
+        } else if (action === '2') {
+          await api.put(`/api/contracts/${contract.id}/send`);
+          window.alert('Contrat envoyé au client !');
+        } else if (action === '3') {
+          const pdfResp = await api.get(`/api/contracts/${contract.id}/pdf`, { responseType: 'blob' });
+          const blob = new Blob([pdfResp.data], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `contrat_${contract.id.slice(0, 8)}.pdf`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }
+    } catch (err: any) {
+      if (err.response?.status === 404) {
+        // No contract exists - generate one
+        if (Platform.OS === 'web') {
+          const lang = window.prompt('Langue du contrat ?\n\n1 = Français\n2 = English\n\nChoisissez (1/2):', '1');
+          const language = lang === '2' ? 'en' : 'fr';
+          try {
+            const genResp = await api.post('/api/admin/contracts/generate', { reservation_id: reservationId, language });
+            window.alert('Contrat généré avec succès !');
+            const action = window.prompt('Que voulez-vous faire ?\n\n1 = Voir le contrat\n2 = Envoyer au client\n\nChoisissez (1/2):', '1');
+            if (action === '1') {
+              router.push(`/contract/${genResp.data.contract_id}` as any);
+            } else if (action === '2') {
+              await api.put(`/api/contracts/${genResp.data.contract_id}/send`);
+              window.alert('Contrat envoyé au client !');
+            }
+          } catch (genErr: any) {
+            window.alert('Erreur: ' + (genErr.response?.data?.detail || 'Impossible de générer le contrat'));
+          }
+        }
+      }
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed': return COLORS.success;
