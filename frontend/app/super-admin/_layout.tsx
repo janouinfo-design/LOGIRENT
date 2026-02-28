@@ -45,10 +45,10 @@ export default function SuperAdminLayout() {
         </View>
         <View style={s.topBarRight}>
           <Text style={[s.userName, { color: C.textLight }]}>{user.name}</Text>
-          <TouchableOpacity onPress={toggleTheme} data-testid="sa-theme-toggle">
+          <TouchableOpacity onPress={toggleTheme} testID="sa-theme-toggle">
             <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="sa-logout-btn">
+          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} testID="sa-logout-btn">
             <Ionicons name="log-out-outline" size={22} color={C.textLight} />
           </TouchableOpacity>
         </View>
