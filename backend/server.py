@@ -1504,6 +1504,60 @@ def generate_cash_reservation_email(user_name: str, vehicle: dict, reservation: 
     </html>
     '''
 
+def generate_status_change_email(user_name: str, vehicle_name: str, status: str, reservation: dict) -> str:
+    """Generate HTML email for reservation status change"""
+    start_date = reservation.get('start_date', '')
+    end_date = reservation.get('end_date', '')
+    if isinstance(start_date, datetime):
+        start_date = start_date.strftime('%d/%m/%Y')
+    elif isinstance(start_date, str):
+        try:
+            start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00')).strftime('%d/%m/%Y')
+        except Exception:
+            pass
+    if isinstance(end_date, datetime):
+        end_date = end_date.strftime('%d/%m/%Y')
+    elif isinstance(end_date, str):
+        try:
+            end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00')).strftime('%d/%m/%Y')
+        except Exception:
+            pass
+
+    status_info = {
+        'confirmed': {'title': 'Réservation Confirmée', 'color': '#10B981', 'icon': 'checkmark', 'msg': f'Votre réservation pour <strong>{vehicle_name}</strong> a été confirmée.'},
+        'active': {'title': 'Location En Cours', 'color': '#7C3AED', 'icon': 'car', 'msg': f'Votre location de <strong>{vehicle_name}</strong> est maintenant active. Bon trajet !'},
+        'completed': {'title': 'Location Terminée', 'color': '#6B7280', 'icon': 'flag', 'msg': f'Votre location de <strong>{vehicle_name}</strong> est terminée. Merci de votre confiance !'},
+        'cancelled': {'title': 'Réservation Annulée', 'color': '#EF4444', 'icon': 'close', 'msg': f'Votre réservation pour <strong>{vehicle_name}</strong> a été annulée.'},
+    }
+    info = status_info.get(status, {'title': 'Mise à jour', 'color': '#6B7280', 'icon': 'info', 'msg': f'Le statut de votre réservation a été mis à jour.'})
+
+    return f'''<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family:Arial,sans-serif;line-height:1.6;color:#1E293B;margin:0;padding:0;background-color:#F8FAFC;">
+<div style="max-width:600px;margin:0 auto;padding:20px;">
+  <div style="background-color:#1A1A2E;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
+    <h1 style="color:#FFFFFF;margin:0;font-size:24px;">LogiRent</h1>
+    <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;">Mise à jour de votre réservation</p>
+  </div>
+  <div style="background-color:#FFFFFF;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <div style="text-align:center;padding:16px;background-color:{info["color"]}15;border-radius:8px;margin-bottom:20px;">
+      <h2 style="color:{info["color"]};margin:0;font-size:20px;">{info["title"]}</h2>
+    </div>
+    <p>Bonjour <strong>{user_name}</strong>,</p>
+    <p>{info["msg"]}</p>
+    <div style="background-color:#F8FAFC;padding:16px;border-radius:8px;margin:20px 0;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#64748B;">Véhicule:</td><td style="padding:6px 0;font-weight:bold;">{vehicle_name}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Du:</td><td style="padding:6px 0;font-weight:bold;">{start_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Au:</td><td style="padding:6px 0;font-weight:bold;">{end_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Montant:</td><td style="padding:6px 0;font-weight:bold;">CHF {reservation.get("total_price", 0):.2f}</td></tr>
+      </table>
+    </div>
+    <p style="color:#64748B;font-size:13px;">Pour toute question, contactez-nous à {SENDER_EMAIL}.</p>
+    <p style="margin-top:24px;">Cordialement,<br><strong>L'équipe LogiRent</strong></p>
+  </div>
+  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">LogiRent - Location de véhicules</div>
+</div></body></html>'''
+
 async def send_cash_reservation_email(user: dict, vehicle: dict, reservation: dict):
     """Send cash reservation email"""
     html = generate_cash_reservation_email(user['name'], vehicle, reservation)
