@@ -46,6 +46,8 @@ const RATINGS = [
 ];
 
 export default function AdminUsers() {
+  const { colors: _c } = useThemeStore();
+  const COLORS = { primary: _c.accent, secondary: _c.warning, background: _c.bg, card: _c.card, text: _c.text, textLight: _c.textLight, border: _c.border, success: _c.success, warning: _c.warning, error: _c.error, vip: '#8B5CF6' };
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
