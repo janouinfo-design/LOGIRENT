@@ -58,36 +58,36 @@ export default function SuperAdminDashboard() {
 
       {/* Global Stats */}
       <View style={s.statsRow}>
-        <View style={[s.statCard, { borderTopColor: C.accent }]}>
+        <View style={[s.statCard, { borderTopColor: C.accent, backgroundColor: C.card }]}>
           <Ionicons name="business" size={24} color={C.accent} />
-          <Text style={s.statNum}>{agencies.length}</Text>
-          <Text style={s.statLabel}>Agences</Text>
+          <Text style={[s.statNum, { color: C.text }]}>{agencies.length}</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Agences</Text>
         </View>
-        <View style={[s.statCard, { borderTopColor: C.info }]}>
+        <View style={[s.statCard, { borderTopColor: C.info, backgroundColor: C.card }]}>
           <Ionicons name="car" size={24} color={C.info} />
-          <Text style={s.statNum}>{totalVehicles}</Text>
-          <Text style={s.statLabel}>Véhicules</Text>
+          <Text style={[s.statNum, { color: C.text }]}>{totalVehicles}</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Véhicules</Text>
         </View>
-        <View style={[s.statCard, { borderTopColor: C.gold }]}>
+        <View style={[s.statCard, { borderTopColor: C.gold, backgroundColor: C.card }]}>
           <Ionicons name="calendar" size={24} color={C.gold} />
-          <Text style={s.statNum}>{totalReservations}</Text>
-          <Text style={s.statLabel}>Réservations</Text>
+          <Text style={[s.statNum, { color: C.text }]}>{totalReservations}</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Réservations</Text>
         </View>
-        <View style={[s.statCard, { borderTopColor: C.success }]}>
+        <View style={[s.statCard, { borderTopColor: C.success, backgroundColor: C.card }]}>
           <Ionicons name="people" size={24} color={C.success} />
-          <Text style={s.statNum}>{globalStats?.total_users || 0}</Text>
-          <Text style={s.statLabel}>Utilisateurs</Text>
+          <Text style={[s.statNum, { color: C.text }]}>{globalStats?.total_users || 0}</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Utilisateurs</Text>
         </View>
       </View>
 
       {/* Per-Agency Breakdown */}
-      <Text style={s.sectionTitle}>Statistiques par Agence</Text>
+      <Text style={[s.sectionTitle, { color: C.text }]}>Statistiques par Agence</Text>
       {agencies.map((agency) => (
-        <View key={agency.id} style={s.agencyCard} data-testid={`sa-agency-${agency.id}`}>
+        <View key={agency.id} style={[s.agencyCard, { backgroundColor: C.card, borderColor: C.border }]}>
           <View style={s.agencyHeader}>
             <View style={s.agencyNameRow}>
               <Ionicons name="business" size={18} color={C.purple} />
-              <Text style={s.agencyName}>{agency.name}</Text>
+              <Text style={[s.agencyName, { color: C.text }]}>{agency.name}</Text>
             </View>
             {agency.navixy_api_url && (
               <View style={s.gpsBadge}><Ionicons name="locate" size={12} color={C.info} /><Text style={s.gpsText}>GPS</Text></View>
@@ -95,16 +95,16 @@ export default function SuperAdminDashboard() {
           </View>
           <View style={s.agencyStats}>
             <View style={s.agencyStat}>
-              <Text style={s.agencyStatNum}>{agency.vehicle_count}</Text>
-              <Text style={s.agencyStatLabel}>Véhicules</Text>
+              <Text style={[s.agencyStatNum, { color: C.text }]}>{agency.vehicle_count}</Text>
+              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>Véhicules</Text>
             </View>
             <View style={s.agencyStat}>
-              <Text style={s.agencyStatNum}>{agency.reservation_count}</Text>
-              <Text style={s.agencyStatLabel}>Réservations</Text>
+              <Text style={[s.agencyStatNum, { color: C.text }]}>{agency.reservation_count}</Text>
+              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>Réservations</Text>
             </View>
             <View style={s.agencyStat}>
-              <Text style={s.agencyStatNum}>{agency.admin_count}</Text>
-              <Text style={s.agencyStatLabel}>Admins</Text>
+              <Text style={[s.agencyStatNum, { color: C.text }]}>{agency.admin_count}</Text>
+              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>Admins</Text>
             </View>
           </View>
         </View>
