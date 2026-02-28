@@ -1,0 +1,85 @@
+{
+  "summary": "Iteration 23: Advanced Statistics Dashboard & Email Notifications Testing. All features verified working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "backend_advanced_stats_api": {
+      "status": "PASS",
+      "endpoint": "GET /api/admin/stats/advanced",
+      "details": "Returns all required fields: revenue_this_month, revenue_last_month, revenue_change_pct, reservations_this_month, reservations_last_month, avg_booking_duration, avg_revenue_per_reservation, vehicle_utilization, revenue_per_vehicle, daily_revenue, new_clients_30d, payment_methods, cancellation_rate, weekly_trends"
+    },
+    "backend_status_change_notification": {
+      "status": "PASS",
+      "endpoint": "PUT /api/admin/reservations/{id}/status",
+      "details": "Status update triggers both in-app notification (verified in MongoDB) and email notification (attempted send, fails due to unverified domain as expected)"
+    },
+    "admin_statistics_page": {
+      "status": "PASS",
+      "route": "/admin/statistics",
+      "details": "Page loads with title 'Statistiques Avancées', KPI cards (Revenue, Reservations, Duration, Cart avg), Bar charts (Daily Revenue, Weekly Trend), Vehicle Utilization bars, Payment methods donut chart"
+    },
+    "agency_app_statistics_page": {
+      "status": "PASS",
+      "route": "/agency-app/statistics",
+      "details": "Page loads with title 'Statistiques', KPI cards with themed colors, Bar chart for daily revenue, Vehicle utilization bars, Top revenues list, Payment donut chart, Cancellation rate and new clients stats"
+    },
+    "super_admin_statistics_page": {
+      "status": "PASS",
+      "route": "/super-admin/statistics",
+      "details": "Page loads with title 'Statistiques Globales', Global KPIs including Agencies count (9), Weekly trends chart, Vehicle utilization for all vehicles across agencies"
+    },
+    "navigation_statistiques_tab": {
+      "admin_layout": {
+        "status": "PASS",
+        "details": "Statistiques tab visible in horizontal nav bar, navigates to /admin/statistics"
+      },
+      "agency_app_layout": {
+        "status": "PASS",
+        "details": "Stats tab visible in tab bar with chart icon, navigates to /agency-app/statistics"
+      },
+      "super_admin_layout": {
+        "status": "PASS",
+        "details": "Statistiques tab visible in nav bar, navigates to /super-admin/statistics"
+      }
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_statistics_and_notifications.py",
+    "/app/test_reports/pytest/pytest_stats_notifications.xml"
+  ],
+  "pytest_results": {
+    "total_tests": 15,
+    "passed": 15,
+    "failed": 0,
+    "test_classes": [
+      "TestAdvancedStatsEndpoint - 11 tests",
+      "TestReservationStatusChangeNotification - 3 tests",
+      "TestBasicStatsEndpoint - 2 tests"
+    ]
+  },
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_statistics_and_notifications.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "super_admin": "test@example.com / password123",
+    "agency_admin": "admin-geneva@logirent.ch / LogiRent2024"
+  },
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 statistics pages are fully functional. Backend API /api/admin/stats/advanced returns complete dataset with revenue, utilization, payment methods etc. Email notifications are triggered on status change but will fail with domain verification error (expected - Resend domain not verified). In-app notifications are created successfully in MongoDB.",
+  "email_notification_note": "Email sending via Resend fails with 'The logitrak.ch domain is not verified' error - this is EXPECTED behavior as noted in review request. The code path is correct and email is attempted."
+}
