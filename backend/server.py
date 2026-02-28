@@ -1642,6 +1642,122 @@ async def get_admin_stats(user: dict = Depends(get_admin_user)):
         revenue_by_month=revenue_by_month
     )
 
+@api_router.get("/admin/stats/advanced")
+async def get_advanced_stats(user: dict = Depends(get_admin_user)):
+    """Get advanced dashboard statistics"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    rf = {} if is_super else {"agency_id": agency_id}
+    vf = {} if is_super else {"agency_id": agency_id}
+
+    now = datetime.utcnow()
+    thirty_days_ago = now - timedelta(days=30)
+    sixty_days_ago = now - timedelta(days=60)
+
+    # Revenue this month vs last month
+    this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
+
+    rev_this_month_pipe = [{"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": this_month_start}}}, {"$group": {"_id": None, "total": {"$sum": "$total_price"}, "count": {"$sum": 1}}}]
+    rev_last_month_pipe = [{"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": last_month_start, "$lt": this_month_start}}}, {"$group": {"_id": None, "total": {"$sum": "$total_price"}, "count": {"$sum": 1}}}]
+
+    rev_this = await db.reservations.aggregate(rev_this_month_pipe).to_list(1)
+    rev_last = await db.reservations.aggregate(rev_last_month_pipe).to_list(1)
+    revenue_this_month = rev_this[0]["total"] if rev_this else 0
+    revenue_last_month = rev_last[0]["total"] if rev_last else 0
+    reservations_this_month = rev_this[0]["count"] if rev_this else 0
+    reservations_last_month = rev_last[0]["count"] if rev_last else 0
+
+    # Average booking duration
+    avg_dur_pipe = [{"$match": {**rf, "status": {"$in": ["confirmed", "active", "completed"]}}}, {"$group": {"_id": None, "avg_days": {"$avg": "$total_days"}}}]
+    avg_dur_res = await db.reservations.aggregate(avg_dur_pipe).to_list(1)
+    avg_booking_duration = round(avg_dur_res[0]["avg_days"], 1) if avg_dur_res else 0
+
+    # Average revenue per reservation
+    avg_rev_pipe = [{"$match": {**rf, "payment_status": "paid"}}, {"$group": {"_id": None, "avg_rev": {"$avg": "$total_price"}}}]
+    avg_rev_res = await db.reservations.aggregate(avg_rev_pipe).to_list(1)
+    avg_revenue_per_reservation = round(avg_rev_res[0]["avg_rev"], 2) if avg_rev_res else 0
+
+    # Vehicle utilization: for each vehicle, count active/confirmed/completed days in last 30 days
+    vehicles = await db.vehicles.find(vf, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(200)
+    vehicle_utilization = []
+    for v in vehicles[:20]:
+        res_list = await db.reservations.find({
+            "vehicle_id": v["id"],
+            "status": {"$in": ["confirmed", "active", "completed"]},
+            "start_date": {"$lte": now},
+            "end_date": {"$gte": thirty_days_ago}
+        }, {"_id": 0, "start_date": 1, "end_date": 1}).to_list(100)
+        booked_days = 0
+        for r in res_list:
+            s = max(r["start_date"], thirty_days_ago) if isinstance(r["start_date"], datetime) else thirty_days_ago
+            e = min(r["end_date"], now) if isinstance(r["end_date"], datetime) else now
+            booked_days += max(0, (e - s).days)
+        rate = min(100, round((booked_days / 30) * 100))
+        vehicle_utilization.append({"id": v["id"], "name": f"{v['brand']} {v['model']}", "utilization": rate, "booked_days": booked_days})
+    vehicle_utilization.sort(key=lambda x: x["utilization"], reverse=True)
+
+    # Revenue per vehicle (top 10)
+    rev_per_vehicle_pipe = [{"$match": {**rf, "payment_status": "paid"}}, {"$group": {"_id": "$vehicle_id", "revenue": {"$sum": "$total_price"}, "count": {"$sum": 1}}}, {"$sort": {"revenue": -1}}, {"$limit": 10}]
+    rev_per_vehicle_result = await db.reservations.aggregate(rev_per_vehicle_pipe).to_list(10)
+    revenue_per_vehicle = []
+    for item in rev_per_vehicle_result:
+        veh = await db.vehicles.find_one({"id": item["_id"]})
+        if veh:
+            revenue_per_vehicle.append({"id": veh["id"], "name": f"{veh['brand']} {veh['model']}", "revenue": item["revenue"], "bookings": item["count"]})
+
+    # Daily revenue for last 30 days
+    daily_pipe = [
+        {"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": thirty_days_ago}}},
+        {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}}, "revenue": {"$sum": "$total_price"}, "count": {"$sum": 1}}},
+        {"$sort": {"_id": 1}}
+    ]
+    daily_result = await db.reservations.aggregate(daily_pipe).to_list(31)
+    daily_revenue = [{"date": item["_id"], "revenue": item["revenue"], "bookings": item["count"]} for item in daily_result]
+
+    # New clients last 30 days
+    new_clients_30d = await db.users.count_documents({"role": "client", "created_at": {"$gte": thirty_days_ago}}) if is_super else 0
+    if not is_super:
+        new_user_ids = await db.reservations.distinct("user_id", {**rf, "created_at": {"$gte": thirty_days_ago}})
+        new_clients_30d = len(new_user_ids)
+
+    # Payment method breakdown
+    payment_method_pipe = [{"$match": {**rf, "payment_status": "paid"}}, {"$group": {"_id": {"$ifNull": ["$payment_method", "card"]}, "count": {"$sum": 1}, "total": {"$sum": "$total_price"}}}]
+    pm_result = await db.reservations.aggregate(payment_method_pipe).to_list(10)
+    payment_methods = [{"method": item["_id"] or "card", "count": item["count"], "total": item["total"]} for item in pm_result]
+
+    # Cancellation rate
+    total_res = await db.reservations.count_documents(rf) or 1
+    cancelled_res = await db.reservations.count_documents({**rf, "status": "cancelled"})
+    cancellation_rate = round((cancelled_res / total_res) * 100, 1)
+
+    # Weekly trend (last 8 weeks)
+    eight_weeks_ago = now - timedelta(weeks=8)
+    weekly_pipe = [
+        {"$match": {**rf, "created_at": {"$gte": eight_weeks_ago}}},
+        {"$group": {"_id": {"$isoWeek": "$created_at"}, "count": {"$sum": 1}, "revenue": {"$sum": {"$cond": [{"$eq": ["$payment_status", "paid"]}, "$total_price", 0]}}}},
+        {"$sort": {"_id": 1}}
+    ]
+    weekly_result = await db.reservations.aggregate(weekly_pipe).to_list(8)
+    weekly_trends = [{"week": item["_id"], "bookings": item["count"], "revenue": item["revenue"]} for item in weekly_result]
+
+    return {
+        "revenue_this_month": revenue_this_month,
+        "revenue_last_month": revenue_last_month,
+        "revenue_change_pct": round(((revenue_this_month - revenue_last_month) / revenue_last_month * 100) if revenue_last_month > 0 else 0, 1),
+        "reservations_this_month": reservations_this_month,
+        "reservations_last_month": reservations_last_month,
+        "avg_booking_duration": avg_booking_duration,
+        "avg_revenue_per_reservation": avg_revenue_per_reservation,
+        "vehicle_utilization": vehicle_utilization,
+        "revenue_per_vehicle": revenue_per_vehicle,
+        "daily_revenue": daily_revenue,
+        "new_clients_30d": new_clients_30d,
+        "payment_methods": payment_methods,
+        "cancellation_rate": cancellation_rate,
+        "weekly_trends": weekly_trends,
+    }
+
 @api_router.get("/admin/users")
 async def get_admin_users(
     skip: int = 0,
