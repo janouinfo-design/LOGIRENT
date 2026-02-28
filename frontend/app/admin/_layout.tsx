@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { key: '/admin/vehicles', label: 'Véhicules', icon: 'car-outline' as const },
   { key: '/admin/reservations', label: 'Réservations', icon: 'calendar-outline' as const },
   { key: '/admin/users', label: 'Clients', icon: 'people-outline' as const },
+  { key: '/admin/statistics', label: 'Statistiques', icon: 'stats-chart-outline' as const },
   { key: '/admin/tracking', label: 'Suivi GPS', icon: 'locate-outline' as const },
 ];
 
