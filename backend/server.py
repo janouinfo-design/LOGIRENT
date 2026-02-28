@@ -3389,10 +3389,11 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     if signature_base64:
         try:
             sig_bytes2 = base64.b64decode(signature_base64.split(',')[-1] if ',' in signature_base64 else signature_base64)
-            sig_buffer2 = io.BytesIO(sig_bytes2)
-            paraphe_label = "Signature Locataire (paraphe) :" if lang == "fr" else "Tenant Signature (initial):"
-            story.append(Paragraph(paraphe_label, styles['FieldLabel']))
-            story.append(RLImage(sig_buffer2, width=40*mm, height=18*mm))
+            if len(sig_bytes2) > 100:
+                sig_buffer2 = io.BytesIO(sig_bytes2)
+                paraphe_label = "Signature Locataire (paraphe) :" if lang == "fr" else "Tenant Signature (initial):"
+                story.append(Paragraph(paraphe_label, styles['FieldLabel']))
+                story.append(RLImage(sig_buffer2, width=40*mm, height=18*mm))
         except Exception:
             pass
 
