@@ -228,15 +228,15 @@ export default function SuperAdminStatistics() {
 }
 
 const s = StyleSheet.create({
-  container: { flex: 1, backgroundColor: C.bg },
+  container: { flex: 1 },
   content: { padding: 20, paddingBottom: 40 },
-  title: { color: C.text, fontSize: 24, fontWeight: '800' },
-  subtitle: { color: C.textLight, fontSize: 13, marginTop: 2, marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: '800' },
+  subtitle: { fontSize: 13, marginTop: 2, marginBottom: 20 },
   kpiRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
-  kpiCard: { flex: 1, minWidth: 130, backgroundColor: C.card, borderRadius: 12, padding: 14, borderTopWidth: 3, alignItems: 'center', gap: 4 },
-  kpiLabel: { color: C.textLight, fontSize: 10 },
-  kpiValue: { color: C.text, fontSize: 22, fontWeight: '800' },
+  kpiCard: { flex: 1, minWidth: 130, borderRadius: 12, padding: 14, borderTopWidth: 3, alignItems: 'center', gap: 4 },
+  kpiLabel: { fontSize: 10 },
+  kpiValue: { fontSize: 22, fontWeight: '800' },
   section: { marginBottom: 16 },
-  sectionTitle: { color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8 },
-  chartCard: { backgroundColor: C.card, borderRadius: 12, padding: 14, borderWidth: 1, borderColor: C.border },
+  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
+  chartCard: { borderRadius: 12, padding: 14, borderWidth: 1 },
 });
