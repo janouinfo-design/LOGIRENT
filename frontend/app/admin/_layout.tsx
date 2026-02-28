@@ -60,10 +60,10 @@ export default function AdminLayout() {
           <View style={[styles.roleBadge, { backgroundColor: C.accent + '20' }]} data-testid="admin-role-badge">
             <Text style={[styles.roleText, { color: C.accent }]}>Admin</Text>
           </View>
-          <TouchableOpacity onPress={toggleTheme} data-testid="admin-theme-toggle">
+          <TouchableOpacity onPress={toggleTheme} testID="admin-theme-toggle">
             <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} data-testid="admin-logout-btn">
+          <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} testID="admin-logout-btn">
             <Ionicons name="log-out-outline" size={22} color={C.textLight} />
           </TouchableOpacity>
         </View>
