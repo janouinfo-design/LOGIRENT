@@ -66,6 +66,19 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
   const canCancel = ['pending', 'confirmed'].includes(item.status) && item.payment_status !== 'paid';
   const statusColor = getStatusColor(item.status);
   const paymentColor = getPaymentColor(item.payment_status);
+  const router = useRouter();
+  const [contractId, setContractId] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const checkContract = async () => {
+      try {
+        const api = (await import('../../src/api/axios')).default;
+        const resp = await api.get(`/api/contracts/by-reservation/${item.id}`);
+        setContractId(resp.data.id);
+      } catch {}
+    };
+    checkContract();
+  }, [item.id]);
 
   return (
     <View style={[styles.card, { backgroundColor: _C.card, borderColor: _C.border }]} data-testid={`reservation-${item.id}`}>
