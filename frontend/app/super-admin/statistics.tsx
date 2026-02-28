@@ -109,15 +109,15 @@ export default function SuperAdminStatistics() {
   useEffect(() => { fetchData(); }, [fetchData]);
   const onRefresh = async () => { setRefreshing(true); await fetchData(); setRefreshing(false); };
 
-  if (loading) return <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
-  if (!stats) return <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}><Text style={{ color: C.textLight }}>Erreur</Text></View>;
+  if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
+  if (!stats) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><Text style={{ color: C.textLight }}>Erreur</Text></View>;
 
   const pmColors: Record<string, string> = { card: C.purple, cash: C.gold, twint: C.info };
 
   return (
-    <ScrollView style={s.container} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <Text style={s.title}>Statistiques Globales</Text>
-      <Text style={s.subtitle}>Vue d'ensemble de toutes les agences</Text>
+    <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
+      <Text style={[s.title, { color: C.text }]}>Statistiques Globales</Text>
+      <Text style={[s.subtitle, { color: C.textLight }]}>Vue d'ensemble de toutes les agences</Text>
 
       {/* KPIs */}
       <View style={s.kpiRow}>
