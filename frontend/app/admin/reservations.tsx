@@ -49,6 +49,7 @@ const STATUS_OPTIONS = [
 export default function AdminReservations() {
   const { colors: _c } = useThemeStore();
   const COLORS = { primary: _c.accent, secondary: _c.warning, background: _c.bg, card: _c.card, text: _c.text, textLight: _c.textLight, border: _c.border, success: _c.success, warning: _c.warning, error: _c.error };
+  const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
