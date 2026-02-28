@@ -5,6 +5,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+import { useThemeStore } from '../../src/store/themeStore';
 const C = { bg: '#0f0f14', card: '#1a1a24', accent: '#7c3aed', accentLight: '#a78bfa', border: '#2a2a3a', text: '#fff', textSecondary: '#9ca3af', success: '#22c55e', warning: '#f59e0b', error: '#ef4444' };
 
 type Position = {
