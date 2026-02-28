@@ -3368,11 +3368,14 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     if signature_base64:
         try:
             sig_bytes = base64.b64decode(signature_base64.split(',')[-1] if ',' in signature_base64 else signature_base64)
-            sig_buffer = io.BytesIO(sig_bytes)
-            story.append(Paragraph(f["signature_client"] + " :", styles['FieldLabel']))
-            story.append(RLImage(sig_buffer, width=60*mm, height=25*mm))
+            if len(sig_bytes) > 100:  # Only use signature if it's a real image
+                sig_buffer = io.BytesIO(sig_bytes)
+                story.append(Paragraph(f["signature_client"] + " :", styles['FieldLabel']))
+                story.append(RLImage(sig_buffer, width=60*mm, height=25*mm))
+            else:
+                story.append(Paragraph(f"{f['signature_client']} : <i>[Signature enregistrée]</i>", styles['ContractBody']))
         except Exception:
-            story.append(Paragraph(f"{f['signature_client']} : ____________________________", styles['ContractBody']))
+            story.append(Paragraph(f"{f['signature_client']} : <i>[Signature enregistrée]</i>", styles['ContractBody']))
     else:
         story.append(Paragraph(f"{f['signature_client']} : ____________________________", styles['ContractBody']))
 
