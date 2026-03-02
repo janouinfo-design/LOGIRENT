@@ -154,6 +154,7 @@ class VehicleCreate(BaseModel):
     fuel_type: str = "essence"
     options: List[VehicleOption] = []
     location: str = "Geneva"
+    status: Optional[str] = None
 
 
 # ==================== RESERVATION MODELS ====================
