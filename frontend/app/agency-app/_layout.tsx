@@ -29,13 +29,6 @@ export default function AgencyAppLayout() {
     }
   }, [isAuthenticated]);
 
-  if (impLoading) return (
-    <View style={[s.container, { backgroundColor: '#0F0B1A', justifyContent: 'center', alignItems: 'center' }]}>
-      <ActivityIndicator size="large" color="#A78BFA" />
-      <Text style={{ color: '#9CA3AF', marginTop: 12, fontSize: 14 }}>Connexion en cours...</Text>
-    </View>
-  );
-
   if (!isAuthenticated || !user || user.role !== 'admin') return null;
 
   const timeAgo = (dateStr: string) => {
