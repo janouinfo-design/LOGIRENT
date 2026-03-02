@@ -237,7 +237,10 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
 
     price_per_day = d.get("price_per_day", "")
     if price_per_day:
-        price_per_day = f"CHF {float(price_per_day):.0f}" if price_per_day else ""
+        try:
+            price_per_day = f"CHF {float(price_per_day):.0f}"
+        except (ValueError, TypeError):
+            price_per_day = str(price_per_day)
 
     price_row = [
         _cell(lbl_prix, bold=True, size=8),
