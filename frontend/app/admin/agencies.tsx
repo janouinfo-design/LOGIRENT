@@ -59,12 +59,12 @@ export default function AgenciesPage() {
   const handleImpersonate = async (agency: Agency) => {
     if (!agency.admin_id) { alert('Aucun admin pour cette agence'); return; }
     setImpersonating(agency.id);
-    // Open window IMMEDIATELY in click context (before async call) to avoid popup blocker
     const newWindow = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
-      const token = await AsyncStorage.getItem('token');
+      // Use token from Zustand store (guaranteed valid since super-admin page renders)
+      const storeToken = useAuthStore.getState().token;
       const res = await axios.post(`${API_URL}/api/admin/impersonate/${agency.admin_id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${storeToken}` }
       });
       const { access_token } = res.data;
       if (newWindow) {
