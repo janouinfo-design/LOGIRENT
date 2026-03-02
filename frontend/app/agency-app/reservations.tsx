@@ -34,6 +34,8 @@ export default function AgencyReservations() {
   const [search, setSearch] = useState('');
   const [actionModal, setActionModal] = useState<Reservation | null>(null);
   const [sendingLink, setSendingLink] = useState(false);
+  const [contractLoading, setContractLoading] = useState(false);
+  const router = useRouter();
 
   const fetchReservations = async () => {
     try {
