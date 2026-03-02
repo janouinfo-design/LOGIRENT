@@ -161,15 +161,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     const init = async () => {
-      // Handle impersonation: check for imp_token in localStorage BEFORE loadUser
+      // Handle impersonation: check for ?imp_token= in URL query params
       if (typeof window !== 'undefined') {
-        const impToken = localStorage.getItem('imp_token');
+        const params = new URLSearchParams(window.location.search);
+        const impToken = params.get('imp_token');
         if (impToken) {
-          localStorage.removeItem('imp_token');
+          // Store imp token as the main token before loadUser reads it
           const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
           const axiosModule = (await import('axios')).default;
           await AsyncStorage.setItem('token', impToken);
           axiosModule.defaults.headers.common['Authorization'] = `Bearer ${impToken}`;
+          // Clean URL (remove query param)
+          window.history.replaceState(null, '', window.location.pathname);
         }
       }
       await loadUser();
