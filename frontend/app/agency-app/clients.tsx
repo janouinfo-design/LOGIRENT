@@ -9,8 +9,17 @@ import { useThemeStore } from '../../src/store/themeStore';
 interface Client {
   id: string; name: string; email: string; phone?: string;
   client_rating?: string; reservation_count?: number; created_at?: string;
-  profile_photo?: string;
+  profile_photo?: string; address?: string; admin_notes?: string;
+  total_spent?: number; total_reservations?: number;
 }
+
+const RATINGS = [
+  { value: 'vip', label: 'VIP', icon: 'star' as const, color: '#8B5CF6' },
+  { value: 'good', label: 'Bon', icon: 'thumbs-up' as const, color: '#22c55e' },
+  { value: 'neutral', label: 'Neutre', icon: 'remove-circle' as const, color: '#9ca3af' },
+  { value: 'bad', label: 'Mauvais', icon: 'thumbs-down' as const, color: '#f59e0b' },
+  { value: 'blocked', label: 'Bloqué', icon: 'ban' as const, color: '#ef4444' },
+];
 
 export default function AgencyClients() {
   const { colors: C } = useThemeStore();
@@ -20,6 +29,16 @@ export default function AgencyClients() {
   const [search, setSearch] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editClient, setEditClient] = useState<Client | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editRating, setEditRating] = useState('');
+  const [editNotes, setEditNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -48,6 +67,49 @@ export default function AgencyClients() {
     );
   }, [clients, search]);
 
+  const openEditModal = async (client: Client) => {
+    setEditClient(client);
+    setEditName(client.name || '');
+    setEditEmail(client.email || '');
+    setEditPhone(client.phone || '');
+    setEditAddress(client.address || '');
+    setEditRating(client.client_rating || '');
+    setEditNotes(client.admin_notes || '');
+    setShowEditModal(true);
+    // Fetch full details
+    setLoadingDetail(true);
+    try {
+      const res = await api.get(`/api/admin/users/${client.id}`);
+      const d = res.data;
+      setEditAddress(d.address || '');
+      setEditNotes(d.admin_notes || '');
+      setEditClient({ ...client, ...d });
+    } catch (e) { console.error(e); }
+    finally { setLoadingDetail(false); }
+  };
+
+  const saveEdit = async () => {
+    if (!editClient) return;
+    setSaving(true);
+    try {
+      const payload: any = {};
+      if (editName !== editClient.name) payload.name = editName;
+      if (editEmail !== editClient.email) payload.email = editEmail;
+      if (editPhone !== (editClient.phone || '')) payload.phone = editPhone;
+      if (editAddress !== (editClient.address || '')) payload.address = editAddress;
+      if (editNotes !== (editClient.admin_notes || '')) payload.admin_notes = editNotes;
+      if (editRating !== (editClient.client_rating || '')) payload.client_rating = editRating || null;
+
+      await api.put(`/api/admin/users/${editClient.id}`, payload);
+      setShowEditModal(false);
+      fetchClients();
+      Platform.OS === 'web' ? window.alert('Client mis à jour!') : Alert.alert('Succès', 'Client mis à jour!');
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    } finally { setSaving(false); }
+  };
+
   const createClient = async () => {
     if (!newName) {
       Platform.OS === 'web' ? window.alert('Le nom est obligatoire') : Alert.alert('Erreur', 'Le nom est obligatoire');
@@ -69,14 +131,12 @@ export default function AgencyClients() {
   const handleImportFile = async (event: any) => {
     const file = event?.target?.files?.[0];
     if (!file) return;
-    
     const validExts = ['.xlsx', '.xls', '.csv', '.zip'];
     const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
     if (!validExts.includes(ext)) {
       window.alert('Format non supporté. Utilisez .xlsx, .csv ou .zip');
       return;
     }
-    
     setImporting(true);
     setImportResult(null);
     try {
@@ -97,28 +157,16 @@ export default function AgencyClients() {
   };
 
   const ratingInfo = (r?: string) => {
-    switch (r) {
-      case 'vip': return { color: '#8B5CF6', label: 'VIP', icon: 'star' as const };
-      case 'good': return { color: C.success, label: 'Bon', icon: 'thumbs-up' as const };
-      case 'bad': return { color: C.warning, label: 'Mauvais', icon: 'thumbs-down' as const };
-      case 'blocked': return { color: C.error, label: 'Bloqué', icon: 'ban' as const };
-      default: return null;
-    }
+    const found = RATINGS.find(rt => rt.value === r);
+    return found || null;
   };
 
   if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>
-      {/* Hidden file input for web */}
       {Platform.OS === 'web' && (
-        <input
-          ref={fileInputRef as any}
-          type="file"
-          accept=".xlsx,.xls,.csv,.zip"
-          style={{ display: 'none' }}
-          onChange={handleImportFile}
-        />
+        <input ref={fileInputRef as any} type="file" accept=".xlsx,.xls,.csv,.zip" style={{ display: 'none' }} onChange={handleImportFile} />
       )}
 
       <View style={s.topRow}>
@@ -126,10 +174,10 @@ export default function AgencyClients() {
           <Ionicons name="search" size={18} color={C.textLight} />
           <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
         </View>
-        <TouchableOpacity style={[s.iconActionBtn, { backgroundColor: C.success + '30', borderWidth: 1, borderColor: C.success + '50' }]} onPress={() => setShowImportModal(true)} testID="import-clients-btn">
+        <TouchableOpacity style={[s.iconActionBtn, { backgroundColor: C.success + '30', borderWidth: 1, borderColor: C.success + '50' }]} onPress={() => setShowImportModal(true)} data-testid="import-clients-btn">
           <Ionicons name="cloud-upload" size={20} color={C.success} />
         </TouchableOpacity>
-        <TouchableOpacity style={[s.addBtn, { backgroundColor: C.primary }]} onPress={() => setShowNewModal(true)} testID="new-client-btn">
+        <TouchableOpacity style={[s.addBtn, { backgroundColor: C.primary }]} onPress={() => setShowNewModal(true)} data-testid="new-client-btn">
           <Ionicons name="person-add" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -143,7 +191,11 @@ export default function AgencyClients() {
         renderItem={({ item }) => {
           const rating = ratingInfo(item.client_rating);
           return (
-            <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]} data-testid={`client-${item.id}`}>
+            <TouchableOpacity
+              style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}
+              onPress={() => openEditModal(item)}
+              data-testid={`client-${item.id}`}
+            >
               <View style={s.cardHeader}>
                 <View style={[s.avatar, { backgroundColor: C.accent + '20' }]}>
                   {item.profile_photo ? (
@@ -165,6 +217,9 @@ export default function AgencyClients() {
                   <Text style={[s.clientEmail, { color: C.textLight }]}>{item.email}</Text>
                   {item.phone && <Text style={[s.clientPhone, { color: C.textLight }]}>{item.phone}</Text>}
                 </View>
+                <View style={s.editHint}>
+                  <Ionicons name="create-outline" size={16} color={C.textLight} />
+                </View>
                 {item.reservation_count !== undefined && (
                   <View style={s.countBadge}>
                     <Text style={[s.countText, { color: C.accent }]}>{item.reservation_count}</Text>
@@ -172,10 +227,133 @@ export default function AgencyClients() {
                   </View>
                 )}
               </View>
-            </View>
+            </TouchableOpacity>
           );
         }}
       />
+
+      {/* Edit Client Modal */}
+      <Modal visible={showEditModal} transparent animationType="slide" onRequestClose={() => setShowEditModal(false)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.modal, { backgroundColor: C.card }]}>
+            <View style={s.modalHeader}>
+              <Text style={[s.modalTitle, { color: C.text }]}>Modifier le client</Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)} data-testid="close-edit-modal">
+                <Ionicons name="close" size={24} color={C.text} />
+              </TouchableOpacity>
+            </View>
+            {loadingDetail ? (
+              <View style={{ padding: 20, alignItems: 'center' }}>
+                <ActivityIndicator size="small" color={C.accent} />
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Client avatar + name header */}
+                {editClient && (
+                  <View style={[s.editHeader, { backgroundColor: C.bg, borderColor: C.border }]}>
+                    <View style={[s.editAvatar, { backgroundColor: C.accent + '20' }]}>
+                      {editClient.profile_photo ? (
+                        <Image source={{ uri: editClient.profile_photo }} style={s.editAvatarImg} />
+                      ) : (
+                        <Ionicons name="person" size={28} color={C.accent} />
+                      )}
+                    </View>
+                    <View>
+                      <Text style={[s.editHeaderName, { color: C.text }]}>{editClient.name}</Text>
+                      <Text style={{ color: C.textLight, fontSize: 12 }}>
+                        {editClient.total_reservations || editClient.reservation_count || 0} réservations
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                <Text style={[s.label, { color: C.textLight }]}>Nom</Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Nom complet"
+                  placeholderTextColor={C.textLight}
+                  data-testid="edit-client-name"
+                />
+
+                <Text style={[s.label, { color: C.textLight }]}>Email</Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={editEmail}
+                  onChangeText={setEditEmail}
+                  placeholder="email@example.com"
+                  placeholderTextColor={C.textLight}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  data-testid="edit-client-email"
+                />
+
+                <Text style={[s.label, { color: C.textLight }]}>Téléphone</Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={editPhone}
+                  onChangeText={setEditPhone}
+                  placeholder="+41 XX XXX XX XX"
+                  placeholderTextColor={C.textLight}
+                  keyboardType="phone-pad"
+                  data-testid="edit-client-phone"
+                />
+
+                <Text style={[s.label, { color: C.textLight }]}>Adresse</Text>
+                <TextInput
+                  style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={editAddress}
+                  onChangeText={setEditAddress}
+                  placeholder="Adresse du client"
+                  placeholderTextColor={C.textLight}
+                  data-testid="edit-client-address"
+                />
+
+                <Text style={[s.label, { color: C.textLight }]}>Classement</Text>
+                <View style={s.ratingRow}>
+                  {RATINGS.map((r) => (
+                    <TouchableOpacity
+                      key={r.value}
+                      style={[
+                        s.ratingOption,
+                        { borderColor: editRating === r.value ? r.color : C.border, backgroundColor: editRating === r.value ? r.color + '15' : C.bg },
+                      ]}
+                      onPress={() => setEditRating(editRating === r.value ? '' : r.value)}
+                      data-testid={`rating-${r.value}`}
+                    >
+                      <Ionicons name={r.icon} size={14} color={editRating === r.value ? r.color : C.textLight} />
+                      <Text style={{ color: editRating === r.value ? r.color : C.textLight, fontSize: 11, fontWeight: '600' }}>{r.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={[s.label, { color: C.textLight }]}>Notes admin</Text>
+                <TextInput
+                  style={[s.input, s.textArea, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                  value={editNotes}
+                  onChangeText={setEditNotes}
+                  placeholder="Notes internes sur ce client..."
+                  placeholderTextColor={C.textLight}
+                  multiline
+                  numberOfLines={3}
+                  data-testid="edit-client-notes"
+                />
+
+                <TouchableOpacity
+                  style={[s.saveBtn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]}
+                  onPress={saveEdit}
+                  disabled={saving}
+                  data-testid="save-edit-client-btn"
+                >
+                  <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                  <Text style={s.saveBtnText}>{saving ? 'Enregistrement...' : 'Enregistrer'}</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Import Modal */}
       <Modal visible={showImportModal} transparent animationType="slide" onRequestClose={() => { setShowImportModal(false); setImportResult(null); }}>
@@ -190,50 +368,25 @@ export default function AgencyClients() {
                 <Ionicons name="information-circle" size={20} color={C.accent} />
                 <View style={{ flex: 1 }}>
                   <Text style={[s.infoTitle, { color: C.text }]}>Formats acceptés</Text>
-                  <Text style={[s.infoDesc, { color: C.textLight }]}>
-                    Excel (.xlsx), CSV (.csv), ou ZIP contenant un Excel + photos
-                  </Text>
+                  <Text style={[s.infoDesc, { color: C.textLight }]}>Excel (.xlsx), CSV (.csv), ou ZIP contenant un Excel + photos</Text>
                 </View>
               </View>
-
               <View style={[s.infoBox, { backgroundColor: C.primary + '10', borderColor: C.primary + '30' }]}>
                 <Ionicons name="document-text" size={20} color={C.primary} />
                 <View style={{ flex: 1 }}>
                   <Text style={[s.infoTitle, { color: C.text }]}>Colonnes Excel</Text>
-                  <Text style={[s.infoDesc, { color: C.textLight }]}>
-                    nom, email, téléphone, adresse, photo{'\n'}
-                    (La colonne "photo" = nom du fichier image dans le ZIP)
-                  </Text>
+                  <Text style={[s.infoDesc, { color: C.textLight }]}>nom, email, téléphone, adresse, photo{'\n'}(La colonne "photo" = nom du fichier image dans le ZIP)</Text>
                 </View>
               </View>
-
-              <View style={[s.infoBox, { backgroundColor: C.success + '10', borderColor: C.success + '30' }]}>
-                <Ionicons name="images" size={20} color={C.success} />
-                <View style={{ flex: 1 }}>
-                  <Text style={[s.infoTitle, { color: C.text }]}>Import avec photos</Text>
-                  <Text style={[s.infoDesc, { color: C.textLight }]}>
-                    Créez un .zip avec le fichier Excel + les photos.{'\n'}
-                    Colonne "photo" = nom du fichier (ex: jean.jpg)
-                  </Text>
-                </View>
-              </View>
-
               <TouchableOpacity
                 style={[s.importBtn, { backgroundColor: C.primary }, importing && { opacity: 0.6 }]}
                 disabled={importing}
                 onPress={() => fileInputRef.current?.click()}
                 data-testid="import-file-btn"
               >
-                {importing ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Ionicons name="cloud-upload" size={22} color="#fff" />
-                )}
-                <Text style={s.importBtnText}>
-                  {importing ? 'Import en cours...' : 'Choisir un fichier'}
-                </Text>
+                {importing ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="cloud-upload" size={22} color="#fff" />}
+                <Text style={s.importBtnText}>{importing ? 'Import en cours...' : 'Choisir un fichier'}</Text>
               </TouchableOpacity>
-
               {importResult && !importResult.error && (
                 <View style={[s.resultBox, { backgroundColor: C.success + '15', borderColor: C.success + '40' }]} data-testid="import-result-success">
                   <View style={s.resultHeader}>
@@ -241,33 +394,13 @@ export default function AgencyClients() {
                     <Text style={[s.resultTitle, { color: C.success }]}>Import réussi</Text>
                   </View>
                   <View style={s.resultStats}>
-                    <View style={s.resultStat}>
-                      <Text style={[s.resultNum, { color: C.text }]}>{importResult.created}</Text>
-                      <Text style={[s.resultStatLabel, { color: C.textLight }]}>créés</Text>
-                    </View>
-                    <View style={s.resultStat}>
-                      <Text style={[s.resultNum, { color: C.text }]}>{importResult.photos_matched || 0}</Text>
-                      <Text style={[s.resultStatLabel, { color: C.textLight }]}>photos</Text>
-                    </View>
-                    <View style={s.resultStat}>
-                      <Text style={[s.resultNum, { color: C.text }]}>{importResult.skipped}</Text>
-                      <Text style={[s.resultStatLabel, { color: C.textLight }]}>existants</Text>
-                    </View>
-                    <View style={s.resultStat}>
-                      <Text style={[s.resultNum, { color: C.text }]}>{importResult.errors?.length || 0}</Text>
-                      <Text style={[s.resultStatLabel, { color: C.textLight }]}>erreurs</Text>
-                    </View>
+                    <View style={s.resultStat}><Text style={[s.resultNum, { color: C.text }]}>{importResult.created}</Text><Text style={[s.resultStatLabel, { color: C.textLight }]}>créés</Text></View>
+                    <View style={s.resultStat}><Text style={[s.resultNum, { color: C.text }]}>{importResult.photos_matched || 0}</Text><Text style={[s.resultStatLabel, { color: C.textLight }]}>photos</Text></View>
+                    <View style={s.resultStat}><Text style={[s.resultNum, { color: C.text }]}>{importResult.skipped}</Text><Text style={[s.resultStatLabel, { color: C.textLight }]}>existants</Text></View>
+                    <View style={s.resultStat}><Text style={[s.resultNum, { color: C.text }]}>{importResult.errors?.length || 0}</Text><Text style={[s.resultStatLabel, { color: C.textLight }]}>erreurs</Text></View>
                   </View>
-                  {importResult.errors?.length > 0 && (
-                    <View style={{ marginTop: 10 }}>
-                      {importResult.errors.map((e: string, i: number) => (
-                        <Text key={i} style={[s.errorLine, { color: C.error }]}>{e}</Text>
-                      ))}
-                    </View>
-                  )}
                 </View>
               )}
-
               {importResult?.error && (
                 <View style={[s.resultBox, { backgroundColor: C.error + '15', borderColor: C.error + '40' }]} data-testid="import-result-error">
                   <View style={s.resultHeader}>
@@ -327,15 +460,25 @@ const s = StyleSheet.create({
   ratingText: { fontSize: 10, fontWeight: '600' },
   clientEmail: { fontSize: 12, marginTop: 2 },
   clientPhone: { fontSize: 12 },
+  editHint: { marginRight: 4 },
   countBadge: { alignItems: 'center' },
   countText: { fontSize: 18, fontWeight: '800' },
   countLabel: { fontSize: 9 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '80%' },
+  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: '800' },
+  editHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 12, borderWidth: 1, marginBottom: 12 },
+  editAvatar: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  editAvatarImg: { width: 50, height: 50, borderRadius: 25 },
+  editHeaderName: { fontSize: 17, fontWeight: '800' },
   label: { fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 12 },
   input: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, borderWidth: 1 },
+  textArea: { minHeight: 70, textAlignVertical: 'top' },
+  ratingRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  ratingOption: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5 },
+  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, paddingVertical: 14, marginTop: 20, marginBottom: 10 },
+  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   createBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, paddingVertical: 14, marginTop: 20 },
   createBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   infoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14, borderRadius: 10, borderWidth: 1, marginBottom: 10 },
