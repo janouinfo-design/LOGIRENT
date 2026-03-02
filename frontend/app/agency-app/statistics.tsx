@@ -86,13 +86,18 @@ function DonutChart({ segments, size = 100, textColor }: any) {
 export default function AgencyStatistics() {
   const { colors: C } = useThemeStore();
   const [stats, setStats] = useState<AdvancedStats | null>(null);
+  const [topClients, setTopClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const resp = await api.get('/api/admin/stats/advanced');
-      setStats(resp.data);
+      const [advResp, tcResp] = await Promise.all([
+        api.get('/api/admin/stats/advanced'),
+        api.get('/api/admin/stats/top-clients'),
+      ]);
+      setStats(advResp.data);
+      setTopClients(tcResp.data || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   }, []);
