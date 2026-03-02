@@ -73,26 +73,26 @@ export default function AgencyAppHome() {
       </TouchableOpacity>
 
       <View style={s.statsRow}>
-        <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/vehicles')} testID="stat-vehicles">
           <Ionicons name="car" size={22} color={C.info} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_vehicles || 0}</Text>
           <Text style={{ color: C.textLight, fontSize: 11 }}>Véhicules</Text>
-        </View>
-        <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/reservations')} testID="stat-reservations">
           <Ionicons name="calendar" size={22} color={C.warning} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_reservations || 0}</Text>
           <Text style={{ color: C.textLight, fontSize: 11 }}>Réservations</Text>
-        </View>
-        <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/clients')} testID="stat-clients">
           <Ionicons name="people" size={22} color={C.success} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_users || 0}</Text>
           <Text style={{ color: C.textLight, fontSize: 11 }}>Clients</Text>
-        </View>
-        <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]}>
+        </TouchableOpacity>
+        <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/statistics')} testID="stat-revenue">
           <Ionicons name="cash" size={22} color={C.accent} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_revenue ? `${stats.total_revenue.toFixed(0)}` : '0'}</Text>
           <Text style={{ color: C.textLight, fontSize: 11 }}>CHF Rev.</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       <Text style={[s.sectionTitle, { color: C.text }]}>Dernières réservations</Text>
