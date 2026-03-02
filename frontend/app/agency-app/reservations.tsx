@@ -109,7 +109,7 @@ export default function AgencyReservations() {
   const monthDays = useMemo(() => eachDayOfInterval({ start: planningMonth, end: endOfMonth(planningMonth) }), [planningMonth]);
   const CELL_W = 32;
   const LABEL_W = 120;
-  const ROW_H = 36;
+  const ROW_H = 40;
   const today = new Date();
 
   if (loading) return <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
@@ -219,18 +219,16 @@ export default function AgencyReservations() {
                             height: ROW_H,
                           }]}>
                             {resForDay && (
-                              <View style={[st.resBar, {
+                              <View style={{
+                                position: 'absolute', top: 3, bottom: 3, left: isStart ? 2 : 0, right: isEnd ? 2 : 0,
                                 backgroundColor: color,
-                                borderTopLeftRadius: isStart ? 5 : 0,
-                                borderBottomLeftRadius: isStart ? 5 : 0,
-                                borderTopRightRadius: isEnd ? 5 : 0,
-                                borderBottomRightRadius: isEnd ? 5 : 0,
-                                marginLeft: isStart ? 2 : 0,
-                                marginRight: isEnd ? 2 : 0,
-                              }]}>
-                                {isStart && spanDays >= 2 && (
-                                  <Text style={{ color: '#fff', fontSize: 8, fontWeight: '800', paddingLeft: 3 }} numberOfLines={1}>
-                                    {statusLabel(resForDay.status).slice(0, 6)}
+                                borderTopLeftRadius: isStart ? 6 : 0, borderBottomLeftRadius: isStart ? 6 : 0,
+                                borderTopRightRadius: isEnd ? 6 : 0, borderBottomRightRadius: isEnd ? 6 : 0,
+                                justifyContent: 'center', overflow: 'hidden',
+                              }}>
+                                {isStart && (
+                                  <Text style={{ color: '#fff', fontSize: 9, fontWeight: '900', paddingLeft: 4, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 }} numberOfLines={1}>
+                                    {statusLabel(resForDay.status)}
                                   </Text>
                                 )}
                               </View>
