@@ -228,6 +228,64 @@ export default function SuperAdminStatistics() {
         </View>
       )}
 
+      {/* Agency Comparison */}
+      {agencyComparison.length > 0 && (
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Comparaison par Agence</Text>
+          <View style={s.chartCard}>
+            {agencyComparison.filter(a => a.revenue > 0 || a.bookings > 0 || a.vehicles > 0).map((a, i) => (
+              <View key={a.id} style={[{ paddingVertical: 12 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Ionicons name="business" size={16} color={C.purple} />
+                    <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{a.name}</Text>
+                  </View>
+                  <Text style={{ color: C.gold, fontSize: 16, fontWeight: '800' }}>CHF {a.revenue.toFixed(0)}</Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="calendar" size={12} color={C.textLight} />
+                    <Text style={{ color: C.textLight, fontSize: 11 }}>{a.bookings} locations</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Ionicons name="car" size={12} color={C.textLight} />
+                    <Text style={{ color: C.textLight, fontSize: 11 }}>{a.vehicles} vehicules</Text>
+                  </View>
+                </View>
+                {/* Revenue bar */}
+                <View style={{ marginTop: 6, height: 6, backgroundColor: C.border + '40', borderRadius: 3, overflow: 'hidden' }}>
+                  <View style={{ width: `${Math.max(2, agencyComparison[0]?.revenue > 0 ? (a.revenue / agencyComparison[0].revenue * 100) : 0)}%`, height: '100%', backgroundColor: C.accent, borderRadius: 3 }} />
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Top Clients */}
+      {topClients.length > 0 && (
+        <View style={s.section}>
+          <Text style={s.sectionTitle}>Top Clients</Text>
+          <View style={s.chartCard}>
+            {topClients.slice(0, 8).map((c, i) => {
+              const rColors: Record<string, string> = { vip: '#8B5CF6', good: C.success, neutral: '#6B7280', bad: C.gold, blocked: C.error };
+              return (
+                <View key={c.id} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
+                  <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: (rColors[c.rating] || '#6B7280') + '25', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '800', color: rColors[c.rating] || '#6B7280' }}>{i + 1}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: C.text, fontSize: 13, fontWeight: '600' }}>{c.name}</Text>
+                    <Text style={{ color: C.textLight, fontSize: 10 }}>{c.email} - {c.bookings} loc.</Text>
+                  </View>
+                  <Text style={{ color: C.gold, fontSize: 14, fontWeight: '800' }}>CHF {c.total_spent.toFixed(0)}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
