@@ -244,6 +244,104 @@ export default function AgencyStatistics() {
           </View>
         </View>
       )}
+
+      {/* AI Revenue Forecast */}
+      <View style={{ marginTop: 16 }} data-testid="agency-revenue-forecast">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <Ionicons name="sparkles" size={16} color={C.accent} />
+          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700' }}>Prévisions de Revenus (IA)</Text>
+        </View>
+        <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.accent + '40' }]}>
+          {forecastLoading ? (
+            <View style={{ alignItems: 'center', padding: 20 }}>
+              <ActivityIndicator size="small" color={C.accent} />
+              <Text style={{ color: C.textLight, fontSize: 11, marginTop: 6 }}>Analyse IA en cours...</Text>
+            </View>
+          ) : forecastData ? (
+            <>
+              {(() => {
+                const allData = [
+                  ...(forecastData.historical || []).map((h: any) => ({ ...h, type: 'historical' })),
+                  ...(forecastData.forecast || []).map((f: any) => ({ ...f, type: 'forecast' })),
+                ];
+                if (allData.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>Aucune donnée</Text>;
+                const chartW = SCREEN_W - 80;
+                const chartH = 120;
+                const maxVal = Math.max(...allData.map(d => d.revenue), 1);
+                const barW = Math.min(36, (chartW - 56) / allData.length - 5);
+                const ml = 50;
+                return (
+                  <Svg width={chartW + ml} height={chartH + 30}>
+                    {[0, 0.5, 1].map((p, i) => (
+                      <G key={i}>
+                        <Line x1={ml} y1={chartH - p * chartH} x2={chartW + ml} y2={chartH - p * chartH} stroke={C.border} strokeWidth={0.5} />
+                        <SvgText x={ml - 4} y={chartH - p * chartH + 3} fill={C.textLight} fontSize={8} textAnchor="end">{Math.round(maxVal * p)}</SvgText>
+                      </G>
+                    ))}
+                    {allData.map((d: any, i: number) => {
+                      const barH = (d.revenue / maxVal) * (chartH - 8);
+                      const x = ml + 6 + i * ((chartW - 12) / allData.length);
+                      const isForecast = d.type === 'forecast';
+                      return (
+                        <G key={i}>
+                          <Rect x={x} y={chartH - barH} width={barW} height={barH} rx={3} fill={isForecast ? C.accent : C.info} opacity={isForecast ? 0.5 : 0.8} />
+                          {isForecast && <Rect x={x} y={chartH - barH} width={barW} height={barH} rx={3} fill="none" stroke={C.accent} strokeWidth={1.2} strokeDasharray="3,2" />}
+                          <SvgText x={x + barW / 2} y={chartH + 12} fill={C.textLight} fontSize={7} textAnchor="middle">{d.month?.slice(-5)}</SvgText>
+                        </G>
+                      );
+                    })}
+                  </Svg>
+                );
+              })()}
+
+              {/* Legend */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: C.info }} />
+                  <Text style={{ color: C.textLight, fontSize: 9 }}>Historique</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: C.accent, opacity: 0.5 }} />
+                  <Text style={{ color: C.textLight, fontSize: 9 }}>Prévision IA</Text>
+                </View>
+              </View>
+
+              {/* Analysis */}
+              <View style={{ marginTop: 10, padding: 10, borderRadius: 8, backgroundColor: C.accent + '10' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+                  <Ionicons name={forecastData.trend === 'up' ? 'trending-up' : forecastData.trend === 'down' ? 'trending-down' : 'remove'} size={14} color={forecastData.trend === 'up' ? C.success : forecastData.trend === 'down' ? C.error : '#fbbf24'} />
+                  <Text style={{ color: C.text, fontSize: 12, fontWeight: '700' }}>
+                    {forecastData.trend === 'up' ? 'Hausse' : forecastData.trend === 'down' ? 'Baisse' : 'Stable'}
+                  </Text>
+                </View>
+                <Text style={{ color: C.textLight, fontSize: 10, lineHeight: 15 }}>{forecastData.analysis}</Text>
+              </View>
+
+              {/* Forecast numbers */}
+              {forecastData.forecast?.length > 0 && (
+                <View style={{ marginTop: 8 }}>
+                  {forecastData.forecast.map((f: any, i: number) => (
+                    <View key={i} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 7, justifyContent: 'space-between' }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
+                      <Text style={{ color: C.text, fontSize: 11, fontWeight: '600' }}>{f.month}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                        <Text style={{ color: C.textLight, fontSize: 9 }}>{f.bookings} rés.</Text>
+                        <Text style={{ color: C.accent, fontSize: 12, fontWeight: '800' }}>CHF {f.revenue?.toLocaleString()}</Text>
+                        {f.confidence && (
+                          <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6, backgroundColor: (f.confidence > 0.6 ? C.success : f.confidence > 0.4 ? '#fbbf24' : C.error) + '20' }}>
+                            <Text style={{ fontSize: 8, fontWeight: '700', color: f.confidence > 0.6 ? C.success : f.confidence > 0.4 ? '#fbbf24' : C.error }}>{Math.round(f.confidence * 100)}%</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>Prévision non disponible</Text>
+          )}
+        </View>
+      </View>
     </ScrollView>
   );
 }
