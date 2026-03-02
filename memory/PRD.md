@@ -1,60 +1,54 @@
 # LogiRent - PRD
 
 ## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with:
-- Client Mobile App (iOS & Android) and Web App
-- Agency Admin Mobile App for phone bookings
-- Admin Web Back-office with Super Admin and Agency Admin roles
-- French/English internationalization, violet/grey/black branding
+Build a complete car rental solution named "LogiRent" with Client App, Agency Admin App, Admin Back-office, and Super Admin.
 
 ## Architecture
-- **4 Interfaces**: Client App (`/`), Agency Admin Mobile App (`/agency-app`), Super Admin (`/super-admin`), Web Admin (`/admin`)
+- **4 Interfaces**: Client App, Agency App, Admin, Super Admin
 - **Backend**: FastAPI + MongoDB
 - **Frontend**: React Native (Expo Router)
-- **Auth**: JWT-based, role-based routing
 
 ## What's Been Implemented
 
-### Contract Actions in Agency App (Mar 2, 2026) - NEW
-- Added CONTRAT section to reservation action modal with 3 options:
-  - "Voir / Générer le contrat" - views existing or generates new, then navigates to contract page
-  - "Envoyer le contrat au client" - sends contract by email via PUT /api/contracts/{id}/send
-  - "Télécharger le PDF" - downloads contract PDF
-- Uses GET /api/contracts/by-reservation/{reservation_id} to find contract by reservation
+### Agenda/Calendar Booking System (Mar 2, 2026) - NEW
+- New backend endpoint: GET /api/admin/vehicle-schedule returns all vehicles with their reservations for date range
+- Complete visual agenda with weekly view: shows all vehicles and their booking status per day
+- Color-coded slots: Green (available), Red (confirmed/active), Orange (pending)
+- Hour selectors for start/end times (08:00-18:00 adjustable)
+- "Occupé" badge on vehicles that conflict with selected dates
+- Selection summary bar showing vehicle, dates, duration, and price
+- 4-step booking flow: Client → Véhicule/Planning → Options/Paiement → Confirmer
+
+### Contract Actions in Agency App (Mar 2, 2026)
+- Added CONTRAT section to reservation modal: View/Generate, Send, Download PDF
 
 ### Filter Chips Fix + Bigger Nav Menu (Mar 2, 2026)
-- Fixed reservation filter chips with inline styles (Metro CI cache workaround)
-- Enlarged navigation menu: icons 24px, text 13px
+- Fixed filter visibility, enlarged navigation icons/text
 
-### Edit Client Profiles from Agency Admin (Mar 2, 2026)
-- Click on any client card to open edit modal (Name, Email, Phone, Address, Rating, Notes)
+### Edit Client Profiles (Mar 2, 2026)
+- Modal to edit name, email, phone, address, rating, admin notes
 
-### GPS Tracking - Fixed Map Layout (Mar 2, 2026)
-- Map always visible and fixed at top, clicking vehicle centers map
+### GPS Tracking Fixed Map (Mar 2, 2026)
+- Map always visible at top, centers on clicked vehicle
 
-### Contract System with Digital Signature (Feb 28, 2026)
-- Full contract API, bilingual, digital signature, PDF generation
+### Previous (Feb 28, 2026)
+- Contract system, Theme toggle, Email notifications, Statistics dashboards
+- All core features: Auth, Vehicles, Reservations, Stripe, Navixy GPS, Client Import, etc.
 
-### Dark/Light Mode Toggle Everywhere (Feb 28, 2026)
-### Email Notifications (Feb 28, 2026)
-### Advanced Statistics Dashboards (Feb 28, 2026)
-### Previously Completed
-- Super Admin, GPS (Navixy), Client Import, Notifications, QR Codes, Calendar, AI Doc Verification, Multi-Agency, Auth, Vehicles, Reservations, Stripe
+## Key Files
+- `/app/backend/server.py` - Backend with vehicle-schedule endpoint
+- `/app/frontend/app/agency-app/book.tsx` - Booking flow with agenda
+- `/app/frontend/app/agency-app/reservations.tsx` - Reservations with contract actions
+- `/app/frontend/app/agency-app/clients.tsx` - Client management with edit modal
+- `/app/frontend/app/agency-app/tracking.tsx` - GPS with fixed map
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase)
 - P2: Driver/Agent Application
-- P3: Refactoring server.py monolith into routers
+- P3: Refactoring server.py into routers
 - P4: App Store Deployment
-- Security: password hashing for agencies
 
 ## Credentials
 - Super Admin: test@example.com / password123
 - Agency Admin Geneva: admin-geneva@logirent.ch / LogiRent2024
 - Client: client1@test.com / test1234
-
-## 3rd Party Integrations
-- Stripe, Resend, Navixy, OpenAI GPT-5.2, reportlab
-
-## DB Collections
-- users, agencies, vehicles, reservations, notifications, contracts
