@@ -1,0 +1,688 @@
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from typing import Optional
+from datetime import datetime, timedelta
+import uuid
+import asyncio
+import base64
+import logging
+
+from database import db
+from models import AdminStats, AdminUserUpdate, Base64UserPhoto, PaymentTransaction
+from deps import get_admin_user, get_agency_admin, hash_password
+from utils.notifications import create_notification
+from utils.email import (
+    send_email, send_reservation_confirmation,
+    generate_status_change_email
+)
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
+@router.get("/admin/stats", response_model=AdminStats)
+async def get_admin_stats(user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+
+    vf = {} if is_super else {"agency_id": agency_id}
+    rf = {} if is_super else {"agency_id": agency_id}
+
+    total_vehicles = await db.vehicles.count_documents(vf)
+    total_reservations = await db.reservations.count_documents(rf)
+
+    if is_super:
+        total_users = await db.users.count_documents({})
+        total_payments = await db.payment_transactions.count_documents({"payment_status": "paid"})
+    else:
+        user_ids = await db.reservations.distinct("user_id", rf)
+        total_users = len(user_ids)
+        total_payments = await db.reservations.count_documents({**rf, "payment_status": "paid"})
+
+    revenue_match = {"payment_status": "paid"}
+    if not is_super:
+        revenue_match["agency_id"] = agency_id
+    pipeline = [{"$match": revenue_match}, {"$group": {"_id": None, "total": {"$sum": "$total_price"}}}]
+    revenue_result = await db.reservations.aggregate(pipeline).to_list(1)
+    total_revenue = revenue_result[0]["total"] if revenue_result else 0
+
+    status_pipeline = [{"$match": rf}, {"$group": {"_id": "$status", "count": {"$sum": 1}}}]
+    status_result = await db.reservations.aggregate(status_pipeline).to_list(10)
+    reservations_by_status = {item["_id"]: item["count"] for item in status_result}
+
+    top_pipeline = [{"$match": rf}, {"$group": {"_id": "$vehicle_id", "rental_count": {"$sum": 1}}}, {"$sort": {"rental_count": -1}}, {"$limit": 5}]
+    top_result = await db.reservations.aggregate(top_pipeline).to_list(5)
+    top_vehicles = []
+    for item in top_result:
+        vehicle = await db.vehicles.find_one({"id": item["_id"]})
+        if vehicle:
+            top_vehicles.append({"id": vehicle["id"], "name": f"{vehicle['brand']} {vehicle['model']}", "rental_count": item["rental_count"]})
+
+    six_months_ago = datetime.utcnow() - timedelta(days=180)
+    monthly_match = {"payment_status": "paid", "created_at": {"$gte": six_months_ago}}
+    if not is_super:
+        monthly_match["agency_id"] = agency_id
+    monthly_pipeline = [{"$match": monthly_match}, {"$group": {"_id": {"year": {"$year": "$created_at"}, "month": {"$month": "$created_at"}}, "revenue": {"$sum": "$total_price"}, "count": {"$sum": 1}}}, {"$sort": {"_id.year": 1, "_id.month": 1}}]
+    monthly_result = await db.reservations.aggregate(monthly_pipeline).to_list(12)
+    revenue_by_month = [{"month": datetime(item["_id"]["year"], item["_id"]["month"], 1).strftime("%b %Y"), "revenue": item["revenue"], "reservations": item["count"]} for item in monthly_result]
+
+    return AdminStats(
+        total_vehicles=total_vehicles, total_users=total_users,
+        total_reservations=total_reservations, total_payments=total_payments,
+        total_revenue=total_revenue, reservations_by_status=reservations_by_status,
+        top_vehicles=top_vehicles, revenue_by_month=revenue_by_month
+    )
+
+
+@router.get("/admin/stats/advanced")
+async def get_advanced_stats(user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    rf = {} if is_super else {"agency_id": agency_id}
+    vf = {} if is_super else {"agency_id": agency_id}
+
+    now = datetime.utcnow()
+    thirty_days_ago = now - timedelta(days=30)
+    this_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
+
+    rev_this = await db.reservations.aggregate([{"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": this_month_start}}}, {"$group": {"_id": None, "total": {"$sum": "$total_price"}, "count": {"$sum": 1}}}]).to_list(1)
+    rev_last = await db.reservations.aggregate([{"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": last_month_start, "$lt": this_month_start}}}, {"$group": {"_id": None, "total": {"$sum": "$total_price"}, "count": {"$sum": 1}}}]).to_list(1)
+    revenue_this_month = rev_this[0]["total"] if rev_this else 0
+    revenue_last_month = rev_last[0]["total"] if rev_last else 0
+    reservations_this_month = rev_this[0]["count"] if rev_this else 0
+    reservations_last_month = rev_last[0]["count"] if rev_last else 0
+
+    avg_dur_res = await db.reservations.aggregate([{"$match": {**rf, "status": {"$in": ["confirmed", "active", "completed"]}}}, {"$group": {"_id": None, "avg_days": {"$avg": "$total_days"}}}]).to_list(1)
+    avg_booking_duration = round(avg_dur_res[0]["avg_days"], 1) if avg_dur_res else 0
+
+    avg_rev_res = await db.reservations.aggregate([{"$match": {**rf, "payment_status": "paid"}}, {"$group": {"_id": None, "avg_rev": {"$avg": "$total_price"}}}]).to_list(1)
+    avg_revenue_per_reservation = round(avg_rev_res[0]["avg_rev"], 2) if avg_rev_res else 0
+
+    vehicles = await db.vehicles.find(vf, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(200)
+    vehicle_utilization = []
+    for v in vehicles[:20]:
+        res_list = await db.reservations.find({"vehicle_id": v["id"], "status": {"$in": ["confirmed", "active", "completed"]}, "start_date": {"$lte": now}, "end_date": {"$gte": thirty_days_ago}}, {"_id": 0, "start_date": 1, "end_date": 1}).to_list(100)
+        booked_days = 0
+        for r in res_list:
+            s = max(r["start_date"], thirty_days_ago) if isinstance(r["start_date"], datetime) else thirty_days_ago
+            e = min(r["end_date"], now) if isinstance(r["end_date"], datetime) else now
+            booked_days += max(0, (e - s).days)
+        rate = min(100, round((booked_days / 30) * 100))
+        vehicle_utilization.append({"id": v["id"], "name": f"{v['brand']} {v['model']}", "utilization": rate, "booked_days": booked_days})
+    vehicle_utilization.sort(key=lambda x: x["utilization"], reverse=True)
+
+    rev_per_vehicle_result = await db.reservations.aggregate([{"$match": {**rf, "payment_status": "paid"}}, {"$group": {"_id": "$vehicle_id", "revenue": {"$sum": "$total_price"}, "count": {"$sum": 1}}}, {"$sort": {"revenue": -1}}, {"$limit": 10}]).to_list(10)
+    revenue_per_vehicle = []
+    for item in rev_per_vehicle_result:
+        veh = await db.vehicles.find_one({"id": item["_id"]})
+        if veh:
+            revenue_per_vehicle.append({"id": veh["id"], "name": f"{veh['brand']} {veh['model']}", "revenue": item["revenue"], "bookings": item["count"]})
+
+    daily_result = await db.reservations.aggregate([{"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": thirty_days_ago}}}, {"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}}, "revenue": {"$sum": "$total_price"}, "count": {"$sum": 1}}}, {"$sort": {"_id": 1}}]).to_list(31)
+    daily_revenue = [{"date": item["_id"], "revenue": item["revenue"], "bookings": item["count"]} for item in daily_result]
+
+    new_clients_30d = await db.users.count_documents({"role": "client", "created_at": {"$gte": thirty_days_ago}}) if is_super else 0
+    if not is_super:
+        new_user_ids = await db.reservations.distinct("user_id", {**rf, "created_at": {"$gte": thirty_days_ago}})
+        new_clients_30d = len(new_user_ids)
+
+    pm_result = await db.reservations.aggregate([{"$match": {**rf, "payment_status": "paid"}}, {"$group": {"_id": {"$ifNull": ["$payment_method", "card"]}, "count": {"$sum": 1}, "total": {"$sum": "$total_price"}}}]).to_list(10)
+    payment_methods = [{"method": item["_id"] or "card", "count": item["count"], "total": item["total"]} for item in pm_result]
+
+    total_res = await db.reservations.count_documents(rf) or 1
+    cancelled_res = await db.reservations.count_documents({**rf, "status": "cancelled"})
+    cancellation_rate = round((cancelled_res / total_res) * 100, 1)
+
+    eight_weeks_ago = now - timedelta(weeks=8)
+    weekly_result = await db.reservations.aggregate([{"$match": {**rf, "created_at": {"$gte": eight_weeks_ago}}}, {"$group": {"_id": {"$isoWeek": "$created_at"}, "count": {"$sum": 1}, "revenue": {"$sum": {"$cond": [{"$eq": ["$payment_status", "paid"]}, "$total_price", 0]}}}}, {"$sort": {"_id": 1}}]).to_list(8)
+    weekly_trends = [{"week": item["_id"], "bookings": item["count"], "revenue": item["revenue"]} for item in weekly_result]
+
+    return {
+        "revenue_this_month": revenue_this_month, "revenue_last_month": revenue_last_month,
+        "revenue_change_pct": round(((revenue_this_month - revenue_last_month) / revenue_last_month * 100) if revenue_last_month > 0 else 0, 1),
+        "reservations_this_month": reservations_this_month, "reservations_last_month": reservations_last_month,
+        "avg_booking_duration": avg_booking_duration, "avg_revenue_per_reservation": avg_revenue_per_reservation,
+        "vehicle_utilization": vehicle_utilization, "revenue_per_vehicle": revenue_per_vehicle,
+        "daily_revenue": daily_revenue, "new_clients_30d": new_clients_30d,
+        "payment_methods": payment_methods, "cancellation_rate": cancellation_rate,
+        "weekly_trends": weekly_trends,
+    }
+
+
+@router.get("/admin/users")
+async def get_admin_users(skip: int = 0, limit: int = 20, user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+
+    if is_super:
+        users = await db.users.find({}, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+        total = await db.users.count_documents({})
+    else:
+        user_ids_from_reservations = await db.reservations.distinct("user_id", {"agency_id": agency_id})
+        query = {"$or": [{"id": {"$in": user_ids_from_reservations}}, {"agency_id": agency_id, "role": "client"}]}
+        users = await db.users.find(query, {"password_hash": 0}).skip(skip).limit(limit).to_list(limit)
+        total = await db.users.count_documents(query)
+
+    for u in users:
+        u['reservation_count'] = await db.reservations.count_documents(
+            {"user_id": u['id']} if is_super else {"user_id": u['id'], "agency_id": agency_id}
+        )
+        u['_id'] = str(u['_id'])
+
+    return {"users": users, "total": total}
+
+
+@router.put("/admin/users/{user_id}/block")
+async def block_user(user_id: str, user: dict = Depends(get_admin_user)):
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    new_status = not target_user.get('blocked', False)
+    await db.users.update_one({"id": user_id}, {"$set": {"blocked": new_status}})
+    return {"message": f"User {'blocked' if new_status else 'unblocked'}"}
+
+
+@router.put("/admin/users/{user_id}")
+async def update_user_admin(user_id: str, update_data: AdminUserUpdate, user: dict = Depends(get_admin_user)):
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    if update_dict:
+        await db.users.update_one({"id": user_id}, {"$set": update_dict})
+
+    updated_user = await db.users.find_one({"id": user_id}, {"password_hash": 0})
+    updated_user['_id'] = str(updated_user['_id'])
+    return {"message": "User updated successfully", "user": updated_user}
+
+
+@router.put("/admin/users/{user_id}/rating")
+async def update_user_rating(user_id: str, rating: str, user: dict = Depends(get_admin_user)):
+    valid_ratings = ["good", "bad", "neutral", "vip", "blocked"]
+    if rating not in valid_ratings:
+        raise HTTPException(status_code=400, detail=f"Invalid rating. Must be one of: {valid_ratings}")
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    await db.users.update_one({"id": user_id}, {"$set": {"client_rating": rating}})
+    return {"message": f"User rating updated to {rating}"}
+
+
+@router.post("/admin/users/{user_id}/photo")
+async def upload_user_photo_admin(user_id: str, data: Base64UserPhoto, user: dict = Depends(get_admin_user)):
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    await db.users.update_one({"id": user_id}, {"$set": {"profile_photo": data_uri}})
+    return {"message": "Photo uploaded successfully", "photo": data_uri}
+
+
+@router.post("/admin/users/{user_id}/id-photo")
+async def upload_user_id_photo_admin(user_id: str, data: Base64UserPhoto, user: dict = Depends(get_admin_user)):
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    await db.users.update_one({"id": user_id}, {"$set": {"id_photo": data_uri}})
+    return {"message": "ID photo uploaded successfully", "photo": data_uri}
+
+
+@router.post("/admin/users/{user_id}/license-photo")
+async def upload_user_license_photo_admin(user_id: str, data: Base64UserPhoto, user: dict = Depends(get_admin_user)):
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    data_uri = f"data:{data.content_type};base64,{data.image}"
+    await db.users.update_one({"id": user_id}, {"$set": {"license_photo": data_uri}})
+    return {"message": "License photo uploaded successfully", "photo": data_uri}
+
+
+@router.get("/admin/users/{user_id}")
+async def get_user_details_admin(user_id: str, user: dict = Depends(get_admin_user)):
+    target_user = await db.users.find_one({"id": user_id}, {"password_hash": 0})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    reservations = await db.reservations.find({"user_id": user_id}).to_list(100)
+    total_spent = sum(r.get('total_price', 0) for r in reservations if r.get('payment_status') == 'paid')
+
+    target_user['_id'] = str(target_user['_id'])
+    target_user['total_spent'] = total_spent
+    target_user['total_reservations'] = len(reservations)
+    for r in reservations:
+        r['_id'] = str(r['_id'])
+    target_user['reservations'] = reservations
+    return target_user
+
+
+@router.post("/admin/import-users")
+async def import_users_from_excel(file: UploadFile = File(...), user: dict = Depends(get_admin_user)):
+    import io
+    import zipfile
+
+    filename = file.filename or ""
+    content = await file.read()
+
+    photos_map = {}
+    excel_content = None
+    excel_filename = ""
+
+    if filename.endswith(".zip"):
+        try:
+            zf = zipfile.ZipFile(io.BytesIO(content))
+        except zipfile.BadZipFile:
+            raise HTTPException(status_code=400, detail="Fichier ZIP invalide")
+
+        for name in zf.namelist():
+            if name.startswith("__MACOSX") or name.startswith("."):
+                continue
+            lower = name.lower()
+            basename = name.split("/")[-1]
+            if not basename:
+                continue
+            if lower.endswith((".xlsx", ".xls", ".csv")):
+                excel_content = zf.read(name)
+                excel_filename = basename
+            elif lower.endswith((".jpg", ".jpeg", ".png", ".webp")):
+                photo_data = zf.read(name)
+                ext = lower.rsplit(".", 1)[-1]
+                mime = {"jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png", "webp": "image/webp"}[ext]
+                b64 = base64.b64encode(photo_data).decode("utf-8")
+                data_uri = f"data:{mime};base64,{b64}"
+                photos_map[basename.lower()] = data_uri
+                photos_map[basename.rsplit(".", 1)[0].lower()] = data_uri
+
+        if not excel_content:
+            raise HTTPException(status_code=400, detail="Aucun fichier Excel/CSV trouvé dans le ZIP")
+        content = excel_content
+        filename = excel_filename
+
+    rows = []
+    if filename.endswith(".csv"):
+        import csv
+        text = content.decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text), delimiter=";")
+        first_row = next(csv.DictReader(io.StringIO(text), delimiter=";"), None)
+        if first_row and len(first_row) <= 1:
+            reader = csv.DictReader(io.StringIO(text), delimiter=",")
+        else:
+            reader = csv.DictReader(io.StringIO(text), delimiter=";")
+        for row in reader:
+            rows.append(row)
+    elif filename.endswith(".xlsx") or filename.endswith(".xls"):
+        import openpyxl
+        wb = openpyxl.load_workbook(io.BytesIO(content))
+        ws = wb.active
+        headers = [str(cell.value or "").strip().lower() for cell in ws[1]]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            row_dict = {}
+            for i, val in enumerate(row):
+                if i < len(headers):
+                    row_dict[headers[i]] = str(val).strip() if val is not None else ""
+            rows.append(row_dict)
+    else:
+        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez .xlsx, .csv ou .zip")
+
+    if not rows:
+        raise HTTPException(status_code=400, detail="Le fichier est vide")
+
+    def find_col(row, candidates):
+        for c in candidates:
+            for key in row.keys():
+                if c in key.lower():
+                    return row[key]
+        return ""
+
+    agency_id = user.get("agency_id")
+    default_password = hash_password("LogiRent2024")
+    created = 0
+    skipped = 0
+    photos_matched = 0
+    errors = []
+
+    for i, row in enumerate(rows):
+        name = find_col(row, ["nom", "name", "prenom", "prénom", "client"])
+        email = find_col(row, ["email", "mail", "e-mail", "courriel"])
+        phone = find_col(row, ["tel", "téléphone", "telephone", "phone", "mobile", "portable"])
+        address = find_col(row, ["adresse", "address", "ville", "city"])
+        photo_ref = find_col(row, ["photo", "image", "avatar", "picture", "profil"])
+
+        prenom = find_col(row, ["prenom", "prénom", "firstname", "first_name"])
+        nom = find_col(row, ["nom", "lastname", "last_name", "family"])
+        if prenom and nom and not name:
+            name = f"{prenom} {nom}"
+        elif nom and not name:
+            name = nom
+
+        if not email:
+            errors.append(f"Ligne {i+2}: email manquant")
+            continue
+
+        email = email.lower().strip()
+        existing = await db.users.find_one({"email": email})
+        if existing:
+            skipped += 1
+            continue
+
+        profile_photo = None
+        if photo_ref and photos_map:
+            ref_lower = photo_ref.lower().strip()
+            profile_photo = photos_map.get(ref_lower) or photos_map.get(ref_lower.rsplit(".", 1)[0])
+        if not profile_photo and photos_map:
+            name_key = (name or "").lower().replace(" ", "_").replace(" ", "")
+            email_key = email.split("@")[0].lower()
+            for key in [name_key, email_key]:
+                if key and key in photos_map:
+                    profile_photo = photos_map[key]
+                    break
+        if profile_photo:
+            photos_matched += 1
+
+        new_user = {
+            "id": str(uuid.uuid4()),
+            "email": email,
+            "password_hash": default_password,
+            "name": name or email.split("@")[0],
+            "phone": phone or None,
+            "address": address or None,
+            "id_photo": None,
+            "license_photo": None,
+            "profile_photo": profile_photo,
+            "role": "client",
+            "agency_id": agency_id,
+            "created_at": datetime.utcnow(),
+        }
+        await db.users.insert_one(new_user)
+        created += 1
+
+    return {
+        "message": f"Import terminé: {created} créés, {skipped} existants, {photos_matched} photos, {len(errors)} erreurs",
+        "created": created, "skipped": skipped,
+        "photos_matched": photos_matched, "errors": errors[:20],
+    }
+
+
+@router.get("/admin/reservations")
+async def get_admin_reservations(skip: int = 0, limit: int = 20, status: Optional[str] = None, user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+
+    query = {} if is_super else {"agency_id": agency_id}
+    if status:
+        query["status"] = status
+
+    reservations = await db.reservations.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.reservations.count_documents(query)
+
+    for res in reservations:
+        res['_id'] = str(res['_id'])
+        res_user = await db.users.find_one({"id": res['user_id']})
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        res['user_name'] = res_user['name'] if res_user else 'Unknown'
+        res['user_email'] = res_user['email'] if res_user else 'Unknown'
+        res['vehicle_name'] = f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Unknown'
+
+    return {"reservations": reservations, "total": total}
+
+
+@router.put("/admin/reservations/{reservation_id}/status")
+async def update_reservation_status(reservation_id: str, status: str, user: dict = Depends(get_admin_user)):
+    valid_statuses = ["pending", "pending_cash", "confirmed", "active", "completed", "cancelled"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+
+    result = await db.reservations.update_one(
+        {"id": reservation_id},
+        {"$set": {"status": status, "updated_at": datetime.utcnow()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    reservation = await db.reservations.find_one({"id": reservation_id})
+    if reservation:
+        client = await db.users.find_one({"id": reservation.get('user_id')})
+        vehicle = await db.vehicles.find_one({"id": reservation.get('vehicle_id')})
+        vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Véhicule"
+        cname = client.get('name', 'Client') if client else 'Client'
+
+        status_msgs = {
+            'confirmed': f"Votre réservation pour {vname} a été confirmée.",
+            'active': f"Votre réservation pour {vname} est maintenant active. Bon trajet !",
+            'completed': f"Votre location de {vname} est terminée. Merci !",
+            'cancelled': f"Votre réservation pour {vname} a été annulée.",
+        }
+        notif_types = {
+            'confirmed': 'reservation_confirmed', 'active': 'reservation_active',
+            'completed': 'reservation_completed', 'cancelled': 'reservation_cancelled',
+        }
+        if status in status_msgs and client:
+            await create_notification(client['id'], notif_types[status], status_msgs[status], reservation_id)
+            try:
+                email_html = generate_status_change_email(cname, vname, status, reservation)
+                email_subjects = {
+                    'confirmed': f"Réservation confirmée - {vname}",
+                    'active': f"Location en cours - {vname}",
+                    'completed': f"Location terminée - {vname}",
+                    'cancelled': f"Réservation annulée - {vname}",
+                }
+                await send_email(client['email'], email_subjects.get(status, f"Mise à jour réservation - {vname}"), email_html)
+            except Exception as e:
+                logger.error(f"Failed to send status change email: {e}")
+
+    return {"message": f"Reservation status updated to {status}"}
+
+
+@router.put("/admin/reservations/{reservation_id}/payment-status")
+async def update_payment_status(reservation_id: str, payment_status: str, user: dict = Depends(get_admin_user)):
+    valid_statuses = ["unpaid", "pending", "paid", "refunded"]
+    if payment_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid payment status. Must be one of: {valid_statuses}")
+
+    reservation = await db.reservations.find_one({"id": reservation_id})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    update_data = {"payment_status": payment_status, "updated_at": datetime.utcnow()}
+    if payment_status == "paid" and reservation.get('status') in ['pending_cash', 'pending']:
+        update_data["status"] = "confirmed"
+
+    await db.reservations.update_one({"id": reservation_id}, {"$set": update_data})
+
+    if payment_status == "paid":
+        existing_tx = await db.payment_transactions.find_one({"reservation_id": reservation_id})
+        if existing_tx:
+            await db.payment_transactions.update_one(
+                {"reservation_id": reservation_id},
+                {"$set": {"status": "paid", "payment_status": "paid", "updated_at": datetime.utcnow()}}
+            )
+        else:
+            new_transaction = PaymentTransaction(
+                user_id=reservation['user_id'], reservation_id=reservation_id,
+                session_id=f"cash_{reservation_id}", amount=float(reservation['total_price']),
+                currency="chf", status="paid", payment_status="paid",
+                metadata={"payment_method": reservation.get('payment_method', 'cash'), "admin_confirmed": True}
+            )
+            await db.payment_transactions.insert_one(new_transaction.dict())
+
+        try:
+            res_user = await db.users.find_one({"id": reservation['user_id']})
+            vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
+            if res_user and vehicle:
+                await send_reservation_confirmation(res_user, vehicle, reservation)
+        except Exception as email_error:
+            logger.error(f"Failed to send confirmation email: {email_error}")
+
+    return {"message": f"Payment status updated to {payment_status}"}
+
+
+@router.get("/admin/payments")
+async def get_admin_payments(skip: int = 0, limit: int = 20, user: dict = Depends(get_admin_user)):
+    transactions = await db.payment_transactions.find({}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    total = await db.payment_transactions.count_documents({})
+
+    for tx in transactions:
+        tx['_id'] = str(tx['_id'])
+        tx_user = await db.users.find_one({"id": tx['user_id']})
+        tx['user_email'] = tx_user['email'] if tx_user else 'Unknown'
+
+    return {"transactions": transactions, "total": total}
+
+
+@router.get("/admin/calendar")
+async def get_admin_calendar(month: int = None, year: int = None, user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+
+    now = datetime.utcnow()
+    if month is None:
+        month = now.month
+    if year is None:
+        year = now.year
+
+    start_of_month = datetime(year, month, 1)
+    end_of_month = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+
+    cal_query = {
+        "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
+        "start_date": {"$lt": end_of_month}, "end_date": {"$gt": start_of_month}
+    }
+    if not is_super:
+        cal_query["agency_id"] = agency_id
+
+    reservations = await db.reservations.find(cal_query).to_list(500)
+
+    events = []
+    for res in reservations:
+        res_user = await db.users.find_one({"id": res['user_id']})
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        is_overdue = res['status'] == 'active' and res['end_date'] < now
+
+        events.append({
+            "id": res['id'],
+            "user_name": res_user['name'] if res_user else 'Inconnu',
+            "user_email": res_user['email'] if res_user else '',
+            "user_phone": res_user.get('phone', '') if res_user else '',
+            "vehicle_name": f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Inconnu',
+            "vehicle_id": res.get('vehicle_id', ''),
+            "start_date": res['start_date'].isoformat(),
+            "end_date": res['end_date'].isoformat(),
+            "total_days": res.get('total_days', 0),
+            "total_price": res.get('total_price', 0),
+            "status": res['status'],
+            "payment_status": res.get('payment_status', 'unpaid'),
+            "payment_method": res.get('payment_method', 'card'),
+            "is_overdue": is_overdue,
+            "days_overdue": (now - res['end_date']).days if is_overdue else 0
+        })
+
+    return {"events": events, "month": month, "year": year}
+
+
+@router.get("/admin/overdue")
+async def get_overdue_reservations(user: dict = Depends(get_admin_user)):
+    now = datetime.utcnow()
+    overdue_reservations = await db.reservations.find({"status": "active", "end_date": {"$lt": now}}).sort("end_date", 1).to_list(100)
+
+    results = []
+    for res in overdue_reservations:
+        res_user = await db.users.find_one({"id": res['user_id']})
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        results.append({
+            "id": res['id'],
+            "user_name": res_user['name'] if res_user else 'Inconnu',
+            "user_email": res_user['email'] if res_user else '',
+            "user_phone": res_user.get('phone', '') if res_user else '',
+            "vehicle_name": f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Inconnu',
+            "start_date": res['start_date'].isoformat(),
+            "end_date": res['end_date'].isoformat(),
+            "total_days": res.get('total_days', 0),
+            "total_price": res.get('total_price', 0),
+            "days_overdue": (now - res['end_date']).days,
+            "status": res['status'],
+            "payment_status": res.get('payment_status', 'unpaid'),
+        })
+
+    return {"overdue": results, "total": len(results)}
+
+
+@router.put("/admin/vehicles/{vehicle_id}/status")
+async def update_vehicle_status(vehicle_id: str, status: str, user: dict = Depends(get_admin_user)):
+    valid_statuses = ["available", "rented", "maintenance"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+
+    result = await db.vehicles.update_one({"id": vehicle_id}, {"$set": {"status": status}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    return {"message": f"Vehicle status updated to {status}"}
+
+
+# Background cron task
+async def _check_overdue_task():
+    now = datetime.utcnow()
+    overdue_reservations = await db.reservations.find({"status": "active", "end_date": {"$lt": now}}).to_list(100)
+
+    created = 0
+    for res in overdue_reservations:
+        existing = await db.notifications.find_one({"reservation_id": res['id'], "type": "late_return"})
+        if existing:
+            continue
+
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        vehicle_name = f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Véhicule'
+        days_overdue = (now - res['end_date']).days
+
+        notification = {
+            "id": str(uuid.uuid4()),
+            "user_id": res['user_id'],
+            "reservation_id": res['id'],
+            "type": "late_return",
+            "title": "Retour en retard",
+            "message": f"Votre location de {vehicle_name} est en retard de {days_overdue} jour(s). Veuillez retourner le véhicule dès que possible.",
+            "read": False,
+            "created_at": datetime.utcnow()
+        }
+        await db.notifications.insert_one(notification)
+        created += 1
+
+        try:
+            res_user = await db.users.find_one({"id": res['user_id']})
+            if res_user:
+                html = f"""
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                    <div style="background:#EF4444;padding:20px;border-radius:12px 12px 0 0;text-align:center;">
+                        <h2 style="color:#fff;margin:0;">Retour en retard</h2>
+                    </div>
+                    <div style="background:#fff;padding:20px;border-radius:0 0 12px 12px;border:1px solid #E5E7EB;">
+                        <p>Bonjour {res_user['name']},</p>
+                        <p>Votre location de <strong>{vehicle_name}</strong> devait être retournée le <strong>{res['end_date'].strftime('%d/%m/%Y')}</strong>.</p>
+                        <p style="color:#EF4444;font-weight:bold;">Vous avez {days_overdue} jour(s) de retard.</p>
+                        <p>Veuillez retourner le véhicule dès que possible.</p>
+                        <p>L'équipe LogiRent</p>
+                    </div>
+                </div>
+                """
+                await send_email(res_user['email'], f"Retour en retard - {vehicle_name}", html)
+        except Exception as e:
+            logger.error(f"Failed to send overdue email: {e}")
+
+    return created
+
+
+async def overdue_cron_loop():
+    while True:
+        try:
+            created = await _check_overdue_task()
+            if created > 0:
+                logger.info(f"Overdue cron: created {created} late return notifications")
+        except Exception as e:
+            logger.error(f"Overdue cron error: {e}")
+        await asyncio.sleep(3600)
+
+
+@router.post("/admin/check-overdue")
+async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
+    created = await _check_overdue_task()
+    return {"message": f"Checked overdue reservations. Created {created} new notifications."}
