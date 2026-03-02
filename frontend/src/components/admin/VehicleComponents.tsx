@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, TextInput, Image, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import api from '../../utils/admin-helpers';
+import api from '../../api/axios';
 import Button from '../Button';
 
 interface VehicleFormProps {
