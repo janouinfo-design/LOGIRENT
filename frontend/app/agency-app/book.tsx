@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../../src/api/axios';
@@ -420,47 +420,72 @@ export default function BookingFlow() {
           </View>
 
           {loadingSchedule ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} /> : (
-            schedule.map(v => {
-              const free = isVehicleFree(v);
-              const selected = selectedVehicle?.id === v.id;
-              return (
-                <TouchableOpacity
-                  key={v.id}
-                  style={[
-                    s.vehicleCard,
-                    { backgroundColor: C.card, borderColor: selected ? C.accent : C.border },
-                    selected && { borderWidth: 2 },
-                    !free && { opacity: 0.5 },
-                  ]}
-                  onPress={() => free ? setSelectedVehicle(v) : showAlert('Indisponible', 'Ce véhicule est occupé pour ces dates')}
-                  data-testid={`vehicle-${v.id}`}
-                >
-                  <View style={s.vehicleRow}>
-                    <Ionicons name="car-sport" size={24} color={free ? C.accent : '#EF4444'} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={[s.vehicleName, { color: C.text }]}>{v.brand} {v.model}</Text>
-                      <Text style={{ color: C.textLight, fontSize: 11 }}>{v.type} | {v.seats} places | {v.transmission}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {schedule.map(v => {
+                const free = isVehicleFree(v);
+                const selected = selectedVehicle?.id === v.id;
+                const cardWidth = (Dimensions.get('window').width - 32 - 30) / 4;
+                return (
+                  <TouchableOpacity
+                    key={v.id}
+                    style={[
+                      {
+                        width: cardWidth,
+                        borderRadius: 10,
+                        borderWidth: selected ? 2 : 1,
+                        borderColor: selected ? C.accent : C.border,
+                        backgroundColor: C.card,
+                        overflow: 'hidden',
+                      },
+                      !free && { opacity: 0.45 },
+                    ]}
+                    onPress={() => free ? setSelectedVehicle(v) : showAlert('Indisponible', 'Ce véhicule est occupé pour ces dates')}
+                    data-testid={`vehicle-${v.id}`}
+                  >
+                    {/* Photo placeholder */}
+                    <View style={{ width: '100%', height: 70, backgroundColor: C.border + '30', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="car-sport" size={26} color={free ? C.accent : '#EF4444'} />
+                      {/* Status badge */}
+                      <View style={{
+                        position: 'absolute', bottom: 3, left: 3,
+                        flexDirection: 'row', alignItems: 'center', gap: 3,
+                        paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5,
+                        backgroundColor: free ? '#10B98120' : '#EF444420',
+                      }}>
+                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: free ? '#10B981' : '#EF4444' }} />
+                        <Text style={{ color: free ? '#10B981' : '#EF4444', fontSize: 8, fontWeight: '800' }}>{free ? 'Dispo' : 'Occupe'}</Text>
+                      </View>
+                      {/* Selected check */}
+                      {selected && (
+                        <View style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: C.accent, justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="checkmark" size={14} color="#fff" />
+                        </View>
+                      )}
                     </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ color: C.accent, fontSize: 16, fontWeight: '800' }}>CHF {v.price_per_day}</Text>
-                      <Text style={{ color: C.textLight, fontSize: 10 }}>/jour</Text>
+                    {/* Info */}
+                    <View style={{ padding: 6 }}>
+                      <Text style={{ color: C.text, fontSize: 11, fontWeight: '800' }} numberOfLines={1}>{v.brand} {v.model}</Text>
+                      <Text style={{ color: C.textLight, fontSize: 9, marginTop: 1 }}>{v.type} | {v.seats}pl</Text>
+                      <Text style={{ color: C.textLight, fontSize: 9 }}>{v.transmission === 'automatic' ? 'Auto' : 'Manuel'}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 4 }}>
+                        <Text style={{ color: C.accent, fontSize: 13, fontWeight: '800' }}>CHF {v.price_per_day}</Text>
+                        <Text style={{ color: C.textLight, fontSize: 8 }}>/j</Text>
+                      </View>
+                      {selected && totalDays > 0 && (
+                        <View style={{ marginTop: 4, paddingVertical: 3, borderRadius: 5, backgroundColor: C.accent + '12' }}>
+                          <Text style={{ color: C.accent, fontSize: 9, fontWeight: '700', textAlign: 'center' }}>Total: CHF {(v.price_per_day * totalDays).toFixed(0)}</Text>
+                        </View>
+                      )}
                     </View>
-                    {selected && <Ionicons name="checkmark-circle" size={22} color={C.success} style={{ marginLeft: 8 }} />}
-                    {!free && <View style={s.occupiedTag}><Text style={{ color: '#EF4444', fontSize: 10, fontWeight: '700' }}>OCCUPÉ</Text></View>}
-                  </View>
-                  {selected && totalDays > 0 && (
-                    <View style={[s.priceSummary, { backgroundColor: C.accent + '10' }]}>
-                      <Text style={{ color: C.accent, fontWeight: '700', fontSize: 13 }}>Total : CHF {(v.price_per_day * totalDays).toFixed(2)} ({totalDays}j x CHF {v.price_per_day})</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
-              );
-            })
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           )}
 
           {/* Next */}
           {selectedVehicle && isVehicleFree(selectedVehicle) && (
-            <View style={{ position: 'sticky' as any, bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 20, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border, marginHorizontal: -20, marginBottom: -20 }}>
+            <View style={{ position: 'sticky' as any, bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 20, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border, marginHorizontal: -20, marginBottom: -20, marginTop: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <View>
                   <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{selectedVehicle.brand} {selectedVehicle.model}</Text>

@@ -1,0 +1,85 @@
+{
+  "summary": "Iteration 31 Testing Complete - All features working: Document expiration alerts, 4-column card grids (clients, booking vehicles), document upload with expiry_date, expiry status badges, and booking confirmation redirect with highlight banner.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "GET /api/admin/vehicles/document-alerts?days=30": {
+      "status": "PASS",
+      "details": "Returns alerts with vehicle_id, vehicle_name, plate_number, doc_id, doc_type, doc_type_label, expiry_date, severity (warning/expired). Sorted by severity then expiry_date."
+    },
+    "POST /api/admin/vehicles/{id}/documents with expiry_date": {
+      "status": "PASS",
+      "details": "expiry_date query param properly saved to document record. Null when not provided."
+    },
+    "Clients page 4-column card grid": {
+      "status": "PASS",
+      "details": "FlatList with numColumns={4}. Cards show avatar, name, email, phone, reservation count badge, rating badge overlay."
+    },
+    "Booking step 3 vehicle selection 4-column grid": {
+      "status": "PASS",
+      "details": "Shows vehicle cards with photo placeholder, 'Dispo'/'Occupe' badges, vehicle specs, price/day, and total price when selected."
+    },
+    "Vehicle edit modal expiry date input": {
+      "status": "PASS",
+      "details": "Input field with placeholder 'AAAA-MM-JJ' and data-testid='doc-expiry-date' present in Documents section."
+    },
+    "Document list expiry status badges": {
+      "status": "PASS",
+      "details": "Documents show green checkmark (OK), orange warning with days remaining (e.g., '▲ 15j'), or red expired badge."
+    },
+    "Dashboard document expiry alerts section": {
+      "status": "PASS",
+      "details": "Shows 'Alertes documents (N)' with cards showing vehicle name, plate, doc type, expiry date, and 'Bientot'/'Expire' badges."
+    },
+    "Booking confirmation redirect with highlight": {
+      "status": "PASS",
+      "details": "After booking, redirects to /agency-app/reservations?highlight={resId}&month=YYYY-MM. Shows green 'Reservation creee avec succes !' banner with pulse animation."
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_document_alerts_and_grids.py",
+    "/app/test_reports/pytest/pytest_document_alerts.xml"
+  ],
+  "pytest_results": {
+    "total_tests": 10,
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "test_classes": [
+      "TestAgencyAdminAuth - 1 test (agency admin login)",
+      "TestDocumentAlertsEndpoint - 4 tests (default 30 days, custom days, sorting, auth required)",
+      "TestDocumentUploadWithExpiry - 2 tests (with expiry_date, without expiry_date)",
+      "TestVehicleScheduleForBooking - 1 test (returns vehicles with reservations)",
+      "TestClientsListEndpoint - 1 test (returns clients for grid)",
+      "TestVehicleDocumentExpiryInResponse - 1 test (documents include expiry_date)"
+    ]
+  },
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Document alerts endpoint properly filters by agency_id and excludes deleted documents",
+    "Expiry status calculation correctly identifies expired (past) vs warning (within N days)",
+    "4-column grids implemented with FlatList numColumns={4} with proper gap calculations",
+    "Highlight mechanism uses URL params and Animated.loop for pulse effect with 4-second auto-clear"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_document_alerts_and_grids.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 passed)",
+    "frontend": "100% - All features working"
+  },
+  "test_credentials": {
+    "agency_admin": "admin-geneva@logirent.ch / LogiRent2024"
+  },
+  "seed_data_creation": "None - Used existing test document with expiry_date=2026-03-17 on vehicle 4bd9f2fa",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Document expiration system fully implemented. Dashboard shows alerts, vehicle edit modal shows expiry badges (green/orange/red). Clients and booking vehicle selection use 4-column card grids. Booking confirmation redirects to planning page with highlight animation."
+}

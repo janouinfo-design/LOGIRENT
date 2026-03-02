@@ -193,6 +193,7 @@ async def upload_vehicle_document(
     vehicle_id: str,
     file: UploadFile = File(...),
     doc_type: str = Query("autre"),
+    expiry_date: Optional[str] = Query(None),
     user: dict = Depends(get_current_user),
 ):
     vehicle = await db.vehicles.find_one({"id": vehicle_id})
@@ -221,6 +222,7 @@ async def upload_vehicle_document(
         "size": result.get("size", len(data)),
         "doc_type": doc_type,
         "doc_type_label": DOCUMENT_TYPES.get(doc_type, doc_type),
+        "expiry_date": expiry_date,
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "is_deleted": False,
     }
@@ -288,3 +290,55 @@ async def delete_vehicle_document(
 
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": {"documents": documents}})
     return {"message": "Document supprime"}
+
+
+@router.get("/admin/vehicles/document-alerts")
+async def get_document_alerts(
+    days: int = Query(30),
+    user: dict = Depends(get_current_user),
+):
+    """Return documents expiring within the next N days (default 30)."""
+    now = datetime.now(timezone.utc)
+    threshold = (now + timedelta(days=days)).isoformat()
+    now_iso = now.isoformat()
+
+    agency_id = user.get("agency_id")
+    query = {"agency_id": agency_id} if agency_id else {}
+    vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(None)
+
+    alerts = []
+    for v in vehicles:
+        for doc in v.get("documents", []):
+            if doc.get("is_deleted"):
+                continue
+            exp = doc.get("expiry_date")
+            if not exp:
+                continue
+            if exp <= now_iso:
+                alerts.append({
+                    "vehicle_id": v["id"],
+                    "vehicle_name": f"{v.get('brand','')} {v.get('model','')}",
+                    "plate_number": v.get("plate_number", ""),
+                    "doc_id": doc["id"],
+                    "doc_type": doc["doc_type"],
+                    "doc_type_label": doc.get("doc_type_label", doc["doc_type"]),
+                    "original_filename": doc.get("original_filename", ""),
+                    "expiry_date": exp,
+                    "severity": "expired",
+                })
+            elif exp <= threshold:
+                alerts.append({
+                    "vehicle_id": v["id"],
+                    "vehicle_name": f"{v.get('brand','')} {v.get('model','')}",
+                    "plate_number": v.get("plate_number", ""),
+                    "doc_id": doc["id"],
+                    "doc_type": doc["doc_type"],
+                    "doc_type_label": doc.get("doc_type_label", doc["doc_type"]),
+                    "original_filename": doc.get("original_filename", ""),
+                    "expiry_date": exp,
+                    "severity": "warning",
+                })
+
+    # Sort: expired first, then by closest expiry
+    alerts.sort(key=lambda a: (0 if a["severity"] == "expired" else 1, a["expiry_date"]))
+    return {"alerts": alerts, "total": len(alerts)}

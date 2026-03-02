@@ -14,6 +14,7 @@ interface VehicleDocument {
   size: number;
   doc_type: string;
   doc_type_label: string;
+  expiry_date?: string;
   uploaded_at: string;
   is_deleted: boolean;
 }
@@ -58,6 +59,7 @@ export default function AgencyVehicles() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [selectedDocType, setSelectedDocType] = useState('carte_grise');
+  const [docExpiryDate, setDocExpiryDate] = useState('');
 
   const fetchVehicles = useCallback(async () => {
     try {
@@ -137,11 +139,14 @@ export default function AgencyVehicles() {
       try {
         const formData = new FormData();
         formData.append('file', file);
+        const params = new URLSearchParams({ doc_type: selectedDocType });
+        if (docExpiryDate) params.append('expiry_date', docExpiryDate);
         const res = await api.post(
-          `/api/admin/vehicles/${editVehicle.id}/documents?doc_type=${selectedDocType}`,
+          `/api/admin/vehicles/${editVehicle.id}/documents?${params.toString()}`,
           formData,
           { headers: { 'Content-Type': 'multipart/form-data' } }
         );
+        setDocExpiryDate('');
         // Refresh vehicle data
         const vRes = await api.get(`/api/vehicles/${editVehicle.id}`);
         setEditVehicle(vRes.data);
@@ -197,6 +202,15 @@ export default function AgencyVehicles() {
   const getStatus = (s: string) => STATUS_CONFIG[s] || { icon: 'help-circle', label: s, bg: '#6B728020', text: '#6B7280', border: '#6B728050' };
   const getDocIcon = (docType: string) => DOC_TYPES.find(d => d.v === docType)?.icon || 'document';
   const formatFileSize = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
+  const getExpiryStatus = (expiry?: string) => {
+    if (!expiry) return null;
+    const now = new Date();
+    const exp = new Date(expiry);
+    const diffDays = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return { label: 'Expire', color: '#EF4444', icon: 'alert-circle' };
+    if (diffDays <= 30) return { label: `${diffDays}j`, color: '#F59E0B', icon: 'warning' };
+    return { label: expiry.slice(0, 10), color: '#10B981', icon: 'checkmark-circle' };
+  };
 
   const activeDocuments = editVehicle?.documents?.filter(d => !d.is_deleted) || [];
 
@@ -436,6 +450,21 @@ export default function AgencyVehicles() {
                 </View>
               </View>
 
+              {/* Expiry date input */}
+              <View style={st.fieldRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.fieldLabel, { color: C.textLight }]}>Date d'expiration (optionnel)</Text>
+                  <TextInput
+                    style={[st.input, { color: C.text, borderColor: C.border }]}
+                    value={docExpiryDate}
+                    onChangeText={setDocExpiryDate}
+                    placeholder="AAAA-MM-JJ"
+                    placeholderTextColor={C.textLight + '80'}
+                    data-testid="doc-expiry-date"
+                  />
+                </View>
+              </View>
+
               <TouchableOpacity
                 onPress={handleDocumentUpload}
                 disabled={uploadingDoc}
@@ -455,26 +484,35 @@ export default function AgencyVehicles() {
               {/* Document List */}
               {activeDocuments.length > 0 ? (
                 <View style={{ gap: 6, marginTop: 8 }}>
-                  {activeDocuments.map(doc => (
-                    <View key={doc.id} style={[st.docItem, { backgroundColor: C.bg, borderColor: C.border }]} data-testid={`doc-item-${doc.id}`}>
-                      <View style={[st.docIconBox, { backgroundColor: C.accent + '15' }]}>
-                        <Ionicons name={getDocIcon(doc.doc_type) as any} size={18} color={C.accent} />
-                      </View>
-                      <View style={{ flex: 1, marginLeft: 10 }}>
-                        <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>{doc.original_filename}</Text>
-                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
-                          <Text style={{ color: C.textLight, fontSize: 10 }}>{doc.doc_type_label}</Text>
-                          <Text style={{ color: C.textLight, fontSize: 10 }}>{formatFileSize(doc.size)}</Text>
+                  {activeDocuments.map(doc => {
+                    const expStatus = getExpiryStatus(doc.expiry_date);
+                    return (
+                      <View key={doc.id} style={[st.docItem, { backgroundColor: C.bg, borderColor: expStatus?.color === '#EF4444' ? '#EF444450' : C.border }]} data-testid={`doc-item-${doc.id}`}>
+                        <View style={[st.docIconBox, { backgroundColor: C.accent + '15' }]}>
+                          <Ionicons name={getDocIcon(doc.doc_type) as any} size={18} color={C.accent} />
                         </View>
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>{doc.original_filename}</Text>
+                          <View style={{ flexDirection: 'row', gap: 8, marginTop: 2, alignItems: 'center' }}>
+                            <Text style={{ color: C.textLight, fontSize: 10 }}>{doc.doc_type_label}</Text>
+                            <Text style={{ color: C.textLight, fontSize: 10 }}>{formatFileSize(doc.size)}</Text>
+                            {expStatus && (
+                              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: expStatus.color + '18' }}>
+                                <Ionicons name={expStatus.icon as any} size={9} color={expStatus.color} />
+                                <Text style={{ color: expStatus.color, fontSize: 9, fontWeight: '700' }}>{expStatus.label}</Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                        <TouchableOpacity onPress={() => handleViewDocument(doc)} style={st.docActionBtn} data-testid={`view-doc-${doc.id}`}>
+                          <Ionicons name="eye" size={16} color={C.accent} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDeleteDocument(doc.id)} style={st.docActionBtn} data-testid={`delete-doc-${doc.id}`}>
+                          <Ionicons name="trash" size={16} color="#EF4444" />
+                        </TouchableOpacity>
                       </View>
-                      <TouchableOpacity onPress={() => handleViewDocument(doc)} style={st.docActionBtn} data-testid={`view-doc-${doc.id}`}>
-                        <Ionicons name="eye" size={16} color={C.accent} />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleDeleteDocument(doc.id)} style={st.docActionBtn} data-testid={`delete-doc-${doc.id}`}>
-                        <Ionicons name="trash" size={16} color="#EF4444" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                    );
+                  })}
                 </View>
               ) : (
                 <View style={{ alignItems: 'center', paddingVertical: 16, opacity: 0.5 }}>

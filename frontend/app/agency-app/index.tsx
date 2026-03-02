@@ -18,20 +18,23 @@ export default function AgencyAppHome() {
   const [stats, setStats] = useState<any>(null);
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [agency, setAgency] = useState<any>(null);
+  const [docAlerts, setDocAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsResp, resResp, agenciesResp] = await Promise.all([
+      const [statsResp, resResp, agenciesResp, alertsResp] = await Promise.all([
         api.get('/api/admin/stats'),
         api.get('/api/admin/reservations?limit=5'),
         api.get('/api/agencies'),
+        api.get('/api/admin/vehicles/document-alerts?days=30').catch(() => ({ data: { alerts: [] } })),
       ]);
       setStats(statsResp.data);
       setRecentReservations(resResp.data.reservations || []);
       const agencies = agenciesResp.data;
       if (agencies?.length > 0) setAgency(agencies[0]);
+      setDocAlerts(alertsResp.data.alerts || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -103,7 +106,46 @@ export default function AgencyAppHome() {
         </TouchableOpacity>
       </View>
 
-      <Text style={[s.sectionTitle, { color: C.text }]}>Dernières réservations</Text>
+      {/* Document Expiry Alerts */}
+      {docAlerts.length > 0 && (
+        <View style={{ marginBottom: 20 }} data-testid="doc-alerts-section">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <Ionicons name="alert-circle" size={18} color="#EF4444" />
+            <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Alertes documents ({docAlerts.length})</Text>
+          </View>
+          {docAlerts.slice(0, 5).map((alert: any, i: number) => (
+            <TouchableOpacity
+              key={`${alert.vehicle_id}-${alert.doc_id}`}
+              style={[s.resCard, { backgroundColor: C.card, borderColor: alert.severity === 'expired' ? '#EF444440' : '#F59E0B40', borderLeftWidth: 4, borderLeftColor: alert.severity === 'expired' ? '#EF4444' : '#F59E0B' }]}
+              onPress={() => router.push('/agency-app/vehicles')}
+              data-testid={`doc-alert-${i}`}
+            >
+              <View style={s.resHeader}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Ionicons name={alert.severity === 'expired' ? 'alert-circle' : 'warning'} size={16} color={alert.severity === 'expired' ? '#EF4444' : '#F59E0B'} />
+                  <Text style={[s.resClient, { color: C.text, fontSize: 13 }]}>{alert.vehicle_name}</Text>
+                  {alert.plate_number ? <Text style={{ color: C.textLight, fontSize: 10 }}>({alert.plate_number})</Text> : null}
+                </View>
+                <View style={[s.statusBadge, { backgroundColor: (alert.severity === 'expired' ? '#EF4444' : '#F59E0B') + '20' }]}>
+                  <Text style={[s.statusText, { color: alert.severity === 'expired' ? '#EF4444' : '#F59E0B' }]}>
+                    {alert.severity === 'expired' ? 'Expire' : 'Bientot'}
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ color: C.textLight, fontSize: 12 }}>
+                {alert.doc_type_label} - Expiration: {alert.expiry_date?.slice(0, 10)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+          {docAlerts.length > 5 && (
+            <TouchableOpacity onPress={() => router.push('/agency-app/vehicles')} style={{ alignItems: 'center', paddingVertical: 8 }}>
+              <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Voir tous ({docAlerts.length})</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      <Text style={[s.sectionTitle, { color: C.text }]}>Dernieres reservations</Text>
       {recentReservations.length === 0 ? (
         <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}><Text style={{ color: C.textLight, fontSize: 14 }}>Aucune réservation récente</Text></View>
       ) : (

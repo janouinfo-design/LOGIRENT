@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Modal, ScrollView, Platform, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Modal, ScrollView, Platform, Alert, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
+
+const SCREEN_W = Dimensions.get('window').width;
 
 interface Client {
   id: string; name: string; email: string; phone?: string;
@@ -185,47 +187,50 @@ export default function AgencyClients() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
+        numColumns={4}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         ListEmptyComponent={<View style={s.empty}><Ionicons name="people-outline" size={40} color={C.textLight} /><Text style={[s.emptyText, { color: C.textLight }]}>Aucun client</Text></View>}
         renderItem={({ item }) => {
           const rating = ratingInfo(item.client_rating);
+          const cardW = (SCREEN_W - 32 - 30) / 4;
           return (
             <TouchableOpacity
-              style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}
+              style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]}
               onPress={() => openEditModal(item)}
               data-testid={`client-${item.id}`}
             >
-              <View style={s.cardHeader}>
-                <View style={[s.avatar, { backgroundColor: C.accent + '20' }]}>
-                  {item.profile_photo ? (
-                    <Image source={{ uri: item.profile_photo }} style={s.avatarImg} />
-                  ) : (
-                    <Ionicons name="person" size={20} color={C.accent} />
-                  )}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={s.nameRow}>
-                    <Text style={[s.clientName, { color: C.text }]}>{item.name}</Text>
-                    {rating && (
-                      <View style={[s.ratingBadge, { backgroundColor: rating.color + '20' }]}>
-                        <Ionicons name={rating.icon} size={10} color={rating.color} />
-                        <Text style={[s.ratingText, { color: rating.color }]}>{rating.label}</Text>
-                      </View>
-                    )}
-                  </View>
-                  <Text style={[s.clientEmail, { color: C.textLight }]}>{item.email}</Text>
-                  {item.phone && <Text style={[s.clientPhone, { color: C.textLight }]}>{item.phone}</Text>}
-                </View>
-                <View style={s.editHint}>
-                  <Ionicons name="create-outline" size={16} color={C.textLight} />
-                </View>
-                {item.reservation_count !== undefined && (
-                  <View style={s.countBadge}>
-                    <Text style={[s.countText, { color: C.accent }]}>{item.reservation_count}</Text>
-                    <Text style={[s.countLabel, { color: C.textLight }]}>rés.</Text>
+              {/* Avatar */}
+              <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
+                {item.profile_photo ? (
+                  <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} />
+                ) : (
+                  <Ionicons name="person" size={28} color={C.accent} />
+                )}
+                {/* Rating badge overlay */}
+                {rating && (
+                  <View style={[s.ratingOverlay, { backgroundColor: rating.color }]}>
+                    <Ionicons name={rating.icon} size={10} color="#fff" />
                   </View>
                 )}
+              </View>
+              {/* Info */}
+              <View style={s.cardBody}>
+                <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
+                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 1 }} numberOfLines={1}>{item.email || '-'}</Text>
+                {item.phone ? <Text style={{ color: C.textLight, fontSize: 10 }} numberOfLines={1}>{item.phone}</Text> : null}
+                <View style={s.cardFooter}>
+                  {item.reservation_count !== undefined && item.reservation_count > 0 ? (
+                    <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
+                      <Text style={{ color: C.accent, fontSize: 9, fontWeight: '700' }}>{item.reservation_count} res.</Text>
+                    </View>
+                  ) : (
+                    <View style={[s.resCountBadge, { backgroundColor: C.border + '30' }]}>
+                      <Text style={{ color: C.textLight, fontSize: 9 }}>0 res.</Text>
+                    </View>
+                  )}
+                </View>
               </View>
             </TouchableOpacity>
           );
@@ -450,20 +455,14 @@ const s = StyleSheet.create({
   addBtn: { width: 44, height: 44, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   empty: { alignItems: 'center', paddingTop: 60, gap: 8 },
   emptyText: { fontSize: 14 },
-  card: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  avatarImg: { width: 40, height: 40, borderRadius: 20 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  clientName: { fontSize: 15, fontWeight: '700' },
-  ratingBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  ratingText: { fontSize: 10, fontWeight: '600' },
-  clientEmail: { fontSize: 12, marginTop: 2 },
-  clientPhone: { fontSize: 12 },
-  editHint: { marginRight: 4 },
-  countBadge: { alignItems: 'center' },
-  countText: { fontSize: 18, fontWeight: '800' },
-  countLabel: { fontSize: 9 },
+  card: { borderRadius: 10, borderWidth: 1, overflow: 'hidden' },
+  cardAvatar: { width: '100%', height: 70, justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  cardAvatarImg: { width: '100%', height: 70 },
+  ratingOverlay: { position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  cardBody: { padding: 8 },
+  cardName: { fontSize: 12, fontWeight: '800' },
+  cardFooter: { marginTop: 4 },
+  resCountBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
