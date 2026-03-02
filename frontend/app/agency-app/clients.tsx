@@ -13,6 +13,8 @@ interface Client {
   client_rating?: string; reservation_count?: number; created_at?: string;
   profile_photo?: string; address?: string; admin_notes?: string;
   total_spent?: number; total_reservations?: number;
+  birth_place?: string; birth_year?: number; license_number?: string;
+  license_issue_date?: string; license_expiry_date?: string; nationality?: string;
 }
 
 const RATINGS = [
@@ -39,11 +41,23 @@ export default function AgencyClients() {
   const [editAddress, setEditAddress] = useState('');
   const [editRating, setEditRating] = useState('');
   const [editNotes, setEditNotes] = useState('');
+  const [editBirthPlace, setEditBirthPlace] = useState('');
+  const [editBirthYear, setEditBirthYear] = useState('');
+  const [editLicenseNumber, setEditLicenseNumber] = useState('');
+  const [editLicenseIssue, setEditLicenseIssue] = useState('');
+  const [editLicenseExpiry, setEditLicenseExpiry] = useState('');
+  const [editNationality, setEditNationality] = useState('');
   const [saving, setSaving] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newBirthPlace, setNewBirthPlace] = useState('');
+  const [newBirthYear, setNewBirthYear] = useState('');
+  const [newLicenseNumber, setNewLicenseNumber] = useState('');
+  const [newLicenseIssue, setNewLicenseIssue] = useState('');
+  const [newLicenseExpiry, setNewLicenseExpiry] = useState('');
+  const [newNationality, setNewNationality] = useState('');
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
@@ -77,6 +91,12 @@ export default function AgencyClients() {
     setEditAddress(client.address || '');
     setEditRating(client.client_rating || '');
     setEditNotes(client.admin_notes || '');
+    setEditBirthPlace(client.birth_place || '');
+    setEditBirthYear(client.birth_year ? String(client.birth_year) : '');
+    setEditLicenseNumber(client.license_number || '');
+    setEditLicenseIssue(client.license_issue_date || '');
+    setEditLicenseExpiry(client.license_expiry_date || '');
+    setEditNationality(client.nationality || '');
     setShowEditModal(true);
     // Fetch full details
     setLoadingDetail(true);
@@ -85,6 +105,12 @@ export default function AgencyClients() {
       const d = res.data;
       setEditAddress(d.address || '');
       setEditNotes(d.admin_notes || '');
+      setEditBirthPlace(d.birth_place || '');
+      setEditBirthYear(d.birth_year ? String(d.birth_year) : '');
+      setEditLicenseNumber(d.license_number || '');
+      setEditLicenseIssue(d.license_issue_date || '');
+      setEditLicenseExpiry(d.license_expiry_date || '');
+      setEditNationality(d.nationality || '');
       setEditClient({ ...client, ...d });
     } catch (e) { console.error(e); }
     finally { setLoadingDetail(false); }
@@ -92,6 +118,12 @@ export default function AgencyClients() {
 
   const saveEdit = async () => {
     if (!editClient) return;
+    // Validate required fields
+    if (!editBirthPlace || !editBirthYear || !editLicenseNumber || !editLicenseIssue || !editLicenseExpiry || !editNationality) {
+      const msg = 'Veuillez remplir tous les champs obligatoires (lieu/annee naissance, permis, nationalite)';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Champs manquants', msg);
+      return;
+    }
     setSaving(true);
     try {
       const payload: any = {};
@@ -101,11 +133,17 @@ export default function AgencyClients() {
       if (editAddress !== (editClient.address || '')) payload.address = editAddress;
       if (editNotes !== (editClient.admin_notes || '')) payload.admin_notes = editNotes;
       if (editRating !== (editClient.client_rating || '')) payload.client_rating = editRating || null;
+      payload.birth_place = editBirthPlace;
+      payload.birth_year = parseInt(editBirthYear) || null;
+      payload.license_number = editLicenseNumber;
+      payload.license_issue_date = editLicenseIssue;
+      payload.license_expiry_date = editLicenseExpiry;
+      payload.nationality = editNationality;
 
       await api.put(`/api/admin/users/${editClient.id}`, payload);
       setShowEditModal(false);
       fetchClients();
-      Platform.OS === 'web' ? window.alert('Client mis à jour!') : Alert.alert('Succès', 'Client mis à jour!');
+      Platform.OS === 'web' ? window.alert('Client mis a jour!') : Alert.alert('Succes', 'Client mis a jour!');
     } catch (e: any) {
       const msg = e.response?.data?.detail || 'Erreur';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
@@ -117,13 +155,25 @@ export default function AgencyClients() {
       Platform.OS === 'web' ? window.alert('Le nom est obligatoire') : Alert.alert('Erreur', 'Le nom est obligatoire');
       return;
     }
+    if (!newBirthPlace || !newBirthYear || !newLicenseNumber || !newLicenseIssue || !newLicenseExpiry || !newNationality) {
+      const msg = 'Veuillez remplir tous les champs obligatoires';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Champs manquants', msg);
+      return;
+    }
     setCreating(true);
     try {
-      await api.post('/api/admin/quick-client', { name: newName, phone: newPhone || null, email: newEmail || null });
+      await api.post('/api/admin/quick-client', {
+        name: newName, phone: newPhone || null, email: newEmail || null,
+        birth_place: newBirthPlace, birth_year: parseInt(newBirthYear) || null,
+        license_number: newLicenseNumber, license_issue_date: newLicenseIssue,
+        license_expiry_date: newLicenseExpiry, nationality: newNationality,
+      });
       setShowNewModal(false);
       setNewName(''); setNewPhone(''); setNewEmail('');
+      setNewBirthPlace(''); setNewBirthYear(''); setNewLicenseNumber('');
+      setNewLicenseIssue(''); setNewLicenseExpiry(''); setNewNationality('');
       fetchClients();
-      Platform.OS === 'web' ? window.alert('Client créé!') : Alert.alert('Succès', 'Client créé!');
+      Platform.OS === 'web' ? window.alert('Client cree!') : Alert.alert('Succes', 'Client cree!');
     } catch (e: any) {
       const msg = e.response?.data?.detail || 'Erreur';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
@@ -315,7 +365,41 @@ export default function AgencyClients() {
                   data-testid="edit-client-address"
                 />
 
-                <Text style={[s.label, { color: C.textLight }]}>Classement</Text>
+                {/* === Identity & License Section === */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }}>
+                  <Ionicons name="id-card" size={16} color={C.accent} />
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Identite & Permis *</Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.label, { color: C.textLight }]}>Lieu de naissance *</Text>
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthPlace ? '#EF444450' : C.border }]} value={editBirthPlace} onChangeText={setEditBirthPlace} placeholder="Geneve" placeholderTextColor={C.textLight} data-testid="edit-birth-place" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.label, { color: C.textLight }]}>Annee de naissance *</Text>
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthYear ? '#EF444450' : C.border }]} value={editBirthYear} onChangeText={setEditBirthYear} placeholder="1990" placeholderTextColor={C.textLight} keyboardType="numeric" data-testid="edit-birth-year" />
+                  </View>
+                </View>
+
+                <Text style={[s.label, { color: C.textLight, marginTop: 10 }]}>Nationalite *</Text>
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !editNationality ? '#EF444450' : C.border }]} value={editNationality} onChangeText={setEditNationality} placeholder="Suisse" placeholderTextColor={C.textLight} data-testid="edit-nationality" />
+
+                <Text style={[s.label, { color: C.textLight, marginTop: 10 }]}>Permis No *</Text>
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseNumber ? '#EF444450' : C.border }]} value={editLicenseNumber} onChangeText={setEditLicenseNumber} placeholder="GE-123456" placeholderTextColor={C.textLight} data-testid="edit-license-number" />
+
+                <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.label, { color: C.textLight }]}>Date d'emission *</Text>
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={setEditLicenseIssue} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} data-testid="edit-license-issue" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.label, { color: C.textLight }]}>Date d'expiration *</Text>
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={setEditLicenseExpiry} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} data-testid="edit-license-expiry" />
+                  </View>
+                </View>
+
+                <Text style={[s.label, { color: C.textLight, marginTop: 12 }]}>Classement</Text>
                 <View style={s.ratingRow}>
                   {RATINGS.map((r) => (
                     <TouchableOpacity
@@ -430,13 +514,48 @@ export default function AgencyClients() {
             <ScrollView>
               <Text style={[s.label, { color: C.textLight }]}>Nom *</Text>
               <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Nom complet" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="modal-client-name" />
-              <Text style={[s.label, { color: C.textLight }]}>Téléphone</Text>
+              <Text style={[s.label, { color: C.textLight }]}>Telephone</Text>
               <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="+41 XX XXX XX XX" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="modal-client-phone" />
               <Text style={[s.label, { color: C.textLight }]}>Email</Text>
               <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="email@example.com" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" autoCapitalize="none" data-testid="modal-client-email" />
+
+              {/* Identity & License */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 4, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }}>
+                <Ionicons name="id-card" size={16} color={C.accent} />
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Identite & Permis *</Text>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.label, { color: C.textLight }]}>Lieu de naissance *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Geneve" placeholderTextColor={C.textLight} value={newBirthPlace} onChangeText={setNewBirthPlace} data-testid="new-birth-place" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.label, { color: C.textLight }]}>Annee de naissance *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="1990" placeholderTextColor={C.textLight} value={newBirthYear} onChangeText={setNewBirthYear} keyboardType="numeric" data-testid="new-birth-year" />
+                </View>
+              </View>
+
+              <Text style={[s.label, { color: C.textLight }]}>Nationalite *</Text>
+              <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Suisse" placeholderTextColor={C.textLight} value={newNationality} onChangeText={setNewNationality} data-testid="new-nationality" />
+
+              <Text style={[s.label, { color: C.textLight }]}>Permis No *</Text>
+              <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="GE-123456" placeholderTextColor={C.textLight} value={newLicenseNumber} onChangeText={setNewLicenseNumber} data-testid="new-license-number" />
+
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.label, { color: C.textLight }]}>Date d'emission *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={newLicenseIssue} onChangeText={setNewLicenseIssue} data-testid="new-license-issue" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.label, { color: C.textLight }]}>Date d'expiration *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={newLicenseExpiry} onChangeText={setNewLicenseExpiry} data-testid="new-license-expiry" />
+                </View>
+              </View>
+
               <TouchableOpacity style={[s.createBtn, { backgroundColor: C.primary }, creating && { opacity: 0.6 }]} onPress={createClient} disabled={creating} data-testid="modal-create-client-btn">
                 <Ionicons name="person-add" size={18} color="#fff" />
-                <Text style={s.createBtnText}>{creating ? 'Création...' : 'Créer le client'}</Text>
+                <Text style={s.createBtnText}>{creating ? 'Creation...' : 'Creer le client'}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>

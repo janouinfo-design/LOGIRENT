@@ -65,6 +65,12 @@ class UserProfile(BaseModel):
     profile_photo: Optional[str] = None
     client_rating: Optional[str] = None
     admin_notes: Optional[str] = None
+    birth_place: Optional[str] = None
+    birth_year: Optional[int] = None
+    license_number: Optional[str] = None
+    license_issue_date: Optional[str] = None
+    license_expiry_date: Optional[str] = None
+    nationality: Optional[str] = None
     role: str = "client"
     agency_id: Optional[str] = None
     agency_name: Optional[str] = None
@@ -84,6 +90,12 @@ class AdminUserUpdate(BaseModel):
     email: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    birth_place: Optional[str] = None
+    birth_year: Optional[int] = None
+    license_number: Optional[str] = None
+    license_issue_date: Optional[str] = None
+    license_expiry_date: Optional[str] = None
+    nationality: Optional[str] = None
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -246,6 +258,12 @@ class QuickClientCreate(BaseModel):
     name: str
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
+    birth_place: Optional[str] = None
+    birth_year: Optional[int] = None
+    license_number: Optional[str] = None
+    license_issue_date: Optional[str] = None
+    license_expiry_date: Optional[str] = None
+    nationality: Optional[str] = None
 
 
 class AdminReservationCreate(BaseModel):
