@@ -1,0 +1,108 @@
+{
+  "summary": "Contract Update-Fields Endpoint Testing - Complete. Tested the PUT /api/admin/contracts/{id}/update-fields endpoint and full reservation-to-contract flow. Fixed a bug where PDF generation crashed with string values for numeric fields (deposit, total_price).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "PUT /api/admin/contracts/{id}/update-fields": {
+      "status": "PASS",
+      "details": "Accepts editable fields, persists them in contract_data, returns updated contract"
+    },
+    "Update-fields on signed contract": {
+      "status": "PASS",
+      "details": "Returns 400 'Cannot edit a signed contract' as expected"
+    },
+    "Non-editable fields": {
+      "status": "PASS",
+      "details": "contract_number, agency_name etc. are silently ignored when passed to update-fields"
+    },
+    "Full flow: reservation -> contract -> update -> sign -> PDF": {
+      "status": "PASS",
+      "details": "Complete workflow tested successfully"
+    },
+    "Contract auto-populates data": {
+      "status": "PASS",
+      "details": "Client name, email, phone, vehicle name, dates, price auto-populated from reservation"
+    },
+    "Access control": {
+      "status": "PASS",
+      "details": "Clients return 403, non-existent contracts return 404"
+    },
+    "All 25 editable fields": {
+      "status": "PASS (manual test)",
+      "details": "vehicle_plate, vehicle_color, vehicle_chassis, km_start, km_return, client_*, deposit, deductible, price_* all update correctly"
+    }
+  },
+  "bug_fixed": {
+    "issue": "PDF generation crashes with ValueError when deposit/total_price are strings",
+    "root_cause": "update-fields endpoint stores values as strings, but generate_contract_pdf used `.2f` format which requires float",
+    "fix_applied": "Added try/except float conversion for deposit and total_price in /app/backend/routes/contracts.py lines 309-318",
+    "status": "FIXED - PDF download now works correctly with string numeric values"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_contract_update_fields.py",
+    "/app/test_reports/pytest/pytest_contract_update_fields.xml"
+  ],
+  "pytest_results": {
+    "total_tests": 16,
+    "passed": 15,
+    "failed": 0,
+    "skipped": 1,
+    "test_classes": [
+      "TestContractUpdateFieldsEndpoint - 2 tests (login verification)",
+      "TestFullReservationToContractFlow - 11 tests (full end-to-end flow)",
+      "TestUpdateFieldsAccessControl - 2 tests (client denied, 404 for missing)",
+      "TestAllEditableFields - 1 test (skipped due to vehicle availability)"
+    ]
+  },
+  "editable_fields_verified": [
+    "vehicle_plate", "vehicle_color", "vehicle_chassis",
+    "km_start", "km_return",
+    "client_name", "client_firstname", "client_address", "client_phone",
+    "client_email", "client_nationality", "client_dob",
+    "client_license", "client_license_issued", "client_license_valid",
+    "deposit", "deductible",
+    "price_per_day", "price_weekend_fri", "price_weekend_sat",
+    "price_hour", "price_week", "price_month_2000", "price_month_3000", "price_extra_km"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fixed type safety issue in PDF generation - numeric fields should handle string input gracefully",
+    "All editable fields in EDITABLE set are correctly filtered and persisted",
+    "Non-editable fields (contract_number, agency_name, etc.) correctly protected"
+  ],
+  "updated_files": [
+    "/app/backend/routes/contracts.py",
+    "/app/backend/tests/test_contract_update_fields.py"
+  ],
+  "success_rate": {
+    "backend": "94% (15/16 passed, 1 skipped due to test fixture vehicle availability)",
+    "frontend": "N/A - Backend only testing as requested"
+  },
+  "test_credentials": {
+    "super_admin": "test@example.com / password123",
+    "geneva_admin": "admin-geneva@logirent.ch / LogiRent2024",
+    "client": "client1@test.com / test1234"
+  },
+  "seed_data_creation": "Multiple test clients created with TEST_ prefix for contract flow testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Contract update-fields endpoint fully functional. All 25 editable fields work correctly. Fixed bug with string numeric values in PDF generation. Full flow from reservation creation -> contract generation -> field updates -> signing -> PDF download tested successfully.",
+  "rca_of_the_issue": {
+    "issue": "PDF generation 500 error when contract has string numeric values",
+    "reproduction_steps": [
+      "1. Generate contract from reservation",
+      "2. Call PUT /api/admin/contracts/{id}/update-fields with deposit='2000' (string)",
+      "3. Sign the contract",
+      "4. Call GET /api/contracts/{id}/pdf -> 500 error"
+    ],
+    "root_cause": "generate_contract_pdf() used f'{deposit:.2f}' which fails when deposit is string type",
+    "fix": "Added try/except float() conversion for deposit and total_price before formatting"
+  }
+}
