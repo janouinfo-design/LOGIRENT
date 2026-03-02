@@ -514,6 +514,40 @@ async def generate_contract(data: ContractGenerate, user: dict = Depends(get_adm
     return {"message": "Contrat genere", "contract_id": contract_id}
 
 
+@router.put("/admin/contracts/{contract_id}/update-fields")
+async def update_contract_fields(contract_id: str, fields: dict, user: dict = Depends(get_admin_user)):
+    """Allow admin to update editable contract data fields before signing"""
+    contract = await db.contracts.find_one({"id": contract_id}, {"_id": 0})
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    if user.get('role') != 'super_admin' and contract.get('agency_id') != user.get('agency_id'):
+        raise HTTPException(status_code=403, detail="Access denied")
+    if contract.get("status") == "signed":
+        raise HTTPException(status_code=400, detail="Cannot edit a signed contract")
+
+    EDITABLE = {
+        "vehicle_plate", "vehicle_color", "vehicle_chassis",
+        "km_start", "km_return",
+        "client_name", "client_firstname", "client_address", "client_phone",
+        "client_email", "client_nationality", "client_dob",
+        "client_license", "client_license_issued", "client_license_valid",
+        "deposit", "deductible",
+        "price_per_day", "price_weekend_fri", "price_weekend_sat",
+        "price_hour", "price_week", "price_month_2000", "price_month_3000", "price_extra_km",
+    }
+    updates = {}
+    for k, v in fields.items():
+        if k in EDITABLE:
+            updates[f"contract_data.{k}"] = v
+
+    if updates:
+        updates["updated_at"] = datetime.utcnow().isoformat()
+        await db.contracts.update_one({"id": contract_id}, {"$set": updates})
+
+    updated = await db.contracts.find_one({"id": contract_id}, {"_id": 0})
+    return updated
+
+
 @router.get("/admin/contracts")
 async def list_contracts(user: dict = Depends(get_admin_user)):
     f = {} if user.get('role') == 'super_admin' else {"agency_id": user.get('agency_id')}
