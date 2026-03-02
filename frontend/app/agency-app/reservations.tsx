@@ -310,10 +310,9 @@ export default function AgencyReservations() {
                   {schedule.map(v => v.reservations.map(r => {
                     const color = RES_COLORS[r.status] || C.textLight;
                     const isHighlighted = highlightId === r.id;
-                    const cw = (Dimensions.get('window').width - 32 - 30) / 4;
                     return (
                       <Animated.View key={r.id} style={{
-                        width: cw, backgroundColor: C.card, borderRadius: 10,
+                        width: '23.5%', backgroundColor: C.card, borderRadius: 10,
                         borderWidth: isHighlighted ? 2 : 1, borderColor: isHighlighted ? '#fff' : C.border,
                         borderLeftWidth: 3, borderLeftColor: color, padding: 8,
                         ...(isHighlighted ? { opacity: highlightAnim } : {}),

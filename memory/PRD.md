@@ -41,6 +41,8 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Super admin vignettes: Converted agencies, vehicles, and users lists to 4-column card grids. Agencies show stats/action buttons, vehicles show photos/status/price, users show avatars/ratings. 10 tests passed (iteration 32).
 - [2026-03-02] Client identity/license fields: Added birth_place, birth_year, license_number, license_issue_date, license_expiry_date, nationality to client profiles. Required fields with red border validation. Edit + creation modals updated. 9 pytest tests passed (iteration 33).
 - [2026-03-02] Booking→Contract→Planning flow: After confirming reservation, navigates to contract page (auto-filled with client identity + vehicle data). After signing, 'Voir sur le planning' button leads to planning with pulsing highlight. Contract auto-fills nationality, license, dates, plate, color, chassis. 7 pytest tests passed (iteration 34).
+- [2026-03-02] Fix: Mouse signature canvas rewritten with native DOM event listeners (bypasses React Native Web interception). Clear/Confirm buttons work. 9 pytest tests passed (iteration 35).
+- [2026-03-02] Reservations in 4-column vignettes: Both list view and planning-below cards now 4-column grids. Inline status change buttons (Conf/Activ/Termi/Annul) on every card for quick status updates.
 
 ## Key API Endpoints (New)
 - `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
