@@ -38,6 +38,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Booking flow redirect: After confirming reservation, navigates to reservations planning page with pulsing highlight on the new reservation bar + success banner for 4 seconds.
 - [2026-03-02] Lists to vignettes: Converted clients list and booking vehicle selection to 4-column card grids with photos/avatars, badges, and compact info.
 - [2026-03-02] Document expiration system: Added expiry_date to documents, GET /api/admin/vehicles/document-alerts endpoint (30-day warning), color-coded badges in vehicle edit modal (green/orange/red), dashboard alerts section. 10 tests passed.
+- [2026-03-02] Super admin vignettes: Converted agencies, vehicles, and users lists to 4-column card grids. Agencies show stats/action buttons, vehicles show photos/status/price, users show avatars/ratings. 10 tests passed (iteration 32).
 
 ## Key API Endpoints (New)
 - `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
