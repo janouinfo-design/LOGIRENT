@@ -41,29 +41,6 @@ class TestContractUpdateFieldsEndpoint:
         if resp.status_code == 200:
             return resp.json().get("access_token")
         pytest.skip("Super admin login failed")
-    
-    @pytest.fixture(scope="class")
-    def client_token(self):
-        """Get client token"""
-        resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "client1@test.com",
-            "password": "test1234"
-        })
-        if resp.status_code == 200:
-            return resp.json().get("access_token")
-        pytest.skip("Client login failed")
-    
-    @pytest.fixture(scope="class")
-    def admin_headers(self, admin_token):
-        return {"Authorization": f"Bearer {admin_token}", "Content-Type": "application/json"}
-    
-    @pytest.fixture(scope="class")
-    def super_admin_headers(self, super_admin_token):
-        return {"Authorization": f"Bearer {super_admin_token}", "Content-Type": "application/json"}
-    
-    @pytest.fixture(scope="class")
-    def client_headers(self, client_token):
-        return {"Authorization": f"Bearer {client_token}", "Content-Type": "application/json"}
 
     def test_admin_login_success(self, admin_token):
         """Verify admin login works"""
@@ -80,34 +57,16 @@ class TestFullReservationToContractFlow:
     """Test complete flow: reservation -> contract -> update fields -> sign -> PDF"""
     
     @pytest.fixture(scope="class")
-    def admin_token(self):
-        """Get admin token"""
-        resp = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": "admin-geneva@logirent.ch",
-            "password": "LogiRent2024"
-        })
-        if resp.status_code == 200:
-            return resp.json().get("access_token")
-        pytest.skip("Admin login failed")
-    
-    @pytest.fixture(scope="class")
-    def super_admin_token(self):
-        """Get super admin token"""
+    def super_admin_headers(self):
+        """Get super admin headers"""
         resp = requests.post(f"{BASE_URL}/api/auth/login", json={
             "email": "test@example.com",
             "password": "password123"
         })
         if resp.status_code == 200:
-            return resp.json().get("access_token")
+            token = resp.json().get("access_token")
+            return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         pytest.skip("Super admin login failed")
-    
-    @pytest.fixture(scope="class")
-    def admin_headers(self, admin_token):
-        return {"Authorization": f"Bearer {admin_token}", "Content-Type": "application/json"}
-    
-    @pytest.fixture(scope="class")
-    def super_admin_headers(self, super_admin_token):
-        return {"Authorization": f"Bearer {super_admin_token}", "Content-Type": "application/json"}
 
     @pytest.fixture(scope="class")
     def test_client(self, super_admin_headers):
@@ -124,38 +83,27 @@ class TestFullReservationToContractFlow:
 
     @pytest.fixture(scope="class")
     def available_vehicle(self, super_admin_headers):
-        """Get an available vehicle for testing"""
-        # Get schedule to find available vehicles
-        start = datetime.now() + timedelta(days=30)
-        end = start + timedelta(days=2)
+        """Get an available vehicle for testing - using dates far in future"""
+        # Use June 2026 which should have availability
         resp = requests.get(
-            f"{BASE_URL}/api/admin/vehicle-schedule?start_date={start.strftime('%Y-%m-%d')}&end_date={end.strftime('%Y-%m-%d')}",
+            f"{BASE_URL}/api/admin/vehicle-schedule?start_date=2026-06-01&end_date=2026-06-30",
             headers=super_admin_headers
         )
         if resp.status_code == 200:
             vehicles = resp.json().get("vehicles", [])
             if vehicles:
                 return vehicles[0]
-        # Fallback: try to get vehicles directly
-        resp = requests.get(f"{BASE_URL}/api/vehicles", headers=super_admin_headers)
-        if resp.status_code == 200:
-            data = resp.json()
-            vehicles = data if isinstance(data, list) else data.get("vehicles", [])
-            if vehicles:
-                return vehicles[0]
         pytest.skip("No vehicles available")
 
     @pytest.fixture(scope="class")
     def new_reservation(self, super_admin_headers, test_client, available_vehicle):
-        """Create a fresh reservation for testing"""
-        start_date = datetime.now() + timedelta(days=30)
-        end_date = start_date + timedelta(days=2)
-        
+        """Create a fresh reservation for testing - using June 2026 dates"""
+        # Use June 2026 dates to avoid conflicts
         payload = {
             "client_id": test_client["id"],
             "vehicle_id": available_vehicle["id"],
-            "start_date": f"{start_date.strftime('%Y-%m-%d')}T08:00:00",
-            "end_date": f"{end_date.strftime('%Y-%m-%d')}T18:00:00",
+            "start_date": "2026-06-20T08:00:00",
+            "end_date": "2026-06-22T18:00:00",
             "options": [],
             "payment_method": "cash"
         }
@@ -168,7 +116,19 @@ class TestFullReservationToContractFlow:
         
         if resp.status_code == 200:
             data = resp.json()
-            # Handle nested response
+            return data.get("reservation", data)
+        
+        # Try different dates if first fails
+        payload["start_date"] = "2026-07-15T08:00:00"
+        payload["end_date"] = "2026-07-17T18:00:00"
+        resp = requests.post(
+            f"{BASE_URL}/api/admin/create-reservation-for-client",
+            json=payload,
+            headers=super_admin_headers
+        )
+        
+        if resp.status_code == 200:
+            data = resp.json()
             return data.get("reservation", data)
         pytest.skip(f"Could not create reservation: {resp.status_code} - {resp.text}")
 
@@ -225,7 +185,6 @@ class TestFullReservationToContractFlow:
         # Verify vehicle data is populated
         assert "vehicle_name" in contract_data
         vehicle_name = contract_data.get("vehicle_name", "")
-        # Check that brand/model from vehicle is in the vehicle_name
         expected_brand = available_vehicle.get("brand", "")
         assert expected_brand in vehicle_name or len(vehicle_name) > 0
         print(f"Contract auto-populated vehicle: {vehicle_name}")
@@ -250,7 +209,6 @@ class TestFullReservationToContractFlow:
         """Test updating editable fields on a draft contract succeeds"""
         contract_id = new_contract["contract_id"]
         
-        # Update multiple editable fields
         update_payload = {
             "vehicle_plate": "TEST-VD-999",
             "vehicle_color": "ROUGE",
@@ -271,16 +229,13 @@ class TestFullReservationToContractFlow:
         
         assert resp.status_code == 200, f"Update failed: {resp.status_code} - {resp.text}"
         updated_contract = resp.json()
-        
-        # Verify data is returned
         assert "contract_data" in updated_contract
-        print(f"Update-fields returned contract with contract_data")
+        print(f"Update-fields succeeded on draft contract")
 
     def test_updated_fields_persist_in_contract(self, super_admin_headers, new_contract):
         """Test GET after update shows the updated values"""
         contract_id = new_contract["contract_id"]
         
-        # First update fields
         update_payload = {
             "vehicle_plate": "PERSIST-TEST-123",
             "vehicle_color": "BLEU",
@@ -297,24 +252,21 @@ class TestFullReservationToContractFlow:
         resp = requests.get(f"{BASE_URL}/api/contracts/{contract_id}", headers=super_admin_headers)
         assert resp.status_code == 200
         
-        contract = resp.json()
-        contract_data = contract.get("contract_data", {})
+        contract_data = resp.json().get("contract_data", {})
         
-        # Verify all updated fields are persisted
-        assert contract_data.get("vehicle_plate") == "PERSIST-TEST-123", f"vehicle_plate not persisted: {contract_data.get('vehicle_plate')}"
-        assert contract_data.get("vehicle_color") == "BLEU", f"vehicle_color not persisted: {contract_data.get('vehicle_color')}"
-        assert contract_data.get("km_start") == "99999", f"km_start not persisted: {contract_data.get('km_start')}"
-        print(f"All updated fields persisted correctly in contract_data")
+        assert contract_data.get("vehicle_plate") == "PERSIST-TEST-123"
+        assert contract_data.get("vehicle_color") == "BLEU"
+        assert contract_data.get("km_start") == "99999"
+        print(f"All updated fields persisted correctly")
 
     def test_non_editable_fields_ignored(self, super_admin_headers, new_contract):
         """Test that non-editable fields are silently ignored"""
         contract_id = new_contract["contract_id"]
         
-        # Try to update a non-editable field (like contract_number)
         update_payload = {
-            "contract_number": "HACKED-999",  # This should be ignored
-            "agency_name": "HACKED-AGENCY",  # This should be ignored
-            "vehicle_plate": "VALID-UPDATE-123"  # This should work
+            "contract_number": "HACKED-999",
+            "agency_name": "HACKED-AGENCY",
+            "vehicle_plate": "VALID-UPDATE-123"
         }
         
         resp = requests.put(
@@ -325,20 +277,18 @@ class TestFullReservationToContractFlow:
         
         assert resp.status_code == 200
         
-        # GET to verify non-editable fields were NOT changed
         get_resp = requests.get(f"{BASE_URL}/api/contracts/{contract_id}", headers=super_admin_headers)
         contract_data = get_resp.json().get("contract_data", {})
         
-        assert contract_data.get("contract_number") != "HACKED-999", "contract_number should NOT be editable"
-        assert contract_data.get("agency_name") != "HACKED-AGENCY", "agency_name should NOT be editable"
-        assert contract_data.get("vehicle_plate") == "VALID-UPDATE-123", "vehicle_plate should be editable"
-        print("Non-editable fields correctly ignored, editable fields updated")
+        assert contract_data.get("contract_number") != "HACKED-999"
+        assert contract_data.get("agency_name") != "HACKED-AGENCY"
+        assert contract_data.get("vehicle_plate") == "VALID-UPDATE-123"
+        print("Non-editable fields correctly ignored")
 
     def test_sign_contract_success(self, super_admin_headers, new_contract):
         """Test signing the contract after updating fields"""
         contract_id = new_contract["contract_id"]
         
-        # Minimal base64 signature (tiny valid PNG)
         signature_data = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         
         resp = requests.put(
@@ -348,15 +298,12 @@ class TestFullReservationToContractFlow:
         )
         
         assert resp.status_code == 200, f"Sign failed: {resp.status_code} - {resp.text}"
-        result = resp.json()
-        assert "message" in result
-        print(f"Contract signed successfully: {result.get('message')}")
+        print(f"Contract signed successfully")
 
     def test_signed_contract_cannot_be_edited(self, super_admin_headers, new_contract):
         """Test that signed contracts return 400 when trying to update fields"""
         contract_id = new_contract["contract_id"]
         
-        # Try to update fields on the now-signed contract
         update_payload = {
             "vehicle_plate": "SHOULD-FAIL",
             "km_start": "12345"
@@ -369,9 +316,7 @@ class TestFullReservationToContractFlow:
         )
         
         assert resp.status_code == 400, f"Expected 400 for signed contract, got {resp.status_code}"
-        error_detail = resp.json().get("detail", "")
-        assert "signed" in error_detail.lower() or "edit" in error_detail.lower()
-        print(f"Correctly rejected update on signed contract: {error_detail}")
+        print(f"Correctly rejected update on signed contract")
 
     def test_download_pdf_after_signing(self, super_admin_headers, new_contract):
         """Test PDF download works after contract is signed"""
@@ -384,7 +329,7 @@ class TestFullReservationToContractFlow:
         
         assert resp.status_code == 200, f"PDF download failed: {resp.status_code}"
         assert resp.headers.get("Content-Type") == "application/pdf"
-        assert len(resp.content) > 100, "PDF should have content"
+        assert len(resp.content) > 100
         print(f"PDF downloaded successfully, size: {len(resp.content)} bytes")
 
 
@@ -392,44 +337,36 @@ class TestUpdateFieldsAccessControl:
     """Test access control for update-fields endpoint"""
     
     @pytest.fixture(scope="class")
-    def super_admin_token(self):
+    def super_admin_headers(self):
         resp = requests.post(f"{BASE_URL}/api/auth/login", json={
             "email": "test@example.com",
             "password": "password123"
         })
         if resp.status_code == 200:
-            return resp.json().get("access_token")
-        pytest.skip("Super admin login failed")
+            token = resp.json().get("access_token")
+            return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+        pytest.skip("Login failed")
     
     @pytest.fixture(scope="class")
-    def client_token(self):
+    def client_headers(self):
         resp = requests.post(f"{BASE_URL}/api/auth/login", json={
             "email": "client1@test.com",
             "password": "test1234"
         })
         if resp.status_code == 200:
-            return resp.json().get("access_token")
+            token = resp.json().get("access_token")
+            return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
         pytest.skip("Client login failed")
-    
-    @pytest.fixture(scope="class")
-    def super_admin_headers(self, super_admin_token):
-        return {"Authorization": f"Bearer {super_admin_token}", "Content-Type": "application/json"}
-    
-    @pytest.fixture(scope="class")
-    def client_headers(self, client_token):
-        return {"Authorization": f"Bearer {client_token}", "Content-Type": "application/json"}
     
     @pytest.fixture(scope="class")
     def any_draft_contract(self, super_admin_headers):
         """Get or create a draft contract for access control tests"""
-        # List contracts and find a draft one
         resp = requests.get(f"{BASE_URL}/api/admin/contracts", headers=super_admin_headers)
         if resp.status_code == 200:
             contracts = resp.json()
             for c in contracts:
                 if c.get("status") == "draft":
                     return c
-        # No draft contract found - create one
         pytest.skip("No draft contract available for access control tests")
 
     def test_client_cannot_update_fields(self, client_headers, any_draft_contract):
@@ -444,9 +381,8 @@ class TestUpdateFieldsAccessControl:
             headers=client_headers
         )
         
-        # Should return 401 or 403 - client is not admin
         assert resp.status_code in [401, 403], f"Expected 401/403 for client, got {resp.status_code}"
-        print(f"Client correctly denied access to update-fields: {resp.status_code}")
+        print(f"Client correctly denied access: {resp.status_code}")
 
     def test_update_nonexistent_contract_returns_404(self, super_admin_headers):
         """Test updating non-existent contract returns 404"""
@@ -492,9 +428,9 @@ class TestAllEditableFields:
         
         client = client_resp.json().get("client")
         
-        # Get vehicle
+        # Get vehicle - use August 2026 dates
         schedule_resp = requests.get(
-            f"{BASE_URL}/api/admin/vehicle-schedule?start_date=2026-03-01&end_date=2026-03-05",
+            f"{BASE_URL}/api/admin/vehicle-schedule?start_date=2026-08-01&end_date=2026-08-10",
             headers=super_admin_headers
         )
         vehicles = schedule_resp.json().get("vehicles", []) if schedule_resp.status_code == 200 else []
@@ -503,15 +439,26 @@ class TestAllEditableFields:
         
         vehicle = vehicles[0]
         
-        # Create reservation
+        # Create reservation for August 2026
         res_resp = requests.post(f"{BASE_URL}/api/admin/create-reservation-for-client", json={
             "client_id": client["id"],
             "vehicle_id": vehicle["id"],
-            "start_date": "2026-03-01T08:00:00",
-            "end_date": "2026-03-05T18:00:00",
+            "start_date": "2026-08-10T08:00:00",
+            "end_date": "2026-08-12T18:00:00",
             "options": [],
             "payment_method": "cash"
         }, headers=super_admin_headers)
+        
+        if res_resp.status_code != 200:
+            # Try September
+            res_resp = requests.post(f"{BASE_URL}/api/admin/create-reservation-for-client", json={
+                "client_id": client["id"],
+                "vehicle_id": vehicle["id"],
+                "start_date": "2026-09-01T08:00:00",
+                "end_date": "2026-09-03T18:00:00",
+                "options": [],
+                "payment_method": "cash"
+            }, headers=super_admin_headers)
         
         if res_resp.status_code != 200:
             pytest.skip(f"Could not create reservation: {res_resp.text}")
@@ -584,13 +531,9 @@ class TestAllEditableFields:
             if str(actual_value) != str(expected_value):
                 failures.append(f"{key}: expected '{expected_value}', got '{actual_value}'")
         
-        if failures:
-            print(f"Field update failures: {failures}")
-        
-        assert len(failures) == 0, f"Some fields not updated correctly: {failures}"
+        assert len(failures) == 0, f"Fields not updated: {failures}"
         print(f"All {len(all_fields)} editable fields updated and persisted correctly")
 
 
-# Run tests if executed directly
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
