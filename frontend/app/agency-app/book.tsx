@@ -99,6 +99,7 @@ function CalendarMonth({ month, startDate, endDate, onSelectDate, busyDays, colo
 
 export default function BookingFlow() {
   const { colors: C } = useThemeStore();
+  const router = useRouter();
   const [step, setStep] = useState<Step>('client');
 
   // Client
