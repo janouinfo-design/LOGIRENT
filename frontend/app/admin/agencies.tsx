@@ -529,6 +529,8 @@ const styles = StyleSheet.create({
   credentialsNote: { fontSize: 12, color: COLORS.textLight, textAlign: 'center', marginBottom: 12, fontStyle: 'italic' },
   qrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: COLORS.primary, paddingVertical: 10, borderRadius: 10, marginTop: 10 },
   qrBtnText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
+  impersonateBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#10B981', paddingVertical: 12, borderRadius: 10 },
+  impersonateBtnText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
   qrContainer: { backgroundColor: '#FFF', padding: 20, borderRadius: 16, marginBottom: 12 },
   qrUrl: { fontSize: 12, color: COLORS.textLight, textAlign: 'center', marginBottom: 16 },
   closeBtn: { position: 'absolute', top: 12, right: 12, zIndex: 1 },
