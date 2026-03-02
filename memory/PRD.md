@@ -1,51 +1,49 @@
 # LogiRent - PRD
 
 ## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with Client App, Agency Admin App, Admin Back-office, and Super Admin.
+Build a complete car rental solution named "LogiRent" with Client App, Agency Admin App, Admin Back-office, Super Admin.
 
 ## Architecture
 - **4 Interfaces**: Client App, Agency App, Admin, Super Admin
-- **Backend**: FastAPI + MongoDB
-- **Frontend**: React Native (Expo Router)
+- **Backend**: FastAPI + MongoDB | **Frontend**: React Native (Expo Router)
 
 ## What's Been Implemented
 
-### Agenda/Calendar Booking System (Mar 2, 2026) - NEW
-- New backend endpoint: GET /api/admin/vehicle-schedule returns all vehicles with their reservations for date range
-- Complete visual agenda with weekly view: shows all vehicles and their booking status per day
-- Color-coded slots: Green (available), Red (confirmed/active), Orange (pending)
-- Hour selectors for start/end times (08:00-18:00 adjustable)
-- "Occupé" badge on vehicles that conflict with selected dates
-- Selection summary bar showing vehicle, dates, duration, and price
-- 4-step booking flow: Client → Véhicule/Planning → Options/Paiement → Confirmer
+### Airbnb-Style Calendar for Booking (Mar 2, 2026) - NEW
+- Two-month visual calendar with range selection (click start + click end)
+- Purple-highlighted date range between start/end dates
+- DÉBUT → FIN summary bar showing formatted dates
+- Hour selectors (08:00/18:00) with +/- controls
+- Duration badge showing total days
+- Vehicle list with availability check (OCCUPÉ badge for busy vehicles)
+- ✓ checkmark on selected vehicle with price summary
 
-### Contract Actions in Agency App (Mar 2, 2026)
-- Added CONTRAT section to reservation modal: View/Generate, Send, Download PDF
-
-### Filter Chips Fix + Bigger Nav Menu (Mar 2, 2026)
-- Fixed filter visibility, enlarged navigation icons/text
-
-### Edit Client Profiles (Mar 2, 2026)
-- Modal to edit name, email, phone, address, rating, admin notes
-
-### GPS Tracking Fixed Map (Mar 2, 2026)
-- Map always visible at top, centers on clicked vehicle
+### Previous (Mar 2, 2026)
+- Contract actions in Agency App modal (View/Generate, Send, Download PDF)
+- Filter chips fix + bigger navigation menu
+- Edit client profiles modal
+- GPS tracking fixed map layout
 
 ### Previous (Feb 28, 2026)
-- Contract system, Theme toggle, Email notifications, Statistics dashboards
-- All core features: Auth, Vehicles, Reservations, Stripe, Navixy GPS, Client Import, etc.
+- Contract system with digital signature and PDF
+- Dark/light mode toggle
+- Email notifications (Resend)
+- Statistics dashboards
+
+### Core Features
+- Auth, Vehicles CRUD, Reservations, Stripe Payments, Navixy GPS, Client Import, QR Codes, Calendar, AI Document Verification, Multi-Agency Architecture
 
 ## Key Files
 - `/app/backend/server.py` - Backend with vehicle-schedule endpoint
-- `/app/frontend/app/agency-app/book.tsx` - Booking flow with agenda
-- `/app/frontend/app/agency-app/reservations.tsx` - Reservations with contract actions
-- `/app/frontend/app/agency-app/clients.tsx` - Client management with edit modal
-- `/app/frontend/app/agency-app/tracking.tsx` - GPS with fixed map
+- `/app/frontend/app/agency-app/book.tsx` - Airbnb calendar booking
+- `/app/frontend/app/agency-app/reservations.tsx` - Reservations with contracts
+- `/app/frontend/app/agency-app/clients.tsx` - Client edit
+- `/app/frontend/app/agency-app/tracking.tsx` - GPS fixed map
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase)
 - P2: Driver/Agent Application
-- P3: Refactoring server.py into routers
+- P3: Refactoring server.py
 - P4: App Store Deployment
 
 ## Credentials
