@@ -124,16 +124,16 @@ export default function AgencyReservations() {
             key={f.label}
             style={[
               s.filterChip,
-              { borderColor: C.border, backgroundColor: C.card },
-              filter === f.value && { borderColor: C.accent, backgroundColor: C.accent + '15' }
+              { borderColor: C.border, backgroundColor: C.bg },
+              filter === f.value && { borderColor: C.accent, backgroundColor: C.accent }
             ]}
             onPress={() => setFilter(f.value)}
             data-testid={`filter-${f.value || 'all'}`}
           >
             <Text style={[
               s.filterText,
-              { color: C.textLight },
-              filter === f.value && { color: C.accent }
+              { color: C.text },
+              filter === f.value && { color: '#fff' }
             ]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
