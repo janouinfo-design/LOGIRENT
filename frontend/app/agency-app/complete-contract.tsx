@@ -41,7 +41,7 @@ const FIELDS = [
 ];
 
 export default function CompleteContract() {
-  const { contract_id } = useLocalSearchParams<{ contract_id: string }>();
+  const { contract_id, reservation_id, month } = useLocalSearchParams<{ contract_id: string; reservation_id?: string; month?: string }>();
   const router = useRouter();
   const { colors: C } = useThemeStore();
 
@@ -155,6 +155,23 @@ export default function CompleteContract() {
         >
           <Ionicons name="download" size={20} color="#fff" />
           <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>Telecharger le PDF</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[st.actionBtn, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border, marginTop: 10, width: '100%' }]}
+          onPress={() => {
+            if (reservation_id) {
+              const params = new URLSearchParams({ highlight: reservation_id });
+              if (month) params.append('month', month);
+              router.replace(`/agency-app/reservations?${params.toString()}` as any);
+            } else {
+              router.replace('/agency-app/reservations');
+            }
+          }}
+          data-testid="go-to-planning-btn"
+        >
+          <Ionicons name="calendar" size={20} color={C.accent} />
+          <Text style={{ color: C.accent, fontSize: 15, fontWeight: '600' }}>Voir sur le planning</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
