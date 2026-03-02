@@ -120,8 +120,21 @@ export default function AgencyReservations() {
       {/* Filters */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterScroll} contentContainerStyle={s.filterContent}>
         {STATUS_FILTERS.map((f) => (
-          <TouchableOpacity key={f.label} style={[s.filterChip, filter === f.value && s.filterChipActive]} onPress={() => setFilter(f.value)}>
-            <Text style={[s.filterText, filter === f.value && s.filterTextActive]}>{f.label}</Text>
+          <TouchableOpacity
+            key={f.label}
+            style={[
+              s.filterChip,
+              { borderColor: C.border, backgroundColor: C.card },
+              filter === f.value && { borderColor: C.accent, backgroundColor: C.accent + '15' }
+            ]}
+            onPress={() => setFilter(f.value)}
+            data-testid={`filter-${f.value || 'all'}`}
+          >
+            <Text style={[
+              s.filterText,
+              { color: C.textLight },
+              filter === f.value && { color: C.accent }
+            ]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
