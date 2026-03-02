@@ -1,52 +1,91 @@
-# LogiRent - PRD
+# LogiRent - PRD (Product Requirements Document)
 
 ## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with Client App, Agency Admin App, Admin Back-office, Super Admin.
+Build a complete car rental solution named "LogiRent" with:
+- Client Mobile/Web App
+- Admin Web Back-office (Super Admin & Agency Admin)
+- Future Driver/Agent App
 
 ## Architecture
-- **4 Interfaces**: Client App, Agency App, Admin, Super Admin
-- **Backend**: FastAPI + MongoDB | **Frontend**: React Native (Expo Router)
+
+### Backend (FastAPI + MongoDB)
+```
+/app/backend/
+  server.py          # Entry point (166 lines) - app creation, CORS, routers, seed data
+  database.py        # MongoDB connection and config
+  models.py          # Pydantic models (271 lines)
+  deps.py            # Dependencies, JWT auth helpers (112 lines)
+  routes/
+    auth.py          # User auth: login, register, profile, forgot-password
+    vehicles.py      # Vehicle CRUD, availability
+    reservations.py  # Reservation management
+    notifications.py # Notification endpoints
+    payments.py      # Stripe payment integration
+    admin.py         # Admin dashboard, stats, users, calendar, overdue
+    agencies.py      # Agency CRUD, public pages, mobile app endpoints
+    navixy.py        # GPS tracking integration
+    contracts.py     # Contract generation and PDF
+  utils/
+    email.py         # Email templates (Resend)
+    helpers.py       # Utility functions
+    notifications.py # Notification creation helpers
+```
+
+### Frontend (React Native / Expo)
+```
+/app/frontend/
+  app/
+    agency-app/      # Agency admin mobile app
+    admin/           # Super admin web interface
+    (tabs)/          # Client-facing app
+```
 
 ## What's Been Implemented
-
-### Airbnb-Style Calendar for Booking (Mar 2, 2026) - NEW
-- Two-month visual calendar with range selection (click start + click end)
-- Purple-highlighted date range between start/end dates
-- DÉBUT → FIN summary bar showing formatted dates
-- Hour selectors (08:00/18:00) with +/- controls
-- Duration badge showing total days
-- Vehicle list with availability check (OCCUPÉ badge for busy vehicles)
-- ✓ checkmark on selected vehicle with price summary
-
-### Previous (Mar 2, 2026)
-- Contract actions in Agency App modal (View/Generate, Send, Download PDF)
-- Filter chips fix + bigger navigation menu
-- Edit client profiles modal
-- GPS tracking fixed map layout
-
-### Previous (Feb 28, 2026)
-- Contract system with digital signature and PDF
-- Dark/light mode toggle
+- Full vehicle catalog with search/filter
+- Reservation system with calendar
+- Multi-role auth (client, admin, super_admin)
+- Agency management (CRUD, public pages)
+- Contract generation with PDF
+- Stripe payment integration
+- GPS tracking (Navixy)
 - Email notifications (Resend)
-- Statistics dashboards
+- Admin dashboard with stats
+- QR code scanning
+- i18n (FR/EN)
+- Agency App home screen gradient button redesign
 
-### Core Features
-- Auth, Vehicles CRUD, Reservations, Stripe Payments, Navixy GPS, Client Import, QR Codes, Calendar, AI Document Verification, Multi-Agency Architecture
+## Completed Tasks
+- [2026-03-02] Backend refactoring: Decomposed 3704-line monolithic server.py into modular structure (17 files). 100% regression test pass rate (70 tests).
+- [2026-03-02] Agency App gradient button redesign (validated by user)
 
-## Key Files
-- `/app/backend/server.py` - Backend with vehicle-schedule endpoint
-- `/app/frontend/app/agency-app/book.tsx` - Airbnb calendar booking
-- `/app/frontend/app/agency-app/reservations.tsx` - Reservations with contracts
-- `/app/frontend/app/agency-app/clients.tsx` - Client edit
-- `/app/frontend/app/agency-app/tracking.tsx` - GPS fixed map
+## 3rd Party Integrations
+- Stripe (Payments)
+- Resend (Email)
+- Navixy (GPS Tracking)
+- OpenAI GPT-5.2 (via emergentintegrations)
+- Expo Barcode Scanner
+- react-qr-code
+- reportlab (PDF)
+- expo-linear-gradient
 
-## Remaining Tasks
-- P1: Push Notifications (Firebase)
-- P2: Driver/Agent Application
-- P3: Refactoring server.py
-- P4: App Store Deployment
+## Prioritized Backlog
 
-## Credentials
+### P0 (Critical)
+- None - refactoring complete
+
+### P1 (High Priority)
+- Security: Replace plain-text initial_password storage with secure password reset flow
+- Push Notifications: Implement native push notifications (Firebase)
+
+### P2 (Medium)
+- Driver/Agent Application: Separate mobile app for drivers
+- Refactoring of new-reservation.tsx (large frontend file)
+
+### P3 (Low Priority)
+- App Store Deployment: Prepare and submit mobile apps
+
+## Test Credentials
 - Super Admin: test@example.com / password123
-- Agency Admin Geneva: admin-geneva@logirent.ch / LogiRent2024
+- Geneva Agency Admin: admin-geneva@logirent.ch / LogiRent2024
+- Lausanne Agency Admin: admin@test.com / password123
 - Client: client1@test.com / test1234
