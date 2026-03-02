@@ -67,15 +67,17 @@ export default function AgencyAppHome() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <TouchableOpacity style={[s.bookBtn, { backgroundColor: C.card, borderColor: C.accent }]} onPress={() => router.push('/agency-app/book')} data-testid="quick-book-btn">
-        <View style={[s.bookIconWrap, { backgroundColor: C.accent }]}>
-          <Ionicons name="add" size={28} color="#fff" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[s.bookBtnText, { color: C.text }]}>Nouvelle réservation</Text>
-          <Text style={[s.bookBtnSub, { color: C.textLight }]}>Réserver pour un client par téléphone</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={22} color={C.accent} />
+      <TouchableOpacity activeOpacity={0.85} onPress={() => router.push('/agency-app/book')} data-testid="quick-book-btn" style={{ marginBottom: 20 }}>
+        <LinearGradient colors={['#6366f1', '#8b5cf6', '#a855f7']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0.5 }} style={s.bookBtn}>
+          <View style={s.bookIconWrap}>
+            <Ionicons name="add" size={26} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={s.bookBtnText}>Nouvelle réservation</Text>
+            <Text style={s.bookBtnSub}>Réserver rapidement pour un client</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.7)" />
+        </LinearGradient>
       </TouchableOpacity>
 
       <View style={s.statsRow}>
