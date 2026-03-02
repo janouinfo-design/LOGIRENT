@@ -412,6 +412,8 @@ const s = StyleSheet.create({
   selectedIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   emptyState: { alignItems: 'center', paddingTop: 40 },
   emptyText: { marginTop: 8, fontSize: 14 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1, marginBottom: 12 },
+  searchInput: { flex: 1, fontSize: 14, paddingVertical: 10 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
   modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '70%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
