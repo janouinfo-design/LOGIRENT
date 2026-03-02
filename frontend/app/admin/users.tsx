@@ -3,391 +3,147 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Ale
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/api/axios';
-import { format } from 'date-fns';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
-
-const COLORS = {
-  primary: '#1E3A8A',
-  secondary: '#F59E0B',
-  background: '#F8FAFC',
-  card: '#FFFFFF',
-  text: '#1E293B',
-  textLight: '#64748B',
-  border: '#E2E8F0',
-  success: '#10B981',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  vip: '#8B5CF6',
-};
+import { USER_RATINGS } from '../../src/utils/admin-helpers';
 
 interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  profile_photo?: string;
-  id_photo?: string;
-  license_photo?: string;
-  client_rating?: string;
-  admin_notes?: string;
-  blocked?: boolean;
-  reservation_count: number;
-  created_at: string;
+  id: string; name: string; email: string; phone?: string; address?: string;
+  profile_photo?: string; id_photo?: string; license_photo?: string;
+  client_rating?: string; admin_notes?: string; blocked?: boolean;
+  reservation_count: number; created_at: string;
 }
 
-const RATINGS = [
-  { value: 'vip', label: 'VIP', color: COLORS.vip, icon: 'star' },
-  { value: 'good', label: 'Bon client', color: COLORS.success, icon: 'thumbs-up' },
-  { value: 'neutral', label: 'Neutre', color: COLORS.textLight, icon: 'remove' },
-  { value: 'bad', label: 'Mauvais client', color: COLORS.warning, icon: 'thumbs-down' },
-  { value: 'blocked', label: 'Bloqué', color: COLORS.error, icon: 'ban' },
-];
+const getRating = (r?: string) => USER_RATINGS.find(x => x.value === r) || USER_RATINGS.find(x => x.value === 'neutral')!;
+
+async function uploadBase64Photo(endpoint: string, aspect: [number, number] = [1, 1]) {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== 'granted') { alert('Permission requise'); return null; }
+  const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect, quality: 0.8, base64: true });
+  if (result.canceled || !result.assets[0]) return null;
+  const asset = result.assets[0];
+  let b64 = asset.base64;
+  let ct = asset.mimeType || 'image/jpeg';
+  if (!b64 && asset.uri?.startsWith('data:')) {
+    const m = asset.uri.match(/^data:([^;]+);base64,(.+)$/);
+    if (m) { ct = m[1]; b64 = m[2]; }
+  }
+  if (!b64) return null;
+  const resp = await api.post(endpoint, { image: b64, content_type: ct });
+  return resp.data.photo || resp.data;
+}
 
 export default function AdminUsers() {
-  const { colors: _c } = useThemeStore();
-  const COLORS = { primary: _c.accent, secondary: _c.warning, background: _c.bg, card: _c.card, text: _c.text, textLight: _c.textLight, border: _c.border, success: _c.success, warning: _c.warning, error: _c.error, vip: '#8B5CF6' };
+  const { colors: C } = useThemeStore();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [total, setTotal] = useState(0);
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [adminNotes, setAdminNotes] = useState('');
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingIdPhoto, setUploadingIdPhoto] = useState(false);
-  const [uploadingLicensePhoto, setUploadingLicensePhoto] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [sel, setSel] = useState<User | null>(null);
+  const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
-  const importInputRef = React.useRef<HTMLInputElement | null>(null);
-  
-  // Edit user info
   const [editMode, setEditMode] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
+  const [uploading, setUploading] = useState<string | null>(null);
+  const importRef = React.useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const fetchUsers = async () => {
+    try { const r = await api.get('/api/admin/users'); setUsers(r.data.users); setTotal(r.data.total); }
+    catch { alert('Impossible de charger les utilisateurs'); }
+    finally { setLoading(false); }
+  };
+
+  const openModal = (u: User) => {
+    setSel(u); setNotes(u.admin_notes || '');
+    setEditName(u.name || ''); setEditEmail(u.email || '');
+    setEditPhone(u.phone || ''); setEditAddress(u.address || '');
+    setEditMode(false); setShowModal(true);
+  };
+
+  const saveInfo = async () => {
+    if (!sel) return;
+    setSaving(true);
     try {
-      const response = await api.get('/api/admin/users');
-      setUsers(response.data.users);
-      setTotal(response.data.total);
-    } catch (error: any) {
-      console.error('Error fetching users:', error.response?.data || error.message);
-      if (Platform.OS === 'web') {
-        window.alert('Impossible de charger les utilisateurs');
+      await api.put(`/api/admin/users/${sel.id}`, { name: editName, email: editEmail, phone: editPhone, address: editAddress, admin_notes: notes });
+      setSel({ ...sel, name: editName, email: editEmail, phone: editPhone, address: editAddress, admin_notes: notes });
+      setEditMode(false); fetchUsers(); alert('Sauvegarde !');
+    } catch { alert('Erreur'); } finally { setSaving(false); }
+  };
+
+  const updateRating = async (rating: string) => {
+    if (!sel) return;
+    try { await api.put(`/api/admin/users/${sel.id}/rating?rating=${rating}`); setSel({ ...sel, client_rating: rating }); fetchUsers(); }
+    catch (e: any) { alert('Erreur: ' + (e.response?.data?.detail || 'Erreur')); }
+  };
+
+  const handlePhoto = async (type: 'profile' | 'id' | 'license') => {
+    if (!sel) return;
+    setUploading(type);
+    try {
+      const ep = type === 'profile' ? `/api/admin/users/${sel.id}/photo` : `/api/admin/users/${sel.id}/${type === 'id' ? 'id-photo' : 'license-photo'}`;
+      const photo = await uploadBase64Photo(ep, type === 'profile' ? [1, 1] : [4, 3]);
+      if (photo) {
+        const field = type === 'profile' ? 'profile_photo' : type === 'id' ? 'id_photo' : 'license_photo';
+        setSel({ ...sel, [field]: photo }); fetchUsers();
       }
-    } finally {
-      setLoading(false);
-    }
+    } catch { alert('Erreur upload'); } finally { setUploading(null); }
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchUsers();
-    setRefreshing(false);
-  };
-
-  const handleImportFile = async (e: any) => {
+  const handleImport = async (e: any) => {
     const file = e.target?.files?.[0];
     if (!file) return;
     setImporting(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const resp = await api.post('/api/admin/import-users', formData);
-      const d = resp.data;
-      let msg = d.message;
-      if (d.errors && d.errors.length > 0) {
-        msg += '\n\nErreurs:\n' + d.errors.join('\n');
-      }
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Import', msg);
-      await fetchUsers();
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Erreur lors de l\'import';
-      if (Platform.OS === 'web') window.alert(msg);
-      else Alert.alert('Erreur', msg);
-    } finally {
-      setImporting(false);
-      e.target.value = '';
-    }
-  };
-
-  const triggerImport = () => {
-    if (Platform.OS === 'web') {
-      importInputRef.current?.click();
-    } else {
-      Alert.alert('Import', 'L\'import Excel est disponible uniquement sur la version web.');
-    }
-  };
-
-  const openUserModal = (user: User) => {
-    setSelectedUser(user);
-    setAdminNotes(user.admin_notes || '');
-    setEditName(user.name || '');
-    setEditEmail(user.email || '');
-    setEditPhone(user.phone || '');
-    setEditAddress(user.address || '');
-    setEditMode(false);
-    setShowUserModal(true);
-  };
-
-  const saveUserInfo = async () => {
-    if (!selectedUser) return;
-    
-    setSaving(true);
-    try {
-      await api.put(`/api/admin/users/${selectedUser.id}`, {
-        name: editName,
-        email: editEmail,
-        phone: editPhone,
-        address: editAddress,
-        admin_notes: adminNotes,
-      });
-      setSelectedUser({ 
-        ...selectedUser, 
-        name: editName,
-        email: editEmail,
-        phone: editPhone,
-        address: editAddress,
-        admin_notes: adminNotes 
-      });
-      setEditMode(false);
-      fetchUsers();
-      if (Platform.OS === 'web') {
-        window.alert('Informations sauvegardées');
-      }
-    } catch (error: any) {
-      console.error('Error saving user info:', error);
-      if (Platform.OS === 'web') {
-        window.alert('Erreur lors de la sauvegarde');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const updateRating = async (rating: string) => {
-    if (!selectedUser) return;
-    
-    try {
-      await api.put(`/api/admin/users/${selectedUser.id}/rating?rating=${rating}`);
-      setSelectedUser({ ...selectedUser, client_rating: rating });
-      fetchUsers();
-      if (Platform.OS === 'web') {
-        window.alert(`Client marqué comme "${RATINGS.find(r => r.value === rating)?.label}"`);
-      }
-    } catch (error: any) {
-      console.error('Error updating rating:', error);
-      if (Platform.OS === 'web') {
-        window.alert('Erreur: ' + (error.response?.data?.detail || 'Impossible de mettre à jour'));
-      }
-    }
-  };
-
-  const saveNotes = async () => {
-    if (!selectedUser) return;
-    
-    setSaving(true);
-    try {
-      await api.put(`/api/admin/users/${selectedUser.id}`, { admin_notes: adminNotes });
-      setSelectedUser({ ...selectedUser, admin_notes: adminNotes });
-      fetchUsers();
-      if (Platform.OS === 'web') {
-        window.alert('Notes sauvegardées');
-      }
-    } catch (error: any) {
-      console.error('Error saving notes:', error);
-      if (Platform.OS === 'web') {
-        window.alert('Erreur lors de la sauvegarde');
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const uploadDocumentPhoto = async (type: 'id' | 'license') => {
-    if (!selectedUser) return;
-
-    const setUploading = type === 'id' ? setUploadingIdPhoto : setUploadingLicensePhoto;
-    const endpoint = type === 'id' ? 'id-photo' : 'license-photo';
-    const fieldName = type === 'id' ? 'id_photo' : 'license_photo';
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      if (Platform.OS === 'web') {
-        window.alert('Permission requise');
-      }
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-      base64: true,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setUploading(true);
-      try {
-        const asset = result.assets[0];
-        let base64Data = asset.base64;
-        let contentType = asset.mimeType || 'image/jpeg';
-
-        if (!base64Data && asset.uri && asset.uri.startsWith('data:')) {
-          const match = asset.uri.match(/^data:([^;]+);base64,(.+)$/);
-          if (match) {
-            contentType = match[1];
-            base64Data = match[2];
-          }
-        }
-
-        if (base64Data) {
-          const response = await api.post(`/api/admin/users/${selectedUser.id}/${endpoint}`, {
-            image: base64Data,
-            content_type: contentType,
-          });
-
-          setSelectedUser({ ...selectedUser, [fieldName]: response.data.photo });
-          fetchUsers();
-          if (Platform.OS === 'web') {
-            window.alert(`${type === 'id' ? 'Pièce d\'identité' : 'Permis de conduire'} mis à jour`);
-          }
-        }
-      } catch (error: any) {
-        console.error('Error uploading document:', error);
-        if (Platform.OS === 'web') {
-          window.alert('Erreur lors de l\'upload');
-        }
-      } finally {
-        setUploading(false);
-      }
-    }
-  };
-
-  const handleUploadPhoto = async () => {
-    if (!selectedUser) return;
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      if (Platform.OS === 'web') {
-        window.alert('Permission requise');
-      }
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-      base64: true,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setUploadingPhoto(true);
-      try {
-        const asset = result.assets[0];
-        let base64Data = asset.base64;
-        let contentType = asset.mimeType || 'image/jpeg';
-
-        // Handle data URI
-        if (!base64Data && asset.uri && asset.uri.startsWith('data:')) {
-          const match = asset.uri.match(/^data:([^;]+);base64,(.+)$/);
-          if (match) {
-            contentType = match[1];
-            base64Data = match[2];
-          }
-        }
-
-        if (base64Data) {
-          const response = await api.post(`/api/admin/users/${selectedUser.id}/photo`, {
-            image: base64Data,
-            content_type: contentType,
-          });
-
-          setSelectedUser({ ...selectedUser, profile_photo: response.data.photo });
-          fetchUsers();
-          if (Platform.OS === 'web') {
-            window.alert('Photo mise à jour');
-          }
-        }
-      } catch (error: any) {
-        console.error('Error uploading photo:', error);
-        if (Platform.OS === 'web') {
-          window.alert('Erreur lors de l\'upload');
-        }
-      } finally {
-        setUploadingPhoto(false);
-      }
-    }
-  };
-
-  const getRatingInfo = (rating?: string) => {
-    return RATINGS.find(r => r.value === rating) || RATINGS.find(r => r.value === 'neutral')!;
+      const fd = new FormData(); fd.append('file', file);
+      const r = await api.post('/api/admin/import-users', fd);
+      let msg = r.data.message;
+      if (r.data.errors?.length) msg += '\n\nErreurs:\n' + r.data.errors.join('\n');
+      alert(msg); fetchUsers();
+    } catch (e: any) { alert(e.response?.data?.detail || 'Erreur import'); }
+    finally { setImporting(false); e.target.value = ''; }
   };
 
   const renderItem = ({ item }: { item: User }) => {
-    const ratingInfo = getRatingInfo(item.client_rating);
-    
+    const ri = getRating(item.client_rating);
     return (
-      <TouchableOpacity style={styles.card} onPress={() => openUserModal(item)}>
-        <View style={styles.cardHeader}>
-          {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            {item.profile_photo ? (
-              <Image source={{ uri: item.profile_photo }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Text style={styles.avatarText}>{item.name.charAt(0).toUpperCase()}</Text>
-              </View>
-            )}
-            {/* Rating Badge */}
-            <View style={[styles.ratingBadge, { backgroundColor: ratingInfo.color }]}>
-              <Ionicons name={ratingInfo.icon as any} size={10} color="#fff" />
-            </View>
+      <TouchableOpacity style={[st.card, { backgroundColor: C.card }]} onPress={() => openModal(item)} data-testid={`user-card-${item.id}`}>
+        <View style={st.cardRow}>
+          <View style={st.avatarWrap}>
+            {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={st.avatar} /> :
+              <View style={[st.avatar, { backgroundColor: C.bg }]}><Text style={{ fontSize: 18, fontWeight: '700', color: C.accent }}>{item.name.charAt(0).toUpperCase()}</Text></View>}
+            <View style={[st.ratingDot, { backgroundColor: ri.color }]}><Ionicons name={ri.icon as any} size={10} color="#fff" /></View>
           </View>
-
-          <View style={styles.userInfo}>
-            <View style={styles.nameRow}>
-              <Text style={styles.userName}>{item.name}</Text>
-              {item.blocked && (
-                <View style={styles.blockedBadge}>
-                  <Text style={styles.blockedText}>Bloqué</Text>
-                </View>
-              )}
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Text style={{ fontSize: 15, fontWeight: '600', color: C.text }}>{item.name}</Text>
+              {item.blocked && <View style={[st.blockedBadge, { backgroundColor: C.error + '20' }]}><Text style={{ color: C.error, fontSize: 10, fontWeight: '700' }}>Bloque</Text></View>}
             </View>
-            <Text style={styles.userEmail}>{item.email}</Text>
-            {item.phone && <Text style={styles.userPhone}>{item.phone}</Text>}
+            <Text style={{ fontSize: 13, color: C.textLight }}>{item.email}</Text>
+            {item.phone && <Text style={{ fontSize: 12, color: C.textLight }}>{item.phone}</Text>}
           </View>
-          
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textLight} />
+          <Ionicons name="chevron-forward" size={20} color={C.textLight} />
         </View>
-
-        <View style={styles.statsRow}>
-          <View style={styles.statItem}>
-            <Ionicons name="calendar" size={14} color={COLORS.textLight} />
-            <Text style={styles.statText}>{item.reservation_count} locations</Text>
+        <View style={st.statsRow}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Ionicons name="calendar" size={14} color={C.textLight} />
+            <Text style={{ fontSize: 12, color: C.textLight }}>{item.reservation_count} locations</Text>
           </View>
-          <View style={[styles.ratingTag, { backgroundColor: ratingInfo.color + '20' }]}>
-            <Ionicons name={ratingInfo.icon as any} size={12} color={ratingInfo.color} />
-            <Text style={[styles.ratingTagText, { color: ratingInfo.color }]}>{ratingInfo.label}</Text>
+          <View style={[st.ratingTag, { backgroundColor: ri.color + '20' }]}>
+            <Ionicons name={ri.icon as any} size={12} color={ri.color} />
+            <Text style={{ fontSize: 12, fontWeight: '600', color: ri.color }}>{ri.label}</Text>
           </View>
         </View>
-
         {item.admin_notes && (
-          <View style={styles.notesPreview}>
-            <Ionicons name="document-text" size={14} color={COLORS.textLight} />
-            <Text style={styles.notesPreviewText} numberOfLines={1}>{item.admin_notes}</Text>
+          <View style={[st.notesRow, { borderTopColor: C.border }]}>
+            <Ionicons name="document-text" size={14} color={C.textLight} />
+            <Text style={{ fontSize: 12, color: C.textLight, flex: 1 }} numberOfLines={1}>{item.admin_notes}</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -395,661 +151,141 @@ export default function AdminUsers() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>{total} utilisateurs au total</Text>
-        <TouchableOpacity
-          style={[styles.importBtn, importing && { opacity: 0.6 }]}
-          onPress={triggerImport}
-          disabled={importing}
-          data-testid="import-excel-btn"
-        >
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+      <View style={[st.header, { backgroundColor: C.card, borderBottomColor: C.border }]}>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: C.text }}>{total} utilisateurs</Text>
+        <TouchableOpacity style={[st.importBtn, { backgroundColor: C.accent }]} onPress={() => Platform.OS === 'web' ? importRef.current?.click() : alert('Import Excel disponible sur web')} disabled={importing} data-testid="import-excel-btn">
           <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
-          <Text style={styles.importBtnText}>{importing ? 'Import...' : 'Importer Excel'}</Text>
+          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{importing ? 'Import...' : 'Importer Excel'}</Text>
         </TouchableOpacity>
-        {Platform.OS === 'web' && (
-          <input
-            ref={(el: any) => { importInputRef.current = el; }}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            style={{ display: 'none' } as any}
-            onChange={(e: any) => handleImportFile(e)}
-          />
-        )}
+        {Platform.OS === 'web' && <input ref={(el: any) => { importRef.current = el; }} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' } as any} onChange={handleImport} />}
       </View>
-
-      <FlatList
-        data={users}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>Aucun utilisateur</Text>
-          </View>
-        }
+      <FlatList data={users} renderItem={renderItem} keyExtractor={i => i.id} contentContainerStyle={{ padding: 16 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchUsers(); setRefreshing(false); }} />}
+        ListEmptyComponent={!loading ? <View style={{ alignItems: 'center', paddingTop: 60 }}><Ionicons name="people-outline" size={48} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 12 }}>Aucun utilisateur</Text></View> : null}
       />
 
       {/* User Detail Modal */}
-      <Modal
-        visible={showUserModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowUserModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Détails du client</Text>
-            <TouchableOpacity onPress={() => setShowUserModal(false)}>
-              <Ionicons name="close" size={24} color={COLORS.text} />
-            </TouchableOpacity>
+      <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
+        <View style={{ flex: 1, backgroundColor: C.bg }}>
+          <View style={[st.modalHeader, { backgroundColor: C.card, borderBottomColor: C.border }]}>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: C.text }}>Details du client</Text>
+            <TouchableOpacity onPress={() => setShowModal(false)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
           </View>
+          {sel && (
+            <ScrollView style={{ flex: 1, padding: 20 }}>
+              {/* Profile Photo */}
+              <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                <TouchableOpacity onPress={() => handlePhoto('profile')} disabled={uploading === 'profile'}>
+                  {uploading === 'profile' ? <View style={[st.bigAvatar, { backgroundColor: C.bg }]}><ActivityIndicator color={C.accent} /></View>
+                    : sel.profile_photo ? <Image source={{ uri: sel.profile_photo }} style={st.bigAvatar} />
+                    : <View style={[st.bigAvatar, { backgroundColor: C.bg }]}><Text style={{ fontSize: 28, fontWeight: '700', color: C.accent }}>{sel.name.charAt(0).toUpperCase()}</Text></View>}
+                  <View style={[st.camBtn, { backgroundColor: C.accent }]}><Ionicons name="camera" size={14} color="#fff" /></View>
+                </TouchableOpacity>
+                <Text style={{ fontSize: 18, fontWeight: '700', color: C.text, marginTop: 12 }}>{sel.name}</Text>
+                <Text style={{ fontSize: 14, color: C.textLight }}>{sel.email}</Text>
+              </View>
 
-          <ScrollView style={styles.modalContent}>
-            {selectedUser && (
-              <>
-                {/* Profile Photo Section */}
-                <View style={styles.photoSection}>
-                  <TouchableOpacity onPress={handleUploadPhoto} disabled={uploadingPhoto}>
-                    {uploadingPhoto ? (
-                      <View style={[styles.modalAvatar, styles.avatarPlaceholder]}>
-                        <ActivityIndicator color={COLORS.primary} />
-                      </View>
-                    ) : selectedUser.profile_photo ? (
-                      <Image source={{ uri: selectedUser.profile_photo }} style={styles.modalAvatar} />
-                    ) : (
-                      <View style={[styles.modalAvatar, styles.avatarPlaceholder]}>
-                        <Text style={styles.modalAvatarText}>{selectedUser.name.charAt(0).toUpperCase()}</Text>
-                      </View>
-                    )}
-                    <View style={styles.editPhotoBtn}>
-                      <Ionicons name="camera" size={16} color="#fff" />
-                    </View>
-                  </TouchableOpacity>
-                  <Text style={styles.modalUserName}>{selectedUser.name}</Text>
-                  <Text style={styles.modalUserEmail}>{selectedUser.email}</Text>
+              {/* Rating */}
+              <View style={[st.section, { backgroundColor: C.card }]}>
+                <Text style={[st.sectionTitle, { color: C.text }]}>Evaluation</Text>
+                <View style={st.ratingsWrap}>
+                  {USER_RATINGS.map(r => (
+                    <TouchableOpacity key={r.value}
+                      style={[st.ratingOpt, { borderColor: r.color, backgroundColor: sel.client_rating === r.value ? r.color : 'transparent' }]}
+                      onPress={() => updateRating(r.value)} data-testid={`rating-${r.value}`}>
+                      <Ionicons name={r.icon as any} size={18} color={sel.client_rating === r.value ? '#fff' : r.color} />
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: sel.client_rating === r.value ? '#fff' : r.color }}>{r.label}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
+              </View>
 
-                {/* Client Rating */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Évaluation du client</Text>
-                  <View style={styles.ratingsContainer}>
-                    {RATINGS.map((rating) => (
-                      <TouchableOpacity
-                        key={rating.value}
-                        style={[
-                          styles.ratingOption,
-                          selectedUser.client_rating === rating.value && styles.ratingOptionActive,
-                          { borderColor: rating.color }
-                        ]}
-                        onPress={() => updateRating(rating.value)}
-                      >
-                        <Ionicons 
-                          name={rating.icon as any} 
-                          size={20} 
-                          color={selectedUser.client_rating === rating.value ? '#fff' : rating.color} 
-                        />
-                        <Text style={[
-                          styles.ratingOptionText,
-                          { color: selectedUser.client_rating === rating.value ? '#fff' : rating.color }
-                        ]}>
-                          {rating.label}
-                        </Text>
-                        {selectedUser.client_rating === rating.value && (
-                          <View style={[styles.ratingOptionBg, { backgroundColor: rating.color }]} />
-                        )}
+              {/* Notes */}
+              <View style={[st.section, { backgroundColor: C.card }]}>
+                <Text style={[st.sectionTitle, { color: C.text }]}>Notes</Text>
+                <TextInput style={[st.notesInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={notes} onChangeText={setNotes}
+                  placeholder="Notes sur ce client..." placeholderTextColor={C.textLight} multiline numberOfLines={4} />
+                <Button title="Sauvegarder" onPress={saveInfo} loading={saving} variant="outline" style={{ marginTop: 12 }} />
+              </View>
+
+              {/* Documents */}
+              <View style={[st.section, { backgroundColor: C.card }]}>
+                <Text style={[st.sectionTitle, { color: C.text }]}>Documents</Text>
+                <View style={st.docsGrid}>
+                  {[{ type: 'id' as const, label: "Piece d'identite", photo: sel.id_photo }, { type: 'license' as const, label: 'Permis de conduire', photo: sel.license_photo }].map(doc => (
+                    <View key={doc.type} style={{ width: '48%' }}>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: C.textLight, marginBottom: 8 }}>{doc.label}</Text>
+                      <TouchableOpacity onPress={() => handlePhoto(doc.type)} disabled={uploading === doc.type}>
+                        {uploading === doc.type ? <View style={[st.docPlaceholder, { borderColor: C.border }]}><ActivityIndicator color={C.accent} /></View>
+                          : doc.photo ? <View><Image source={{ uri: doc.photo }} style={st.docImg} /><View style={st.docOverlay}><Ionicons name="camera" size={20} color="#fff" /></View></View>
+                          : <View style={[st.docPlaceholder, { borderColor: C.border }]}><Ionicons name="add-circle" size={28} color={C.accent} /><Text style={{ color: C.accent, fontSize: 11, marginTop: 4 }}>Ajouter</Text></View>}
                       </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* User Info */}
+              <View style={[st.section, { backgroundColor: C.card }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={[st.sectionTitle, { color: C.text, marginBottom: 0 }]}>Informations</Text>
+                  <TouchableOpacity onPress={() => editMode ? saveInfo() : setEditMode(true)}>
+                    <Text style={{ color: C.accent, fontWeight: '600' }}>{editMode ? 'Sauvegarder' : 'Modifier'}</Text>
+                  </TouchableOpacity>
+                </View>
+                {editMode ? (
+                  <View style={{ gap: 12 }}>
+                    {[{ label: 'Nom', val: editName, set: setEditName }, { label: 'Email', val: editEmail, set: setEditEmail },
+                      { label: 'Telephone', val: editPhone, set: setEditPhone }, { label: 'Adresse', val: editAddress, set: setEditAddress }].map((f, i) => (
+                      <View key={i}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: C.textLight, marginBottom: 4 }}>{f.label}</Text>
+                        <TextInput style={[st.editInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={f.val} onChangeText={f.set} />
+                      </View>
                     ))}
                   </View>
-                </View>
-
-                {/* Admin Notes */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Notes administratives</Text>
-                  <TextInput
-                    style={styles.notesInput}
-                    value={adminNotes}
-                    onChangeText={setAdminNotes}
-                    placeholder="Ajouter des notes sur ce client..."
-                    placeholderTextColor={COLORS.textLight}
-                    multiline
-                    numberOfLines={4}
-                  />
-                  <Button
-                    title="Sauvegarder les notes"
-                    onPress={saveNotes}
-                    loading={saving}
-                    variant="outline"
-                    style={{ marginTop: 12 }}
-                  />
-                </View>
-
-                {/* Documents */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Documents</Text>
-                  <View style={styles.documentsGrid}>
-                    <View style={styles.documentItem}>
-                      <Text style={styles.documentLabel}>Pièce d'identité</Text>
-                      <TouchableOpacity onPress={() => uploadDocumentPhoto('id')} disabled={uploadingIdPhoto}>
-                        {uploadingIdPhoto ? (
-                          <View style={styles.noDocument}>
-                            <ActivityIndicator color={COLORS.primary} />
-                          </View>
-                        ) : selectedUser.id_photo ? (
-                          <View>
-                            <Image source={{ uri: selectedUser.id_photo }} style={styles.documentImage} />
-                            <View style={styles.documentOverlay}>
-                              <Ionicons name="camera" size={20} color="#fff" />
-                            </View>
-                          </View>
-                        ) : (
-                          <View style={styles.noDocument}>
-                            <Ionicons name="add-circle" size={32} color={COLORS.primary} />
-                            <Text style={styles.addDocumentText}>Ajouter</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.documentItem}>
-                      <Text style={styles.documentLabel}>Permis de conduire</Text>
-                      <TouchableOpacity onPress={() => uploadDocumentPhoto('license')} disabled={uploadingLicensePhoto}>
-                        {uploadingLicensePhoto ? (
-                          <View style={styles.noDocument}>
-                            <ActivityIndicator color={COLORS.primary} />
-                          </View>
-                        ) : selectedUser.license_photo ? (
-                          <View>
-                            <Image source={{ uri: selectedUser.license_photo }} style={styles.documentImage} />
-                            <View style={styles.documentOverlay}>
-                              <Ionicons name="camera" size={20} color="#fff" />
-                            </View>
-                          </View>
-                        ) : (
-                          <View style={styles.noDocument}>
-                            <Ionicons name="add-circle" size={32} color={COLORS.primary} />
-                            <Text style={styles.addDocumentText}>Ajouter</Text>
-                          </View>
-                        )}
-                      </TouchableOpacity>
-                    </View>
+                ) : (
+                  <View style={{ gap: 10 }}>
+                    {[{ icon: 'person', val: sel.name }, { icon: 'mail', val: sel.email }, { icon: 'call', val: sel.phone }, { icon: 'location', val: sel.address }].map((f, i) => (
+                      <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Ionicons name={f.icon as any} size={18} color={C.textLight} />
+                        <Text style={{ fontSize: 14, color: C.text }}>{f.val || '—'}</Text>
+                      </View>
+                    ))}
                   </View>
-                </View>
-
-                {/* User Info - Editable */}
-                <View style={styles.section}>
-                  <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Informations</Text>
-                    <TouchableOpacity onPress={() => setEditMode(!editMode)}>
-                      <Text style={styles.editLink}>{editMode ? 'Annuler' : 'Modifier'}</Text>
-                    </TouchableOpacity>
-                  </View>
-                  
-                  {editMode ? (
-                    <>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Nom</Text>
-                        <TextInput
-                          style={styles.textInput}
-                          value={editName}
-                          onChangeText={setEditName}
-                          placeholder="Nom complet"
-                        />
-                      </View>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Email</Text>
-                        <TextInput
-                          style={styles.textInput}
-                          value={editEmail}
-                          onChangeText={setEditEmail}
-                          placeholder="Email"
-                          keyboardType="email-address"
-                          autoCapitalize="none"
-                        />
-                      </View>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Téléphone</Text>
-                        <TextInput
-                          style={styles.textInput}
-                          value={editPhone}
-                          onChangeText={setEditPhone}
-                          placeholder="Numéro de téléphone"
-                          keyboardType="phone-pad"
-                        />
-                      </View>
-                      <View style={styles.inputGroup}>
-                        <Text style={styles.inputLabel}>Adresse</Text>
-                        <TextInput
-                          style={styles.textInput}
-                          value={editAddress}
-                          onChangeText={setEditAddress}
-                          placeholder="Adresse complète"
-                        />
-                      </View>
-                      <Button
-                        title="Sauvegarder les modifications"
-                        onPress={saveUserInfo}
-                        loading={saving}
-                        style={{ marginTop: 12 }}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <View style={styles.infoRow}>
-                        <Ionicons name="person" size={18} color={COLORS.textLight} />
-                        <Text style={styles.infoText}>{selectedUser.name}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Ionicons name="mail" size={18} color={COLORS.textLight} />
-                        <Text style={styles.infoText}>{selectedUser.email}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Ionicons name="call" size={18} color={COLORS.textLight} />
-                        <Text style={styles.infoText}>{selectedUser.phone || 'Non renseigné'}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Ionicons name="location" size={18} color={COLORS.textLight} />
-                        <Text style={styles.infoText}>{selectedUser.address || 'Non renseignée'}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Ionicons name="calendar" size={18} color={COLORS.textLight} />
-                        <Text style={styles.infoText}>Inscrit le {format(new Date(selectedUser.created_at), 'dd/MM/yyyy')}</Text>
-                      </View>
-                      <View style={styles.infoRow}>
-                        <Ionicons name="car" size={18} color={COLORS.textLight} />
-                        <Text style={styles.infoText}>{selectedUser.reservation_count} locations effectuées</Text>
-                      </View>
-                    </>
-                  )}
-                </View>
-              </>
-            )}
-          </ScrollView>
-
-          <View style={styles.modalFooter}>
-            <Button
-              title="Fermer"
-              onPress={() => setShowUserModal(false)}
-              style={{ flex: 1 }}
-            />
-          </View>
+                )}
+              </View>
+            </ScrollView>
+          )}
         </View>
       </Modal>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    backgroundColor: COLORS.card,
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerText: {
-    fontSize: 14,
-    color: COLORS.textLight,
-  },
-  importBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#7c3aed',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    gap: 6,
-  },
-  importBtnText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  listContent: {
-    padding: 16,
-  },
-  card: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-  },
-  avatarPlaceholder: {
-    backgroundColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  ratingBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.card,
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  blockedBadge: {
-    backgroundColor: COLORS.error + '20',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  blockedText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: COLORS.error,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 2,
-  },
-  userPhone: {
-    fontSize: 13,
-    color: COLORS.textLight,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  statText: {
-    fontSize: 13,
-    color: COLORS.textLight,
-  },
-  ratingTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  ratingTagText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  notesPreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 10,
-    padding: 10,
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
-  },
-  notesPreviewText: {
-    flex: 1,
-    fontSize: 13,
-    color: COLORS.textLight,
-    fontStyle: 'italic',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: COLORS.textLight,
-    marginTop: 12,
-  },
-  // Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: COLORS.card,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  modalContent: {
-    flex: 1,
-    padding: 20,
-  },
-  photoSection: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalAvatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-  },
-  modalAvatarText: {
-    fontSize: 36,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  editPhotoBtn: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: COLORS.primary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: COLORS.background,
-  },
-  modalUserName: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 12,
-  },
-  modalUserEmail: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginTop: 4,
-  },
-  section: {
-    backgroundColor: COLORS.card,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 12,
-  },
-  ratingsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  ratingOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 2,
-    gap: 6,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  ratingOptionActive: {
-    backgroundColor: 'transparent',
-  },
-  ratingOptionBg: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: -1,
-  },
-  ratingOptionText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  notesInput: {
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 14,
-    color: COLORS.text,
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  documentsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  documentItem: {
-    flex: 1,
-  },
-  documentLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: COLORS.textLight,
-    marginBottom: 8,
-  },
-  documentImage: {
-    width: '100%',
-    height: 100,
-    borderRadius: 8,
-  },
-  noDocument: {
-    width: '100%',
-    height: 100,
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: COLORS.border,
-    borderStyle: 'dashed',
-  },
-  noDocumentText: {
-    fontSize: 12,
-    color: COLORS.textLight,
-    marginTop: 4,
-  },
-  addDocumentText: {
-    fontSize: 12,
-    color: COLORS.primary,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  documentOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  editLink: {
-    color: COLORS.primary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  inputGroup: {
-    marginBottom: 12,
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: COLORS.textLight,
-    marginBottom: 6,
-  },
-  textInput: {
-    backgroundColor: COLORS.background,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  infoText: {
-    fontSize: 14,
-    color: COLORS.text,
-  },
-  modalFooter: {
-    padding: 20,
-    backgroundColor: COLORS.card,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-  },
+const st = StyleSheet.create({
+  card: { borderRadius: 12, padding: 16, marginBottom: 10 },
+  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  avatarWrap: { position: 'relative' },
+  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
+  ratingDot: { position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  blockedBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  ratingTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, gap: 4 },
+  notesRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
+  importBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, gap: 6 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1 },
+  bigAvatar: { width: 80, height: 80, borderRadius: 40, justifyContent: 'center', alignItems: 'center' },
+  camBtn: { position: 'absolute', bottom: 0, right: -4, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  section: { borderRadius: 12, padding: 16, marginBottom: 16 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', marginBottom: 12 },
+  ratingsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  ratingOpt: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 20, borderWidth: 1, gap: 6 },
+  notesInput: { borderWidth: 1, borderRadius: 10, padding: 14, fontSize: 14, minHeight: 80, textAlignVertical: 'top' },
+  docsGrid: { flexDirection: 'row', gap: 12 },
+  docImg: { width: '100%', height: 100, borderRadius: 10 },
+  docPlaceholder: { width: '100%', height: 100, borderRadius: 10, borderWidth: 2, borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+  docOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.3)', alignItems: 'center', justifyContent: 'center' },
+  editInput: { borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 14 },
 });
