@@ -258,25 +258,29 @@ export default function AgencyReservations() {
                 </View>
               </ScrollView>
 
-              {/* Reservation details below the chart - compact */}
+              {/* Reservation details below the chart - compact grid */}
               <View style={{ padding: 16, paddingTop: 12 }}>
-                <Text style={{ color: C.text, fontSize: 14, fontWeight: '800', marginBottom: 8 }}>
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: '800', marginBottom: 10 }}>
                   Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0)})
                 </Text>
-                {schedule.map(v => v.reservations.map(r => {
-                  const color = RES_COLORS[r.status] || C.textLight;
-                  return (
-                    <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: C.border, gap: 8 }}>
-                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
-                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '700', width: 110 }} numberOfLines={1}>{v.brand} {v.model}</Text>
-                      <Text style={{ color: C.textLight, fontSize: 11, flex: 1 }}>{r.start?.slice(5, 10)} → {r.end?.slice(5, 10)}</Text>
-                      {r.user_name ? <Text style={{ color: C.textLight, fontSize: 11, flex: 1 }} numberOfLines={1}>{r.user_name}</Text> : null}
-                      <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: color + '20' }}>
-                        <Text style={{ color, fontSize: 9, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {schedule.map(v => v.reservations.map(r => {
+                    const color = RES_COLORS[r.status] || C.textLight;
+                    return (
+                      <View key={r.id} style={{ width: '31%', minWidth: 150, backgroundColor: C.card, borderRadius: 10, borderWidth: 1, borderColor: C.border, borderLeftWidth: 4, borderLeftColor: color, padding: 10 }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                          <Text style={{ color: C.text, fontSize: 12, fontWeight: '800' }} numberOfLines={1}>{v.brand} {v.model}</Text>
+                          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+                        </View>
+                        <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>{r.start?.slice(5, 10)} → {r.end?.slice(5, 10)}</Text>
+                        {r.user_name ? <Text style={{ color: C.textLight, fontSize: 10 }} numberOfLines={1}>{r.user_name}</Text> : null}
+                        <View style={{ alignSelf: 'flex-start', marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: color + '18' }}>
+                          <Text style={{ color, fontSize: 9, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
+                        </View>
                       </View>
-                    </View>
-                  );
-                })).flat()}
+                    );
+                  })).flat()}
+                </View>
               </View>
             </ScrollView>
           )}
