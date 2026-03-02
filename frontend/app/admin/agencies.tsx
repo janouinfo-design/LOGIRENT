@@ -66,12 +66,8 @@ export default function AgenciesPage() {
         headers: { Authorization: `Bearer ${storeToken}` }
       });
       const { access_token } = res.data;
-      if (typeof window !== 'undefined') {
-        // Store imp token in a separate key (doesn't interfere with super admin session)
-        localStorage.setItem('imp_token', access_token);
-      }
       if (newWindow) {
-        newWindow.location.href = `${API_URL}/agency-app`;
+        newWindow.location.href = `${API_URL}/agency-app?imp_token=${access_token}`;
       }
     } catch (e: any) {
       if (newWindow) newWindow.close();
