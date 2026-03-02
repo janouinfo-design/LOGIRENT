@@ -128,15 +128,15 @@ export default function AgencyReservations() {
               paddingVertical: 10,
               borderRadius: 20,
               borderWidth: 2,
-              borderColor: filter === f.value ? '#6C2BD9' : '#CBD5E1',
-              backgroundColor: filter === f.value ? '#6C2BD9' : '#F1F5F9',
+              borderColor: filter === f.value ? C.accent : C.border,
+              backgroundColor: filter === f.value ? C.accent : C.card,
             }}
             data-testid={`filter-${f.value || 'all'}`}
           >
             <Text style={{
               fontSize: 13,
               fontWeight: '700',
-              color: filter === f.value ? '#FFFFFF' : '#1E293B',
+              color: filter === f.value ? '#FFFFFF' : C.text,
             }}>{f.label}</Text>
           </TouchableOpacity>
         ))}
