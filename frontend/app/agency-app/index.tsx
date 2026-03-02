@@ -66,32 +66,37 @@ export default function AgencyAppHome() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <TouchableOpacity style={[s.bookBtn, { backgroundColor: C.primary }]} onPress={() => router.push('/agency-app/book')} data-testid="quick-book-btn">
-        <Ionicons name="add-circle" size={24} color="#fff" />
-        <Text style={s.bookBtnText}>Nouvelle réservation</Text>
-        <Text style={s.bookBtnSub}>Réserver pour un client par téléphone</Text>
+      <TouchableOpacity style={[s.bookBtn, { backgroundColor: C.card, borderColor: C.accent }]} onPress={() => router.push('/agency-app/book')} data-testid="quick-book-btn">
+        <View style={[s.bookIconWrap, { backgroundColor: C.accent }]}>
+          <Ionicons name="add" size={28} color="#fff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[s.bookBtnText, { color: C.text }]}>Nouvelle réservation</Text>
+          <Text style={[s.bookBtnSub, { color: C.textLight }]}>Réserver pour un client par téléphone</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={22} color={C.accent} />
       </TouchableOpacity>
 
       <View style={s.statsRow}>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/vehicles')} testID="stat-vehicles">
-          <Ionicons name="car" size={22} color={C.info} />
+          <Ionicons name="car" size={32} color={C.info} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_vehicles || 0}</Text>
-          <Text style={{ color: C.textLight, fontSize: 11 }}>Véhicules</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Véhicules</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/reservations')} testID="stat-reservations">
-          <Ionicons name="calendar" size={22} color={C.warning} />
+          <Ionicons name="calendar" size={32} color={C.warning} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_reservations || 0}</Text>
-          <Text style={{ color: C.textLight, fontSize: 11 }}>Réservations</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Réservations</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/clients')} testID="stat-clients">
-          <Ionicons name="people" size={22} color={C.success} />
+          <Ionicons name="people" size={32} color={C.success} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_users || 0}</Text>
-          <Text style={{ color: C.textLight, fontSize: 11 }}>Clients</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>Clients</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/statistics')} testID="stat-revenue">
-          <Ionicons name="cash" size={22} color={C.accent} />
+          <Ionicons name="cash" size={32} color={C.accent} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_revenue ? `${stats.total_revenue.toFixed(0)}` : '0'}</Text>
-          <Text style={{ color: C.textLight, fontSize: 11 }}>CHF Rev.</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>CHF Rev.</Text>
         </TouchableOpacity>
       </View>
 
@@ -124,12 +129,14 @@ export default function AgencyAppHome() {
 const s = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 32 },
-  bookBtn: { borderRadius: 14, padding: 20, marginBottom: 20, alignItems: 'center', gap: 6 },
-  bookBtnText: { color: '#fff', fontSize: 18, fontWeight: '800' },
-  bookBtnSub: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
+  bookBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 16, marginBottom: 20, gap: 14, borderWidth: 1.5 },
+  bookIconWrap: { width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  bookBtnText: { fontSize: 16, fontWeight: '800' },
+  bookBtnSub: { fontSize: 12, marginTop: 2 },
   statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 },
-  statCard: { flex: 1, minWidth: '45%', borderRadius: 12, padding: 14, alignItems: 'center', gap: 4, borderWidth: 1 },
-  statNum: { fontSize: 22, fontWeight: '800' },
+  statCard: { flex: 1, minWidth: '45%', borderRadius: 12, padding: 18, alignItems: 'center', gap: 6, borderWidth: 1 },
+  statNum: { fontSize: 28, fontWeight: '800' },
+  statLabel: { fontSize: 13, fontWeight: '500' },
   sectionTitle: { fontSize: 17, fontWeight: '700', marginBottom: 12 },
   emptyCard: { borderRadius: 12, padding: 24, alignItems: 'center', borderWidth: 1 },
   resCard: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1 },
