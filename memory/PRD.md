@@ -15,34 +15,31 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### GPS Tracking - Fixed Map Layout (Mar 2, 2026) - NEW
-- Map is now always visible and fixed at top of the page (agency-app + admin tracking)
-- Clicking a vehicle in the list centers the map on its position with a marker
+### Edit Client Profiles from Agency Admin (Mar 2, 2026) - NEW
+- Click on any client card to open edit modal
+- Editable fields: Name, Email, Phone, Address, Rating (VIP/Bon/Neutre/Mauvais/Bloqué), Admin Notes
+- Uses existing PUT /api/admin/users/{user_id} endpoint
+- Edit icon (pencil) shown on each client card
+
+### GPS Tracking - Fixed Map Layout (Mar 2, 2026)
+- Map always visible and fixed at top (agency-app + admin tracking)
+- Clicking a vehicle centers the map on its position with a marker
 - Selected vehicle shows "Affiché sur la carte" indicator
-- Default view shows Switzerland; zooms to first vehicle with position when available
 
 ### Clickable Agency App Dashboard Cards (Feb 28, 2026)
-- Four stat cards (Véhicules, Réservations, Clients, CHF Rev.) navigate to respective pages
+- Four stat cards navigate to respective pages
 
 ### Contract System with Digital Signature (Feb 28, 2026)
-- Backend: Full contract API: generate, get, list, send, sign, PDF download
-- Contract Template: Based on user's DOCX template with 7 sections
-- Bilingual: Full FR + EN support for contract content
-- Digital Signature: HTML5 canvas-based signature pad for clients (web)
-- PDF Generation: Uses reportlab to generate professional multi-page PDF
-- Workflow: Admin generates contract -> Sends to client -> Client signs -> PDF available
+- Full contract API, bilingual, digital signature, PDF generation
 
 ### Dark/Light Mode Toggle Everywhere (Feb 28, 2026)
-- Theme toggle (moon/sun icon) in Admin and Super Admin headers
-- All admin/super-admin pages use `useThemeStore()` for dynamic theming
+- Theme toggle in Admin and Super Admin headers
 
-### Email Notifications on Reservation Status Change (Feb 28, 2026)
-- Branded HTML email via Resend when status changes
-- In-app + email notifications triggered simultaneously
+### Email Notifications (Feb 28, 2026)
+- Branded HTML email via Resend on reservation status change
 
 ### Advanced Statistics Dashboards (Feb 28, 2026)
-- `/api/admin/stats/advanced` endpoint with comprehensive metrics
-- 3 Statistics pages: Admin, Agency App, Super Admin with SVG charts
+- 3 Statistics pages with SVG charts
 
 ### Previously Completed
 - Super Admin Agencies, GPS Tab, Password Display
@@ -54,12 +51,11 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## Key Files
 - Backend: `/app/backend/server.py`
+- Agency Clients: `/app/frontend/app/agency-app/clients.tsx`
 - Agency Tracking: `/app/frontend/app/agency-app/tracking.tsx`
 - Admin Tracking: `/app/frontend/app/admin/tracking.tsx`
-- Super Admin Tracking: `/app/frontend/app/super-admin/tracking.tsx` (re-exports admin)
 - Agency App Home: `/app/frontend/app/agency-app/index.tsx`
 - Contract View: `/app/frontend/app/contract/[id].tsx`
-- Signature Canvas: `/app/frontend/src/components/SignatureCanvas.tsx`
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase) for mobile apps
