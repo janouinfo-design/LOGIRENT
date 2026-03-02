@@ -270,23 +270,37 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     story.append(Spacer(1, 4 * mm))
 
     # ======================== LEGAL CONDITIONS ========================
+    agency_website = d.get("agency_website", "www.abicar.ch")
+    deductible = d.get('deductible', '1000')
     if is_fr:
         legal_text = (
-            "Le/la soussigne(e) s'engage a respecter les conditions generales figurant sur le site "
-            f"de {agency_name}. Il/elle s'engage a conduire prudemment et a respecter les regles "
-            "du code de la route. Le loueur couvre le vehicule par une assurance Casco Collisions. "
-            f"La franchise est de <b>CHF {d.get('deductible', '1000')}.-</b> par sinistre. "
-            "Tout dommage non couvert par l'assurance sera a la charge du locataire. "
-            "Le present document vaut reconnaissance de dette au sens de l'art. 82 LP pour tous montants dus."
+            f"Le/la soussign\u00e9(e) d\u00e9clare avoir pris connaissance et accepter sans r\u00e9serve les conditions "
+            f"g\u00e9n\u00e9rales disponibles sur le site <b>{agency_website}</b>, lesquelles font partie "
+            f"int\u00e9grante du pr\u00e9sent contrat, conform\u00e9ment au Code des obligations (CO), "
+            "notamment aux art. 1 ss CO (formation du contrat)."
+            "<br/><br/>"
+            "Les dommages relevant de la garantie Casco collision sont couverts par l'assurance du loueur, "
+            f"sous r\u00e9serve d'une franchise contractuelle de <b>CHF {deductible}.\u2013</b> par sinistre, "
+            "laquelle demeure int\u00e9gralement \u00e0 la charge du locataire responsable, "
+            "conform\u00e9ment au principe de responsabilit\u00e9 contractuelle (art. 97 CO)."
+            "<br/><br/>"
+            "Le pr\u00e9sent document vaut reconnaissance de dette au sens de l'art. 82 CO et peut "
+            "\u00eatre produit \u00e0 titre de titre de mainlev\u00e9e provisoire conform\u00e9ment \u00e0 l'art. 82 "
+            "de la Loi f\u00e9d\u00e9rale sur la poursuite pour dettes et la faillite (LP)."
         )
     else:
         legal_text = (
-            "The undersigned agrees to respect the general conditions on the website "
-            f"of {agency_name}. He/she commits to drive carefully and respect traffic laws. "
-            "The lessor covers the vehicle with Collision insurance. "
-            f"The deductible is <b>CHF {d.get('deductible', '1000')}.-</b> per claim. "
-            "Any damage not covered by insurance will be borne by the tenant. "
-            "This document constitutes an acknowledgment of debt per art. 82 LP for all amounts due."
+            f"The undersigned declares having read and accepted without reservation the general conditions "
+            f"available on the website <b>{agency_website}</b>, which form an integral part of this contract, "
+            "in accordance with the Swiss Code of Obligations (CO), in particular art. 1 ff. CO (contract formation)."
+            "<br/><br/>"
+            "Damages covered under the Collision insurance are insured by the lessor, subject to a contractual "
+            f"deductible of <b>CHF {deductible}.\u2013</b> per claim, which remains entirely the responsibility "
+            "of the liable tenant, in accordance with the principle of contractual liability (art. 97 CO)."
+            "<br/><br/>"
+            "This document constitutes an acknowledgment of debt within the meaning of art. 82 CO and may be "
+            "used as a provisional enforcement title in accordance with art. 82 of the Federal Act on Debt "
+            "Enforcement and Bankruptcy (LP)."
         )
     story.append(Paragraph(legal_text, styles['Body']))
     story.append(Spacer(1, 3 * mm))
