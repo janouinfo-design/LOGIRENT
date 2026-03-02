@@ -13,7 +13,7 @@ import zipfile
 import csv
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-manager-366.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-staging-2.preview.emergentagent.com')
 BASE_URL = BASE_URL.rstrip('/')
 
 # Test credentials from review_request
