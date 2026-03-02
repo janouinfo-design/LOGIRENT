@@ -9,17 +9,41 @@ import { useThemeStore } from '../../src/store/themeStore';
 export default function AgencyAppLayout() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, loadUser } = useAuthStore();
   const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
   const { mode, colors: C, toggleTheme, loadTheme } = useThemeStore();
   const [showNotifs, setShowNotifs] = useState(false);
+  const [impLoading, setImpLoading] = useState(false);
 
   useEffect(() => { loadTheme(); }, []);
 
+  // Handle impersonation token from URL hash
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hash = window.location.hash;
+    if (hash.includes('imp_token=')) {
+      const token = hash.split('imp_token=')[1];
+      if (token) {
+        setImpLoading(true);
+        (async () => {
+          const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+          const axios = (await import('axios')).default;
+          await AsyncStorage.setItem('token', token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          // Clean hash from URL
+          window.history.replaceState(null, '', window.location.pathname);
+          await loadUser();
+          setImpLoading(false);
+        })();
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (impLoading) return;
     if (!isAuthenticated) { router.replace('/admin-login'); return; }
     if (user?.role !== 'admin') router.replace('/admin-login');
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, impLoading]);
 
   useEffect(() => {
     if (isAuthenticated) {
