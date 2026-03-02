@@ -298,6 +298,106 @@ export default function SuperAdminStatistics() {
         </View>
       )}
 
+      {/* AI Revenue Forecast */}
+      <View style={s.section} data-testid="sa-revenue-forecast">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <Ionicons name="sparkles" size={18} color={C.purple} />
+          <Text style={s.sectionTitle}>Prévisions de Revenus (IA)</Text>
+        </View>
+        <View style={[s.chartCard, { borderColor: C.purple + '40' }]}>
+          {forecastLoading ? (
+            <View style={{ alignItems: 'center', padding: 24 }}>
+              <ActivityIndicator size="small" color={C.purple} />
+              <Text style={{ color: C.textLight, fontSize: 11, marginTop: 8 }}>Analyse IA en cours...</Text>
+            </View>
+          ) : forecastData ? (
+            <>
+              {/* Combined chart: historical + forecast */}
+              {(() => {
+                const allData = [
+                  ...(forecastData.historical || []).map((h: any) => ({ ...h, type: 'historical' })),
+                  ...(forecastData.forecast || []).map((f: any) => ({ ...f, type: 'forecast' })),
+                ];
+                if (allData.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>;
+                const chartW = SCREEN_W - 80;
+                const chartH = 140;
+                const maxVal = Math.max(...allData.map(d => d.revenue), 1);
+                const barW = Math.min(40, (chartW - 60) / allData.length - 6);
+                const ml = 55;
+                return (
+                  <Svg width={chartW + ml} height={chartH + 40}>
+                    {[0, 0.5, 1].map((p, i) => (
+                      <G key={i}>
+                        <Line x1={ml} y1={chartH - p * chartH} x2={chartW + ml} y2={chartH - p * chartH} stroke={C.border} strokeWidth={0.5} />
+                        <SvgText x={ml - 4} y={chartH - p * chartH + 3} fill={C.textLight} fontSize={9} textAnchor="end">CHF {Math.round(maxVal * p).toLocaleString()}</SvgText>
+                      </G>
+                    ))}
+                    {allData.map((d: any, i: number) => {
+                      const barH = (d.revenue / maxVal) * (chartH - 8);
+                      const x = ml + 8 + i * ((chartW - 16) / allData.length);
+                      const isForecast = d.type === 'forecast';
+                      return (
+                        <G key={i}>
+                          <Rect x={x} y={chartH - barH} width={barW} height={barH} rx={3} fill={isForecast ? C.purple : C.accent} opacity={isForecast ? 0.6 : 0.85} />
+                          {isForecast && <Rect x={x} y={chartH - barH} width={barW} height={barH} rx={3} fill="none" stroke={C.purple} strokeWidth={1.5} strokeDasharray="4,2" />}
+                          <SvgText x={x + barW / 2} y={chartH + 13} fill={C.textLight} fontSize={7} textAnchor="middle">{d.month?.slice(-5)}</SvgText>
+                          <SvgText x={x + barW / 2} y={chartH + 25} fill={isForecast ? C.purple : C.textLight} fontSize={7} textAnchor="middle" fontWeight={isForecast ? 'bold' : 'normal'}>{isForecast ? 'prev.' : ''}</SvgText>
+                        </G>
+                      );
+                    })}
+                  </Svg>
+                );
+              })()}
+
+              {/* Legend */}
+              <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 12, height: 8, borderRadius: 2, backgroundColor: C.accent }} />
+                  <Text style={{ color: C.textLight, fontSize: 10 }}>Historique</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 12, height: 8, borderRadius: 2, backgroundColor: C.purple, opacity: 0.6 }} />
+                  <Text style={{ color: C.textLight, fontSize: 10 }}>Prévision IA</Text>
+                </View>
+              </View>
+
+              {/* Trend + Analysis */}
+              <View style={{ marginTop: 12, padding: 12, borderRadius: 8, backgroundColor: C.purple + '10' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                  <Ionicons name={forecastData.trend === 'up' ? 'trending-up' : forecastData.trend === 'down' ? 'trending-down' : 'remove'} size={16} color={forecastData.trend === 'up' ? C.success : forecastData.trend === 'down' ? C.error : C.gold} />
+                  <Text style={{ color: C.text, fontSize: 13, fontWeight: '700' }}>
+                    Tendance: {forecastData.trend === 'up' ? 'Hausse' : forecastData.trend === 'down' ? 'Baisse' : 'Stable'}
+                  </Text>
+                </View>
+                <Text style={{ color: C.textLight, fontSize: 11, lineHeight: 16 }}>{forecastData.analysis}</Text>
+              </View>
+
+              {/* Forecast details */}
+              {forecastData.forecast?.length > 0 && (
+                <View style={{ marginTop: 10 }}>
+                  {forecastData.forecast.map((f: any, i: number) => (
+                    <View key={i} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8, justifyContent: 'space-between' }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
+                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }}>{f.month}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Text style={{ color: C.textLight, fontSize: 10 }}>{f.bookings} rés.</Text>
+                        <Text style={{ color: C.purple, fontSize: 13, fontWeight: '800' }}>CHF {f.revenue?.toLocaleString()}</Text>
+                        {f.confidence && (
+                          <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8, backgroundColor: (f.confidence > 0.6 ? C.success : f.confidence > 0.4 ? C.gold : C.error) + '20' }}>
+                            <Text style={{ fontSize: 9, fontWeight: '700', color: f.confidence > 0.6 ? C.success : f.confidence > 0.4 ? C.gold : C.error }}>{Math.round(f.confidence * 100)}%</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          ) : (
+            <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Prévision non disponible</Text>
+          )}
+        </View>
+      </View>
+
       <View style={{ height: 40 }} />
     </ScrollView>
   );
