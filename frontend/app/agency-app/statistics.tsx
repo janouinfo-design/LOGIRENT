@@ -208,6 +208,30 @@ export default function AgencyStatistics() {
           <Text style={{ color: C.textLight, fontSize: 9, textAlign: 'center' }}>Nouveaux clients (30j)</Text>
         </View>
       </View>
+
+      {/* Top Clients */}
+      {topClients.length > 0 && (
+        <View style={{ marginTop: 16 }}>
+          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8 }}>Top Clients</Text>
+          <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            {topClients.slice(0, 5).map((c: any, i: number) => {
+              const rColors: Record<string, string> = { vip: '#8B5CF6', good: C.success, neutral: '#6B7280', bad: '#F59E0B', blocked: C.error };
+              return (
+                <View key={c.id} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
+                  <View style={{ width: 26, height: 26, borderRadius: 13, backgroundColor: (rColors[c.rating] || '#6B7280') + '25', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: rColors[c.rating] || '#6B7280' }}>{i + 1}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: C.text, fontSize: 13, fontWeight: '600' }}>{c.name}</Text>
+                    <Text style={{ color: C.textLight, fontSize: 10 }}>{c.bookings} locations</Text>
+                  </View>
+                  <Text style={{ color: '#fbbf24', fontSize: 14, fontWeight: '800' }}>CHF {c.total_spent.toFixed(0)}</Text>
+                </View>
+              );
+            })}
+          </View>
+        </View>
+      )}
     </ScrollView>
   );
 }
