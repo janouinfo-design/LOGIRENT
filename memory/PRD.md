@@ -13,8 +13,8 @@ Build a complete car rental solution named "LogiRent" with:
 /app/backend/
   server.py          # Entry point (166 lines) - app creation, CORS, routers, seed data
   database.py        # MongoDB connection and config
-  models.py          # Pydantic models (271 lines)
-  deps.py            # Dependencies, JWT auth helpers (112 lines)
+  models.py          # Pydantic models
+  deps.py            # Dependencies, JWT auth helpers
   routes/
     auth.py          # User auth: login, register, profile, forgot-password
     vehicles.py      # Vehicle CRUD, availability
@@ -24,7 +24,7 @@ Build a complete car rental solution named "LogiRent" with:
     admin.py         # Admin dashboard, stats, users, calendar, overdue
     agencies.py      # Agency CRUD, public pages, mobile app endpoints
     navixy.py        # GPS tracking integration
-    contracts.py     # ABICAR-style contract generation and PDF
+    contracts.py     # ABICAR-style contract generation, field editing, signing, PDF
   utils/
     email.py         # Email templates (Resend)
     helpers.py       # Utility functions
@@ -32,16 +32,20 @@ Build a complete car rental solution named "LogiRent" with:
   tests/
     test_backend_refactoring_regression.py
     test_abicar_contracts.py
+    test_contract_update_fields.py
 ```
 
 ### Frontend (React Native / Expo)
 ```
 /app/frontend/
   app/
-    agency-app/      # Agency admin mobile app
-    admin/           # Super admin web interface
-    (tabs)/          # Client-facing app
-    contract/[id].tsx # Contract view (ABICAR-style)
+    agency-app/
+      book.tsx                  # Booking flow - auto-generates contract after reservation
+      complete-contract.tsx     # NEW: Contract completion + client signing screen
+      reservations.tsx          # Reservation list
+    admin/                      # Super admin web interface
+    (tabs)/                     # Client-facing app
+    contract/[id].tsx           # Contract view (ABICAR-style)
 ```
 
 ## What's Been Implemented
@@ -49,30 +53,30 @@ Build a complete car rental solution named "LogiRent" with:
 - Reservation system with calendar
 - Multi-role auth (client, admin, super_admin)
 - Agency management (CRUD, public pages)
-- Contract generation with ABICAR-style PDF format
+- **ABICAR-style contract PDF**: header, vehicle, tenant, dates/km, pricing grid, legal conditions, financial, signature, footer
+- **Contract auto-generation**: after reservation creation, contract auto-generated with pre-filled data
+- **Editable contract fields**: 25 editable fields (vehicle plate/color, client nationality/license, km, pricing)
+- **On-screen signing**: client signs directly on computer/tablet screen
 - Stripe payment integration
 - GPS tracking (Navixy)
 - Email notifications (Resend)
 - Admin dashboard with stats
 - QR code scanning
 - i18n (FR/EN)
-- Agency App home screen gradient button redesign
 
 ## Completed Tasks
-- [2026-03-02] Backend refactoring: Decomposed 3704-line monolithic server.py into modular structure. 70 tests passed.
-- [2026-03-02] Agency App gradient button redesign (validated by user)
-- [2026-03-02] Contract PDF redesigned to ABICAR format: header, vehicle section, tenant info with license/nationality, dates with time/km, pricing grid, legal conditions, financial summary, signature, footer. 16 tests passed.
-- [2026-03-02] Frontend contract view updated to match new ABICAR-style data structure
+- [2026-03-02] Backend refactoring: 3704-line server.py → 17 modular files. 70 tests passed.
+- [2026-03-02] Contract PDF redesigned to ABICAR format. 16 tests passed.
+- [2026-03-02] Contract legal text updated with Swiss CO/LP references.
+- [2026-03-02] Contract completion flow: auto-generation after reservation, field editing, on-screen signing. 16 tests passed.
+- [2026-03-02] Bug fix: PDF generation crash with string numeric values.
 
 ## 3rd Party Integrations
 - Stripe (Payments)
 - Resend (Email)
 - Navixy (GPS Tracking)
 - OpenAI GPT-5.2 (via emergentintegrations)
-- Expo Barcode Scanner
-- react-qr-code
-- reportlab (PDF)
-- expo-linear-gradient
+- Expo Barcode Scanner, react-qr-code, reportlab, expo-linear-gradient
 
 ## Prioritized Backlog
 
@@ -82,7 +86,7 @@ Build a complete car rental solution named "LogiRent" with:
 
 ### P2 (Medium)
 - Driver/Agent Application: Separate mobile app for drivers
-- Refactoring of large frontend files (admin/reservations.tsx: 1211 lines, admin/vehicles.tsx: 1155 lines)
+- Refactoring of large frontend files (admin/reservations.tsx: 1211 lines)
 
 ### P3 (Low Priority)
 - App Store Deployment: Prepare and submit mobile apps
