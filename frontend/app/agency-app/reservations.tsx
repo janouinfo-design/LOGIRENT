@@ -32,7 +32,7 @@ const STATUS_FILTERS = [
 ];
 
 const RES_COLORS: Record<string, string> = {
-  confirmed: '#10B981', active: '#3B82F6', pending: '#F59E0B', pending_cash: '#F97316',
+  confirmed: '#10B981', active: '#3B82F6', pending: '#FBBF24', pending_cash: '#A855F7',
   completed: '#6B7280', cancelled: '#EF4444',
 };
 
@@ -109,6 +109,7 @@ export default function AgencyReservations() {
   const monthDays = useMemo(() => eachDayOfInterval({ start: planningMonth, end: endOfMonth(planningMonth) }), [planningMonth]);
   const CELL_W = 32;
   const LABEL_W = 120;
+  const ROW_H = 36;
   const today = new Date();
 
   if (loading) return <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
@@ -178,18 +179,17 @@ export default function AgencyReservations() {
                   {schedule.filter(v => v.reservations.length > 0 || true).map((vehicle, vi) => (
                     <View key={vehicle.id} style={{ flexDirection: 'row' }}>
                       {/* Vehicle label */}
-                      <View style={[st.labelCell, { width: LABEL_W, backgroundColor: vi % 2 === 0 ? C.card : C.bg, borderColor: C.border }]}>
+                      <View style={[st.labelCell, { width: LABEL_W, backgroundColor: vi % 2 === 0 ? C.card : C.bg, borderColor: C.border, height: ROW_H }]}>
                         <Text style={{ color: C.text, fontSize: 11, fontWeight: '700' }} numberOfLines={1}>{vehicle.brand} {vehicle.model}</Text>
                         <Text style={{ color: C.textLight, fontSize: 9 }}>CHF {vehicle.price_per_day}/j</Text>
                       </View>
 
-                      {/* Day cells */}
+                      {/* Day cells with reservation bars */}
                       {monthDays.map((day, di) => {
                         const dayTs = day.getTime();
                         const isToday = isSameDay(day, today);
                         const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
-                        // Find reservation for this day
                         let resForDay: typeof vehicle.reservations[0] | null = null;
                         let isStart = false;
                         let isEnd = false;
@@ -216,17 +216,24 @@ export default function AgencyReservations() {
                             width: CELL_W,
                             backgroundColor: isToday ? C.accent + '08' : isWeekend ? C.card + '60' : vi % 2 === 0 ? C.card + '30' : 'transparent',
                             borderColor: C.border,
+                            height: ROW_H,
                           }]}>
                             {resForDay && (
                               <View style={[st.resBar, {
                                 backgroundColor: color,
-                                borderTopLeftRadius: isStart ? 4 : 0,
-                                borderBottomLeftRadius: isStart ? 4 : 0,
-                                borderTopRightRadius: isEnd ? 4 : 0,
-                                borderBottomRightRadius: isEnd ? 4 : 0,
+                                borderTopLeftRadius: isStart ? 5 : 0,
+                                borderBottomLeftRadius: isStart ? 5 : 0,
+                                borderTopRightRadius: isEnd ? 5 : 0,
+                                borderBottomRightRadius: isEnd ? 5 : 0,
                                 marginLeft: isStart ? 2 : 0,
                                 marginRight: isEnd ? 2 : 0,
-                              }]} />
+                              }]}>
+                                {isStart && spanDays >= 2 && (
+                                  <Text style={{ color: '#fff', fontSize: 8, fontWeight: '800', paddingLeft: 3 }} numberOfLines={1}>
+                                    {statusLabel(resForDay.status).slice(0, 6)}
+                                  </Text>
+                                )}
+                              </View>
                             )}
                           </View>
                         );
@@ -411,8 +418,8 @@ const st = StyleSheet.create({
   monthNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1 },
   labelCell: { paddingHorizontal: 8, paddingVertical: 6, justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1 },
   dayHeaderCell: { alignItems: 'center', justifyContent: 'center', paddingVertical: 4, borderRightWidth: 0.5, borderBottomWidth: 1 },
-  dayCell: { justifyContent: 'center', alignItems: 'center', borderRightWidth: 0.5, borderBottomWidth: 0.5, height: 28 },
-  resBar: { position: 'absolute', top: 5, bottom: 5, left: 0, right: 0, opacity: 0.85 },
+  dayCell: { justifyContent: 'center', alignItems: 'center', borderRightWidth: 0.5, borderBottomWidth: 0.5 },
+  resBar: { position: 'absolute', top: 4, bottom: 4, left: 0, right: 0, justifyContent: 'center' },
   resItem: { flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, borderWidth: 1, marginBottom: 6, gap: 10 },
   resItemDot: { width: 8, height: 8, borderRadius: 4 },
   resItemBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
