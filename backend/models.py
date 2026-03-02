@@ -137,6 +137,10 @@ class Vehicle(BaseModel):
     options: List[VehicleOption] = []
     status: str = "available"
     location: str = "Geneva"
+    plate_number: Optional[str] = None
+    chassis_number: Optional[str] = None
+    color: Optional[str] = None
+    documents: List[dict] = []
     agency_id: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -155,6 +159,10 @@ class VehicleCreate(BaseModel):
     options: List[VehicleOption] = []
     location: str = "Geneva"
     status: Optional[str] = None
+    plate_number: Optional[str] = None
+    chassis_number: Optional[str] = None
+    color: Optional[str] = None
+    documents: Optional[List[dict]] = None
 
 
 # ==================== RESERVATION MODELS ====================

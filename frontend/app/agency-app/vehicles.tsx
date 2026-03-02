@@ -7,10 +7,23 @@ import { useThemeStore } from '../../src/store/themeStore';
 
 const SCREEN_W = Dimensions.get('window').width;
 
+interface VehicleDocument {
+  id: string;
+  original_filename: string;
+  content_type: string;
+  size: number;
+  doc_type: string;
+  doc_type_label: string;
+  uploaded_at: string;
+  is_deleted: boolean;
+}
+
 interface Vehicle {
   id: string; brand: string; model: string; year: number; price_per_day: number;
   type: string; seats: number; transmission: string; fuel_type: string; status: string;
   description?: string; location?: string; photos?: string[];
+  plate_number?: string; chassis_number?: string; color?: string;
+  documents?: VehicleDocument[];
 }
 
 const STATUS_CONFIG: Record<string, { icon: string; label: string; bg: string; text: string; border: string }> = {
@@ -18,6 +31,14 @@ const STATUS_CONFIG: Record<string, { icon: string; label: string; bg: string; t
   rented: { icon: 'car', label: 'Loue', bg: '#FBBF2420', text: '#FBBF24', border: '#FBBF2450' },
   maintenance: { icon: 'construct', label: 'Maintenance', bg: '#EF444420', text: '#EF4444', border: '#EF444450' },
 };
+
+const DOC_TYPES = [
+  { v: 'carte_grise', l: 'Carte Grise', icon: 'document-text' },
+  { v: 'assurance', l: 'Assurance', icon: 'shield-checkmark' },
+  { v: 'controle_technique', l: 'Controle Technique', icon: 'clipboard' },
+  { v: 'photo', l: 'Photo', icon: 'camera' },
+  { v: 'autre', l: 'Autre', icon: 'attach' },
+];
 
 const TYPES = ['Berline', 'SUV', 'Citadine', 'Utilitaire', 'Luxe', 'Van', 'Electrique'];
 const TRANSMISSIONS = [{ v: 'automatic', l: 'Automatique' }, { v: 'manual', l: 'Manuel' }];
@@ -35,6 +56,8 @@ export default function AgencyVehicles() {
   const [editForm, setEditForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [selectedDocType, setSelectedDocType] = useState('carte_grise');
 
   const fetchVehicles = useCallback(async () => {
     try {
@@ -54,14 +77,22 @@ export default function AgencyVehicles() {
     if (statusFilter !== 'all') list = list.filter(v => v.status === statusFilter);
     if (search) list = list.filter(v =>
       `${v.brand} ${v.model}`.toLowerCase().includes(search.toLowerCase()) ||
-      v.type?.toLowerCase().includes(search.toLowerCase())
+      v.type?.toLowerCase().includes(search.toLowerCase()) ||
+      v.plate_number?.toLowerCase().includes(search.toLowerCase())
     );
     return list;
   }, [vehicles, search, statusFilter]);
 
   const openEdit = (v: Vehicle) => {
     setEditVehicle(v);
-    setEditForm({ brand: v.brand, model: v.model, year: String(v.year), type: v.type, price_per_day: String(v.price_per_day), seats: String(v.seats), transmission: v.transmission, fuel_type: v.fuel_type, status: v.status, location: v.location || '', description: v.description || '' });
+    setEditForm({
+      brand: v.brand, model: v.model, year: String(v.year), type: v.type,
+      price_per_day: String(v.price_per_day), seats: String(v.seats),
+      transmission: v.transmission, fuel_type: v.fuel_type, status: v.status,
+      location: v.location || '', description: v.description || '',
+      plate_number: v.plate_number || '', chassis_number: v.chassis_number || '',
+      color: v.color || '',
+    });
   };
 
   const saveEdit = async () => {
@@ -74,6 +105,9 @@ export default function AgencyVehicles() {
         seats: parseInt(editForm.seats), transmission: editForm.transmission,
         fuel_type: editForm.fuel_type, status: editForm.status,
         location: editForm.location, description: editForm.description,
+        plate_number: editForm.plate_number || null,
+        chassis_number: editForm.chassis_number || null,
+        color: editForm.color || null,
       });
       setEditVehicle(null);
       await fetchVehicles();
@@ -83,6 +117,77 @@ export default function AgencyVehicles() {
     } finally { setSaving(false); }
   };
 
+  const handleDocumentUpload = async () => {
+    if (!editVehicle) return;
+    if (Platform.OS !== 'web') {
+      Alert.alert('Info', 'Upload de documents disponible uniquement sur le web');
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png,.webp,.doc,.docx';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) {
+        window.alert('Fichier trop volumineux (max 10 MB)');
+        return;
+      }
+      setUploadingDoc(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await api.post(
+          `/api/admin/vehicles/${editVehicle.id}/documents?doc_type=${selectedDocType}`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
+        );
+        // Refresh vehicle data
+        const vRes = await api.get(`/api/vehicles/${editVehicle.id}`);
+        setEditVehicle(vRes.data);
+        await fetchVehicles();
+      } catch (e: any) {
+        const msg = e.response?.data?.detail || 'Erreur lors de l\'upload';
+        window.alert(msg);
+      } finally { setUploadingDoc(false); }
+    };
+    input.click();
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!editVehicle) return;
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm('Supprimer ce document ?')
+      : await new Promise(resolve => Alert.alert('Confirmer', 'Supprimer ce document ?', [{ text: 'Non', onPress: () => resolve(false) }, { text: 'Oui', onPress: () => resolve(true) }]));
+    if (!confirmed) return;
+    try {
+      await api.delete(`/api/admin/vehicles/${editVehicle.id}/documents/${docId}`);
+      const vRes = await api.get(`/api/vehicles/${editVehicle.id}`);
+      setEditVehicle(vRes.data);
+      await fetchVehicles();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur lors de la suppression';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
+  const handleViewDocument = async (doc: VehicleDocument) => {
+    if (!editVehicle) return;
+    try {
+      const res = await api.get(
+        `/api/vehicles/${editVehicle.id}/documents/${doc.id}/download`,
+        { responseType: 'blob' }
+      );
+      const blob = new Blob([res.data], { type: doc.content_type });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur lors du telechargement';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { all: vehicles.length, available: 0, rented: 0, maintenance: 0 };
     vehicles.forEach(v => { if (counts[v.status] !== undefined) counts[v.status]++; });
@@ -90,6 +195,10 @@ export default function AgencyVehicles() {
   }, [vehicles]);
 
   const getStatus = (s: string) => STATUS_CONFIG[s] || { icon: 'help-circle', label: s, bg: '#6B728020', text: '#6B7280', border: '#6B728050' };
+  const getDocIcon = (docType: string) => DOC_TYPES.find(d => d.v === docType)?.icon || 'document';
+  const formatFileSize = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
+
+  const activeDocuments = editVehicle?.documents?.filter(d => !d.is_deleted) || [];
 
   const CARD_GAP = 10;
   const PADDING = 16;
@@ -103,7 +212,7 @@ export default function AgencyVehicles() {
       {/* Search */}
       <View style={[st.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
         <Ionicons name="search" size={18} color={C.textLight} />
-        <TextInput style={[st.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} data-testid="vehicle-search" />
+        <TextInput style={[st.searchInput, { color: C.text }]} placeholder="Rechercher (nom, plaque)..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} data-testid="vehicle-search" />
       </View>
 
       {/* Status Filter Tabs */}
@@ -129,6 +238,7 @@ export default function AgencyVehicles() {
         renderItem={({ item }) => {
           const sc = getStatus(item.status);
           const photo = item.photos?.[0];
+          const docCount = item.documents?.filter(d => !d.is_deleted).length || 0;
           return (
             <TouchableOpacity onPress={() => openEdit(item)} style={[st.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
               {/* Photo */}
@@ -145,12 +255,24 @@ export default function AgencyVehicles() {
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: sc.text }} />
                   <Text style={{ color: sc.text, fontSize: 9, fontWeight: '800' }}>{sc.label}</Text>
                 </View>
+                {/* Doc count badge */}
+                {docCount > 0 && (
+                  <View style={[st.docCountBadge, { backgroundColor: '#3B82F6' }]} data-testid={`doc-count-${item.id}`}>
+                    <Ionicons name="document-attach" size={10} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>{docCount}</Text>
+                  </View>
+                )}
               </View>
 
               {/* Info */}
               <View style={st.cardInfo}>
                 <Text style={[st.vehicleName, { color: C.text }]} numberOfLines={1}>{item.brand} {item.model}</Text>
                 <Text style={{ color: C.textLight, fontSize: 10, marginTop: 1 }}>{item.year} | {item.type}</Text>
+                {item.plate_number ? (
+                  <View style={[st.plateTag, { backgroundColor: C.accent + '15', borderColor: C.accent + '40' }]}>
+                    <Text style={{ color: C.accent, fontSize: 9, fontWeight: '700' }}>{item.plate_number}</Text>
+                  </View>
+                ) : null}
                 <View style={st.cardMeta}>
                   <Text style={{ color: C.textLight, fontSize: 9 }}>{item.seats}pl | {item.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
                 </View>
@@ -227,6 +349,28 @@ export default function AgencyVehicles() {
                 </View>
               </View>
 
+              {/* ===== NEW FIELDS: Plate, Chassis, Color ===== */}
+              <View style={[st.sectionHeader, { borderTopColor: C.border }]}>
+                <Ionicons name="card" size={16} color={C.accent} />
+                <Text style={[st.sectionTitle, { color: C.text }]}>Identification</Text>
+              </View>
+
+              <View style={st.fieldRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.fieldLabel, { color: C.textLight }]}>Plaque d'immatriculation</Text>
+                  <TextInput style={[st.input, { color: C.text, borderColor: C.border }]} value={editForm.plate_number} onChangeText={v => setEditForm({ ...editForm, plate_number: v })} placeholder="GE 12345" placeholderTextColor={C.textLight + '80'} data-testid="edit-plate-number" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.fieldLabel, { color: C.textLight }]}>Couleur</Text>
+                  <TextInput style={[st.input, { color: C.text, borderColor: C.border }]} value={editForm.color} onChangeText={v => setEditForm({ ...editForm, color: v })} placeholder="Noir, Blanc..." placeholderTextColor={C.textLight + '80'} data-testid="edit-color" />
+                </View>
+              </View>
+
+              <View style={{ marginBottom: 12 }}>
+                <Text style={[st.fieldLabel, { color: C.textLight }]}>Numero de chassis</Text>
+                <TextInput style={[st.input, { color: C.text, borderColor: C.border }]} value={editForm.chassis_number} onChangeText={v => setEditForm({ ...editForm, chassis_number: v })} placeholder="WBA1234567890" placeholderTextColor={C.textLight + '80'} data-testid="edit-chassis-number" />
+              </View>
+
               {/* Type */}
               <Text style={[st.fieldLabel, { color: C.textLight }]}>Type</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
@@ -267,6 +411,77 @@ export default function AgencyVehicles() {
               {/* Description */}
               <Text style={[st.fieldLabel, { color: C.textLight }]}>Description</Text>
               <TextInput style={[st.input, st.textArea, { color: C.text, borderColor: C.border }]} value={editForm.description} onChangeText={v => setEditForm({ ...editForm, description: v })} multiline numberOfLines={3} data-testid="edit-description" />
+
+              {/* ===== DOCUMENTS SECTION ===== */}
+              <View style={[st.sectionHeader, { borderTopColor: C.border }]}>
+                <Ionicons name="folder-open" size={16} color={C.accent} />
+                <Text style={[st.sectionTitle, { color: C.text }]}>Documents ({activeDocuments.length})</Text>
+              </View>
+
+              {/* Document Type Selector + Upload Button */}
+              <View style={st.docUploadRow}>
+                <View style={{ flex: 1 }}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      {DOC_TYPES.map(dt => (
+                        <TouchableOpacity key={dt.v} onPress={() => setSelectedDocType(dt.v)}
+                          style={[st.chip, { backgroundColor: selectedDocType === dt.v ? C.accent + '20' : 'transparent', borderColor: selectedDocType === dt.v ? C.accent : C.border, flexDirection: 'row', gap: 4, alignItems: 'center' }]}
+                          data-testid={`doc-type-${dt.v}`}>
+                          <Ionicons name={dt.icon as any} size={12} color={selectedDocType === dt.v ? C.accent : C.textLight} />
+                          <Text style={{ color: selectedDocType === dt.v ? C.accent : C.textLight, fontSize: 11, fontWeight: selectedDocType === dt.v ? '700' : '500' }}>{dt.l}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+              </View>
+
+              <TouchableOpacity
+                onPress={handleDocumentUpload}
+                disabled={uploadingDoc}
+                style={[st.uploadBtn, { borderColor: C.accent, backgroundColor: C.accent + '10' }]}
+                data-testid="upload-document-btn"
+              >
+                {uploadingDoc ? (
+                  <ActivityIndicator size="small" color={C.accent} />
+                ) : (
+                  <>
+                    <Ionicons name="cloud-upload" size={18} color={C.accent} />
+                    <Text style={{ color: C.accent, fontSize: 13, fontWeight: '700' }}>Ajouter un document</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              {/* Document List */}
+              {activeDocuments.length > 0 ? (
+                <View style={{ gap: 6, marginTop: 8 }}>
+                  {activeDocuments.map(doc => (
+                    <View key={doc.id} style={[st.docItem, { backgroundColor: C.bg, borderColor: C.border }]} data-testid={`doc-item-${doc.id}`}>
+                      <View style={[st.docIconBox, { backgroundColor: C.accent + '15' }]}>
+                        <Ionicons name={getDocIcon(doc.doc_type) as any} size={18} color={C.accent} />
+                      </View>
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>{doc.original_filename}</Text>
+                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 2 }}>
+                          <Text style={{ color: C.textLight, fontSize: 10 }}>{doc.doc_type_label}</Text>
+                          <Text style={{ color: C.textLight, fontSize: 10 }}>{formatFileSize(doc.size)}</Text>
+                        </View>
+                      </View>
+                      <TouchableOpacity onPress={() => handleViewDocument(doc)} style={st.docActionBtn} data-testid={`view-doc-${doc.id}`}>
+                        <Ionicons name="eye" size={16} color={C.accent} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleDeleteDocument(doc.id)} style={st.docActionBtn} data-testid={`delete-doc-${doc.id}`}>
+                        <Ionicons name="trash" size={16} color="#EF4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 16, opacity: 0.5 }}>
+                  <Ionicons name="document-outline" size={28} color={C.textLight} />
+                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>Aucun document</Text>
+                </View>
+              )}
             </ScrollView>
 
             {/* Actions */}
@@ -300,15 +515,19 @@ const st = StyleSheet.create({
   photo: { width: '100%', height: 90, borderTopLeftRadius: 10, borderTopRightRadius: 10 },
   photoPlaceholder: { width: '100%', height: 90, justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 10, borderTopRightRadius: 10 },
   statusOverlay: { position: 'absolute', bottom: 4, left: 4, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  docCountBadge: { position: 'absolute', top: 4, right: 4, flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8 },
   cardInfo: { padding: 8 },
   vehicleName: { fontSize: 12, fontWeight: '800' },
+  plateTag: { marginTop: 3, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, alignSelf: 'flex-start', borderWidth: 1 },
   cardMeta: { marginTop: 2 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 4 },
   price: { fontSize: 14, fontWeight: '800' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalBox: { width: '100%', maxWidth: 500, borderRadius: 16, padding: 20, maxHeight: '90%' },
+  modalBox: { width: '100%', maxWidth: 560, borderRadius: 16, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: '800' },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 16, marginTop: 16, marginBottom: 10, borderTopWidth: 1 },
+  sectionTitle: { fontSize: 14, fontWeight: '700' },
   fieldLabel: { fontSize: 11, fontWeight: '600', marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   fieldRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
   input: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14 },
@@ -319,4 +538,9 @@ const st = StyleSheet.create({
   modalActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10, borderWidth: 1 },
   saveBtn: { borderWidth: 0 },
+  docUploadRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  uploadBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, borderStyle: 'dashed', marginBottom: 4 },
+  docItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
+  docIconBox: { width: 36, height: 36, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  docActionBtn: { padding: 6, marginLeft: 4 },
 });

@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Response, Query, Header
 from typing import Optional, List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import base64
+import uuid
+import logging
 
 from database import db
 from models import Vehicle, VehicleCreate, Base64ImageUpload
 from deps import get_current_user, get_agency_admin
+from utils.storage import put_object, get_object, generate_storage_path
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -155,6 +160,9 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, user: dic
         raise HTTPException(status_code=404, detail="Vehicle not found")
 
     update_dict = {k: v for k, v in vehicle_data.dict().items() if v is not None}
+    # Preserve existing documents list if not provided
+    if "documents" not in update_dict or update_dict.get("documents") is None:
+        update_dict.pop("documents", None)
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": update_dict})
 
     updated = await db.vehicles.find_one({"id": vehicle_id})
@@ -167,3 +175,116 @@ async def delete_vehicle(vehicle_id: str, user: dict = Depends(get_current_user)
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     return {"message": "Vehicle deleted"}
+
+
+# ==================== VEHICLE DOCUMENT ENDPOINTS ====================
+
+DOCUMENT_TYPES = {
+    "carte_grise": "Carte Grise",
+    "assurance": "Assurance",
+    "controle_technique": "Controle Technique",
+    "photo": "Photo",
+    "autre": "Autre",
+}
+
+
+@router.post("/admin/vehicles/{vehicle_id}/documents")
+async def upload_vehicle_document(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    doc_type: str = Query("autre"),
+    user: dict = Depends(get_current_user),
+):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    data = await file.read()
+    if len(data) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 10 MB)")
+
+    content_type = file.content_type or "application/octet-stream"
+    storage_path = generate_storage_path(vehicle_id, file.filename or "document.bin")
+
+    try:
+        result = put_object(storage_path, data, content_type)
+    except Exception as e:
+        logger.error(f"Storage upload failed: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors de l'upload du fichier")
+
+    doc_id = str(uuid.uuid4())
+    doc_record = {
+        "id": doc_id,
+        "storage_path": result["path"],
+        "original_filename": file.filename,
+        "content_type": content_type,
+        "size": result.get("size", len(data)),
+        "doc_type": doc_type,
+        "doc_type_label": DOCUMENT_TYPES.get(doc_type, doc_type),
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "is_deleted": False,
+    }
+
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$push": {"documents": doc_record}},
+    )
+
+    return {
+        "message": "Document uploade avec succes",
+        "document": doc_record,
+    }
+
+
+@router.get("/vehicles/{vehicle_id}/documents/{doc_id}/download")
+async def download_vehicle_document(
+    vehicle_id: str,
+    doc_id: str,
+    authorization: str = Header(None),
+    auth: str = Query(None),
+):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    documents = vehicle.get("documents", [])
+    doc = next((d for d in documents if d.get("id") == doc_id and not d.get("is_deleted")), None)
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    try:
+        file_data, ct = get_object(doc["storage_path"])
+    except Exception as e:
+        logger.error(f"Storage download failed: {e}")
+        raise HTTPException(status_code=500, detail="Erreur lors du telechargement")
+
+    return Response(
+        content=file_data,
+        media_type=doc.get("content_type", ct),
+        headers={"Content-Disposition": f'inline; filename="{doc.get("original_filename", "document")}"'},
+    )
+
+
+@router.delete("/admin/vehicles/{vehicle_id}/documents/{doc_id}")
+async def delete_vehicle_document(
+    vehicle_id: str,
+    doc_id: str,
+    user: dict = Depends(get_current_user),
+):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    documents = vehicle.get("documents", [])
+    found = False
+    for doc in documents:
+        if doc.get("id") == doc_id:
+            doc["is_deleted"] = True
+            found = True
+            break
+
+    if not found:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    await db.vehicles.update_one({"id": vehicle_id}, {"$set": {"documents": documents}})
+    return {"message": "Document supprime"}

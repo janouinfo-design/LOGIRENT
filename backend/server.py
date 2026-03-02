@@ -159,6 +159,12 @@ app.add_middleware(
 async def startup_cron():
     asyncio.create_task(overdue_cron_loop())
     logger.info("Overdue cron job started (checks every hour)")
+    try:
+        from utils.storage import init_storage
+        init_storage()
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.error(f"Object storage init failed: {e}")
 
 
 @app.on_event("shutdown")
