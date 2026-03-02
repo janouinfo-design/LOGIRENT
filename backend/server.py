@@ -2879,6 +2879,63 @@ async def get_available_vehicles_for_dates(
     
     return {"vehicles": available}
 
+@api_router.get("/admin/vehicle-schedule")
+async def get_vehicle_schedule(
+    start_date: str,
+    end_date: str,
+    user: dict = Depends(get_agency_admin)
+):
+    """Get all vehicles with their reservations for a date range (agenda view)"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    
+    from datetime import datetime as dt
+    try:
+        sd = dt.fromisoformat(start_date)
+        ed = dt.fromisoformat(end_date)
+    except:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    vf = {"status": {"$ne": "maintenance"}}
+    if not is_super and agency_id:
+        vf["agency_id"] = agency_id
+    
+    vehicles = await db.vehicles.find(vf, {"_id": 0}).to_list(200)
+    
+    result = []
+    for v in vehicles:
+        reservations = await db.reservations.find({
+            "vehicle_id": v['id'],
+            "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
+            "$or": [{"start_date": {"$lt": ed}, "end_date": {"$gt": sd}}]
+        }, {"_id": 0, "id": 1, "user_name": 1, "start_date": 1, "end_date": 1, "status": 1}).to_list(100)
+        
+        slots = []
+        for r in reservations:
+            slots.append({
+                "id": r['id'],
+                "user_name": r.get('user_name', ''),
+                "start": r['start_date'].isoformat() if isinstance(r['start_date'], dt) else str(r['start_date']),
+                "end": r['end_date'].isoformat() if isinstance(r['end_date'], dt) else str(r['end_date']),
+                "status": r['status']
+            })
+        
+        result.append({
+            "id": v['id'],
+            "brand": v.get('brand', ''),
+            "model": v.get('model', ''),
+            "price_per_day": v.get('price_per_day', 0),
+            "type": v.get('type', ''),
+            "seats": v.get('seats', 0),
+            "transmission": v.get('transmission', ''),
+            "fuel_type": v.get('fuel_type', ''),
+            "options": v.get('options', []),
+            "reservations": slots
+        })
+    
+    return {"vehicles": result}
+
+
 # ==================== ADMIN LOGIN (legacy support) ====================
 
 class AdminLogin(BaseModel):
