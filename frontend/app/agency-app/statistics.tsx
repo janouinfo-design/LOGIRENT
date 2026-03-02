@@ -87,8 +87,19 @@ export default function AgencyStatistics() {
   const { colors: C } = useThemeStore();
   const [stats, setStats] = useState<AdvancedStats | null>(null);
   const [topClients, setTopClients] = useState<any[]>([]);
+  const [forecastData, setForecastData] = useState<any>(null);
+  const [forecastLoading, setForecastLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const fetchForecast = useCallback(async () => {
+    setForecastLoading(true);
+    try {
+      const resp = await api.get('/api/admin/stats/revenue-forecast');
+      setForecastData(resp.data);
+    } catch (err) { console.error('Forecast error:', err); }
+    finally { setForecastLoading(false); }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -98,9 +109,10 @@ export default function AgencyStatistics() {
       ]);
       setStats(advResp.data);
       setTopClients(tcResp.data || []);
+      fetchForecast();
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
-  }, []);
+  }, [fetchForecast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   const onRefresh = async () => { setRefreshing(true); await fetchData(); setRefreshing(false); };
