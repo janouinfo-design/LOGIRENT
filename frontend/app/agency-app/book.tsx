@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
-import { format, addDays, startOfWeek, isSameDay, isWithinInterval, parseISO, differenceInDays } from 'date-fns';
+import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSameDay, isBefore, isAfter, parseISO, differenceInDays, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
 
@@ -10,12 +10,91 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 interface Client { id: string; name: string; email: string; phone?: string; }
 interface VehicleSlot { id: string; user_name: string; start: string; end: string; status: string; }
-interface VehicleSchedule { id: string; brand: string; model: string; year?: number; price_per_day: number; type: string; seats: number; transmission: string; fuel_type: string; options?: any[]; reservations: VehicleSlot[]; }
+interface VehicleSchedule { id: string; brand: string; model: string; price_per_day: number; type: string; seats: number; transmission: string; fuel_type: string; options?: any[]; reservations: VehicleSlot[]; }
 
-type Step = 'client' | 'vehicle' | 'dates' | 'confirm';
+type Step = 'client' | 'calendar' | 'options' | 'confirm';
 
-const HOURS = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-const DAY_NAMES = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const WEEKDAYS = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
+
+// ─── Calendar Month Grid ───
+function CalendarMonth({ month, startDate, endDate, onSelectDate, busyDays, colors: C }: {
+  month: Date; startDate: Date | null; endDate: Date | null;
+  onSelectDate: (d: Date) => void; busyDays: Date[]; colors: any;
+}) {
+  const monthStart = startOfMonth(month);
+  const monthEnd = endOfMonth(month);
+  const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+  const weeks: Date[][] = [];
+  let day = calStart;
+  while (day <= monthEnd || weeks.length < 6) {
+    const week: Date[] = [];
+    for (let i = 0; i < 7; i++) { week.push(day); day = addDays(day, 1); }
+    weeks.push(week);
+    if (day > monthEnd && weeks.length >= 4) break;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const isBusy = (d: Date) => busyDays.some(b => isSameDay(b, d));
+  const isInRange = (d: Date) => {
+    if (!startDate || !endDate) return false;
+    return isAfter(d, startDate) && isBefore(d, endDate);
+  };
+  const isStart = (d: Date) => startDate ? isSameDay(d, startDate) : false;
+  const isEnd = (d: Date) => endDate ? isSameDay(d, endDate) : false;
+
+  return (
+    <View style={cs.monthContainer}>
+      <Text style={[cs.monthTitle, { color: C.text }]}>{format(month, 'MMMM yyyy', { locale: fr })}</Text>
+      <View style={cs.weekdayRow}>
+        {WEEKDAYS.map(w => <Text key={w} style={[cs.weekdayText, { color: C.textLight }]}>{w}</Text>)}
+      </View>
+      {weeks.map((week, wi) => (
+        <View key={wi} style={cs.weekRow}>
+          {week.map((d, di) => {
+            const isCurrentMonth = d.getMonth() === month.getMonth();
+            const isPast = isBefore(d, today);
+            const busy = isBusy(d);
+            const inRange = isInRange(d);
+            const start = isStart(d);
+            const end = isEnd(d);
+            const selected = start || end;
+            const disabled = !isCurrentMonth || isPast;
+
+            return (
+              <TouchableOpacity
+                key={di}
+                style={[
+                  cs.dayCell,
+                  inRange && { backgroundColor: C.accent + '15' },
+                  start && { backgroundColor: C.accent, borderTopLeftRadius: 20, borderBottomLeftRadius: 20 },
+                  end && { backgroundColor: C.accent, borderTopRightRadius: 20, borderBottomRightRadius: 20 },
+                  (inRange && !start && !end) && { borderRadius: 0 },
+                ]}
+                onPress={() => !disabled && onSelectDate(d)}
+                disabled={disabled}
+              >
+                <Text style={[
+                  cs.dayText,
+                  { color: disabled ? C.border : C.text },
+                  selected && { color: '#fff', fontWeight: '800' },
+                  inRange && !selected && { color: C.accent },
+                  busy && !selected && { color: '#EF4444' },
+                ]}>
+                  {isCurrentMonth ? d.getDate() : ''}
+                </Text>
+                {busy && isCurrentMonth && !selected && (
+                  <View style={[cs.busyDot, { backgroundColor: '#EF4444' }]} />
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 export default function BookingFlow() {
   const { colors: C } = useThemeStore();
@@ -32,472 +111,389 @@ export default function BookingFlow() {
   const [newEmail, setNewEmail] = useState('');
   const [creatingClient, setCreatingClient] = useState(false);
 
-  // Schedule
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  // Calendar & Schedule
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [startHour, setStartHour] = useState(8);
+  const [endHour, setEndHour] = useState(18);
+
+  // Vehicles
   const [schedule, setSchedule] = useState<VehicleSchedule[]>([]);
   const [loadingSchedule, setLoadingSchedule] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleSchedule | null>(null);
 
-  // Dates with hours
-  const [startDate, setStartDate] = useState('');
-  const [startHour, setStartHour] = useState('08');
-  const [endDate, setEndDate] = useState('');
-  const [endHour, setEndHour] = useState('18');
+  // Options & Payment
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-
-  // Payment
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'send_link'>('cash');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [createdReservation, setCreatedReservation] = useState<any>(null);
 
-  const showAlert = (title: string, msg: string) => {
-    if (Platform.OS === 'web') window.alert(msg);
-    else Alert.alert(title, msg);
-  };
+  const showAlert = (t: string, m: string) => Platform.OS === 'web' ? window.alert(m) : Alert.alert(t, m);
 
   // Search clients
-  const searchClients = useCallback(async (q: string) => {
-    if (q.length < 2) { setSearchResults([]); return; }
-    setSearching(true);
-    try {
-      const res = await api.get(`/api/admin/search-clients?q=${encodeURIComponent(q)}`);
-      setSearchResults(res.data.clients || []);
-    } catch (e) { console.error(e); }
-    finally { setSearching(false); }
-  }, []);
-
   useEffect(() => {
-    const timer = setTimeout(() => searchClients(searchQuery), 300);
-    return () => clearTimeout(timer);
+    if (searchQuery.length < 2) { setSearchResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try { const r = await api.get(`/api/admin/search-clients?q=${encodeURIComponent(searchQuery)}`); setSearchResults(r.data.clients || []); }
+      catch {} finally { setSearching(false); }
+    }, 300);
+    return () => clearTimeout(t);
   }, [searchQuery]);
 
-  // Create client
   const createClient = async () => {
     if (!newName) { showAlert('Erreur', 'Le nom est obligatoire'); return; }
     setCreatingClient(true);
     try {
-      const res = await api.post('/api/admin/quick-client', { name: newName, phone: newPhone || null, email: newEmail || null });
-      setSelectedClient(res.data.client);
-      setShowNewClient(false);
-      setStep('vehicle');
+      const r = await api.post('/api/admin/quick-client', { name: newName, phone: newPhone || null, email: newEmail || null });
+      setSelectedClient(r.data.client); setShowNewClient(false); setStep('calendar');
     } catch (e: any) { showAlert('Erreur', e.response?.data?.detail || 'Erreur'); }
     finally { setCreatingClient(false); }
   };
 
-  // Fetch schedule
+  // Fetch schedule when dates change
   const fetchSchedule = useCallback(async () => {
+    if (!startDate || !endDate) return;
     setLoadingSchedule(true);
     try {
-      const sd = format(weekStart, 'yyyy-MM-dd');
-      const ed = format(addDays(weekStart, 13), 'yyyy-MM-dd');
-      const res = await api.get(`/api/admin/vehicle-schedule?start_date=${sd}&end_date=${ed}`);
-      setSchedule(res.data.vehicles || []);
-    } catch (e) { console.error(e); }
-    finally { setLoadingSchedule(false); }
-  }, [weekStart]);
+      const sd = format(addDays(startDate, -7), 'yyyy-MM-dd');
+      const ed = format(addDays(endDate, 7), 'yyyy-MM-dd');
+      const r = await api.get(`/api/admin/vehicle-schedule?start_date=${sd}&end_date=${ed}`);
+      setSchedule(r.data.vehicles || []);
+    } catch {} finally { setLoadingSchedule(false); }
+  }, [startDate, endDate]);
 
-  useEffect(() => {
-    if (step === 'vehicle') fetchSchedule();
-  }, [step, fetchSchedule]);
+  useEffect(() => { if (startDate && endDate) fetchSchedule(); }, [fetchSchedule]);
 
-  // Week days
-  const weekDays = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  }, [weekStart]);
-
-  // Check if a vehicle has a reservation at a specific day
-  const getSlotForDay = (vehicle: VehicleSchedule, day: Date): VehicleSlot | null => {
-    for (const r of vehicle.reservations) {
-      try {
-        const rStart = parseISO(r.start);
-        const rEnd = parseISO(r.end);
-        if (day >= rStart && day < rEnd) return r;
-        if (isSameDay(day, rStart) || isSameDay(day, rEnd)) return r;
-      } catch { continue; }
+  // Calendar date selection
+  const onSelectDate = (d: Date) => {
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(d); setEndDate(null); setSelectedVehicle(null);
+    } else {
+      if (isBefore(d, startDate)) { setStartDate(d); setEndDate(null); }
+      else { setEndDate(d); }
     }
-    return null;
   };
 
-  const isVehicleFreeForDates = (vehicle: VehicleSchedule): boolean => {
-    if (!startDate || !endDate) return true;
-    const sd = parseISO(`${startDate}T${startHour}:00:00`);
-    const ed = parseISO(`${endDate}T${endHour}:00:00`);
-    for (const r of vehicle.reservations) {
+  // Busy days for selected vehicle
+  const busyDaysForVehicle = useMemo(() => {
+    if (!selectedVehicle) return [];
+    const days: Date[] = [];
+    for (const r of selectedVehicle.reservations) {
       try {
-        const rStart = parseISO(r.start);
-        const rEnd = parseISO(r.end);
-        if (sd < rEnd && ed > rStart) return false;
-      } catch { continue; }
+        let cur = parseISO(r.start); const end = parseISO(r.end);
+        while (cur <= end) { days.push(new Date(cur)); cur = addDays(cur, 1); }
+      } catch {}
+    }
+    return days;
+  }, [selectedVehicle]);
+
+  // Check vehicle availability
+  const isVehicleFree = (v: VehicleSchedule) => {
+    if (!startDate || !endDate) return true;
+    const sd = startDate.getTime();
+    const ed = endDate.getTime();
+    for (const r of v.reservations) {
+      try {
+        const rs = parseISO(r.start).getTime();
+        const re = parseISO(r.end).getTime();
+        if (sd < re && ed > rs) return false;
+      } catch {}
     }
     return true;
   };
 
-  // Submit reservation
+  // Pricing
+  const totalDays = startDate && endDate ? Math.max(1, differenceInDays(endDate, startDate)) : 0;
+  const basePrice = selectedVehicle ? selectedVehicle.price_per_day * totalDays : 0;
+  const optionsPrice = selectedVehicle?.options?.filter(o => selectedOptions.includes(o.name)).reduce((s, o) => s + o.price_per_day * totalDays, 0) || 0;
+  const totalPrice = basePrice + optionsPrice;
+
+  // Submit
   const submitReservation = async () => {
     if (!selectedClient || !selectedVehicle || !startDate || !endDate) return;
     setSubmitting(true);
     try {
-      const res = await api.post('/api/admin/create-reservation-for-client', {
-        client_id: selectedClient.id,
-        vehicle_id: selectedVehicle.id,
-        start_date: `${startDate}T${startHour}:00:00`,
-        end_date: `${endDate}T${endHour}:00:00`,
-        options: selectedOptions,
-        payment_method: paymentMethod,
+      const r = await api.post('/api/admin/create-reservation-for-client', {
+        client_id: selectedClient.id, vehicle_id: selectedVehicle.id,
+        start_date: `${format(startDate, 'yyyy-MM-dd')}T${String(startHour).padStart(2, '0')}:00:00`,
+        end_date: `${format(endDate, 'yyyy-MM-dd')}T${String(endHour).padStart(2, '0')}:00:00`,
+        options: selectedOptions, payment_method: paymentMethod,
       });
-      setCreatedReservation(res.data.reservation);
       if (paymentMethod === 'send_link') {
-        try { await api.post(`/api/admin/reservations/${res.data.reservation.id}/send-payment-link`, { origin_url: API_URL }); } catch {}
+        try { await api.post(`/api/admin/reservations/${r.data.reservation.id}/send-payment-link`, { origin_url: API_URL }); } catch {}
       }
       setSuccess(true);
-    } catch (e: any) { showAlert('Erreur', e.response?.data?.detail || 'Erreur lors de la création'); }
+    } catch (e: any) { showAlert('Erreur', e.response?.data?.detail || 'Erreur'); }
     finally { setSubmitting(false); }
   };
 
-  const totalDays = startDate && endDate ? Math.max(1, differenceInDays(parseISO(endDate), parseISO(startDate))) : 0;
-  const basePrice = selectedVehicle ? selectedVehicle.price_per_day * totalDays : 0;
-  const optionsPrice = selectedVehicle?.options?.filter(o => selectedOptions.includes(o.name)).reduce((sum, o) => sum + o.price_per_day * totalDays, 0) || 0;
-  const totalPrice = basePrice + optionsPrice;
-
   const resetFlow = () => {
-    setStep('client'); setSelectedClient(null); setSelectedVehicle(null);
-    setStartDate(''); setEndDate(''); setStartHour('08'); setEndHour('18');
-    setSelectedOptions([]); setPaymentMethod('cash'); setSuccess(false);
-    setCreatedReservation(null); setSearchQuery(''); setSearchResults([]);
-    setShowNewClient(false); setNewName(''); setNewPhone(''); setNewEmail('');
+    setStep('client'); setSelectedClient(null); setStartDate(null); setEndDate(null);
+    setSelectedVehicle(null); setSelectedOptions([]); setPaymentMethod('cash');
+    setSuccess(false); setSearchQuery(''); setSearchResults([]);
+    setStartHour(8); setEndHour(18);
   };
 
-  // Status color
-  const statusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed': case 'active': return '#EF4444';
-      case 'pending': case 'pending_cash': return '#F59E0B';
-      default: return '#9CA3AF';
-    }
-  };
+  const month2 = addMonths(calendarMonth, 1);
 
+  // ─── SUCCESS ───
   if (success) {
     return (
       <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={[s.content, { alignItems: 'center', paddingTop: 60 }]}>
         <Ionicons name="checkmark-circle" size={64} color={C.success} />
-        <Text style={[s.successTitle, { color: C.text }]}>Réservation créée</Text>
-        <Text style={[s.successSub, { color: C.textLight }]}>{selectedVehicle?.brand} {selectedVehicle?.model} pour {selectedClient?.name}</Text>
-        <Text style={[s.successPrice, { color: C.accent }]}>CHF {totalPrice.toFixed(2)}</Text>
-        <Text style={[s.successMethod, { color: C.textLight }]}>{paymentMethod === 'cash' ? 'Paiement en espèces' : 'Lien de paiement envoyé'}</Text>
-        <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={resetFlow} data-testid="new-booking-btn">
-          <Text style={s.primaryBtnText}>Nouvelle réservation</Text>
-        </TouchableOpacity>
+        <Text style={[s.successTitle, { color: C.text }]}>Réservation créée !</Text>
+        <Text style={{ color: C.textLight, fontSize: 15, marginBottom: 4 }}>{selectedVehicle?.brand} {selectedVehicle?.model} pour {selectedClient?.name}</Text>
+        <Text style={{ color: C.accent, fontSize: 28, fontWeight: '800', marginVertical: 12 }}>CHF {totalPrice.toFixed(2)}</Text>
+        <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={resetFlow}><Text style={s.btnText}>Nouvelle réservation</Text></TouchableOpacity>
       </ScrollView>
     );
   }
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content}>
-      {/* Steps indicator */}
-      <View style={[s.steps, { backgroundColor: C.card, borderColor: C.border }]}>
-        {(['client', 'vehicle', 'dates', 'confirm'] as Step[]).map((st, i) => {
-          const labels = ['Client', 'Véhicule', 'Options', 'Confirmer'];
-          const icons: any[] = ['person', 'car', 'settings', 'checkmark'];
-          const isActive = step === st;
-          const isPast = ['client', 'vehicle', 'dates', 'confirm'].indexOf(step) > i;
+      {/* Steps */}
+      <View style={[s.stepsBar, { backgroundColor: C.card, borderColor: C.border }]}>
+        {(['client', 'calendar', 'options', 'confirm'] as Step[]).map((st, i) => {
+          const labels = ['Client', 'Dates & Véhicule', 'Options', 'Confirmer'];
+          const icons: any[] = ['person', 'calendar', 'settings', 'checkmark'];
+          const curIdx = ['client', 'calendar', 'options', 'confirm'].indexOf(step);
+          const active = step === st;
+          const past = curIdx > i;
           return (
-            <TouchableOpacity key={st} style={s.stepItem} onPress={() => isPast && setStep(st)}>
-              <View style={[s.stepDot, { backgroundColor: (isActive || isPast) ? C.accent : C.border }]}>
-                <Ionicons name={icons[i]} size={14} color={(isActive || isPast) ? '#fff' : C.textLight} />
+            <TouchableOpacity key={st} style={s.stepItem} onPress={() => past && setStep(st)}>
+              <View style={[s.stepDot, { backgroundColor: (active || past) ? C.accent : C.border }]}>
+                <Ionicons name={icons[i]} size={14} color={(active || past) ? '#fff' : C.textLight} />
               </View>
-              <Text style={[s.stepLabel, { color: (isActive || isPast) ? C.accent : C.textLight }]}>{labels[i]}</Text>
+              <Text style={[s.stepLabel, { color: (active || past) ? C.accent : C.textLight }]}>{labels[i]}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      {/* STEP: Client */}
+      {/* ─── STEP 1: Client ─── */}
       {step === 'client' && (
         <View>
           <Text style={[s.title, { color: C.text }]}>Sélectionner un client</Text>
           {selectedClient ? (
-            <View style={[s.selectedCard, { backgroundColor: C.accent + '15', borderColor: C.accent + '30' }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.selectedName, { color: C.text }]}>{selectedClient.name}</Text>
-                <Text style={{ color: C.textLight, fontSize: 12 }}>{selectedClient.email}{selectedClient.phone ? ` | ${selectedClient.phone}` : ''}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setSelectedClient(null)}><Ionicons name="close-circle" size={24} color={C.error} /></TouchableOpacity>
+            <View style={[s.selectedBox, { backgroundColor: C.accent + '12', borderColor: C.accent + '30' }]}>
+              <Ionicons name="person-circle" size={32} color={C.accent} />
+              <View style={{ flex: 1 }}><Text style={[s.selName, { color: C.text }]}>{selectedClient.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{selectedClient.email}</Text></View>
+              <TouchableOpacity onPress={() => setSelectedClient(null)}><Ionicons name="close-circle" size={22} color={C.error} /></TouchableOpacity>
             </View>
           ) : (
             <>
-              <View style={[s.searchBox, { backgroundColor: C.card, borderColor: C.border }]}>
+              <View style={[s.searchRow, { backgroundColor: C.card, borderColor: C.border }]}>
                 <Ionicons name="search" size={18} color={C.textLight} />
-                <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher par nom, email, téléphone..." placeholderTextColor={C.textLight} value={searchQuery} onChangeText={setSearchQuery} data-testid="client-search-input" />
+                <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher nom, email, tél..." placeholderTextColor={C.textLight} value={searchQuery} onChangeText={setSearchQuery} />
                 {searching && <ActivityIndicator size="small" color={C.accent} />}
               </View>
-              {searchResults.map((c) => (
-                <TouchableOpacity key={c.id} style={[s.resultCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { setSelectedClient(c); setStep('vehicle'); }} data-testid={`client-${c.id}`}>
-                  <Ionicons name="person-circle" size={32} color={C.accent} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[s.resultName, { color: C.text }]}>{c.name}</Text>
-                    <Text style={{ color: C.textLight, fontSize: 12 }}>{c.email}{c.phone ? ` | ${c.phone}` : ''}</Text>
-                  </View>
+              {searchResults.map(c => (
+                <TouchableOpacity key={c.id} style={[s.clientCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { setSelectedClient(c); setStep('calendar'); }}>
+                  <Ionicons name="person-circle" size={30} color={C.accent} />
+                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '600', fontSize: 14 }}>{c.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{c.email}</Text></View>
                   <Ionicons name="chevron-forward" size={18} color={C.textLight} />
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity style={s.newClientBtn} onPress={() => setShowNewClient(!showNewClient)} data-testid="new-client-toggle">
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }} onPress={() => setShowNewClient(!showNewClient)}>
                 <Ionicons name={showNewClient ? 'chevron-up' : 'person-add'} size={18} color={C.accent} />
-                <Text style={[s.newClientBtnText, { color: C.accent }]}>{showNewClient ? 'Masquer' : 'Créer un nouveau client'}</Text>
+                <Text style={{ color: C.accent, fontWeight: '600' }}>{showNewClient ? 'Masquer' : 'Nouveau client'}</Text>
               </TouchableOpacity>
               {showNewClient && (
-                <View style={[s.newClientForm, { backgroundColor: C.card, borderColor: C.border }]}>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="new-client-name" />
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Téléphone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" />
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Email" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} keyboardType="email-address" autoCapitalize="none" />
+                <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} />
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Téléphone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} />
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Email" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" />
                   <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={createClient} disabled={creatingClient}>
-                    <Text style={s.primaryBtnText}>{creatingClient ? 'Création...' : 'Créer et continuer'}</Text>
+                    <Text style={s.btnText}>{creatingClient ? 'Création...' : 'Créer et continuer'}</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </>
           )}
           {selectedClient && (
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('vehicle')} data-testid="next-to-vehicle">
-              <Text style={s.primaryBtnText}>Suivant : Planning & Véhicule</Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('calendar')}>
+              <Text style={s.btnText}>Suivant</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
             </TouchableOpacity>
           )}
         </View>
       )}
 
-      {/* STEP: Vehicle with Schedule */}
-      {step === 'vehicle' && (
+      {/* ─── STEP 2: Calendar & Vehicle ─── */}
+      {step === 'calendar' && (
         <View>
-          <Text style={[s.title, { color: C.text }]}>Planning & Réservation</Text>
-          <Text style={[s.subtitle, { color: C.textLight }]}>Visualisez les disponibilités et choisissez vos dates</Text>
+          <Text style={[s.title, { color: C.text }]}>Choisissez vos dates</Text>
 
-          {/* Week Navigation */}
-          <View style={[s.weekNav, { backgroundColor: C.card, borderColor: C.border }]}>
-            <TouchableOpacity onPress={() => setWeekStart(addDays(weekStart, -7))} data-testid="prev-week">
-              <Ionicons name="chevron-back" size={22} color={C.accent} />
+          {/* Date summary bar */}
+          <View style={[s.dateSummaryBar, { backgroundColor: C.card, borderColor: C.border }]}>
+            <TouchableOpacity style={[s.dateSummaryItem, startDate && !endDate && { borderColor: C.accent, borderWidth: 2 }]} onPress={() => { setStartDate(null); setEndDate(null); }}>
+              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>DÉBUT</Text>
+              <Text style={[s.dateSummaryText, { color: startDate ? C.text : C.textLight }]}>{startDate ? format(startDate, 'd MMM yyyy', { locale: fr }) : 'Sélectionner'}</Text>
             </TouchableOpacity>
-            <Text style={[s.weekTitle, { color: C.text }]}>
-              {format(weekStart, 'd MMM', { locale: fr })} - {format(addDays(weekStart, 6), 'd MMM yyyy', { locale: fr })}
-            </Text>
-            <TouchableOpacity onPress={() => setWeekStart(addDays(weekStart, 7))} data-testid="next-week">
-              <Ionicons name="chevron-forward" size={22} color={C.accent} />
+            <Ionicons name="arrow-forward" size={18} color={C.textLight} />
+            <TouchableOpacity style={[s.dateSummaryItem, startDate && endDate && { borderColor: C.accent, borderWidth: 2 }]}>
+              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>FIN</Text>
+              <Text style={[s.dateSummaryText, { color: endDate ? C.text : C.textLight }]}>{endDate ? format(endDate, 'd MMM yyyy', { locale: fr }) : 'Sélectionner'}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Date + Hour Selection */}
-          <View style={[s.dateSelectionBox, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Text style={[s.dateSelLabel, { color: C.text }]}>Période de location</Text>
-            <View style={s.dateRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Début</Text>
-                <View style={s.dateTimeRow}>
-                  <TextInput style={[s.dateInput, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={startDate} onChangeText={setStartDate} data-testid="start-date-input" />
-                  <View style={[s.hourPicker, { backgroundColor: C.bg, borderColor: C.border }]}>
-                    <TouchableOpacity onPress={() => setStartHour(String(Math.max(0, parseInt(startHour) - 1)).padStart(2, '0'))}>
-                      <Ionicons name="remove-circle-outline" size={18} color={C.textLight} />
-                    </TouchableOpacity>
-                    <Text style={[s.hourText, { color: C.text }]}>{startHour}:00</Text>
-                    <TouchableOpacity onPress={() => setStartHour(String(Math.min(23, parseInt(startHour) + 1)).padStart(2, '0'))}>
-                      <Ionicons name="add-circle-outline" size={18} color={C.accent} />
-                    </TouchableOpacity>
-                  </View>
+          {/* Month navigation */}
+          <View style={s.monthNav}>
+            <TouchableOpacity onPress={() => setCalendarMonth(addMonths(calendarMonth, -1))} data-testid="prev-month">
+              <Ionicons name="chevron-back" size={24} color={C.accent} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setCalendarMonth(addMonths(calendarMonth, 1))} data-testid="next-month">
+              <Ionicons name="chevron-forward" size={24} color={C.accent} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Two months calendar */}
+          <View style={s.calendarGrid}>
+            <CalendarMonth month={calendarMonth} startDate={startDate} endDate={endDate} onSelectDate={onSelectDate} busyDays={busyDaysForVehicle} colors={C} />
+            <CalendarMonth month={month2} startDate={startDate} endDate={endDate} onSelectDate={onSelectDate} busyDays={busyDaysForVehicle} colors={C} />
+          </View>
+
+          {/* Hour selectors */}
+          {startDate && endDate && (
+            <View style={[s.hourSection, { backgroundColor: C.card, borderColor: C.border }]}>
+              <View style={s.hourGroup}>
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>Heure de début</Text>
+                <View style={[s.hourControl, { backgroundColor: C.bg, borderColor: C.border }]}>
+                  <TouchableOpacity onPress={() => setStartHour(Math.max(0, startHour - 1))}><Ionicons name="remove-circle" size={26} color={C.textLight} /></TouchableOpacity>
+                  <Text style={[s.hourValue, { color: C.text }]}>{String(startHour).padStart(2, '0')}:00</Text>
+                  <TouchableOpacity onPress={() => setStartHour(Math.min(23, startHour + 1))}><Ionicons name="add-circle" size={26} color={C.accent} /></TouchableOpacity>
                 </View>
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Fin</Text>
-                <View style={s.dateTimeRow}>
-                  <TextInput style={[s.dateInput, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={endDate} onChangeText={setEndDate} data-testid="end-date-input" />
-                  <View style={[s.hourPicker, { backgroundColor: C.bg, borderColor: C.border }]}>
-                    <TouchableOpacity onPress={() => setEndHour(String(Math.max(0, parseInt(endHour) - 1)).padStart(2, '0'))}>
-                      <Ionicons name="remove-circle-outline" size={18} color={C.textLight} />
-                    </TouchableOpacity>
-                    <Text style={[s.hourText, { color: C.text }]}>{endHour}:00</Text>
-                    <TouchableOpacity onPress={() => setEndHour(String(Math.min(23, parseInt(endHour) + 1)).padStart(2, '0'))}>
-                      <Ionicons name="add-circle-outline" size={18} color={C.accent} />
-                    </TouchableOpacity>
-                  </View>
+              <View style={s.hourGroup}>
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>Heure de fin</Text>
+                <View style={[s.hourControl, { backgroundColor: C.bg, borderColor: C.border }]}>
+                  <TouchableOpacity onPress={() => setEndHour(Math.max(0, endHour - 1))}><Ionicons name="remove-circle" size={26} color={C.textLight} /></TouchableOpacity>
+                  <Text style={[s.hourValue, { color: C.text }]}>{String(endHour).padStart(2, '0')}:00</Text>
+                  <TouchableOpacity onPress={() => setEndHour(Math.min(23, endHour + 1))}><Ionicons name="add-circle" size={26} color={C.accent} /></TouchableOpacity>
                 </View>
               </View>
             </View>
-            {startDate && endDate && totalDays > 0 && (
-              <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600', marginTop: 6 }}>
-                {totalDays} jour(s) de location
-              </Text>
-            )}
-          </View>
+          )}
 
-          {/* Schedule Grid - Agenda */}
-          {loadingSchedule ? (
-            <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} />
-          ) : (
-            <View style={{ marginTop: 12 }}>
-              <Text style={[s.sectionTitle, { color: C.text }]}>Agenda des véhicules</Text>
+          {/* Duration info */}
+          {startDate && endDate && totalDays > 0 && (
+            <View style={[s.durationBadge, { backgroundColor: C.accent + '12' }]}>
+              <Ionicons name="time" size={16} color={C.accent} />
+              <Text style={{ color: C.accent, fontWeight: '700', fontSize: 13 }}>{totalDays} jour(s) de location</Text>
+            </View>
+          )}
+
+          {/* Vehicle selection */}
+          {startDate && endDate && (
+            <View style={{ marginTop: 16 }}>
+              <Text style={[s.sectionTitle, { color: C.text }]}>Choisir un véhicule</Text>
               <View style={s.legendRow}>
-                <View style={s.legendItem}>
-                  <View style={[s.legendDot, { backgroundColor: '#10B981' }]} />
-                  <Text style={{ color: C.textLight, fontSize: 11 }}>Disponible</Text>
-                </View>
-                <View style={s.legendItem}>
-                  <View style={[s.legendDot, { backgroundColor: '#EF4444' }]} />
-                  <Text style={{ color: C.textLight, fontSize: 11 }}>Occupé (confirmé)</Text>
-                </View>
-                <View style={s.legendItem}>
-                  <View style={[s.legendDot, { backgroundColor: '#F59E0B' }]} />
-                  <Text style={{ color: C.textLight, fontSize: 11 }}>En attente</Text>
-                </View>
+                <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#10B981' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Disponible</Text></View>
+                <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#EF4444' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Occupé</Text></View>
               </View>
-
-              {/* Day headers */}
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View>
-                  <View style={s.gridHeader}>
-                    <View style={[s.vehicleCol, { backgroundColor: C.card, borderColor: C.border }]}>
-                      <Text style={[s.colHeaderText, { color: C.textLight }]}>Véhicule</Text>
-                    </View>
-                    {weekDays.map((day, i) => {
-                      const isToday = isSameDay(day, new Date());
-                      return (
-                        <TouchableOpacity
-                          key={i}
-                          style={[s.dayCol, { backgroundColor: isToday ? C.accent + '15' : C.card, borderColor: C.border }]}
-                          onPress={() => {
-                            const d = format(day, 'yyyy-MM-dd');
-                            if (!startDate) setStartDate(d);
-                            else if (!endDate && d > startDate) setEndDate(d);
-                            else { setStartDate(d); setEndDate(''); }
-                          }}
-                        >
-                          <Text style={[s.dayName, { color: isToday ? C.accent : C.textLight }]}>{DAY_NAMES[i]}</Text>
-                          <Text style={[s.dayNum, { color: isToday ? C.accent : C.text }]}>{format(day, 'd')}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-
-                  {/* Vehicle rows */}
-                  {schedule.map((v) => {
-                    const isFree = isVehicleFreeForDates(v);
-                    const isSelected = selectedVehicle?.id === v.id;
-                    return (
-                      <TouchableOpacity
-                        key={v.id}
-                        style={[s.gridRow, isSelected && { backgroundColor: C.accent + '10' }]}
-                        onPress={() => {
-                          if (isFree || !startDate || !endDate) setSelectedVehicle(v);
-                          else showAlert('Indisponible', 'Ce véhicule est occupé pour les dates sélectionnées');
-                        }}
-                        data-testid={`schedule-vehicle-${v.id}`}
-                      >
-                        <View style={[s.vehicleCol, s.vehicleColRow, { backgroundColor: C.card, borderColor: C.border }]}>
-                          <Text style={[s.vehicleLabel, { color: C.text }]} numberOfLines={1}>{v.brand} {v.model}</Text>
-                          <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700' }}>CHF {v.price_per_day}/j</Text>
-                          {isSelected && <Ionicons name="checkmark-circle" size={16} color={C.success} />}
-                          {startDate && endDate && !isFree && <View style={[s.busyTag]}><Text style={s.busyTagText}>Occupé</Text></View>}
+              {loadingSchedule ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} /> : (
+                schedule.map(v => {
+                  const free = isVehicleFree(v);
+                  const selected = selectedVehicle?.id === v.id;
+                  return (
+                    <TouchableOpacity
+                      key={v.id}
+                      style={[
+                        s.vehicleCard,
+                        { backgroundColor: C.card, borderColor: selected ? C.accent : C.border },
+                        selected && { borderWidth: 2 },
+                        !free && { opacity: 0.5 },
+                      ]}
+                      onPress={() => free ? setSelectedVehicle(v) : showAlert('Indisponible', 'Ce véhicule est occupé pour ces dates')}
+                      data-testid={`vehicle-${v.id}`}
+                    >
+                      <View style={s.vehicleRow}>
+                        <Ionicons name="car-sport" size={24} color={free ? C.accent : '#EF4444'} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={[s.vehicleName, { color: C.text }]}>{v.brand} {v.model}</Text>
+                          <Text style={{ color: C.textLight, fontSize: 11 }}>{v.type} | {v.seats} places | {v.transmission}</Text>
                         </View>
-                        {weekDays.map((day, i) => {
-                          const slot = getSlotForDay(v, day);
-                          const bgColor = slot ? statusColor(slot.status) : '#10B981';
-                          return (
-                            <View key={i} style={[s.dayCell, { borderColor: C.border }]}>
-                              <View style={[s.cellBar, { backgroundColor: slot ? bgColor + '30' : 'transparent', borderLeftColor: slot ? bgColor : 'transparent', borderLeftWidth: slot ? 3 : 0 }]}>
-                                {slot ? (
-                                  <Text style={[s.cellText, { color: bgColor }]} numberOfLines={1}>
-                                    {slot.user_name?.split(' ')[0] || (slot.status === 'pending' ? 'Attente' : 'Réservé')}
-                                  </Text>
-                                ) : (
-                                  <Text style={[s.cellFreeText, { color: '#10B981' }]}>-</Text>
-                                )}
-                              </View>
-                            </View>
-                          );
-                        })}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              </ScrollView>
+                        <View style={{ alignItems: 'flex-end' }}>
+                          <Text style={{ color: C.accent, fontSize: 16, fontWeight: '800' }}>CHF {v.price_per_day}</Text>
+                          <Text style={{ color: C.textLight, fontSize: 10 }}>/jour</Text>
+                        </View>
+                        {selected && <Ionicons name="checkmark-circle" size={22} color={C.success} style={{ marginLeft: 8 }} />}
+                        {!free && <View style={s.occupiedTag}><Text style={{ color: '#EF4444', fontSize: 10, fontWeight: '700' }}>OCCUPÉ</Text></View>}
+                      </View>
+                      {selected && totalDays > 0 && (
+                        <View style={[s.priceSummary, { backgroundColor: C.accent + '10' }]}>
+                          <Text style={{ color: C.accent, fontWeight: '700', fontSize: 13 }}>Total : CHF {(v.price_per_day * totalDays).toFixed(2)} ({totalDays}j × CHF {v.price_per_day})</Text>
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })
+              )}
             </View>
           )}
 
-          {/* Next button */}
-          {selectedVehicle && startDate && endDate && totalDays > 0 && (
-            <View style={[s.selectionSummary, { backgroundColor: C.card, borderColor: C.accent }]}>
-              <View style={{ flex: 1 }}>
-                <Text style={[s.selSummaryTitle, { color: C.text }]}>{selectedVehicle.brand} {selectedVehicle.model}</Text>
-                <Text style={{ color: C.textLight, fontSize: 12 }}>{startDate} {startHour}:00 → {endDate} {endHour}:00 ({totalDays}j)</Text>
-              </View>
-              <Text style={[s.selSummaryPrice, { color: C.accent }]}>CHF {basePrice.toFixed(0)}</Text>
-            </View>
-          )}
-          {selectedVehicle && startDate && endDate && totalDays > 0 && isVehicleFreeForDates(selectedVehicle) && (
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('dates')} data-testid="next-to-options">
-              <Text style={s.primaryBtnText}>Suivant : Options & Paiement</Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
+          {/* Next */}
+          {selectedVehicle && startDate && endDate && totalDays > 0 && isVehicleFree(selectedVehicle) && (
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('options')}>
+              <Text style={s.btnText}>Suivant : Options & Paiement</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
             </TouchableOpacity>
           )}
         </View>
       )}
 
-      {/* STEP: Options & Payment */}
-      {step === 'dates' && selectedVehicle && (
+      {/* ─── STEP 3: Options & Payment ─── */}
+      {step === 'options' && selectedVehicle && (
         <View>
           <Text style={[s.title, { color: C.text }]}>Options & Paiement</Text>
           {(selectedVehicle.options || []).length > 0 && (
             <>
               <Text style={[s.sectionTitle, { color: C.text }]}>Options disponibles</Text>
               {selectedVehicle.options!.map((opt: any) => (
-                <TouchableOpacity key={opt.name} style={[s.optionCard, { backgroundColor: C.card, borderColor: selectedOptions.includes(opt.name) ? C.success : C.border }]} onPress={() => setSelectedOptions(prev => prev.includes(opt.name) ? prev.filter(o => o !== opt.name) : [...prev, opt.name])}>
+                <TouchableOpacity key={opt.name} style={[s.optionCard, { backgroundColor: C.card, borderColor: selectedOptions.includes(opt.name) ? C.success : C.border }]} onPress={() => setSelectedOptions(p => p.includes(opt.name) ? p.filter(o => o !== opt.name) : [...p, opt.name])}>
                   <Ionicons name={selectedOptions.includes(opt.name) ? 'checkbox' : 'square-outline'} size={22} color={selectedOptions.includes(opt.name) ? C.success : C.textLight} />
-                  <Text style={[s.optionName, { color: C.text }]}>{opt.name}</Text>
+                  <Text style={{ flex: 1, color: C.text, fontSize: 14 }}>{opt.name}</Text>
                   <Text style={{ color: C.accent, fontSize: 12 }}>+CHF {opt.price_per_day}/j</Text>
                 </TouchableOpacity>
               ))}
             </>
           )}
           <Text style={[s.sectionTitle, { color: C.text, marginTop: 16 }]}>Mode de paiement</Text>
-          <TouchableOpacity style={[s.payCard, { backgroundColor: C.card, borderColor: paymentMethod === 'cash' ? C.warning : C.border }]} onPress={() => setPaymentMethod('cash')} data-testid="pay-cash">
+          <TouchableOpacity style={[s.payCard, { backgroundColor: C.card, borderColor: paymentMethod === 'cash' ? C.warning : C.border }]} onPress={() => setPaymentMethod('cash')}>
             <Ionicons name="cash" size={24} color={paymentMethod === 'cash' ? C.warning : C.textLight} />
-            <View style={{ flex: 1 }}>
-              <Text style={[s.payTitle, { color: C.text }]}>Espèces</Text>
-              <Text style={{ color: C.textLight, fontSize: 11 }}>Le client paie au retrait du véhicule</Text>
-            </View>
+            <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Espèces</Text><Text style={{ color: C.textLight, fontSize: 11 }}>Le client paie au retrait</Text></View>
             {paymentMethod === 'cash' && <Ionicons name="checkmark-circle" size={22} color={C.success} />}
           </TouchableOpacity>
-          <TouchableOpacity style={[s.payCard, { backgroundColor: C.card, borderColor: paymentMethod === 'send_link' ? C.accent : C.border }]} onPress={() => setPaymentMethod('send_link')} data-testid="pay-link">
+          <TouchableOpacity style={[s.payCard, { backgroundColor: C.card, borderColor: paymentMethod === 'send_link' ? C.accent : C.border }]} onPress={() => setPaymentMethod('send_link')}>
             <Ionicons name="link" size={24} color={paymentMethod === 'send_link' ? C.accent : C.textLight} />
-            <View style={{ flex: 1 }}>
-              <Text style={[s.payTitle, { color: C.text }]}>Lien de paiement</Text>
-              <Text style={{ color: C.textLight, fontSize: 11 }}>Un lien Stripe envoyé par email</Text>
-            </View>
+            <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Lien Stripe</Text><Text style={{ color: C.textLight, fontSize: 11 }}>Envoyé par email</Text></View>
             {paymentMethod === 'send_link' && <Ionicons name="checkmark-circle" size={22} color={C.success} />}
           </TouchableOpacity>
-          <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('confirm')} data-testid="next-to-confirm">
-            <Text style={s.primaryBtnText}>Voir le récapitulatif</Text>
-            <Ionicons name="arrow-forward" size={18} color="#fff" />
+          <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('confirm')}>
+            <Text style={s.btnText}>Voir le récapitulatif</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
       )}
 
-      {/* STEP: Confirm */}
-      {step === 'confirm' && selectedClient && selectedVehicle && (
+      {/* ─── STEP 4: Confirm ─── */}
+      {step === 'confirm' && selectedClient && selectedVehicle && startDate && endDate && (
         <View>
           <Text style={[s.title, { color: C.text }]}>Récapitulatif</Text>
           <View style={[s.summaryCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Client</Text><Text style={[s.summaryValue, { color: C.text }]}>{selectedClient.name}</Text></View>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Véhicule</Text><Text style={[s.summaryValue, { color: C.text }]}>{selectedVehicle.brand} {selectedVehicle.model}</Text></View>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Début</Text><Text style={[s.summaryValue, { color: C.text }]}>{startDate} à {startHour}:00</Text></View>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Fin</Text><Text style={[s.summaryValue, { color: C.text }]}>{endDate} à {endHour}:00</Text></View>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Durée</Text><Text style={[s.summaryValue, { color: C.text }]}>{totalDays} jour(s)</Text></View>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Prix de base</Text><Text style={[s.summaryValue, { color: C.text }]}>CHF {basePrice.toFixed(2)}</Text></View>
-            {optionsPrice > 0 && <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Options</Text><Text style={[s.summaryValue, { color: C.text }]}>CHF {optionsPrice.toFixed(2)}</Text></View>}
+            <SummaryRow label="Client" value={selectedClient.name} C={C} />
+            <SummaryRow label="Véhicule" value={`${selectedVehicle.brand} ${selectedVehicle.model}`} C={C} />
+            <SummaryRow label="Début" value={`${format(startDate, 'd MMM yyyy', { locale: fr })} à ${String(startHour).padStart(2, '0')}:00`} C={C} />
+            <SummaryRow label="Fin" value={`${format(endDate, 'd MMM yyyy', { locale: fr })} à ${String(endHour).padStart(2, '0')}:00`} C={C} />
+            <SummaryRow label="Durée" value={`${totalDays} jour(s)`} C={C} />
+            <SummaryRow label="Prix base" value={`CHF ${basePrice.toFixed(2)}`} C={C} />
+            {optionsPrice > 0 && <SummaryRow label="Options" value={`CHF ${optionsPrice.toFixed(2)}`} C={C} />}
             <View style={[s.divider, { backgroundColor: C.border }]} />
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.text, fontWeight: '800' }]}>Total</Text><Text style={[s.summaryValue, { fontSize: 20, color: C.accent }]}>CHF {totalPrice.toFixed(2)}</Text></View>
-            <View style={s.summaryRow}><Text style={[s.summaryLabel, { color: C.textLight }]}>Paiement</Text><Text style={[s.summaryValue, { color: paymentMethod === 'cash' ? C.warning : C.accent }]}>{paymentMethod === 'cash' ? 'Espèces' : 'Lien par email'}</Text></View>
+            <View style={s.summaryRow}><Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Total</Text><Text style={{ color: C.accent, fontSize: 22, fontWeight: '800' }}>CHF {totalPrice.toFixed(2)}</Text></View>
+            <SummaryRow label="Paiement" value={paymentMethod === 'cash' ? 'Espèces' : 'Lien Stripe'} C={C} />
           </View>
-          <TouchableOpacity style={[s.confirmBtn, { backgroundColor: C.success }, submitting && { opacity: 0.6 }]} onPress={submitReservation} disabled={submitting} data-testid="confirm-booking-btn">
+          <TouchableOpacity style={[s.confirmBtn, { backgroundColor: C.success }, submitting && { opacity: 0.6 }]} onPress={submitReservation} disabled={submitting} data-testid="confirm-btn">
             {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="checkmark-circle" size={22} color="#fff" />}
-            <Text style={s.primaryBtnText}>{submitting ? 'Création...' : 'Confirmer la réservation'}</Text>
+            <Text style={s.btnText}>{submitting ? 'Création...' : 'Confirmer la réservation'}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -505,70 +501,62 @@ export default function BookingFlow() {
   );
 }
 
+function SummaryRow({ label, value, C }: { label: string; value: string; C: any }) {
+  return <View style={s.summaryRow}><Text style={{ color: C.textLight, fontSize: 13 }}>{label}</Text><Text style={{ color: C.text, fontSize: 13, fontWeight: '600' }}>{value}</Text></View>;
+}
+
+const cs = StyleSheet.create({
+  monthContainer: { flex: 1, minWidth: 260 },
+  monthTitle: { fontSize: 16, fontWeight: '800', textAlign: 'center', marginBottom: 10, textTransform: 'capitalize' },
+  weekdayRow: { flexDirection: 'row' },
+  weekdayText: { flex: 1, textAlign: 'center', fontSize: 11, fontWeight: '700', marginBottom: 6 },
+  weekRow: { flexDirection: 'row' },
+  dayCell: { flex: 1, alignItems: 'center', justifyContent: 'center', height: 40, borderRadius: 20 },
+  dayText: { fontSize: 14, fontWeight: '500' },
+  busyDot: { width: 5, height: 5, borderRadius: 3, position: 'absolute', bottom: 3 },
+});
+
 const s = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, paddingBottom: 40 },
-  steps: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20, borderRadius: 12, padding: 12, borderWidth: 1 },
+  stepsBar: { flexDirection: 'row', justifyContent: 'space-between', borderRadius: 12, padding: 12, borderWidth: 1, marginBottom: 20 },
   stepItem: { alignItems: 'center', gap: 4, flex: 1 },
   stepDot: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   stepLabel: { fontSize: 10, fontWeight: '700' },
-  title: { fontSize: 20, fontWeight: '800', marginBottom: 6 },
-  subtitle: { fontSize: 13, marginBottom: 12 },
+  title: { fontSize: 20, fontWeight: '800', marginBottom: 12 },
   sectionTitle: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
-  searchBox: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1, marginBottom: 12 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1, marginBottom: 12 },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
-  resultCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1 },
-  resultName: { fontSize: 14, fontWeight: '700' },
-  selectedCard: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 14, marginBottom: 16, borderWidth: 1 },
-  selectedName: { fontSize: 15, fontWeight: '700' },
-  newClientBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
-  newClientBtnText: { fontSize: 14, fontWeight: '600' },
-  newClientForm: { borderRadius: 10, padding: 14, gap: 10, borderWidth: 1, marginBottom: 16 },
+  clientCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1 },
+  selectedBox: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 10, padding: 14, marginBottom: 16, borderWidth: 1 },
+  selName: { fontSize: 15, fontWeight: '700' },
+  newForm: { borderRadius: 10, padding: 14, gap: 10, borderWidth: 1, marginBottom: 16 },
   input: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, borderWidth: 1 },
-  primaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, paddingVertical: 14, marginTop: 16 },
-  primaryBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  primaryBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, paddingVertical: 14 },
   confirmBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, paddingVertical: 16, marginTop: 16 },
-  weekNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: 10, padding: 12, borderWidth: 1, marginBottom: 12 },
-  weekTitle: { fontSize: 14, fontWeight: '700' },
-  dateSelectionBox: { borderRadius: 10, padding: 14, borderWidth: 1, marginBottom: 12 },
-  dateSelLabel: { fontSize: 14, fontWeight: '700', marginBottom: 8 },
-  dateRow: { flexDirection: 'row', gap: 12 },
-  dateTimeRow: { flexDirection: 'row', gap: 6 },
-  dateInput: { flex: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, fontSize: 13, borderWidth: 1 },
-  hourPicker: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 8, paddingHorizontal: 8, borderWidth: 1 },
-  hourText: { fontSize: 14, fontWeight: '700', minWidth: 38, textAlign: 'center' },
-  legendRow: { flexDirection: 'row', gap: 16, marginBottom: 10, flexWrap: 'wrap' },
+  btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  dateSummaryBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, borderRadius: 12, padding: 14, borderWidth: 1, marginBottom: 16 },
+  dateSummaryItem: { flex: 1, alignItems: 'center', padding: 10, borderRadius: 10, borderWidth: 1, borderColor: 'transparent' },
+  dateSummaryText: { fontSize: 15, fontWeight: '700', marginTop: 4 },
+  monthNav: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8, paddingHorizontal: 4 },
+  calendarGrid: { flexDirection: 'row', gap: 24, marginBottom: 16 },
+  hourSection: { flexDirection: 'row', gap: 16, borderRadius: 12, padding: 16, borderWidth: 1, marginBottom: 12 },
+  hourGroup: { flex: 1, alignItems: 'center' },
+  hourControl: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
+  hourValue: { fontSize: 18, fontWeight: '800', minWidth: 50, textAlign: 'center' },
+  durationBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, alignSelf: 'flex-start' },
+  legendRow: { flexDirection: 'row', gap: 16, marginBottom: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
-  gridHeader: { flexDirection: 'row' },
-  vehicleCol: { width: 130, padding: 8, borderWidth: 1, borderRightWidth: 2 },
-  vehicleColRow: { justifyContent: 'center', gap: 2 },
-  colHeaderText: { fontSize: 11, fontWeight: '700' },
-  dayCol: { width: 80, alignItems: 'center', padding: 6, borderWidth: 1 },
-  dayName: { fontSize: 10, fontWeight: '600' },
-  dayNum: { fontSize: 16, fontWeight: '800' },
-  gridRow: { flexDirection: 'row' },
-  vehicleLabel: { fontSize: 12, fontWeight: '700' },
-  busyTag: { backgroundColor: '#EF444420', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 1 },
-  busyTagText: { color: '#EF4444', fontSize: 9, fontWeight: '700' },
-  dayCell: { width: 80, height: 48, borderWidth: 1, padding: 2, justifyContent: 'center' },
-  cellBar: { flex: 1, borderRadius: 4, justifyContent: 'center', paddingHorizontal: 4 },
-  cellText: { fontSize: 9, fontWeight: '600' },
-  cellFreeText: { fontSize: 11, textAlign: 'center' },
-  selectionSummary: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, padding: 14, borderWidth: 2, marginTop: 12 },
-  selSummaryTitle: { fontSize: 14, fontWeight: '700' },
-  selSummaryPrice: { fontSize: 18, fontWeight: '800' },
+  vehicleCard: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1 },
+  vehicleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  vehicleName: { fontSize: 15, fontWeight: '700' },
+  occupiedTag: { position: 'absolute', top: 0, right: 0, backgroundColor: '#EF444415', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  priceSummary: { marginTop: 10, padding: 10, borderRadius: 8 },
   optionCard: { flexDirection: 'row', alignItems: 'center', gap: 10, borderRadius: 8, padding: 12, marginBottom: 8, borderWidth: 1 },
-  optionName: { flex: 1, fontSize: 14 },
   payCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 10, padding: 14, marginBottom: 8, borderWidth: 1.5 },
-  payTitle: { fontSize: 14, fontWeight: '700' },
   summaryCard: { borderRadius: 12, padding: 16, borderWidth: 1, marginBottom: 16 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
-  summaryLabel: { fontSize: 13 },
-  summaryValue: { fontSize: 13, fontWeight: '600' },
   divider: { height: 1, marginVertical: 8 },
   successTitle: { fontSize: 24, fontWeight: '800', marginTop: 16, marginBottom: 8 },
-  successSub: { fontSize: 15, marginBottom: 4 },
-  successPrice: { fontSize: 28, fontWeight: '800', marginVertical: 12 },
-  successMethod: { fontSize: 14, marginBottom: 24 },
 });
