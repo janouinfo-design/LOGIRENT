@@ -17,6 +17,20 @@ type Position = {
   last_update: string;
 };
 
+const DEFAULT_LAT = 46.8182;
+const DEFAULT_LNG = 8.2275;
+const DEFAULT_ZOOM_BBOX = 2.0;
+const SELECTED_ZOOM_BBOX = 0.008;
+
+function buildMapUrl(lat: number, lng: number, zoom: number, markerLat?: number, markerLng?: number) {
+  const bbox = `${lng - zoom},${lat - zoom},${lng + zoom},${lat + zoom}`;
+  let url = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik`;
+  if (markerLat !== undefined && markerLng !== undefined) {
+    url += `&marker=${markerLat},${markerLng}`;
+  }
+  return url;
+}
+
 export default function AgencyTracking() {
   const { colors: C } = useThemeStore();
   const [positions, setPositions] = useState<Position[]>([]);
@@ -84,7 +98,7 @@ export default function AgencyTracking() {
       intervalRef.current = setInterval(fetchPositions, 30000);
     } catch (e: any) {
       const msg = e.response?.data?.detail || 'Erreur';
-      Platform.OS === 'web' ? window.alert(msg) : null;
+      if (Platform.OS === 'web') window.alert(msg);
     } finally { setSaving(false); }
   };
 
@@ -104,32 +118,16 @@ export default function AgencyTracking() {
   const parkedCount = positions.filter(p => p.movement_status !== 'moving' && p.connection_status === 'active').length;
   const offlineCount = positions.filter(p => p.connection_status !== 'active').length;
 
-  if (loading) {
-    return (
-      <View style={[s.center, { backgroundColor: C.bg }]}>
-        <ActivityIndicator size="large" color={C.accent} />
-        <Text style={[s.loadingText, { color: C.textLight }]}>Chargement GPS...</Text>
-      </View>
-    );
-  }
-
-  // Not configured - show setup prompt
-  if (!configured && !error) {
-    return (
-      <View style={[s.center, { backgroundColor: C.bg }]}>
-        <Ionicons name="navigate-circle-outline" size={64} color={C.textLight} />
-        <Text style={[s.setupTitle, { color: C.text }]}>Suivi GPS</Text>
-        <Text style={[s.setupDesc, { color: C.textLight }]}>
-          Configurez votre clé API Navixy pour activer le suivi GPS de votre flotte.
-        </Text>
-        <TouchableOpacity style={[s.configBtn, { backgroundColor: C.primary }]} onPress={() => setShowConfig(true)} testID="setup-navixy-btn">
-          <Ionicons name="settings" size={18} color="#fff" />
-          <Text style={s.configBtnText}>Configurer Navixy</Text>
-        </TouchableOpacity>
-        {renderConfigModal()}
-      </View>
-    );
-  }
+  const getMapUrl = () => {
+    if (selectedTracker?.lat && selectedTracker?.lng) {
+      return buildMapUrl(selectedTracker.lat, selectedTracker.lng, SELECTED_ZOOM_BBOX, selectedTracker.lat, selectedTracker.lng);
+    }
+    const firstWithPos = positions.find(p => p.lat && p.lng);
+    if (firstWithPos?.lat && firstWithPos?.lng) {
+      return buildMapUrl(firstWithPos.lat, firstWithPos.lng, 0.05);
+    }
+    return buildMapUrl(DEFAULT_LAT, DEFAULT_LNG, DEFAULT_ZOOM_BBOX);
+  };
 
   function renderConfigModal() {
     return (
@@ -149,7 +147,6 @@ export default function AgencyTracking() {
                   Connectez-vous sur navixy.com pour obtenir votre URL API et votre clé (hash).
                 </Text>
               </View>
-
               <Text style={[s.label, { color: C.textLight }]}>URL API Navixy</Text>
               <TextInput
                 style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
@@ -158,9 +155,8 @@ export default function AgencyTracking() {
                 value={navixyUrl}
                 onChangeText={setNavixyUrl}
                 autoCapitalize="none"
-                testID="navixy-url-input"
+                data-testid="navixy-url-input"
               />
-
               <Text style={[s.label, { color: C.textLight }]}>Hash API (clé d'authentification)</Text>
               <TextInput
                 style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
@@ -170,14 +166,13 @@ export default function AgencyTracking() {
                 onChangeText={setNavixyHash}
                 autoCapitalize="none"
                 secureTextEntry
-                testID="navixy-hash-input"
+                data-testid="navixy-hash-input"
               />
-
               <TouchableOpacity
                 style={[s.saveBtn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]}
                 onPress={saveConfig}
                 disabled={saving || !navixyUrl || !navixyHash}
-                testID="save-navixy-btn"
+                data-testid="save-navixy-btn"
               >
                 <Ionicons name="checkmark-circle" size={18} color="#fff" />
                 <Text style={s.saveBtnText}>{saving ? 'Enregistrement...' : 'Enregistrer'}</Text>
@@ -189,124 +184,178 @@ export default function AgencyTracking() {
     );
   }
 
-  return (
-    <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content}>
-      {/* Header */}
-      <View style={s.headerRow}>
-        <View>
-          <Text style={[s.title, { color: C.text }]}>Suivi GPS</Text>
-          <Text style={[s.subtitle, { color: C.textLight }]}>MAJ: {lastRefresh}</Text>
-        </View>
-        <View style={s.headerActions}>
-          <TouchableOpacity style={[s.iconBtn, { backgroundColor: C.card, borderColor: C.border }]} onPress={fetchPositions} testID="refresh-gps-btn">
-            <Ionicons name="refresh" size={18} color={C.accent} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[s.iconBtn, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { fetchConfig(); setShowConfig(true); }} testID="config-navixy-btn">
-            <Ionicons name="settings-outline" size={18} color={C.textLight} />
-          </TouchableOpacity>
-        </View>
+  if (loading) {
+    return (
+      <View style={[s.center, { backgroundColor: C.bg }]}>
+        <ActivityIndicator size="large" color={C.accent} />
+        <Text style={[s.loadingText, { color: C.textLight }]}>Chargement GPS...</Text>
       </View>
+    );
+  }
 
-      {/* Error */}
-      {error ? (
-        <View style={[s.errorBox, { backgroundColor: C.error + '15', borderColor: C.error + '30' }]}>
-          <Ionicons name="alert-circle" size={18} color={C.error} />
-          <Text style={[s.errorText, { color: C.error }]}>{error}</Text>
-          <TouchableOpacity onPress={() => { fetchConfig(); setShowConfig(true); }}>
-            <Text style={[s.errorLink, { color: C.accent }]}>Configurer</Text>
-          </TouchableOpacity>
-        </View>
-      ) : null}
+  if (!configured && !error) {
+    return (
+      <View style={[s.center, { backgroundColor: C.bg }]}>
+        <Ionicons name="navigate-circle-outline" size={64} color={C.textLight} />
+        <Text style={[s.setupTitle, { color: C.text }]}>Suivi GPS</Text>
+        <Text style={[s.setupDesc, { color: C.textLight }]}>
+          Configurez votre clé API Navixy pour activer le suivi GPS de votre flotte.
+        </Text>
+        <TouchableOpacity style={[s.configBtn, { backgroundColor: C.primary }]} onPress={() => setShowConfig(true)} data-testid="setup-navixy-btn">
+          <Ionicons name="settings" size={18} color="#fff" />
+          <Text style={s.configBtnText}>Configurer Navixy</Text>
+        </TouchableOpacity>
+        {renderConfigModal()}
+      </View>
+    );
+  }
 
-      {/* Stats */}
-      {!error && (
-        <View style={s.statsRow}>
-          <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.success }]}>
-            <Text style={[s.statNum, { color: C.text }]}>{movingCount}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>En route</Text>
-          </View>
-          <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.warning }]}>
-            <Text style={[s.statNum, { color: C.text }]}>{parkedCount}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>Stationnés</Text>
-          </View>
-          <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.error }]}>
-            <Text style={[s.statNum, { color: C.text }]}>{offlineCount}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>Hors ligne</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Map */}
-      {selectedTracker && selectedTracker.lat && selectedTracker.lng && Platform.OS === 'web' && (
-        <View style={[s.mapBox, { backgroundColor: C.card, borderColor: C.border }]}>
-          <View style={s.mapHeader}>
-            <Text style={[s.mapTitle, { color: C.text }]}>{selectedTracker.label}</Text>
-            <TouchableOpacity onPress={() => setSelectedTracker(null)}>
-              <Ionicons name="close-circle" size={22} color={C.error} />
-            </TouchableOpacity>
-          </View>
+  return (
+    <View style={[s.container, { backgroundColor: C.bg }]} data-testid="tracking-page">
+      {/* Fixed Map at top */}
+      {Platform.OS === 'web' && (
+        <View style={[s.mapContainer, { backgroundColor: C.card, borderColor: C.border }]} data-testid="map-container">
+          {selectedTracker ? (
+            <View style={[s.mapLabel, { backgroundColor: C.accent }]}>
+              <Ionicons name="location" size={14} color="#fff" />
+              <Text style={s.mapLabelText}>{selectedTracker.label}</Text>
+              <TouchableOpacity onPress={() => setSelectedTracker(null)} data-testid="clear-selection-btn">
+                <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.8)" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={[s.mapLabel, { backgroundColor: C.card }]}>
+              <Ionicons name="map" size={14} color={C.textLight} />
+              <Text style={[s.mapLabelText, { color: C.textLight }]}>Sélectionnez un véhicule</Text>
+            </View>
+          )}
           <iframe
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedTracker.lng - 0.01},${selectedTracker.lat - 0.01},${selectedTracker.lng + 0.01},${selectedTracker.lat + 0.01}&layer=mapnik&marker=${selectedTracker.lat},${selectedTracker.lng}`}
-            style={{ width: '100%', height: 280, border: 'none', borderRadius: 8 } as any}
+            key={selectedTracker?.tracker_id || 'default'}
+            src={getMapUrl()}
+            style={{ width: '100%', height: 280, border: 'none' } as any}
+            title="GPS Map"
           />
         </View>
       )}
 
-      {/* Vehicle list */}
-      {!error && positions.length > 0 && (
-        <>
-          <Text style={[s.sectionTitle, { color: C.text }]}>Véhicules ({positions.length})</Text>
-          {positions.map((p) => (
-            <TouchableOpacity
-              key={p.tracker_id}
-              style={[s.vehicleCard, { backgroundColor: C.card, borderColor: selectedTracker?.tracker_id === p.tracker_id ? C.accent : C.border }]}
-              onPress={() => setSelectedTracker(p)}
-            >
-              <View style={s.vehicleHeader}>
-                <View style={[s.dot, { backgroundColor: getStatusColor(p) }]} />
-                <Text style={[s.vehicleName, { color: C.text }]} numberOfLines={1}>{p.label}</Text>
-                <View style={[s.badge, { backgroundColor: getStatusColor(p) + '20' }]}>
-                  <Text style={[s.badgeText, { color: getStatusColor(p) }]}>{getStatusLabel(p)}</Text>
-                </View>
-              </View>
-              <View style={s.vehicleDetails}>
-                {p.lat && p.lng ? (
-                  <Text style={[s.detailText, { color: C.textLight }]}>
-                    {p.lat?.toFixed(4)}, {p.lng?.toFixed(4)} | {p.speed} km/h
-                  </Text>
-                ) : (
-                  <Text style={[s.detailText, { color: C.textLight }]}>Position non disponible</Text>
-                )}
-                <Text style={[s.detailText, { color: C.textLight }]}>
-                  Moteur: {p.ignition ? 'Allumé' : 'Éteint'} | MAJ: {p.last_update || 'N/A'}
-                </Text>
-              </View>
+      {/* Scrollable content */}
+      <ScrollView style={s.scrollArea} contentContainerStyle={s.scrollContent}>
+        {/* Header row */}
+        <View style={s.headerRow}>
+          <View>
+            <Text style={[s.title, { color: C.text }]}>Suivi GPS</Text>
+            <Text style={[s.subtitle, { color: C.textLight }]}>MAJ: {lastRefresh}</Text>
+          </View>
+          <View style={s.headerActions}>
+            <TouchableOpacity style={[s.iconBtn, { backgroundColor: C.card, borderColor: C.border }]} onPress={fetchPositions} data-testid="refresh-gps-btn">
+              <Ionicons name="refresh" size={18} color={C.accent} />
             </TouchableOpacity>
-          ))}
-        </>
-      )}
-
-      {!error && positions.length === 0 && configured && (
-        <View style={s.emptyState}>
-          <Ionicons name="car-outline" size={40} color={C.textLight} />
-          <Text style={[s.emptyText, { color: C.textLight }]}>Aucun tracker trouvé</Text>
+            <TouchableOpacity style={[s.iconBtn, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { fetchConfig(); setShowConfig(true); }} data-testid="config-navixy-btn">
+              <Ionicons name="settings-outline" size={18} color={C.textLight} />
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
+
+        {/* Error */}
+        {error ? (
+          <View style={[s.errorBox, { backgroundColor: C.error + '15', borderColor: C.error + '30' }]}>
+            <Ionicons name="alert-circle" size={18} color={C.error} />
+            <Text style={[s.errorText, { color: C.error }]}>{error}</Text>
+            <TouchableOpacity onPress={() => { fetchConfig(); setShowConfig(true); }}>
+              <Text style={[s.errorLink, { color: C.accent }]}>Configurer</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        {/* Stats */}
+        {!error && (
+          <View style={s.statsRow}>
+            <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.success }]}>
+              <Text style={[s.statNum, { color: C.text }]}>{movingCount}</Text>
+              <Text style={[s.statLabel, { color: C.textLight }]}>En route</Text>
+            </View>
+            <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.warning }]}>
+              <Text style={[s.statNum, { color: C.text }]}>{parkedCount}</Text>
+              <Text style={[s.statLabel, { color: C.textLight }]}>Stationnés</Text>
+            </View>
+            <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.error }]}>
+              <Text style={[s.statNum, { color: C.text }]}>{offlineCount}</Text>
+              <Text style={[s.statLabel, { color: C.textLight }]}>Hors ligne</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Vehicle list */}
+        {!error && positions.length > 0 && (
+          <>
+            <Text style={[s.sectionTitle, { color: C.text }]}>Véhicules ({positions.length})</Text>
+            {positions.map((p) => (
+              <TouchableOpacity
+                key={p.tracker_id}
+                style={[
+                  s.vehicleCard,
+                  { backgroundColor: C.card, borderColor: selectedTracker?.tracker_id === p.tracker_id ? C.accent : C.border },
+                  selectedTracker?.tracker_id === p.tracker_id && { borderWidth: 2 }
+                ]}
+                onPress={() => setSelectedTracker(p)}
+                data-testid={`vehicle-tracker-${p.tracker_id}`}
+              >
+                <View style={s.vehicleHeader}>
+                  <View style={[s.dot, { backgroundColor: getStatusColor(p) }]} />
+                  <Text style={[s.vehicleName, { color: C.text }]} numberOfLines={1}>{p.label}</Text>
+                  <View style={[s.badge, { backgroundColor: getStatusColor(p) + '20' }]}>
+                    <Text style={[s.badgeText, { color: getStatusColor(p) }]}>{getStatusLabel(p)}</Text>
+                  </View>
+                </View>
+                <View style={s.vehicleDetails}>
+                  {p.lat && p.lng ? (
+                    <Text style={[s.detailText, { color: C.textLight }]}>
+                      {p.lat?.toFixed(4)}, {p.lng?.toFixed(4)} | {p.speed} km/h
+                    </Text>
+                  ) : (
+                    <Text style={[s.detailText, { color: C.textLight }]}>Position non disponible</Text>
+                  )}
+                  <Text style={[s.detailText, { color: C.textLight }]}>
+                    Moteur: {p.ignition ? 'Allumé' : 'Éteint'} | MAJ: {p.last_update || 'N/A'}
+                  </Text>
+                </View>
+                {selectedTracker?.tracker_id === p.tracker_id && (
+                  <View style={[s.selectedIndicator, { backgroundColor: C.accent + '15' }]}>
+                    <Ionicons name="location" size={14} color={C.accent} />
+                    <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Affiché sur la carte</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </>
+        )}
+
+        {!error && positions.length === 0 && configured && (
+          <View style={s.emptyState}>
+            <Ionicons name="car-outline" size={40} color={C.textLight} />
+            <Text style={[s.emptyText, { color: C.textLight }]}>Aucun tracker trouvé</Text>
+          </View>
+        )}
+      </ScrollView>
 
       {renderConfigModal()}
-    </ScrollView>
+    </View>
   );
 }
 
 const s = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, paddingBottom: 40 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
   loadingText: { marginTop: 12, fontSize: 14 },
   setupTitle: { fontSize: 22, fontWeight: '800', marginTop: 16, marginBottom: 8 },
   setupDesc: { fontSize: 14, textAlign: 'center', lineHeight: 22, marginBottom: 20 },
   configBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
   configBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  mapContainer: { borderBottomWidth: 1, overflow: 'hidden' },
+  mapLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8 },
+  mapLabelText: { flex: 1, color: '#fff', fontSize: 13, fontWeight: '600' },
+  scrollArea: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   headerActions: { flexDirection: 'row', gap: 8 },
   iconBtn: { width: 40, height: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
@@ -319,9 +368,6 @@ const s = StyleSheet.create({
   statCard: { flex: 1, borderRadius: 10, padding: 14, borderWidth: 1, borderLeftWidth: 3 },
   statNum: { fontSize: 26, fontWeight: '800' },
   statLabel: { fontSize: 11, marginTop: 2 },
-  mapBox: { borderRadius: 12, overflow: 'hidden', marginBottom: 16, borderWidth: 1 },
-  mapHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12 },
-  mapTitle: { fontWeight: '700', fontSize: 14 },
   sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 10 },
   vehicleCard: { borderRadius: 10, padding: 14, marginBottom: 10, borderWidth: 1 },
   vehicleHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
@@ -331,6 +377,7 @@ const s = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: '600' },
   vehicleDetails: { paddingLeft: 18 },
   detailText: { fontSize: 12, marginBottom: 2 },
+  selectedIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
   emptyState: { alignItems: 'center', paddingTop: 40 },
   emptyText: { marginTop: 8, fontSize: 14 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
