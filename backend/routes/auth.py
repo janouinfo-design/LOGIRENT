@@ -180,3 +180,17 @@ async def upload_id(file: UploadFile = File(...), user: dict = Depends(get_curre
 
     await db.users.update_one({"id": user['id']}, {"$set": {"id_photo": data_uri}})
     return {"message": "ID uploaded successfully", "id_photo": data_uri}
+
+
+
+@router.post("/admin/impersonate/{user_id}")
+async def impersonate_user(user_id: str, user: dict = Depends(get_current_user)):
+    """Super admin can login as any user without password"""
+    if user.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="Super admin only")
+    target = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    token = create_token(target['id'], target['email'], target.get('role', 'client'))
+    profile = await build_user_profile(target)
+    return {"access_token": token, "user": profile.dict()}
