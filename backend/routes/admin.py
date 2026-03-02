@@ -149,6 +149,52 @@ async def get_advanced_stats(user: dict = Depends(get_admin_user)):
     }
 
 
+@router.get("/admin/stats/top-clients")
+async def get_top_clients(user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    rf = {} if is_super else {"agency_id": agency_id}
+
+    pipeline = [
+        {"$match": {**rf, "payment_status": "paid"}},
+        {"$group": {"_id": "$user_id", "total_spent": {"$sum": "$total_price"}, "bookings": {"$sum": 1}}},
+        {"$sort": {"total_spent": -1}},
+        {"$limit": 10},
+    ]
+    top = await db.reservations.aggregate(pipeline).to_list(10)
+    result = []
+    for item in top:
+        u = await db.users.find_one({"id": item["_id"]}, {"_id": 0, "id": 1, "name": 1, "email": 1, "client_rating": 1})
+        if u:
+            result.append({"id": u["id"], "name": u.get("name", ""), "email": u.get("email", ""),
+                           "rating": u.get("client_rating", "neutral"),
+                           "total_spent": item["total_spent"], "bookings": item["bookings"]})
+    return result
+
+
+@router.get("/admin/stats/agency-comparison")
+async def get_agency_comparison(user: dict = Depends(get_admin_user)):
+    if user.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="Super admin only")
+
+    agencies = await db.agencies.find({}, {"_id": 0, "id": 1, "name": 1}).to_list(50)
+    result = []
+    for a in agencies:
+        rev = await db.reservations.aggregate([
+            {"$match": {"agency_id": a["id"], "payment_status": "paid"}},
+            {"$group": {"_id": None, "revenue": {"$sum": "$total_price"}, "bookings": {"$sum": 1}}}
+        ]).to_list(1)
+        vehicle_count = await db.vehicles.count_documents({"agency_id": a["id"]})
+        result.append({
+            "id": a["id"], "name": a["name"],
+            "revenue": rev[0]["revenue"] if rev else 0,
+            "bookings": rev[0]["bookings"] if rev else 0,
+            "vehicles": vehicle_count,
+        })
+    result.sort(key=lambda x: x["revenue"], reverse=True)
+    return result
+
+
 @router.get("/admin/users")
 async def get_admin_users(skip: int = 0, limit: int = 20, user: dict = Depends(get_admin_user)):
     agency_id = user.get('agency_id')
