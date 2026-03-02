@@ -33,6 +33,7 @@ interface Agency {
   vehicle_count: number;
   reservation_count: number;
   admin_count: number;
+  admin_id?: string;
   admin_email?: string;
   admin_name?: string;
   admin_password_display?: string;
