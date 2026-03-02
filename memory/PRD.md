@@ -15,54 +15,46 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Filter Chips Fix + Bigger Nav Menu (Mar 2, 2026) - NEW
-- Fixed reservation filter chips (Toutes, En attente, Espèces, Confirmées, Actives, Terminées, Annulées) - now visible with proper colors and theme support
-- Enlarged navigation menu: icons 24px, text 13px (was 20px/11px)
-- Used inline styles to avoid Metro CI cache issues with StyleSheet references
+### Contract Actions in Agency App (Mar 2, 2026) - NEW
+- Added CONTRAT section to reservation action modal with 3 options:
+  - "Voir / Générer le contrat" - views existing or generates new, then navigates to contract page
+  - "Envoyer le contrat au client" - sends contract by email via PUT /api/contracts/{id}/send
+  - "Télécharger le PDF" - downloads contract PDF
+- Uses GET /api/contracts/by-reservation/{reservation_id} to find contract by reservation
+
+### Filter Chips Fix + Bigger Nav Menu (Mar 2, 2026)
+- Fixed reservation filter chips with inline styles (Metro CI cache workaround)
+- Enlarged navigation menu: icons 24px, text 13px
 
 ### Edit Client Profiles from Agency Admin (Mar 2, 2026)
-- Click on any client card to open edit modal
-- Editable fields: Name, Email, Phone, Address, Rating (VIP/Bon/Neutre/Mauvais/Bloqué), Admin Notes
+- Click on any client card to open edit modal (Name, Email, Phone, Address, Rating, Notes)
 
 ### GPS Tracking - Fixed Map Layout (Mar 2, 2026)
-- Map always visible and fixed at top (agency-app + admin tracking)
-- Clicking a vehicle centers the map on its position with a marker
+- Map always visible and fixed at top, clicking vehicle centers map
 
 ### Contract System with Digital Signature (Feb 28, 2026)
 - Full contract API, bilingual, digital signature, PDF generation
 
 ### Dark/Light Mode Toggle Everywhere (Feb 28, 2026)
-- Theme toggle in Admin and Super Admin headers
-
 ### Email Notifications (Feb 28, 2026)
-- Branded HTML email via Resend on reservation status change
-
 ### Advanced Statistics Dashboards (Feb 28, 2026)
-- 3 Statistics pages with SVG charts
-
 ### Previously Completed
-- Super Admin Agencies, GPS Tab, Password Display
-- Agency Admin Profile Page, Theme System
-- GPS Tracking (Navixy), Client Import (ZIP)
-- In-App Notifications, QR Codes, Calendar
-- AI Document Verification, Multi-Agency Architecture
-- Auth, Vehicles, Reservations, Stripe Payments, Resend Email
+- Super Admin, GPS (Navixy), Client Import, Notifications, QR Codes, Calendar, AI Doc Verification, Multi-Agency, Auth, Vehicles, Reservations, Stripe
 
 ## Remaining Tasks
-- P1: Push Notifications (Firebase) for mobile apps
+- P1: Push Notifications (Firebase)
 - P2: Driver/Agent Application
 - P3: Refactoring server.py monolith into routers
 - P4: App Store Deployment
-- Security: password stored in plain text (initial_password field)
+- Security: password hashing for agencies
 
 ## Credentials
 - Super Admin: test@example.com / password123
 - Agency Admin Geneva: admin-geneva@logirent.ch / LogiRent2024
-- Agency Admin Lausanne: admin@test.com / password123
 - Client: client1@test.com / test1234
 
 ## 3rd Party Integrations
-- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (AI doc verification), reportlab (PDF generation)
+- Stripe, Resend, Navixy, OpenAI GPT-5.2, reportlab
 
 ## DB Collections
 - users, agencies, vehicles, reservations, notifications, contracts
