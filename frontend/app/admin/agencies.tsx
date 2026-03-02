@@ -61,14 +61,17 @@ export default function AgenciesPage() {
     setImpersonating(agency.id);
     const newWindow = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
-      // Use token from Zustand store (guaranteed valid since super-admin page renders)
       const storeToken = useAuthStore.getState().token;
       const res = await axios.post(`${API_URL}/api/admin/impersonate/${agency.admin_id}`, {}, {
         headers: { Authorization: `Bearer ${storeToken}` }
       });
       const { access_token } = res.data;
+      if (typeof window !== 'undefined') {
+        // Store imp token in a separate key (doesn't interfere with super admin session)
+        localStorage.setItem('imp_token', access_token);
+      }
       if (newWindow) {
-        newWindow.location.href = `${API_URL}/agency-app#imp_token=${access_token}`;
+        newWindow.location.href = `${API_URL}/agency-app`;
       }
     } catch (e: any) {
       if (newWindow) newWindow.close();
