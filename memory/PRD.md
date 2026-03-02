@@ -15,19 +15,18 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Edit Client Profiles from Agency Admin (Mar 2, 2026) - NEW
+### Filter Chips Fix + Bigger Nav Menu (Mar 2, 2026) - NEW
+- Fixed reservation filter chips (Toutes, En attente, Espèces, Confirmées, Actives, Terminées, Annulées) - now visible with proper colors and theme support
+- Enlarged navigation menu: icons 24px, text 13px (was 20px/11px)
+- Used inline styles to avoid Metro CI cache issues with StyleSheet references
+
+### Edit Client Profiles from Agency Admin (Mar 2, 2026)
 - Click on any client card to open edit modal
 - Editable fields: Name, Email, Phone, Address, Rating (VIP/Bon/Neutre/Mauvais/Bloqué), Admin Notes
-- Uses existing PUT /api/admin/users/{user_id} endpoint
-- Edit icon (pencil) shown on each client card
 
 ### GPS Tracking - Fixed Map Layout (Mar 2, 2026)
 - Map always visible and fixed at top (agency-app + admin tracking)
 - Clicking a vehicle centers the map on its position with a marker
-- Selected vehicle shows "Affiché sur la carte" indicator
-
-### Clickable Agency App Dashboard Cards (Feb 28, 2026)
-- Four stat cards navigate to respective pages
 
 ### Contract System with Digital Signature (Feb 28, 2026)
 - Full contract API, bilingual, digital signature, PDF generation
@@ -48,14 +47,6 @@ Build a complete car rental solution named "LogiRent" with:
 - In-App Notifications, QR Codes, Calendar
 - AI Document Verification, Multi-Agency Architecture
 - Auth, Vehicles, Reservations, Stripe Payments, Resend Email
-
-## Key Files
-- Backend: `/app/backend/server.py`
-- Agency Clients: `/app/frontend/app/agency-app/clients.tsx`
-- Agency Tracking: `/app/frontend/app/agency-app/tracking.tsx`
-- Admin Tracking: `/app/frontend/app/admin/tracking.tsx`
-- Agency App Home: `/app/frontend/app/agency-app/index.tsx`
-- Contract View: `/app/frontend/app/contract/[id].tsx`
 
 ## Remaining Tasks
 - P1: Push Notifications (Firebase) for mobile apps
