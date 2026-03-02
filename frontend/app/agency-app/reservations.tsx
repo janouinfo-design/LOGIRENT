@@ -118,23 +118,26 @@ export default function AgencyReservations() {
       </View>
 
       {/* Filters */}
-      <View style={s.filterRow}>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginTop: 12, marginBottom: 4 }}>
         {STATUS_FILTERS.map((f) => (
           <TouchableOpacity
             key={f.label}
-            style={[
-              s.filterChip,
-              { borderColor: C.border, backgroundColor: C.bg },
-              filter === f.value && { borderColor: C.accent, backgroundColor: C.accent }
-            ]}
             onPress={() => setFilter(f.value)}
+            style={{
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 20,
+              borderWidth: 2,
+              borderColor: filter === f.value ? '#6C2BD9' : '#CBD5E1',
+              backgroundColor: filter === f.value ? '#6C2BD9' : '#F1F5F9',
+            }}
             data-testid={`filter-${f.value || 'all'}`}
           >
-            <Text style={[
-              s.filterText,
-              { color: C.text },
-              filter === f.value && { color: '#fff' }
-            ]}>{f.label}</Text>
+            <Text style={{
+              fontSize: 13,
+              fontWeight: '700',
+              color: filter === f.value ? '#FFFFFF' : '#1E293B',
+            }}>{f.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
