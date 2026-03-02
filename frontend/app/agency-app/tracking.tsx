@@ -43,6 +43,7 @@ export default function AgencyTracking() {
   const [navixyHash, setNavixyHash] = useState('');
   const [configured, setConfigured] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchConfig = async () => {
@@ -113,6 +114,10 @@ export default function AgencyTracking() {
     if (p.movement_status === 'moving') return 'En mouvement';
     return 'Stationné';
   };
+
+  const filteredPositions = search.length > 0
+    ? positions.filter(p => p.label.toLowerCase().includes(search.toLowerCase()))
+    : positions;
 
   const movingCount = positions.filter(p => p.movement_status === 'moving' && p.connection_status === 'active').length;
   const parkedCount = positions.filter(p => p.movement_status !== 'moving' && p.connection_status === 'active').length;
@@ -285,11 +290,31 @@ export default function AgencyTracking() {
           </View>
         )}
 
-        {/* Vehicle list */}
+        {/* Search bar */}
         {!error && positions.length > 0 && (
+          <View style={[s.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
+            <Ionicons name="search" size={18} color={C.textLight} />
+            <TextInput
+              style={[s.searchInput, { color: C.text }]}
+              placeholder="Rechercher un véhicule..."
+              placeholderTextColor={C.textLight}
+              value={search}
+              onChangeText={setSearch}
+              data-testid="gps-search-input"
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch('')}>
+                <Ionicons name="close-circle" size={18} color={C.textLight} />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Vehicle list */}
+        {!error && filteredPositions.length > 0 && (
           <>
-            <Text style={[s.sectionTitle, { color: C.text }]}>Véhicules ({positions.length})</Text>
-            {positions.map((p) => (
+            <Text style={[s.sectionTitle, { color: C.text }]}>Véhicules ({filteredPositions.length}{search ? ` / ${positions.length}` : ''})</Text>
+            {filteredPositions.map((p) => (
               <TouchableOpacity
                 key={p.tracker_id}
                 style={[
@@ -328,6 +353,13 @@ export default function AgencyTracking() {
               </TouchableOpacity>
             ))}
           </>
+        )}
+
+        {!error && filteredPositions.length === 0 && search.length > 0 && (
+          <View style={s.emptyState}>
+            <Ionicons name="search-outline" size={40} color={C.textLight} />
+            <Text style={[s.emptyText, { color: C.textLight }]}>Aucun résultat pour "{search}"</Text>
+          </View>
         )}
 
         {!error && positions.length === 0 && configured && (
