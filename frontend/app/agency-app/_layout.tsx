@@ -94,7 +94,7 @@ export default function AgencyAppLayout() {
                 onPress={() => router.push(tab.key === 'index' ? '/agency-app' as any : `/agency-app/${tab.key}` as any)}
                 data-testid={`agency-tab-${tab.key}`}
               >
-                <Ionicons name={(active ? tab.icon : tab.iconO) as any} size={20} color={active ? C.accent : C.textLight} />
+                <Ionicons name={(active ? tab.icon : tab.iconO) as any} size={24} color={active ? C.accent : C.textLight} />
                 <Text style={[s.tabText, { color: active ? C.accent : C.textLight }]}>{tab.label}</Text>
               </TouchableOpacity>
             );
