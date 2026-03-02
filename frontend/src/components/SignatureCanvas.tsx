@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, PanResponder } from 'react-native';
 import Svg, { Path as SvgPath } from 'react-native-svg';
 
@@ -11,14 +11,11 @@ interface Props {
 export default function SignatureCanvas({ onSave, saving, colors: C }: Props) {
   const [paths, setPaths] = useState<string[]>([]);
   const [currentPath, setCurrentPath] = useState('');
-  const canvasRef = useRef<any>(null);
 
-  // For Web: use a canvas element
   if (Platform.OS === 'web') {
     return <WebSignatureCanvas onSave={onSave} saving={saving} colors={C} />;
   }
 
-  // For Native: use SVG + PanResponder
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
@@ -63,53 +60,77 @@ export default function SignatureCanvas({ onSave, saving, colors: C }: Props) {
   );
 }
 
-// Web-only canvas signature
 function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [drawing, setDrawing] = useState(false);
+  const drawingRef = useRef(false);
   const [hasDrawn, setHasDrawn] = useState(false);
 
-  const getPos = (e: any) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  };
-
-  const startDraw = useCallback((e: any) => {
-    e.preventDefault();
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const { x, y } = getPos(e);
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    setDrawing(true);
-    setHasDrawn(true);
-  }, []);
 
-  const draw = useCallback((e: any) => {
-    e.preventDefault();
-    if (!drawing) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const { x, y } = getPos(e);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = '#1A1A2E';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-  }, [drawing]);
+    const getPos = (e: MouseEvent | TouchEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      if ('touches' in e && e.touches.length > 0) {
+        return { x: (e.touches[0].clientX - rect.left) * scaleX, y: (e.touches[0].clientY - rect.top) * scaleY };
+      }
+      const me = e as MouseEvent;
+      return { x: (me.clientX - rect.left) * scaleX, y: (me.clientY - rect.top) * scaleY };
+    };
 
-  const endDraw = useCallback((e: any) => {
-    e.preventDefault();
-    setDrawing(false);
+    const onStart = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const { x, y } = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      drawingRef.current = true;
+      setHasDrawn(true);
+    };
+
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!drawingRef.current) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      const { x, y } = getPos(e);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#1A1A2E';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    };
+
+    const onEnd = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      drawingRef.current = false;
+    };
+
+    // Attach native DOM event listeners directly (bypasses React Native Web)
+    canvas.addEventListener('mousedown', onStart, { passive: false });
+    canvas.addEventListener('mousemove', onMove, { passive: false });
+    canvas.addEventListener('mouseup', onEnd, { passive: false });
+    canvas.addEventListener('mouseleave', onEnd, { passive: false });
+    canvas.addEventListener('touchstart', onStart, { passive: false });
+    canvas.addEventListener('touchmove', onMove, { passive: false });
+    canvas.addEventListener('touchend', onEnd, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('mousedown', onStart);
+      canvas.removeEventListener('mousemove', onMove);
+      canvas.removeEventListener('mouseup', onEnd);
+      canvas.removeEventListener('mouseleave', onEnd);
+      canvas.removeEventListener('touchstart', onStart);
+      canvas.removeEventListener('touchmove', onMove);
+      canvas.removeEventListener('touchend', onEnd);
+    };
   }, []);
 
   const handleClear = () => {
@@ -124,37 +145,29 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
   const handleConfirm = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const dataUrl = canvas.toDataURL('image/png');
-    onSave(dataUrl);
+    onSave(canvas.toDataURL('image/png'));
   };
 
   return (
     <View>
-      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>Dessinez votre signature ci-dessous</Text>
+      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>Dessinez votre signature ci-dessous avec la souris</Text>
       <View style={[st.canvasWrap, { borderColor: C.border }]}>
         <canvas
-          ref={canvasRef}
+          ref={(el: HTMLCanvasElement | null) => { canvasRef.current = el; }}
           width={500}
           height={150}
           style={{ width: '100%', height: 150, backgroundColor: '#FFFFFF', borderRadius: 8, cursor: 'crosshair', touchAction: 'none' }}
-          onMouseDown={startDraw}
-          onMouseMove={draw}
-          onMouseUp={endDraw}
-          onMouseLeave={endDraw}
-          onTouchStart={startDraw}
-          onTouchMove={draw}
-          onTouchEnd={endDraw}
         />
       </View>
       <View style={st.btnRow}>
-        <TouchableOpacity style={[st.btn, { backgroundColor: C.border }]} onPress={handleClear}>
+        <TouchableOpacity style={[st.btn, { backgroundColor: C.border }]} onPress={handleClear} data-testid="signature-clear-btn">
           <Text style={{ color: C.text, fontSize: 13 }}>Effacer</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[st.btn, { backgroundColor: C.accent, opacity: !hasDrawn || saving ? 0.5 : 1 }]}
+          style={[st.btn, { backgroundColor: '#10B981', opacity: !hasDrawn || saving ? 0.5 : 1 }]}
           onPress={handleConfirm}
           disabled={!hasDrawn || saving}
-          testID="signature-confirm-btn"
+          data-testid="signature-confirm-btn"
         >
           <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>{saving ? 'Envoi...' : 'Confirmer la signature'}</Text>
         </TouchableOpacity>

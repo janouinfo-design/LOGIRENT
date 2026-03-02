@@ -301,30 +301,46 @@ export default function AgencyReservations() {
                 </View>
               </ScrollView>
 
-              {/* Reservation details below the chart - compact grid */}
+              {/* Reservation details below the chart - 4-column grid */}
               <View style={{ padding: 16, paddingTop: 12 }}>
                 <Text style={{ color: C.text, fontSize: 14, fontWeight: '800', marginBottom: 10 }}>
                   Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0)})
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
                   {schedule.map(v => v.reservations.map(r => {
                     const color = RES_COLORS[r.status] || C.textLight;
                     const isHighlighted = highlightId === r.id;
+                    const cw = (Dimensions.get('window').width - 32 - 30) / 4;
                     return (
                       <Animated.View key={r.id} style={{
-                        width: '31%', minWidth: 150, backgroundColor: C.card, borderRadius: 10,
+                        width: cw, backgroundColor: C.card, borderRadius: 10,
                         borderWidth: isHighlighted ? 2 : 1, borderColor: isHighlighted ? '#fff' : C.border,
-                        borderLeftWidth: 4, borderLeftColor: color, padding: 10,
+                        borderLeftWidth: 3, borderLeftColor: color, padding: 8,
                         ...(isHighlighted ? { opacity: highlightAnim } : {}),
                       }}>
-                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                          <Text style={{ color: C.text, fontSize: 12, fontWeight: '800' }} numberOfLines={1}>{v.brand} {v.model}</Text>
-                          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                          <Text style={{ color: C.text, fontSize: 11, fontWeight: '800', flex: 1 }} numberOfLines={1}>{v.brand} {v.model}</Text>
+                          <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: color + '20' }}>
+                            <Text style={{ color, fontSize: 8, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
+                          </View>
                         </View>
-                        <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>{r.start?.slice(5, 10)} → {r.end?.slice(5, 10)}</Text>
+                        <Text style={{ color: C.textLight, fontSize: 10 }}>{r.start?.slice(5, 10)} → {r.end?.slice(5, 10)}</Text>
                         {r.user_name ? <Text style={{ color: C.textLight, fontSize: 10 }} numberOfLines={1}>{r.user_name}</Text> : null}
-                        <View style={{ alignSelf: 'flex-start', marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: color + '18' }}>
-                          <Text style={{ color, fontSize: 9, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
+                        {/* Inline status change */}
+                        <View style={{ flexDirection: 'row', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+                          {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
+                            <TouchableOpacity
+                              key={s}
+                              onPress={() => updateStatus(r.id, s)}
+                              style={{
+                                paddingHorizontal: 4, paddingVertical: 2, borderRadius: 3,
+                                backgroundColor: r.status === s ? (RES_COLORS[s] || C.textLight) + '30' : 'transparent',
+                                borderWidth: 1, borderColor: r.status === s ? (RES_COLORS[s] || C.textLight) : C.border,
+                              }}
+                            >
+                              <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 7, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+                            </TouchableOpacity>
+                          ))}
                         </View>
                       </Animated.View>
                     );
@@ -359,31 +375,67 @@ export default function AgencyReservations() {
           </View>
 
           <FlatList data={filtered} keyExtractor={(item) => item.id}
+            numColumns={4}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
             contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+            columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
             ListEmptyComponent={<View style={st.empty}><Ionicons name="calendar-outline" size={40} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 14 }}>Aucune reservation</Text></View>}
-            renderItem={({ item }) => (
-              <TouchableOpacity style={[st.card, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => setActionModal(item)} data-testid={`res-${item.id}`}>
-                <View style={st.cardHeader}>
-                  <Text style={[st.clientName, { color: C.text }]}>{item.user_name}</Text>
-                  <View style={[st.badge, { backgroundColor: statusColor(item.status) + '20' }]}>
-                    <Text style={{ color: statusColor(item.status), fontSize: 11, fontWeight: '700' }}>{statusLabel(item.status)}</Text>
+            renderItem={({ item }) => {
+              const sc = statusColor(item.status);
+              const cardW = (Dimensions.get('window').width - 32 - 30) / 4;
+              return (
+                <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, width: cardW, borderLeftWidth: 3, borderLeftColor: sc }]} data-testid={`res-${item.id}`}>
+                  {/* Header: Client + Status badge */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={{ color: C.text, fontSize: 12, fontWeight: '800', flex: 1 }} numberOfLines={1}>{item.user_name}</Text>
+                    <View style={[st.badge, { backgroundColor: sc + '20' }]}>
+                      <Text style={{ color: sc, fontSize: 9, fontWeight: '700' }}>{statusLabel(item.status)}</Text>
+                    </View>
                   </View>
-                </View>
-                <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 8 }}>{item.vehicle_name}</Text>
-                <View style={st.cardFooter}>
-                  <Text style={{ color: C.textLight, fontSize: 12 }}>
+                  {/* Vehicle */}
+                  <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 4 }} numberOfLines={1}>{item.vehicle_name}</Text>
+                  {/* Dates */}
+                  <Text style={{ color: C.textLight, fontSize: 10 }}>
                     {item.start_date ? format(new Date(item.start_date), 'dd MMM', { locale: fr }) : ''} - {item.end_date ? format(new Date(item.end_date), 'dd MMM', { locale: fr }) : ''}
                   </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ color: item.payment_status === 'paid' ? C.success : C.warning, fontSize: 11, fontWeight: '600' }}>
-                      {item.payment_status === 'paid' ? 'Paye' : 'Non paye'}
-                    </Text>
-                    <Text style={{ color: C.accent, fontSize: 14, fontWeight: '700' }}>CHF {item.total_price?.toFixed(2)}</Text>
+                  {/* Price + Payment */}
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                    <Text style={{ color: C.accent, fontSize: 12, fontWeight: '800' }}>CHF {item.total_price?.toFixed(0)}</Text>
+                    <View style={{ paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, backgroundColor: item.payment_status === 'paid' ? '#10B98118' : '#F59E0B18' }}>
+                      <Text style={{ color: item.payment_status === 'paid' ? '#10B981' : '#F59E0B', fontSize: 8, fontWeight: '700' }}>
+                        {item.payment_status === 'paid' ? 'Paye' : 'Non paye'}
+                      </Text>
+                    </View>
                   </View>
+                  {/* Inline status change */}
+                  <View style={{ flexDirection: 'row', gap: 3, marginTop: 6, flexWrap: 'wrap' }}>
+                    {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
+                      <TouchableOpacity
+                        key={s}
+                        onPress={() => updateStatus(item.id, s)}
+                        style={{
+                          paddingHorizontal: 5, paddingVertical: 3, borderRadius: 4,
+                          backgroundColor: item.status === s ? statusColor(s) + '30' : 'transparent',
+                          borderWidth: 1, borderColor: item.status === s ? statusColor(s) : C.border,
+                        }}
+                        data-testid={`status-${item.id}-${s}`}
+                      >
+                        <Text style={{ color: item.status === s ? statusColor(s) : C.textLight, fontSize: 8, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {/* Quick actions */}
+                  <TouchableOpacity
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: C.border }}
+                    onPress={() => setActionModal(item)}
+                    data-testid={`actions-${item.id}`}
+                  >
+                    <Ionicons name="ellipsis-horizontal" size={14} color={C.accent} />
+                    <Text style={{ color: C.accent, fontSize: 10, fontWeight: '600' }}>Actions</Text>
+                  </TouchableOpacity>
                 </View>
-              </TouchableOpacity>
-            )}
+              );
+            }}
           />
         </>
       )}
@@ -492,7 +544,7 @@ const st = StyleSheet.create({
   searchInput: { flex: 1, fontSize: 14 },
   filterTab: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
   empty: { alignItems: 'center', paddingTop: 60, gap: 8 },
-  card: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1 },
+  card: { borderRadius: 10, padding: 10, borderWidth: 1, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   clientName: { fontSize: 15, fontWeight: '700' },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
