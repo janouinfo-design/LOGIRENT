@@ -1931,6 +1931,9 @@ async def get_user_details_admin(
     target_user['_id'] = str(target_user['_id'])
     target_user['total_spent'] = total_spent
     target_user['total_reservations'] = total_reservations
+    # Serialize reservations - remove ObjectId fields
+    for r in reservations:
+        r['_id'] = str(r['_id'])
     target_user['reservations'] = reservations
     
     return target_user
