@@ -154,7 +154,7 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, user: dic
     if not existing:
         raise HTTPException(status_code=404, detail="Vehicle not found")
 
-    update_dict = vehicle_data.dict()
+    update_dict = {k: v for k, v in vehicle_data.dict().items() if v is not None}
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": update_dict})
 
     updated = await db.vehicles.find_one({"id": vehicle_id})
