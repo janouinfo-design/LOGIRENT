@@ -258,24 +258,21 @@ export default function AgencyReservations() {
                 </View>
               </ScrollView>
 
-              {/* Reservation details below the chart */}
-              <View style={{ padding: 16 }}>
-                <Text style={{ color: C.text, fontSize: 15, fontWeight: '800', marginBottom: 10 }}>
+              {/* Reservation details below the chart - compact */}
+              <View style={{ padding: 16, paddingTop: 12 }}>
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: '800', marginBottom: 8 }}>
                   Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0)})
                 </Text>
                 {schedule.map(v => v.reservations.map(r => {
                   const color = RES_COLORS[r.status] || C.textLight;
                   return (
-                    <View key={r.id} style={[st.resItem, { backgroundColor: C.card, borderColor: C.border }]}>
-                      <View style={[st.resItemDot, { backgroundColor: color }]} />
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ color: C.text, fontSize: 13, fontWeight: '700' }}>{v.brand} {v.model}</Text>
-                        <Text style={{ color: C.textLight, fontSize: 11 }}>
-                          {r.start?.slice(0, 10)} → {r.end?.slice(0, 10)} {r.user_name ? `| ${r.user_name}` : ''}
-                        </Text>
-                      </View>
-                      <View style={[st.resItemBadge, { backgroundColor: color + '20' }]}>
-                        <Text style={{ color, fontSize: 10, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
+                    <View key={r.id} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: C.border, gap: 8 }}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: color }} />
+                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '700', width: 110 }} numberOfLines={1}>{v.brand} {v.model}</Text>
+                      <Text style={{ color: C.textLight, fontSize: 11, flex: 1 }}>{r.start?.slice(5, 10)} → {r.end?.slice(5, 10)}</Text>
+                      {r.user_name ? <Text style={{ color: C.textLight, fontSize: 11, flex: 1 }} numberOfLines={1}>{r.user_name}</Text> : null}
+                      <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: color + '20' }}>
+                        <Text style={{ color, fontSize: 9, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
                       </View>
                     </View>
                   );
