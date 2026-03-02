@@ -464,9 +464,18 @@ export default function BookingFlow() {
 
           {/* Next */}
           {selectedVehicle && isVehicleFree(selectedVehicle) && (
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('options')}>
-              <Text style={s.btnText}>Suivant : Options & Paiement</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
-            </TouchableOpacity>
+            <View style={{ position: 'sticky' as any, bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 20, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border, marginHorizontal: -20, marginBottom: -20 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <View>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{selectedVehicle.brand} {selectedVehicle.model}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11 }}>{totalDays}j x CHF {selectedVehicle.price_per_day}</Text>
+                </View>
+                <Text style={{ color: C.accent, fontSize: 18, fontWeight: '800' }}>CHF {(selectedVehicle.price_per_day * totalDays).toFixed(0)}</Text>
+              </View>
+              <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('options')} data-testid="next-to-options">
+                <Text style={s.btnText}>Suivant : Options & Paiement</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       )}
