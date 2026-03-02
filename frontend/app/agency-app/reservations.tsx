@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, TextInput, Modal, ScrollView, Platform, Alert, Dimensions } from 'react-native';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, RefreshControl, TextInput, Modal, ScrollView, Platform, Alert, Dimensions, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../../src/api/axios';
 import { format, addMonths, startOfMonth, endOfMonth, eachDayOfInterval, parseISO, differenceInDays, isSameDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -38,6 +38,7 @@ const RES_COLORS: Record<string, string> = {
 
 export default function AgencyReservations() {
   const { colors: C } = useThemeStore();
+  const params = useLocalSearchParams<{ highlight?: string; month?: string }>();
   const [viewMode, setViewMode] = useState<'list' | 'planning'>('planning');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [schedule, setSchedule] = useState<VehicleSchedule[]>([]);
@@ -52,7 +53,36 @@ export default function AgencyReservations() {
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [showAllVehicles, setShowAllVehicles] = useState(false);
   const [vehicleSearch, setVehicleSearch] = useState('');
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const highlightAnim = useRef(new Animated.Value(1)).current;
   const router = useRouter();
+
+  // Handle highlight param from booking flow
+  useEffect(() => {
+    if (params.highlight) {
+      setHighlightId(params.highlight);
+      setViewMode('planning');
+      setShowAllVehicles(true);
+      if (params.month) {
+        try {
+          const [y, m] = params.month.split('-').map(Number);
+          setPlanningMonth(startOfMonth(new Date(y, m - 1)));
+        } catch {}
+      }
+      // Pulse animation
+      const pulse = Animated.loop(
+        Animated.sequence([
+          Animated.timing(highlightAnim, { toValue: 0.3, duration: 500, useNativeDriver: false }),
+          Animated.timing(highlightAnim, { toValue: 1, duration: 500, useNativeDriver: false }),
+        ]),
+        { iterations: 4 }
+      );
+      pulse.start();
+      // Clear highlight after 4 seconds
+      const timer = setTimeout(() => { setHighlightId(null); pulse.stop(); highlightAnim.setValue(1); }, 4000);
+      return () => { clearTimeout(timer); pulse.stop(); };
+    }
+  }, [params.highlight, params.month]);
 
   const fetchReservations = async () => {
     try {
@@ -146,6 +176,14 @@ export default function AgencyReservations() {
             </TouchableOpacity>
           </View>
 
+          {/* Highlight success banner */}
+          {highlightId && (
+            <Animated.View style={{ opacity: highlightAnim, flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8, padding: 10, borderRadius: 10, backgroundColor: '#10B981' }} data-testid="highlight-banner">
+              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>Reservation creee avec succes !</Text>
+            </Animated.View>
+          )}
+
           {/* Legend */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 8 }}>
             {Object.entries(RES_COLORS).filter(([k]) => k !== 'completed' && k !== 'cancelled').map(([k, color]) => (
@@ -236,19 +274,24 @@ export default function AgencyReservations() {
                             height: ROW_H,
                           }]}>
                             {resForDay && (
-                              <View style={{
+                              <Animated.View style={{
                                 position: 'absolute', top: 3, bottom: 3, left: isStart ? 2 : 0, right: isEnd ? 2 : 0,
                                 backgroundColor: color,
                                 borderTopLeftRadius: isStart ? 6 : 0, borderBottomLeftRadius: isStart ? 6 : 0,
                                 borderTopRightRadius: isEnd ? 6 : 0, borderBottomRightRadius: isEnd ? 6 : 0,
                                 justifyContent: 'center', overflow: 'hidden',
+                                ...(highlightId && resForDay.id === highlightId ? {
+                                  opacity: highlightAnim,
+                                  borderWidth: 2,
+                                  borderColor: '#fff',
+                                } : {}),
                               }}>
                                 {isStart && (
                                   <Text style={{ color: '#fff', fontSize: 9, fontWeight: '900', paddingLeft: 4, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 }} numberOfLines={1}>
                                     {statusLabel(resForDay.status)}
                                   </Text>
                                 )}
-                              </View>
+                              </Animated.View>
                             )}
                           </View>
                         );
@@ -266,8 +309,14 @@ export default function AgencyReservations() {
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {schedule.map(v => v.reservations.map(r => {
                     const color = RES_COLORS[r.status] || C.textLight;
+                    const isHighlighted = highlightId === r.id;
                     return (
-                      <View key={r.id} style={{ width: '31%', minWidth: 150, backgroundColor: C.card, borderRadius: 10, borderWidth: 1, borderColor: C.border, borderLeftWidth: 4, borderLeftColor: color, padding: 10 }}>
+                      <Animated.View key={r.id} style={{
+                        width: '31%', minWidth: 150, backgroundColor: C.card, borderRadius: 10,
+                        borderWidth: isHighlighted ? 2 : 1, borderColor: isHighlighted ? '#fff' : C.border,
+                        borderLeftWidth: 4, borderLeftColor: color, padding: 10,
+                        ...(isHighlighted ? { opacity: highlightAnim } : {}),
+                      }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                           <Text style={{ color: C.text, fontSize: 12, fontWeight: '800' }} numberOfLines={1}>{v.brand} {v.model}</Text>
                           <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />
@@ -277,7 +326,7 @@ export default function AgencyReservations() {
                         <View style={{ alignSelf: 'flex-start', marginTop: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, backgroundColor: color + '18' }}>
                           <Text style={{ color, fontSize: 9, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
                         </View>
-                      </View>
+                      </Animated.View>
                     );
                   })).flat()}
                 </View>

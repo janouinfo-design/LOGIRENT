@@ -223,19 +223,15 @@ export default function BookingFlow() {
         end_date: `${format(endDate, 'yyyy-MM-dd')}T${String(endHour).padStart(2, '0')}:00:00`,
         options: selectedOptions, payment_method: paymentMethod,
       });
+      const resId = r.data.reservation?.id;
       if (paymentMethod === 'send_link') {
-        try { await api.post(`/api/admin/reservations/${r.data.reservation.id}/send-payment-link`, { origin_url: API_URL }); } catch {}
+        try { await api.post(`/api/admin/reservations/${resId}/send-payment-link`, { origin_url: API_URL }); } catch {}
       }
-      // Auto-generate contract and navigate to completion screen
-      try {
-        const contractResp = await api.post('/api/admin/contracts/generate', {
-          reservation_id: r.data.reservation.id, language: 'fr',
-        });
-        router.push(`/agency-app/complete-contract?contract_id=${contractResp.data.contract_id}`);
-      } catch {
-        // If contract generation fails, still show success
-        setSuccess(true);
-      }
+      // Auto-generate contract silently
+      try { await api.post('/api/admin/contracts/generate', { reservation_id: resId, language: 'fr' }); } catch {}
+      // Navigate to reservations page with highlight on the planning
+      const monthParam = format(startDate, 'yyyy-MM');
+      router.push(`/agency-app/reservations?highlight=${resId}&month=${monthParam}` as any);
     } catch (e: any) { showAlert('Erreur', e.response?.data?.detail || 'Erreur'); }
     finally { setSubmitting(false); }
   };
