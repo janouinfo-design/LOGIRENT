@@ -185,24 +185,105 @@ export default function AgencyReservations() {
             </View>
             {actionModal && (
               <ScrollView>
-                <Text style={s.modalSub}>{actionModal.user_name} - {actionModal.vehicle_name}</Text>
-                <Text style={s.modalPrice}>CHF {actionModal.total_price?.toFixed(2)}</Text>
+                <Text style={[s.modalSub, { color: C.textLight }]}>{actionModal.user_name} - {actionModal.vehicle_name}</Text>
+                <Text style={[s.modalPrice, { color: C.text }]}>CHF {actionModal.total_price?.toFixed(2)}</Text>
 
-                <Text style={s.modalSection}>Statut</Text>
+                {/* CONTRACT SECTION */}
+                <Text style={[s.modalSection, { color: C.textLight }]}>Contrat</Text>
+                <TouchableOpacity
+                  style={[s.actionBtn, { borderColor: C.border }]}
+                  onPress={async () => {
+                    setContractLoading(true);
+                    try {
+                      const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
+                      const contract = resp.data;
+                      setActionModal(null);
+                      router.push(`/contract/${contract.id}` as any);
+                    } catch (err: any) {
+                      if (err.response?.status === 404) {
+                        try {
+                          const genResp = await api.post('/api/admin/contracts/generate', { reservation_id: actionModal.id, language: 'fr' });
+                          Platform.OS === 'web' ? window.alert('Contrat généré !') : Alert.alert('Succès', 'Contrat généré !');
+                          setActionModal(null);
+                          router.push(`/contract/${genResp.data.contract_id}` as any);
+                        } catch (genErr: any) {
+                          const msg = genErr.response?.data?.detail || 'Erreur';
+                          Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+                        }
+                      } else {
+                        Platform.OS === 'web' ? window.alert('Erreur lors de la récupération du contrat') : Alert.alert('Erreur', 'Erreur');
+                      }
+                    } finally { setContractLoading(false); }
+                  }}
+                  data-testid="contract-view-btn"
+                >
+                  <Ionicons name="document-text" size={18} color={C.accent} />
+                  <Text style={[s.actionText, { color: C.text }]}>{contractLoading ? 'Chargement...' : 'Voir / Générer le contrat'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.actionBtn, { borderColor: C.border }]}
+                  onPress={async () => {
+                    try {
+                      const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
+                      await api.put(`/api/contracts/${resp.data.id}/send`);
+                      Platform.OS === 'web' ? window.alert('Contrat envoyé au client !') : Alert.alert('Succès', 'Contrat envoyé !');
+                    } catch (err: any) {
+                      if (err.response?.status === 404) {
+                        Platform.OS === 'web' ? window.alert('Générez d\'abord le contrat') : Alert.alert('Info', 'Générez d\'abord le contrat');
+                      } else {
+                        Platform.OS === 'web' ? window.alert('Erreur') : Alert.alert('Erreur', 'Erreur');
+                      }
+                    }
+                  }}
+                  data-testid="contract-send-btn"
+                >
+                  <Ionicons name="send" size={18} color={C.success} />
+                  <Text style={[s.actionText, { color: C.text }]}>Envoyer le contrat au client</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[s.actionBtn, { borderColor: C.border }]}
+                  onPress={async () => {
+                    try {
+                      const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
+                      const pdfResp = await api.get(`/api/contracts/${resp.data.id}/pdf`, { responseType: 'blob' });
+                      if (Platform.OS === 'web') {
+                        const blob = new Blob([pdfResp.data], { type: 'application/pdf' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `contrat_${resp.data.id.slice(0, 8)}.pdf`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      }
+                    } catch (err: any) {
+                      if (err.response?.status === 404) {
+                        Platform.OS === 'web' ? window.alert('Générez d\'abord le contrat') : Alert.alert('Info', 'Générez d\'abord le contrat');
+                      } else {
+                        Platform.OS === 'web' ? window.alert('Erreur') : Alert.alert('Erreur', 'Erreur');
+                      }
+                    }
+                  }}
+                  data-testid="contract-pdf-btn"
+                >
+                  <Ionicons name="download" size={18} color={C.accent} />
+                  <Text style={[s.actionText, { color: C.text }]}>Télécharger le PDF</Text>
+                </TouchableOpacity>
+
+                <Text style={[s.modalSection, { color: C.textLight }]}>Statut</Text>
                 {['confirmed', 'active', 'completed', 'cancelled'].map(st => (
-                  <TouchableOpacity key={st} style={s.actionBtn} onPress={() => updateStatus(actionModal.id, st)}>
+                  <TouchableOpacity key={st} style={[s.actionBtn, { borderColor: C.border }]} onPress={() => updateStatus(actionModal.id, st)}>
                     <View style={[s.dot, { backgroundColor: statusColor(st) }]} />
-                    <Text style={s.actionText}>{statusLabel(st)}</Text>
+                    <Text style={[s.actionText, { color: C.text }]}>{statusLabel(st)}</Text>
                   </TouchableOpacity>
                 ))}
 
-                <Text style={s.modalSection}>Paiement</Text>
-                <TouchableOpacity style={s.actionBtn} onPress={() => updatePayment(actionModal.id, 'paid')}>
+                <Text style={[s.modalSection, { color: C.textLight }]}>Paiement</Text>
+                <TouchableOpacity style={[s.actionBtn, { borderColor: C.border }]} onPress={() => updatePayment(actionModal.id, 'paid')}>
                   <Ionicons name="checkmark-circle" size={18} color={C.success} />
-                  <Text style={s.actionText}>Marquer comme payé</Text>
+                  <Text style={[s.actionText, { color: C.text }]}>Marquer comme payé</Text>
                 </TouchableOpacity>
                 {actionModal.payment_status !== 'paid' && (
-                  <TouchableOpacity style={[s.actionBtn, s.linkBtn]} onPress={() => sendPaymentLink(actionModal.id)} disabled={sendingLink}>
+                  <TouchableOpacity style={[s.actionBtn, s.linkBtn, { borderColor: C.border }]} onPress={() => sendPaymentLink(actionModal.id)} disabled={sendingLink}>
                     <Ionicons name="link" size={18} color={C.accent} />
                     <Text style={[s.actionText, { color: C.accent }]}>{sendingLink ? 'Envoi...' : 'Envoyer lien de paiement'}</Text>
                   </TouchableOpacity>
