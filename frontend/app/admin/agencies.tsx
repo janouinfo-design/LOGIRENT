@@ -229,37 +229,29 @@ export default function AgenciesPage() {
                   </View>
                 </View>
                 <View style={styles.linksSection}>
-                  <Text style={styles.linksSectionTitle}>Liens d'acces</Text>
-                  {agency.admin_email && (
-                    <View style={{ gap: 4 }}>
-                      <View style={styles.linkItem}>
-                        <Ionicons name="person-circle" size={16} color={COLORS.accent} />
-                        <Text style={styles.linkLabel}>Admin : </Text>
-                        <Text style={styles.linkUrl} selectable>{agency.admin_name || 'Admin'} ({agency.admin_email})</Text>
-                      </View>
-                      <View style={styles.linkItem}>
-                        <Ionicons name="lock-closed" size={16} color={COLORS.accent} />
-                        <Text style={styles.linkLabel}>Mot de passe : </Text>
-                        <Text style={[styles.linkUrl, { fontFamily: 'monospace' }]} selectable data-testid={`agency-password-${agency.id}`}>{agency.admin_password_display || 'N/A'}</Text>
-                      </View>
-                    </View>
+                  {agency.admin_id && (
+                    <TouchableOpacity
+                      style={styles.impersonateBtn}
+                      onPress={() => handleImpersonate(agency)}
+                      disabled={impersonating === agency.id}
+                      data-testid={`login-as-${agency.id}`}
+                    >
+                      {impersonating === agency.id ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                      ) : (
+                        <Ionicons name="log-in" size={18} color="#FFF" />
+                      )}
+                      <Text style={styles.impersonateBtnText}>
+                        {impersonating === agency.id ? 'Connexion...' : `Se connecter en tant que ${agency.admin_name || 'Admin'}`}
+                      </Text>
+                    </TouchableOpacity>
                   )}
-                  {!agency.admin_email && (
+                  {!agency.admin_id && (
                     <View style={styles.linkItem}>
                       <Ionicons name="warning" size={16} color={COLORS.error} />
                       <Text style={[styles.linkLabel, { color: COLORS.error }]}>Aucun admin assigne</Text>
                     </View>
                   )}
-                  <View style={styles.linkItem}>
-                    <Ionicons name="phone-portrait" size={16} color={COLORS.warning} />
-                    <Text style={styles.linkLabel}>App Admin Mobile : </Text>
-                    <Text style={styles.linkUrl} selectable>{API_URL}/admin-login</Text>
-                  </View>
-                  <View style={styles.linkItem}>
-                    <Ionicons name="globe-outline" size={16} color={COLORS.success} />
-                    <Text style={styles.linkLabel}>App Client Mobile : </Text>
-                    <Text style={styles.linkUrl} selectable>{API_URL}/a/{agency.slug || agency.id}</Text>
-                  </View>
                   <TouchableOpacity
                     style={styles.qrBtn}
                     onPress={() => { setQrAgency(agency); setQrType('both'); }}
