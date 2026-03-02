@@ -36,7 +36,7 @@ async def list_agencies(user: dict = Depends(get_agency_admin)):
         agency['admin_email'] = admin_user['email'] if admin_user else None
         agency['admin_name'] = admin_user.get('name') if admin_user else None
         agency['admin_id'] = admin_user.get('id') if admin_user else None
-        agency['admin_password_display'] = agency.get('admin_password_plain', 'N/A')
+        agency.pop('admin_password_plain', None)
     return agencies
 
 
@@ -55,8 +55,6 @@ async def create_agency(data: AgencyCreate, user: dict = Depends(get_super_admin
         slug = f"{slug}-{str(uuid.uuid4())[:4]}"
     agency = Agency(name=data.name, slug=slug, address=data.address, phone=data.phone, email=data.email, navixy_api_url=data.navixy_api_url, navixy_hash=data.navixy_hash)
     await db.agencies.insert_one(agency.dict())
-
-    await db.agencies.update_one({"id": agency.id}, {"$set": {"admin_password_plain": data.admin_password}})
 
     admin_user = {
         "id": str(uuid.uuid4()),
