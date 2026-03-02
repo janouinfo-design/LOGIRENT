@@ -197,6 +197,114 @@ async def get_agency_comparison(user: dict = Depends(get_admin_user)):
     return result
 
 
+@router.get("/admin/stats/revenue-forecast")
+async def get_revenue_forecast(user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    rf = {} if is_super else {"agency_id": agency_id}
+
+    now = datetime.utcnow()
+    twelve_months_ago = now - timedelta(days=365)
+
+    monthly_pipeline = [
+        {"$match": {**rf, "payment_status": "paid", "created_at": {"$gte": twelve_months_ago}}},
+        {"$group": {
+            "_id": {"year": {"$year": "$created_at"}, "month": {"$month": "$created_at"}},
+            "revenue": {"$sum": "$total_price"},
+            "bookings": {"$sum": 1}
+        }},
+        {"$sort": {"_id.year": 1, "_id.month": 1}}
+    ]
+    monthly_result = await db.reservations.aggregate(monthly_pipeline).to_list(12)
+
+    historical = []
+    for item in monthly_result:
+        month_str = datetime(item["_id"]["year"], item["_id"]["month"], 1).strftime("%Y-%m")
+        historical.append({
+            "month": month_str,
+            "revenue": round(item["revenue"], 2),
+            "bookings": item["bookings"]
+        })
+
+    total_vehicles = await db.vehicles.count_documents({} if is_super else {"agency_id": agency_id})
+    avg_price_res = await db.vehicles.aggregate([
+        {"$match": {} if is_super else {"agency_id": agency_id}},
+        {"$group": {"_id": None, "avg_price": {"$avg": "$price_per_day"}}}
+    ]).to_list(1)
+    avg_daily_price = round(avg_price_res[0]["avg_price"], 2) if avg_price_res else 0
+
+    forecast = []
+    analysis = ""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if api_key and historical:
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=f"forecast-{agency_id or 'global'}-{now.strftime('%Y%m%d%H')}",
+                system_message="Tu es un analyste financier expert en location de véhicules. Réponds en français. Analyse les données historiques et génère des prévisions précises."
+            ).with_model("openai", "gpt-5.2")
+
+            prompt = f"""Voici les données historiques de revenus mensuels d'une agence de location de véhicules:
+
+{json.dumps(historical, ensure_ascii=False)}
+
+Contexte:
+- Nombre de véhicules: {total_vehicles}
+- Prix moyen journalier: CHF {avg_daily_price}
+- Mois actuel: {now.strftime('%Y-%m')}
+
+Génère une prévision pour les 3 prochains mois et une analyse courte.
+Réponds UNIQUEMENT en JSON valide avec ce format exact:
+{{
+  "forecast": [
+    {{"month": "YYYY-MM", "revenue": number, "bookings": number, "confidence": number_between_0_and_1}}
+  ],
+  "analysis": "string courte en français (2-3 phrases max)",
+  "trend": "up" ou "down" ou "stable"
+}}"""
+
+            user_msg = UserMessage(text=prompt)
+            response = await chat.send_message(user_msg)
+
+            try:
+                cleaned = response.strip()
+                if cleaned.startswith("```"):
+                    cleaned = cleaned.split("\n", 1)[1] if "\n" in cleaned else cleaned[3:]
+                    if cleaned.endswith("```"):
+                        cleaned = cleaned[:-3]
+                    cleaned = cleaned.strip()
+                    if cleaned.startswith("json"):
+                        cleaned = cleaned[4:].strip()
+                parsed = json.loads(cleaned)
+                forecast = parsed.get("forecast", [])
+                analysis = parsed.get("analysis", "")
+                trend = parsed.get("trend", "stable")
+            except (json.JSONDecodeError, AttributeError):
+                trend = "stable"
+                analysis = "Prévision non disponible - données insuffisantes."
+        else:
+            trend = "stable"
+            if not historical:
+                analysis = "Aucune donnée historique disponible pour générer une prévision."
+            else:
+                analysis = "Clé API non configurée."
+    except Exception as e:
+        logger.error(f"Revenue forecast AI error: {e}")
+        trend = "stable"
+        analysis = "Prévision temporairement indisponible."
+
+    return {
+        "historical": historical,
+        "forecast": forecast,
+        "analysis": analysis,
+        "trend": trend,
+        "total_vehicles": total_vehicles,
+        "avg_daily_price": avg_daily_price
+    }
+
+
+
 @router.get("/admin/users")
 async def get_admin_users(skip: int = 0, limit: int = 20, user: dict = Depends(get_admin_user)):
     agency_id = user.get('agency_id')
