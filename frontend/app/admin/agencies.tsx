@@ -52,8 +52,46 @@ export default function AgenciesPage() {
   const [successInfo, setSuccessInfo] = useState<{name: string, email: string, password: string} | null>(null);
   const [qrAgency, setQrAgency] = useState<Agency | null>(null);
   const [qrType, setQrType] = useState<'both' | 'client' | 'admin'>('both');
+  const [impersonating, setImpersonating] = useState<string | null>(null);
 
   const isSuperAdmin = user?.role === 'super_admin';
+
+  const handleImpersonate = async (agency: Agency) => {
+    if (!agency.admin_id) { alert('Aucun admin pour cette agence'); return; }
+    setImpersonating(agency.id);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const res = await axios.post(`${API_URL}/api/admin/impersonate/${agency.admin_id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const { access_token, user: impUser } = res.data;
+      await AsyncStorage.setItem('token', access_token);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+      // Open agency-app in new tab on web
+      if (typeof window !== 'undefined') {
+        window.open(`${API_URL}/agency-app`, '_blank');
+        // Restore super admin token after opening
+        setTimeout(async () => {
+          const saToken = await AsyncStorage.getItem('sa_token_backup');
+          if (saToken) {
+            await AsyncStorage.setItem('token', saToken);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${saToken}`;
+          }
+        }, 500);
+      }
+    } catch (e: any) {
+      alert(e.response?.data?.detail || 'Erreur d\'impersonation');
+    } finally { setImpersonating(null); }
+  };
+
+  // Backup super admin token on mount
+  useEffect(() => {
+    const backupToken = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (token) await AsyncStorage.setItem('sa_token_backup', token);
+    };
+    if (isSuperAdmin) backupToken();
+  }, [isSuperAdmin]);
 
   const fetchAgencies = async () => {
     try {
