@@ -329,18 +329,27 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     story.append(Spacer(1, 3 * mm))
 
     lbl_sig = "Signature" if is_fr else "Signature"
+    signature_added = False
     if signature_base64:
         try:
             sig_bytes = base64.b64decode(
                 signature_base64.split(',')[-1] if ',' in signature_base64 else signature_base64)
             if len(sig_bytes) > 100:
                 sig_buffer = io.BytesIO(sig_bytes)
+                # Validate image can be opened before adding to story
+                from PIL import Image as PILImage
+                test_img = PILImage.open(io.BytesIO(sig_bytes))
+                test_img.verify()  # Verify it's a valid image
+                # Re-create buffer for RLImage (verify() closes file)
+                sig_buffer = io.BytesIO(sig_bytes)
                 sig_label_style = ParagraphStyle('siglbl', fontSize=9, fontName='Helvetica-Bold', textColor=GREY)
                 story.append(Paragraph(f"{lbl_sig} :", sig_label_style))
                 story.append(RLImage(sig_buffer, width=55 * mm, height=22 * mm))
-        except Exception:
-            story.append(Paragraph(f"{lbl_sig} : ____________________________", styles['Body']))
-    else:
+                signature_added = True
+        except Exception as e:
+            logger.warning(f"Failed to add signature image to PDF: {e}")
+    
+    if not signature_added:
         story.append(Paragraph(f"{lbl_sig} : ____________________________", styles['Body']))
 
     story.append(Spacer(1, 6 * mm))
