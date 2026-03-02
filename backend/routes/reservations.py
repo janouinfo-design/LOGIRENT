@@ -1,0 +1,144 @@
+from fastapi import APIRouter, HTTPException, Depends
+from typing import List
+from datetime import datetime, timedelta
+import logging
+
+from database import db
+from models import Reservation, ReservationCreate, ReservationUpdate, ReservationOption
+from deps import get_current_user
+from utils.email import send_cash_reservation_email
+
+logger = logging.getLogger(__name__)
+router = APIRouter()
+
+
+@router.post("/reservations", response_model=Reservation)
+async def create_reservation(reservation_data: ReservationCreate, user: dict = Depends(get_current_user)):
+    vehicle = await db.vehicles.find_one({"id": reservation_data.vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    if vehicle['status'] == 'maintenance':
+        raise HTTPException(status_code=400, detail="Vehicle is under maintenance")
+
+    overlap = await db.reservations.find_one({
+        "vehicle_id": reservation_data.vehicle_id,
+        "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
+        "$or": [{"start_date": {"$lt": reservation_data.end_date}, "end_date": {"$gt": reservation_data.start_date}}]
+    })
+    if overlap:
+        raise HTTPException(status_code=400, detail="Ce véhicule n'est pas disponible pour les dates sélectionnées.")
+
+    total_days = (reservation_data.end_date - reservation_data.start_date).days
+    if total_days <= 0:
+        raise HTTPException(status_code=400, detail="End date must be after start date")
+
+    base_price = vehicle['price_per_day'] * total_days
+
+    vehicle_options = {opt['name']: opt for opt in vehicle.get('options', [])}
+    selected_options = []
+    options_price = 0
+
+    for opt_name in reservation_data.options:
+        if opt_name in vehicle_options:
+            opt = vehicle_options[opt_name]
+            opt_total = opt['price_per_day'] * total_days
+            selected_options.append(ReservationOption(name=opt_name, price_per_day=opt['price_per_day'], total_price=opt_total))
+            options_price += opt_total
+
+    total_price = base_price + options_price
+    payment_method = reservation_data.payment_method
+    if payment_method not in ["card", "cash"]:
+        payment_method = "card"
+    status = "pending_cash" if payment_method == "cash" else "pending"
+
+    reservation = Reservation(
+        user_id=user['id'],
+        vehicle_id=reservation_data.vehicle_id,
+        agency_id=vehicle.get('agency_id'),
+        start_date=reservation_data.start_date,
+        end_date=reservation_data.end_date,
+        options=selected_options,
+        total_days=total_days,
+        base_price=base_price,
+        options_price=options_price,
+        total_price=total_price,
+        status=status,
+        payment_method=payment_method
+    )
+
+    await db.reservations.insert_one(reservation.dict())
+
+    if payment_method == "cash":
+        try:
+            await send_cash_reservation_email(user, vehicle, reservation.dict())
+        except Exception as email_error:
+            logger.error(f"Failed to send cash reservation email: {email_error}")
+
+    return reservation
+
+
+@router.get("/reservations", response_model=List[Reservation])
+async def get_reservations(user: dict = Depends(get_current_user)):
+    reservations = await db.reservations.find({"user_id": user['id']}).sort("created_at", -1).to_list(100)
+    return [Reservation(**r) for r in reservations]
+
+
+@router.get("/reservations/{reservation_id}", response_model=Reservation)
+async def get_reservation(reservation_id: str, user: dict = Depends(get_current_user)):
+    reservation = await db.reservations.find_one({"id": reservation_id, "user_id": user['id']})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    return Reservation(**reservation)
+
+
+@router.put("/reservations/{reservation_id}", response_model=Reservation)
+async def update_reservation(reservation_id: str, update_data: ReservationUpdate, user: dict = Depends(get_current_user)):
+    reservation = await db.reservations.find_one({"id": reservation_id, "user_id": user['id']})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    if reservation['status'] in ['active', 'completed']:
+        raise HTTPException(status_code=400, detail="Cannot modify active or completed reservations")
+
+    if update_data.start_date or update_data.end_date:
+        vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
+        start = update_data.start_date or reservation['start_date']
+        end = update_data.end_date or reservation['end_date']
+
+        total_days = (end - start).days
+        if total_days <= 0:
+            raise HTTPException(status_code=400, detail="End date must be after start date")
+
+        base_price = vehicle['price_per_day'] * total_days
+        options_price = sum(opt['price_per_day'] * total_days for opt in reservation['options'])
+        total_price = base_price + options_price
+
+        await db.reservations.update_one(
+            {"id": reservation_id},
+            {"$set": {
+                "start_date": start, "end_date": end,
+                "total_days": total_days, "base_price": base_price,
+                "options_price": options_price, "total_price": total_price,
+                "updated_at": datetime.utcnow()
+            }}
+        )
+
+    updated = await db.reservations.find_one({"id": reservation_id})
+    return Reservation(**updated)
+
+
+@router.post("/reservations/{reservation_id}/cancel")
+async def cancel_reservation(reservation_id: str, user: dict = Depends(get_current_user)):
+    reservation = await db.reservations.find_one({"id": reservation_id, "user_id": user['id']})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    if reservation['status'] in ['active', 'completed', 'cancelled']:
+        raise HTTPException(status_code=400, detail="Cannot cancel this reservation")
+
+    await db.reservations.update_one(
+        {"id": reservation_id},
+        {"$set": {"status": "cancelled", "updated_at": datetime.utcnow()}}
+    )
+    return {"message": "Reservation cancelled"}
