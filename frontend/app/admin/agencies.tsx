@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import QRCode from 'react-qr-code';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const SCREEN_W = Dimensions.get('window').width;
 const COLORS = {
   primary: '#6C2BD9',
   background: '#0F0B1A',
@@ -170,98 +171,84 @@ export default function AgenciesPage() {
           </View>
         ) : (
           <View style={styles.grid}>
-            {agencies.map((agency) => (
-              <View key={agency.id} style={styles.agencyCard} data-testid={`agency-card-${agency.id}`}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.cardIcon}>
-                    <Ionicons name="business" size={24} color={COLORS.accent} />
+            {agencies.map((agency) => {
+              const cardW = (SCREEN_W - 40 - 30) / 4;
+              return (
+                <View key={agency.id} style={[styles.agencyCard, { width: cardW }]} data-testid={`agency-card-${agency.id}`}>
+                  {/* Icon + Actions */}
+                  <View style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 8, position: 'relative' }}>
+                    <View style={styles.cardIcon}>
+                      <Ionicons name="business" size={22} color={COLORS.accent} />
+                    </View>
+                    <View style={{ position: 'absolute', top: 8, right: 8, flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity onPress={() => openEdit(agency)} data-testid={`edit-agency-${agency.id}`}>
+                        <Ionicons name="pencil" size={15} color={COLORS.accent} />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleDelete(agency.id)} data-testid={`delete-agency-${agency.id}`}>
+                        <Ionicons name="trash" size={15} color={COLORS.error} />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.agencyName}>{agency.name}</Text>
-                    {agency.email && <Text style={styles.agencyEmail}>{agency.email}</Text>}
+
+                  {/* Name */}
+                  <View style={{ paddingHorizontal: 10, paddingBottom: 8 }}>
+                    <Text style={[styles.agencyName, { fontSize: 13 }]} numberOfLines={1}>{agency.name}</Text>
+                    {agency.email && <Text style={[styles.agencyEmail, { fontSize: 10 }]} numberOfLines={1}>{agency.email}</Text>}
+                    {agency.address && (
+                      <View style={[styles.infoRow, { marginTop: 3, marginBottom: 0 }]}>
+                        <Ionicons name="location-outline" size={11} color={COLORS.textLight} />
+                        <Text style={[styles.infoText, { fontSize: 10 }]} numberOfLines={1}>{agency.address}</Text>
+                      </View>
+                    )}
                   </View>
-                  <View style={styles.cardActions}>
-                    <TouchableOpacity onPress={() => openEdit(agency)} data-testid={`edit-agency-${agency.id}`}>
-                      <Ionicons name="pencil" size={18} color={COLORS.accent} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleDelete(agency.id)} data-testid={`delete-agency-${agency.id}`}>
-                      <Ionicons name="trash" size={18} color={COLORS.error} />
-                    </TouchableOpacity>
+
+                  {/* Stats */}
+                  <View style={[styles.statsRow, { paddingHorizontal: 8, paddingTop: 6, paddingBottom: 8, gap: 4 }]}>
+                    <View style={[styles.statItem]}>
+                      <Text style={[styles.statValue, { fontSize: 15 }]}>{agency.vehicle_count}</Text>
+                      <Text style={[styles.statLabel, { fontSize: 9 }]}>Veh.</Text>
+                    </View>
+                    <View style={[styles.statItem]}>
+                      <Text style={[styles.statValue, { fontSize: 15 }]}>{agency.reservation_count}</Text>
+                      <Text style={[styles.statLabel, { fontSize: 9 }]}>Res.</Text>
+                    </View>
+                    <View style={[styles.statItem]}>
+                      <Text style={[styles.statValue, { fontSize: 15 }]}>{agency.admin_count}</Text>
+                      <Text style={[styles.statLabel, { fontSize: 9 }]}>Adm.</Text>
+                    </View>
                   </View>
-                </View>
-                {agency.address && (
-                  <View style={styles.infoRow}>
-                    <Ionicons name="location-outline" size={14} color={COLORS.textLight} />
-                    <Text style={styles.infoText}>{agency.address}</Text>
-                  </View>
-                )}
-                {agency.phone && (
-                  <View style={styles.infoRow}>
-                    <Ionicons name="call-outline" size={14} color={COLORS.textLight} />
-                    <Text style={styles.infoText}>{agency.phone}</Text>
-                  </View>
-                )}
-                <View style={styles.statsRow}>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{agency.vehicle_count}</Text>
-                    <Text style={styles.statLabel}>Véhicules</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{agency.reservation_count}</Text>
-                    <Text style={styles.statLabel}>Réservations</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                    <Text style={styles.statValue}>{agency.admin_count}</Text>
-                    <Text style={styles.statLabel}>Admins</Text>
-                  </View>
-                </View>
-                <View style={styles.linksSection}>
-                  {agency.admin_id && (
+
+                  {/* Impersonate + QR */}
+                  <View style={{ paddingHorizontal: 8, paddingBottom: 10, gap: 4 }}>
+                    {agency.admin_id && (
+                      <TouchableOpacity
+                        style={[styles.impersonateBtn, { paddingVertical: 7, borderRadius: 6 }]}
+                        onPress={() => handleImpersonate(agency)}
+                        disabled={impersonating === agency.id}
+                        data-testid={`login-as-${agency.id}`}
+                      >
+                        {impersonating === agency.id ? (
+                          <ActivityIndicator size="small" color="#FFF" />
+                        ) : (
+                          <Ionicons name="log-in" size={14} color="#FFF" />
+                        )}
+                        <Text style={[styles.impersonateBtnText, { fontSize: 10 }]} numberOfLines={1}>
+                          {impersonating === agency.id ? '...' : 'Connexion Admin'}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                     <TouchableOpacity
-                      style={styles.impersonateBtn}
-                      onPress={() => handleImpersonate(agency)}
-                      disabled={impersonating === agency.id}
-                      data-testid={`login-as-${agency.id}`}
+                      style={[styles.qrBtn, { paddingVertical: 7, borderRadius: 6, marginTop: 0 }]}
+                      onPress={() => { setQrAgency(agency); setQrType('both'); }}
+                      data-testid={`qr-agency-${agency.id}`}
                     >
-                      {impersonating === agency.id ? (
-                        <ActivityIndicator size="small" color="#FFF" />
-                      ) : (
-                        <Ionicons name="log-in" size={18} color="#FFF" />
-                      )}
-                      <Text style={styles.impersonateBtnText}>
-                        {impersonating === agency.id ? 'Connexion...' : `Se connecter en tant que ${agency.admin_name || 'Admin'}`}
-                      </Text>
+                      <Ionicons name="qr-code-outline" size={13} color="#FFF" />
+                      <Text style={[styles.qrBtnText, { fontSize: 10 }]}>QR Codes</Text>
                     </TouchableOpacity>
-                  )}
-                  {!agency.admin_id && (
-                    <View style={styles.linkItem}>
-                      <Ionicons name="warning" size={16} color={COLORS.error} />
-                      <Text style={[styles.linkLabel, { color: COLORS.error }]}>Aucun admin assigne</Text>
-                    </View>
-                  )}
-                  <View style={{ marginTop: 10, gap: 6 }}>
-                    <View style={styles.linkItem}>
-                      <Ionicons name="phone-portrait" size={16} color={COLORS.warning} />
-                      <Text style={styles.linkLabel}>App Admin : </Text>
-                      <Text style={styles.linkUrl} selectable>{API_URL}/admin-login</Text>
-                    </View>
-                    <View style={styles.linkItem}>
-                      <Ionicons name="globe-outline" size={16} color={COLORS.success} />
-                      <Text style={styles.linkLabel}>App Client : </Text>
-                      <Text style={styles.linkUrl} selectable>{API_URL}/a/{agency.slug || agency.id}</Text>
-                    </View>
                   </View>
-                  <TouchableOpacity
-                    style={styles.qrBtn}
-                    onPress={() => { setQrAgency(agency); setQrType('both'); }}
-                    data-testid={`qr-agency-${agency.id}`}
-                  >
-                    <Ionicons name="qr-code-outline" size={16} color="#FFF" />
-                    <Text style={styles.qrBtnText}>QR Codes</Text>
-                  </TouchableOpacity>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -482,8 +469,8 @@ const styles = StyleSheet.create({
   loadingText: { color: COLORS.textLight, fontSize: 14, textAlign: 'center', marginTop: 40 },
   emptyState: { alignItems: 'center', marginTop: 60, gap: 12 },
   emptyText: { color: COLORS.textLight, fontSize: 16 },
-  grid: { gap: 16 },
-  agencyCard: { backgroundColor: COLORS.card, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: COLORS.border },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  agencyCard: { backgroundColor: COLORS.card, borderRadius: 10, borderWidth: 1, borderColor: COLORS.border, overflow: 'hidden' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   cardIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(108,43,217,0.15)', alignItems: 'center', justifyContent: 'center' },
   agencyName: { fontSize: 17, fontWeight: '700', color: COLORS.text },

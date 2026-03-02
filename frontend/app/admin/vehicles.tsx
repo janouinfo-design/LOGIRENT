@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Modal, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Modal, Image, Platform, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/api/axios';
@@ -8,6 +8,8 @@ import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 import { VehicleForm, PhotoManagementModal } from '../../src/components/admin/VehicleComponents';
+
+const SCREEN_W = Dimensions.get('window').width;
 
 const getVehicleStatusColor = (status: string, C: any) => {
   switch (status) {
@@ -137,43 +139,37 @@ export default function AdminVehicles() {
 
   const renderItem = ({ item }: { item: Vehicle }) => {
     const sc = getVehicleStatusColor(item.status, C);
+    const cardW = (SCREEN_W - 32 - 30) / 4;
     return (
-      <View style={[st.card, { backgroundColor: C.card }]} data-testid={`vehicle-card-${item.id}`}>
-        <View style={st.cardHeader}>
+      <View style={[st.card, { backgroundColor: C.card, width: cardW }]} data-testid={`vehicle-card-${item.id}`}>
+        {/* Photo */}
+        <View style={{ position: 'relative' }}>
           {item.photos?.length ? (
-            <Image source={{ uri: item.photos[0] }} style={st.img} />
+            <Image source={{ uri: item.photos[0] }} style={{ width: '100%', height: 80, borderTopLeftRadius: 10, borderTopRightRadius: 10 }} resizeMode="cover" />
           ) : (
-            <View style={[st.imgPlaceholder, { backgroundColor: C.bg }]}><Ionicons name="car" size={32} color={C.textLight} /></View>
+            <View style={[st.imgPlaceholder, { backgroundColor: C.bg, height: 80 }]}><Ionicons name="car" size={28} color={C.textLight} /></View>
           )}
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', color: C.text }}>{item.brand} {item.model}</Text>
-            <Text style={{ fontSize: 13, color: C.textLight, marginTop: 2 }}>{item.year} - {item.type} - {item.seats} places</Text>
-            <Text style={{ fontSize: 15, fontWeight: '600', color: C.accent, marginTop: 4 }}>CHF {item.price_per_day}/jour</Text>
-          </View>
-        </View>
-        <View style={st.cardFooter}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Ionicons name="location" size={14} color={C.textLight} />
-            <Text style={{ fontSize: 12, color: C.textLight }}>{item.location}</Text>
-          </View>
-          <TouchableOpacity style={[st.statusBadge, { backgroundColor: sc + '20' }]} onPress={() => handleStatusChange(item)}>
+          <TouchableOpacity style={[st.statusBadge, { backgroundColor: sc + '20', position: 'absolute', bottom: 4, left: 4 }]} onPress={() => handleStatusChange(item)}>
             <View style={[st.dot, { backgroundColor: sc }]} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: sc }}>{getVehicleStatusLabel(item.status)}</Text>
-            <Ionicons name="chevron-down" size={14} color={sc} />
+            <Text style={{ fontSize: 9, fontWeight: '700', color: sc }}>{getVehicleStatusLabel(item.status)}</Text>
           </TouchableOpacity>
         </View>
-        <View style={st.actions}>
-          <TouchableOpacity style={[st.actBtn, { backgroundColor: '#8B5CF610' }]} onPress={() => { setSelectedVehicleForPhotos(item); setShowPhotoModal(true); }}>
-            <Ionicons name="camera" size={16} color="#8B5CF6" />
-            <Text style={{ color: '#8B5CF6', fontSize: 12, fontWeight: '600' }}>Photos ({item.photos?.length || 0})</Text>
+        {/* Info */}
+        <View style={{ padding: 8 }}>
+          <Text style={{ fontSize: 11, fontWeight: '800', color: C.text }} numberOfLines={1}>{item.brand} {item.model}</Text>
+          <Text style={{ fontSize: 9, color: C.textLight, marginTop: 1 }}>{item.year} | {item.type} | {item.seats}pl</Text>
+          <Text style={{ fontSize: 13, fontWeight: '800', color: C.accent, marginTop: 4 }}>CHF {item.price_per_day}/j</Text>
+        </View>
+        {/* Actions */}
+        <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 6, paddingBottom: 8 }}>
+          <TouchableOpacity style={[st.actBtn, { backgroundColor: '#8B5CF610', flex: 1, paddingVertical: 6 }]} onPress={() => { setSelectedVehicleForPhotos(item); setShowPhotoModal(true); }}>
+            <Ionicons name="camera" size={13} color="#8B5CF6" />
           </TouchableOpacity>
-          <TouchableOpacity style={[st.actBtn, { backgroundColor: C.accent + '10' }]} onPress={() => openEditModal(item)}>
-            <Ionicons name="pencil" size={16} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Modifier</Text>
+          <TouchableOpacity style={[st.actBtn, { backgroundColor: C.accent + '10', flex: 1, paddingVertical: 6 }]} onPress={() => openEditModal(item)}>
+            <Ionicons name="pencil" size={13} color={C.accent} />
           </TouchableOpacity>
-          <TouchableOpacity style={[st.actBtn, { backgroundColor: C.error + '10' }]} onPress={() => handleDelete(item)}>
-            <Ionicons name="trash" size={16} color={C.error} />
-            <Text style={{ color: C.error, fontSize: 12, fontWeight: '600' }}>Supprimer</Text>
+          <TouchableOpacity style={[st.actBtn, { backgroundColor: C.error + '10', flex: 1, paddingVertical: 6 }]} onPress={() => handleDelete(item)}>
+            <Ionicons name="trash" size={13} color={C.error} />
           </TouchableOpacity>
         </View>
       </View>
@@ -199,7 +195,9 @@ export default function AdminVehicles() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <FlatList data={vehicles} renderItem={renderItem} keyExtractor={i => i.id}
+        numColumns={4}
         contentContainerStyle={{ padding: 16 }}
+        columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchVehicles(); setRefreshing(false); }} />}
         ListHeaderComponent={
           <TouchableOpacity style={[st.addBtn, { borderColor: C.accent, backgroundColor: C.card }]} onPress={() => { resetForm(); setShowAddModal(true); }} data-testid="add-vehicle-btn">
@@ -223,15 +221,11 @@ export default function AdminVehicles() {
 }
 
 const st = StyleSheet.create({
-  card: { borderRadius: 12, padding: 16, marginBottom: 12 },
-  cardHeader: { flexDirection: 'row', marginBottom: 12 },
-  img: { width: 80, height: 60, borderRadius: 8 },
-  imgPlaceholder: { width: 80, height: 60, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  actions: { flexDirection: 'row', gap: 8 },
-  actBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: 10, borderRadius: 10, gap: 6 },
+  card: { borderRadius: 10, overflow: 'hidden' },
+  imgPlaceholder: { width: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, gap: 3 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  actBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: 6, gap: 4 },
   addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 20, borderRadius: 12, marginBottom: 16, gap: 10, borderWidth: 2, borderStyle: 'dashed' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1 },
   modalFooter: { flexDirection: 'row', padding: 20, gap: 12, borderTopWidth: 1 },

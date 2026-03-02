@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Modal, ScrollView, TextInput, Image, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Alert, Modal, ScrollView, TextInput, Image, Platform, ActivityIndicator, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../src/api/axios';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 import { USER_RATINGS } from '../../src/utils/admin-helpers';
+
+const SCREEN_W = Dimensions.get('window').width;
 
 interface User {
   id: string; name: string; email: string; phone?: string; address?: string;
@@ -112,40 +114,32 @@ export default function AdminUsers() {
 
   const renderItem = ({ item }: { item: User }) => {
     const ri = getRating(item.client_rating);
+    const cardW = (SCREEN_W - 32 - 30) / 4;
     return (
-      <TouchableOpacity style={[st.card, { backgroundColor: C.card }]} onPress={() => openModal(item)} data-testid={`user-card-${item.id}`}>
-        <View style={st.cardRow}>
-          <View style={st.avatarWrap}>
-            {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={st.avatar} /> :
-              <View style={[st.avatar, { backgroundColor: C.bg }]}><Text style={{ fontSize: 18, fontWeight: '700', color: C.accent }}>{item.name.charAt(0).toUpperCase()}</Text></View>}
-            <View style={[st.ratingDot, { backgroundColor: ri.color }]}><Ionicons name={ri.icon as any} size={10} color="#fff" /></View>
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Text style={{ fontSize: 15, fontWeight: '600', color: C.text }}>{item.name}</Text>
-              {item.blocked && <View style={[st.blockedBadge, { backgroundColor: C.error + '20' }]}><Text style={{ color: C.error, fontSize: 10, fontWeight: '700' }}>Bloque</Text></View>}
+      <TouchableOpacity style={[st.card, { backgroundColor: C.card, width: cardW }]} onPress={() => openModal(item)} data-testid={`user-card-${item.id}`}>
+        {/* Avatar */}
+        <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 6, position: 'relative' }}>
+          {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={st.avatar} /> :
+            <View style={[st.avatar, { backgroundColor: C.bg }]}><Text style={{ fontSize: 18, fontWeight: '700', color: C.accent }}>{item.name.charAt(0).toUpperCase()}</Text></View>}
+          <View style={[st.ratingDot, { backgroundColor: ri.color }]}><Ionicons name={ri.icon as any} size={10} color="#fff" /></View>
+          {item.blocked && <View style={[st.blockedBadge, { backgroundColor: C.error + '20', position: 'absolute', top: 6, right: 6 }]}><Text style={{ color: C.error, fontSize: 8, fontWeight: '700' }}>Bloque</Text></View>}
+        </View>
+        {/* Info */}
+        <View style={{ paddingHorizontal: 8, paddingBottom: 10 }}>
+          <Text style={{ fontSize: 11, fontWeight: '800', color: C.text, textAlign: 'center' }} numberOfLines={1}>{item.name}</Text>
+          <Text style={{ fontSize: 9, color: C.textLight, textAlign: 'center', marginTop: 1 }} numberOfLines={1}>{item.email}</Text>
+          {item.phone && <Text style={{ fontSize: 9, color: C.textLight, textAlign: 'center' }} numberOfLines={1}>{item.phone}</Text>}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 6 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+              <Ionicons name="calendar" size={10} color={C.textLight} />
+              <Text style={{ fontSize: 9, color: C.textLight }}>{item.reservation_count}</Text>
             </View>
-            <Text style={{ fontSize: 13, color: C.textLight }}>{item.email}</Text>
-            {item.phone && <Text style={{ fontSize: 12, color: C.textLight }}>{item.phone}</Text>}
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={C.textLight} />
-        </View>
-        <View style={st.statsRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Ionicons name="calendar" size={14} color={C.textLight} />
-            <Text style={{ fontSize: 12, color: C.textLight }}>{item.reservation_count} locations</Text>
-          </View>
-          <View style={[st.ratingTag, { backgroundColor: ri.color + '20' }]}>
-            <Ionicons name={ri.icon as any} size={12} color={ri.color} />
-            <Text style={{ fontSize: 12, fontWeight: '600', color: ri.color }}>{ri.label}</Text>
+            <View style={[st.ratingTag, { backgroundColor: ri.color + '20', paddingHorizontal: 6, paddingVertical: 2 }]}>
+              <Ionicons name={ri.icon as any} size={9} color={ri.color} />
+              <Text style={{ fontSize: 9, fontWeight: '600', color: ri.color }}>{ri.label}</Text>
+            </View>
           </View>
         </View>
-        {item.admin_notes && (
-          <View style={[st.notesRow, { borderTopColor: C.border }]}>
-            <Ionicons name="document-text" size={14} color={C.textLight} />
-            <Text style={{ fontSize: 12, color: C.textLight, flex: 1 }} numberOfLines={1}>{item.admin_notes}</Text>
-          </View>
-        )}
       </TouchableOpacity>
     );
   };
@@ -161,6 +155,8 @@ export default function AdminUsers() {
         {Platform.OS === 'web' && <input ref={(el: any) => { importRef.current = el; }} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' } as any} onChange={handleImport} />}
       </View>
       <FlatList data={users} renderItem={renderItem} keyExtractor={i => i.id} contentContainerStyle={{ padding: 16 }}
+        numColumns={4}
+        columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchUsers(); setRefreshing(false); }} />}
         ListEmptyComponent={!loading ? <View style={{ alignItems: 'center', paddingTop: 60 }}><Ionicons name="people-outline" size={48} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 12 }}>Aucun utilisateur</Text></View> : null}
       />
@@ -264,15 +260,11 @@ export default function AdminUsers() {
 }
 
 const st = StyleSheet.create({
-  card: { borderRadius: 12, padding: 16, marginBottom: 10 },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  avatarWrap: { position: 'relative' },
-  avatar: { width: 48, height: 48, borderRadius: 24, justifyContent: 'center', alignItems: 'center' },
-  ratingDot: { position: 'absolute', bottom: -2, right: -2, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  blockedBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  ratingTag: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, gap: 4 },
-  notesRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1 },
+  card: { borderRadius: 10, overflow: 'hidden' },
+  avatar: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  ratingDot: { position: 'absolute', bottom: 4, right: -2, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  blockedBadge: { paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
+  ratingTag: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 4 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
   importBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, gap: 6 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1 },
