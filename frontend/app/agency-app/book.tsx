@@ -13,7 +13,7 @@ interface Client { id: string; name: string; email: string; phone?: string; }
 interface VehicleSlot { id: string; user_name: string; start: string; end: string; status: string; }
 interface VehicleSchedule { id: string; brand: string; model: string; price_per_day: number; type: string; seats: number; transmission: string; fuel_type: string; options?: any[]; reservations: VehicleSlot[]; }
 
-type Step = 'client' | 'calendar' | 'options' | 'confirm';
+type Step = 'client' | 'calendar' | 'vehicle' | 'options' | 'confirm';
 
 const WEEKDAYS = ['Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa', 'Di'];
 
@@ -266,10 +266,10 @@ export default function BookingFlow() {
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content}>
       {/* Steps */}
       <View style={[s.stepsBar, { backgroundColor: C.card, borderColor: C.border }]}>
-        {(['client', 'calendar', 'options', 'confirm'] as Step[]).map((st, i) => {
-          const labels = ['Client', 'Dates & Véhicule', 'Options', 'Confirmer'];
-          const icons: any[] = ['person', 'calendar', 'settings', 'checkmark'];
-          const curIdx = ['client', 'calendar', 'options', 'confirm'].indexOf(step);
+        {(['client', 'calendar', 'vehicle', 'options', 'confirm'] as Step[]).map((st, i) => {
+          const labels = ['Client', 'Dates', 'Véhicule', 'Options', 'Confirmer'];
+          const icons: any[] = ['person', 'calendar', 'car-sport', 'settings', 'checkmark'];
+          const curIdx = ['client', 'calendar', 'vehicle', 'options', 'confirm'].indexOf(step);
           const active = step === st;
           const past = curIdx > i;
           return (
@@ -331,7 +331,7 @@ export default function BookingFlow() {
         </View>
       )}
 
-      {/* ─── STEP 2: Calendar & Vehicle ─── */}
+      {/* ─── STEP 2: Calendar ─── */}
       {step === 'calendar' && (
         <View>
           <Text style={[s.title, { color: C.text }]}>Choisissez vos dates</Text>
@@ -395,57 +395,75 @@ export default function BookingFlow() {
             </View>
           )}
 
-          {/* Vehicle selection */}
-          {startDate && endDate && (
-            <View style={{ marginTop: 16 }}>
-              <Text style={[s.sectionTitle, { color: C.text }]}>Choisir un véhicule</Text>
-              <View style={s.legendRow}>
-                <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#10B981' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Disponible</Text></View>
-                <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#EF4444' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Occupé</Text></View>
-              </View>
-              {loadingSchedule ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} /> : (
-                schedule.map(v => {
-                  const free = isVehicleFree(v);
-                  const selected = selectedVehicle?.id === v.id;
-                  return (
-                    <TouchableOpacity
-                      key={v.id}
-                      style={[
-                        s.vehicleCard,
-                        { backgroundColor: C.card, borderColor: selected ? C.accent : C.border },
-                        selected && { borderWidth: 2 },
-                        !free && { opacity: 0.5 },
-                      ]}
-                      onPress={() => free ? setSelectedVehicle(v) : showAlert('Indisponible', 'Ce véhicule est occupé pour ces dates')}
-                      data-testid={`vehicle-${v.id}`}
-                    >
-                      <View style={s.vehicleRow}>
-                        <Ionicons name="car-sport" size={24} color={free ? C.accent : '#EF4444'} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={[s.vehicleName, { color: C.text }]}>{v.brand} {v.model}</Text>
-                          <Text style={{ color: C.textLight, fontSize: 11 }}>{v.type} | {v.seats} places | {v.transmission}</Text>
-                        </View>
-                        <View style={{ alignItems: 'flex-end' }}>
-                          <Text style={{ color: C.accent, fontSize: 16, fontWeight: '800' }}>CHF {v.price_per_day}</Text>
-                          <Text style={{ color: C.textLight, fontSize: 10 }}>/jour</Text>
-                        </View>
-                        {selected && <Ionicons name="checkmark-circle" size={22} color={C.success} style={{ marginLeft: 8 }} />}
-                        {!free && <View style={s.occupiedTag}><Text style={{ color: '#EF4444', fontSize: 10, fontWeight: '700' }}>OCCUPÉ</Text></View>}
-                      </View>
-                      {selected && totalDays > 0 && (
-                        <View style={[s.priceSummary, { backgroundColor: C.accent + '10' }]}>
-                          <Text style={{ color: C.accent, fontWeight: '700', fontSize: 13 }}>Total : CHF {(v.price_per_day * totalDays).toFixed(2)} ({totalDays}j × CHF {v.price_per_day})</Text>
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })
-              )}
-            </View>
+          {/* Next to Vehicle step */}
+          {startDate && endDate && totalDays > 0 && (
+            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('vehicle')}>
+              <Text style={s.btnText}>Suivant : Choisir un véhicule</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {/* ─── STEP 3: Vehicle Selection ─── */}
+      {step === 'vehicle' && (
+        <View>
+          <Text style={[s.title, { color: C.text }]}>Choisir un véhicule</Text>
+
+          {/* Date recap */}
+          <View style={[s.dateRecap, { backgroundColor: C.accent + '10', borderColor: C.accent + '30' }]}>
+            <Ionicons name="calendar" size={16} color={C.accent} />
+            <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>
+              {startDate && format(startDate, 'd MMM', { locale: fr })} - {endDate && format(endDate, 'd MMM yyyy', { locale: fr })} ({totalDays}j)
+            </Text>
+            <TouchableOpacity onPress={() => setStep('calendar')}><Text style={{ color: C.textLight, fontSize: 11, textDecorationLine: 'underline' }}>Modifier</Text></TouchableOpacity>
+          </View>
+
+          <View style={s.legendRow}>
+            <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#10B981' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Disponible</Text></View>
+            <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#EF4444' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Occupé</Text></View>
+          </View>
+
+          {loadingSchedule ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} /> : (
+            schedule.map(v => {
+              const free = isVehicleFree(v);
+              const selected = selectedVehicle?.id === v.id;
+              return (
+                <TouchableOpacity
+                  key={v.id}
+                  style={[
+                    s.vehicleCard,
+                    { backgroundColor: C.card, borderColor: selected ? C.accent : C.border },
+                    selected && { borderWidth: 2 },
+                    !free && { opacity: 0.5 },
+                  ]}
+                  onPress={() => free ? setSelectedVehicle(v) : showAlert('Indisponible', 'Ce véhicule est occupé pour ces dates')}
+                  data-testid={`vehicle-${v.id}`}
+                >
+                  <View style={s.vehicleRow}>
+                    <Ionicons name="car-sport" size={24} color={free ? C.accent : '#EF4444'} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={[s.vehicleName, { color: C.text }]}>{v.brand} {v.model}</Text>
+                      <Text style={{ color: C.textLight, fontSize: 11 }}>{v.type} | {v.seats} places | {v.transmission}</Text>
+                    </View>
+                    <View style={{ alignItems: 'flex-end' }}>
+                      <Text style={{ color: C.accent, fontSize: 16, fontWeight: '800' }}>CHF {v.price_per_day}</Text>
+                      <Text style={{ color: C.textLight, fontSize: 10 }}>/jour</Text>
+                    </View>
+                    {selected && <Ionicons name="checkmark-circle" size={22} color={C.success} style={{ marginLeft: 8 }} />}
+                    {!free && <View style={s.occupiedTag}><Text style={{ color: '#EF4444', fontSize: 10, fontWeight: '700' }}>OCCUPÉ</Text></View>}
+                  </View>
+                  {selected && totalDays > 0 && (
+                    <View style={[s.priceSummary, { backgroundColor: C.accent + '10' }]}>
+                      <Text style={{ color: C.accent, fontWeight: '700', fontSize: 13 }}>Total : CHF {(v.price_per_day * totalDays).toFixed(2)} ({totalDays}j x CHF {v.price_per_day})</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })
           )}
 
           {/* Next */}
-          {selectedVehicle && startDate && endDate && totalDays > 0 && isVehicleFree(selectedVehicle) && (
+          {selectedVehicle && isVehicleFree(selectedVehicle) && (
             <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('options')}>
               <Text style={s.btnText}>Suivant : Options & Paiement</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
             </TouchableOpacity>
@@ -453,7 +471,7 @@ export default function BookingFlow() {
         </View>
       )}
 
-      {/* ─── STEP 3: Options & Payment ─── */}
+      {/* ─── STEP 4: Options & Payment ─── */}
       {step === 'options' && selectedVehicle && (
         <View>
           <Text style={[s.title, { color: C.text }]}>Options & Paiement</Text>
@@ -486,7 +504,7 @@ export default function BookingFlow() {
         </View>
       )}
 
-      {/* ─── STEP 4: Confirm ─── */}
+      {/* ─── STEP 5: Confirm ─── */}
       {step === 'confirm' && selectedClient && selectedVehicle && startDate && endDate && (
         <View>
           <Text style={[s.title, { color: C.text }]}>Récapitulatif</Text>
@@ -556,6 +574,7 @@ const s = StyleSheet.create({
   hourControl: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1 },
   hourValue: { fontSize: 18, fontWeight: '800', minWidth: 50, textAlign: 'center' },
   durationBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, alignSelf: 'flex-start' },
+  dateRecap: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 10, borderWidth: 1, marginBottom: 14 },
   legendRow: { flexDirection: 'row', gap: 16, marginBottom: 10 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   legendDot: { width: 10, height: 10, borderRadius: 5 },
