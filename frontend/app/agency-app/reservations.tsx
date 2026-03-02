@@ -50,6 +50,8 @@ export default function AgencyReservations() {
   const [contractLoading, setContractLoading] = useState(false);
   const [planningMonth, setPlanningMonth] = useState(startOfMonth(new Date()));
   const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [showAllVehicles, setShowAllVehicles] = useState(false);
+  const [vehicleSearch, setVehicleSearch] = useState('');
   const router = useRouter();
 
   const fetchReservations = async () => {
@@ -154,6 +156,18 @@ export default function AgencyReservations() {
             ))}
           </ScrollView>
 
+          {/* Vehicle search + toggle */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8, marginBottom: 8 }}>
+            <View style={[st.searchBar, { flex: 1, margin: 0, backgroundColor: C.card, borderColor: C.border }]}>
+              <Ionicons name="search" size={16} color={C.textLight} />
+              <TextInput style={[st.searchInput, { color: C.text, paddingVertical: 6 }]} placeholder="Filtrer vehicule..." placeholderTextColor={C.textLight} value={vehicleSearch} onChangeText={setVehicleSearch} data-testid="vehicle-search-planning" />
+            </View>
+            <TouchableOpacity onPress={() => setShowAllVehicles(!showAllVehicles)} style={[st.filterTab, { backgroundColor: showAllVehicles ? C.accent + '20' : C.card, borderColor: showAllVehicles ? C.accent : C.border }]} data-testid="toggle-all-vehicles">
+              <Ionicons name={showAllVehicles ? 'eye' : 'eye-off'} size={14} color={showAllVehicles ? C.accent : C.textLight} />
+              <Text style={{ color: showAllVehicles ? C.accent : C.textLight, fontSize: 11, fontWeight: '600' }}>{showAllVehicles ? 'Tous' : 'Avec res.'}</Text>
+            </TouchableOpacity>
+          </View>
+
           {scheduleLoading ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 40 }} /> : (
             <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
               <ScrollView horizontal showsHorizontalScrollIndicator={true}>
@@ -176,7 +190,10 @@ export default function AgencyReservations() {
                   </View>
 
                   {/* Vehicle rows */}
-                  {schedule.filter(v => v.reservations.length > 0 || true).map((vehicle, vi) => (
+                  {schedule
+                    .filter(v => showAllVehicles || v.reservations.length > 0)
+                    .filter(v => !vehicleSearch || `${v.brand} ${v.model}`.toLowerCase().includes(vehicleSearch.toLowerCase()))
+                    .map((vehicle, vi) => (
                     <View key={vehicle.id} style={{ flexDirection: 'row' }}>
                       {/* Vehicle label */}
                       <View style={[st.labelCell, { width: LABEL_W, backgroundColor: vi % 2 === 0 ? C.card : C.bg, borderColor: C.border, height: ROW_H }]}>
@@ -422,7 +439,8 @@ const st = StyleSheet.create({
   resItemDot: { width: 8, height: 8, borderRadius: 4 },
   resItemBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   searchBar: { flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1 },
-  searchInput: { flex: 1, fontSize: 14, paddingVertical: 10 },
+  searchInput: { flex: 1, fontSize: 14 },
+  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
   empty: { alignItems: 'center', paddingTop: 60, gap: 8 },
   card: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
