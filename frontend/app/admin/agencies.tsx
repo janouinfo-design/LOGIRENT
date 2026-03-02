@@ -252,6 +252,18 @@ export default function AgenciesPage() {
                       <Text style={[styles.linkLabel, { color: COLORS.error }]}>Aucun admin assigne</Text>
                     </View>
                   )}
+                  <View style={{ marginTop: 10, gap: 6 }}>
+                    <View style={styles.linkItem}>
+                      <Ionicons name="phone-portrait" size={16} color={COLORS.warning} />
+                      <Text style={styles.linkLabel}>App Admin : </Text>
+                      <Text style={styles.linkUrl} selectable>{API_URL}/admin-login</Text>
+                    </View>
+                    <View style={styles.linkItem}>
+                      <Ionicons name="globe-outline" size={16} color={COLORS.success} />
+                      <Text style={styles.linkLabel}>App Client : </Text>
+                      <Text style={styles.linkUrl} selectable>{API_URL}/a/{agency.slug || agency.id}</Text>
+                    </View>
+                  </View>
                   <TouchableOpacity
                     style={styles.qrBtn}
                     onPress={() => { setQrAgency(agency); setQrType('both'); }}
