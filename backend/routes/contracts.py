@@ -306,8 +306,15 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     story.append(Spacer(1, 3 * mm))
 
     # ======================== FINANCIAL SECTION ========================
-    deposit = d.get("deposit", 0)
-    total_price = d.get("total_price", 0)
+    # Convert to float safely (may be string from update-fields)
+    try:
+        deposit = float(d.get("deposit", 0) or 0)
+    except (ValueError, TypeError):
+        deposit = 0
+    try:
+        total_price = float(d.get("total_price", 0) or 0)
+    except (ValueError, TypeError):
+        total_price = 0
     total_paid = d.get("total_paid", "")
 
     lbl_depot = "Depot (caution)" if is_fr else "Deposit (caution)"
