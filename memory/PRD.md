@@ -33,12 +33,20 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Analytics dashboards: Top Clients + Agency Comparison sections.
 - [2026-03-02] AI Revenue Forecast (GPT-5.2): Endpoint + frontend charts for both super-admin and agency-admin. 16 tests passed.
 - [2026-03-02] Fix: Impersonation token via URL hash instead of localStorage swap. Both sessions now independent.
+- [2026-03-02] Vehicle fields: Added plate_number, chassis_number, color to Vehicle model and edit UI.
+- [2026-03-02] Vehicle document upload: Object Storage integration (Emergent), upload/download/delete endpoints. Frontend document management in edit modal (carte grise, assurance, controle technique, photos). 19 tests passed.
+
+## Key API Endpoints (New)
+- `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
+- `GET /api/vehicles/{id}/documents/{doc_id}/download` - Download vehicle document
+- `DELETE /api/admin/vehicles/{id}/documents/{doc_id}` - Soft-delete vehicle document
 
 ## 3rd Party Integrations
 - Stripe (Payments)
 - Resend (Email)
 - Navixy (GPS Tracking)
 - OpenAI GPT-5.2 via emergentintegrations (Revenue Forecast)
+- Emergent Object Storage (Vehicle Documents)
 - react-native-svg (Charts)
 - reportlab (PDF Generation)
 
