@@ -1,19 +1,21 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Modal, ScrollView, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Modal, ScrollView, Alert, Platform, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 
+const SCREEN_W = Dimensions.get('window').width;
+
 interface Vehicle {
   id: string; brand: string; model: string; year: number; price_per_day: number;
   type: string; seats: number; transmission: string; fuel_type: string; status: string;
-  description?: string; location?: string;
+  description?: string; location?: string; photos?: string[];
 }
 
 const STATUS_CONFIG: Record<string, { icon: string; label: string; bg: string; text: string; border: string }> = {
   available: { icon: 'checkmark-circle', label: 'Disponible', bg: '#10B98120', text: '#10B981', border: '#10B98150' },
-  rented: { icon: 'car', label: 'Loue', bg: '#F59E0B20', text: '#F59E0B', border: '#F59E0B50' },
+  rented: { icon: 'car', label: 'Loue', bg: '#FBBF2420', text: '#FBBF24', border: '#FBBF2450' },
   maintenance: { icon: 'construct', label: 'Maintenance', bg: '#EF444420', text: '#EF4444', border: '#EF444450' },
 };
 
@@ -89,6 +91,11 @@ export default function AgencyVehicles() {
 
   const getStatus = (s: string) => STATUS_CONFIG[s] || { icon: 'help-circle', label: s, bg: '#6B728020', text: '#6B7280', border: '#6B728050' };
 
+  const CARD_GAP = 10;
+  const PADDING = 16;
+  const NUM_COLS = 4;
+  const cardW = (SCREEN_W - PADDING * 2 - CARD_GAP * (NUM_COLS - 1)) / NUM_COLS;
+
   if (loading) return <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
@@ -113,44 +120,46 @@ export default function AgencyVehicles() {
         ))}
       </ScrollView>
 
-      {/* Vehicle List */}
-      <FlatList data={filtered} keyExtractor={(item) => item.id}
+      {/* Vehicle Grid - 4 columns */}
+      <FlatList data={filtered} keyExtractor={(item) => item.id} numColumns={4}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
-        contentContainerStyle={{ padding: 16, paddingTop: 8, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: PADDING, paddingTop: 8, paddingBottom: 32 }}
+        columnWrapperStyle={{ gap: CARD_GAP, marginBottom: CARD_GAP }}
         ListEmptyComponent={<View style={st.empty}><Ionicons name="car-outline" size={40} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 14 }}>Aucun vehicule</Text></View>}
         renderItem={({ item }) => {
           const sc = getStatus(item.status);
+          const photo = item.photos?.[0];
           return (
-            <View data-testid={`vehicle-card-${item.id}`} style={[st.card, { backgroundColor: C.card, borderColor: C.border }]}>
-              {/* Status Banner - prominent at the top */}
-              <View style={[st.statusBanner, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
-                <Ionicons name={sc.icon as any} size={16} color={sc.text} />
-                <Text style={[st.statusLabel, { color: sc.text }]}>{sc.label}</Text>
-                <View style={{ flex: 1 }} />
-                <View style={[st.statusDot, { backgroundColor: sc.text }]} />
-              </View>
-
-              <View style={st.cardBody}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.vehicleName, { color: C.text }]}>{item.brand} {item.model}</Text>
-                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 2 }}>{item.year} | {item.type}</Text>
+            <TouchableOpacity onPress={() => openEdit(item)} style={[st.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
+              {/* Photo */}
+              <View style={st.photoBox}>
+                {photo ? (
+                  <Image source={{ uri: photo }} style={st.photo} resizeMode="cover" />
+                ) : (
+                  <View style={[st.photoPlaceholder, { backgroundColor: C.border + '40' }]}>
+                    <Ionicons name="car-sport" size={28} color={C.textLight} />
+                  </View>
+                )}
+                {/* Status badge overlay */}
+                <View style={[st.statusOverlay, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
+                  <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: sc.text }} />
+                  <Text style={{ color: sc.text, fontSize: 9, fontWeight: '800' }}>{sc.label}</Text>
                 </View>
-                <Text style={[st.price, { color: C.accent }]}>CHF {item.price_per_day}<Text style={{ fontSize: 11, fontWeight: '500', color: C.textLight }}>/j</Text></Text>
               </View>
 
-              <View style={st.cardDetails}>
-                <View style={st.detail}><Ionicons name="people-outline" size={13} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 11 }}>{item.seats}pl</Text></View>
-                <View style={st.detail}><Ionicons name="cog-outline" size={13} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 11 }}>{item.transmission === 'automatic' ? 'Auto' : 'Manuel'}</Text></View>
-                <View style={st.detail}><Ionicons name="flash-outline" size={13} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 11 }}>{item.fuel_type}</Text></View>
-                {item.location && <View style={st.detail}><Ionicons name="location-outline" size={13} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 11 }}>{item.location}</Text></View>}
+              {/* Info */}
+              <View style={st.cardInfo}>
+                <Text style={[st.vehicleName, { color: C.text }]} numberOfLines={1}>{item.brand} {item.model}</Text>
+                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 1 }}>{item.year} | {item.type}</Text>
+                <View style={st.cardMeta}>
+                  <Text style={{ color: C.textLight, fontSize: 9 }}>{item.seats}pl | {item.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
+                </View>
+                <View style={st.priceRow}>
+                  <Text style={[st.price, { color: C.accent }]}>CHF {item.price_per_day}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 9 }}>/jour</Text>
+                </View>
               </View>
-
-              {/* Edit Button */}
-              <TouchableOpacity onPress={() => openEdit(item)} style={[st.editBtn, { borderColor: C.accent + '40' }]} data-testid={`edit-vehicle-${item.id}`}>
-                <Ionicons name="create-outline" size={15} color={C.accent} />
-                <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Modifier</Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           );
         }}
       />
@@ -167,18 +176,18 @@ export default function AgencyVehicles() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
-              {/* Status Selection - Prominent */}
+              {/* Status Selection */}
               <Text style={[st.fieldLabel, { color: C.textLight }]}>Statut</Text>
               <View style={st.statusRow}>
                 {STATUSES.map(s => {
-                  const sc = getStatus(s.v);
+                  const sc2 = getStatus(s.v);
                   const sel = editForm.status === s.v;
                   return (
                     <TouchableOpacity key={s.v} onPress={() => setEditForm({ ...editForm, status: s.v })}
-                      style={[st.statusOption, { backgroundColor: sel ? sc.bg : 'transparent', borderColor: sel ? sc.text : C.border }]}
+                      style={[st.statusOption, { backgroundColor: sel ? sc2.bg : 'transparent', borderColor: sel ? sc2.text : C.border }]}
                       data-testid={`status-option-${s.v}`}>
-                      <Ionicons name={sc.icon as any} size={18} color={sel ? sc.text : C.textLight} />
-                      <Text style={{ color: sel ? sc.text : C.textLight, fontSize: 12, fontWeight: sel ? '700' : '500' }}>{s.l}</Text>
+                      <Ionicons name={sc2.icon as any} size={18} color={sel ? sc2.text : C.textLight} />
+                      <Text style={{ color: sel ? sc2.text : C.textLight, fontSize: 12, fontWeight: sel ? '700' : '500' }}>{s.l}</Text>
                     </TouchableOpacity>
                   );
                 })}
@@ -286,16 +295,16 @@ const st = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: 60, gap: 8 },
   filterTab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
   countBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, minWidth: 20, alignItems: 'center' },
-  card: { borderRadius: 12, marginBottom: 10, borderWidth: 1, overflow: 'hidden' },
-  statusBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1 },
-  statusLabel: { fontSize: 13, fontWeight: '800', letterSpacing: 0.5 },
-  statusDot: { width: 8, height: 8, borderRadius: 4 },
-  cardBody: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingTop: 12, paddingBottom: 6 },
-  vehicleName: { fontSize: 16, fontWeight: '700' },
-  price: { fontSize: 18, fontWeight: '800' },
-  cardDetails: { flexDirection: 'row', gap: 14, paddingHorizontal: 14, paddingBottom: 10 },
-  detail: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  editBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderTopWidth: 1 },
+  card: { borderRadius: 10, borderWidth: 1, overflow: 'hidden' },
+  photoBox: { position: 'relative' },
+  photo: { width: '100%', height: 90, borderTopLeftRadius: 10, borderTopRightRadius: 10 },
+  photoPlaceholder: { width: '100%', height: 90, justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 10, borderTopRightRadius: 10 },
+  statusOverlay: { position: 'absolute', bottom: 4, left: 4, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  cardInfo: { padding: 8 },
+  vehicleName: { fontSize: 12, fontWeight: '800' },
+  cardMeta: { marginTop: 2 },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 4 },
+  price: { fontSize: 14, fontWeight: '800' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
   modalBox: { width: '100%', maxWidth: 500, borderRadius: 16, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
