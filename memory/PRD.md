@@ -32,6 +32,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Frontend refactoring: super-admin pages refactored (-64%).
 - [2026-03-02] Analytics dashboards: Top Clients + Agency Comparison sections.
 - [2026-03-02] AI Revenue Forecast (GPT-5.2): Endpoint + frontend charts for both super-admin and agency-admin. 16 tests passed.
+- [2026-03-02] Fix: Impersonation token via URL hash instead of localStorage swap. Both sessions now independent.
 
 ## 3rd Party Integrations
 - Stripe (Payments)
