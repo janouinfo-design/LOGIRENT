@@ -36,6 +36,8 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Vehicle fields: Added plate_number, chassis_number, color to Vehicle model and edit UI.
 - [2026-03-02] Vehicle document upload: Object Storage integration (Emergent), upload/download/delete endpoints. Frontend document management in edit modal (carte grise, assurance, controle technique, photos). 19 tests passed.
 - [2026-03-02] Booking flow redirect: After confirming reservation, navigates to reservations planning page with pulsing highlight on the new reservation bar + success banner for 4 seconds.
+- [2026-03-02] Lists to vignettes: Converted clients list and booking vehicle selection to 4-column card grids with photos/avatars, badges, and compact info.
+- [2026-03-02] Document expiration system: Added expiry_date to documents, GET /api/admin/vehicles/document-alerts endpoint (30-day warning), color-coded badges in vehicle edit modal (green/orange/red), dashboard alerts section. 10 tests passed.
 
 ## Key API Endpoints (New)
 - `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
