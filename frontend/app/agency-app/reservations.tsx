@@ -118,7 +118,7 @@ export default function AgencyReservations() {
       </View>
 
       {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.filterScroll} contentContainerStyle={s.filterContent}>
+      <View style={s.filterRow}>
         {STATUS_FILTERS.map((f) => (
           <TouchableOpacity
             key={f.label}
@@ -137,7 +137,7 @@ export default function AgencyReservations() {
             ]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       <FlatList
         data={filtered}
@@ -216,11 +216,10 @@ const s = StyleSheet.create({
   container: { flex: 1 },
   searchBar: { flexDirection: 'row', alignItems: 'center', margin: 16, marginBottom: 0, borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1 },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 10 },
-  filterScroll: { maxHeight: 44, marginTop: 12 },
-  filterContent: { paddingHorizontal: 16, gap: 8 },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20, borderWidth: 1.5 },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginTop: 12, marginBottom: 4 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
   filterChipActive: { },
-  filterText: { fontSize: 14, fontWeight: '700' },
+  filterText: { fontSize: 13, fontWeight: '700' },
   filterTextActive: { color: '#fff' },
   empty: { alignItems: 'center', paddingTop: 60, gap: 8 },
   emptyText: { fontSize: 14 },
