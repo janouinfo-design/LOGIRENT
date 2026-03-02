@@ -40,6 +40,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Document expiration system: Added expiry_date to documents, GET /api/admin/vehicles/document-alerts endpoint (30-day warning), color-coded badges in vehicle edit modal (green/orange/red), dashboard alerts section. 10 tests passed.
 - [2026-03-02] Super admin vignettes: Converted agencies, vehicles, and users lists to 4-column card grids. Agencies show stats/action buttons, vehicles show photos/status/price, users show avatars/ratings. 10 tests passed (iteration 32).
 - [2026-03-02] Client identity/license fields: Added birth_place, birth_year, license_number, license_issue_date, license_expiry_date, nationality to client profiles. Required fields with red border validation. Edit + creation modals updated. 9 pytest tests passed (iteration 33).
+- [2026-03-02] Booking→Contract→Planning flow: After confirming reservation, navigates to contract page (auto-filled with client identity + vehicle data). After signing, 'Voir sur le planning' button leads to planning with pulsing highlight. Contract auto-fills nationality, license, dates, plate, color, chassis. 7 pytest tests passed (iteration 34).
 
 ## Key API Endpoints (New)
 - `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
