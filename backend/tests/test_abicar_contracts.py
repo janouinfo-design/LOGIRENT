@@ -48,7 +48,15 @@ class TestABICARContractGeneration:
             headers=self.get_headers()
         )
         assert response.status_code == 200, f"Failed to get reservations: {response.text}"
-        reservations = response.json()
+        data = response.json()
+        
+        # Handle both list and object response formats
+        if isinstance(data, list):
+            reservations = data
+        elif isinstance(data, dict) and "reservations" in data:
+            reservations = data["reservations"]
+        else:
+            reservations = []
         
         assert len(reservations) > 0, "No reservations found for testing"
         
