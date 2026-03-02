@@ -89,19 +89,25 @@ export default function SuperAdminStatistics() {
   const [stats, setStats] = useState<AdvancedStats | null>(null);
   const [basicStats, setBasicStats] = useState<any>(null);
   const [agencies, setAgencies] = useState<any[]>([]);
+  const [topClients, setTopClients] = useState<any[]>([]);
+  const [agencyComparison, setAgencyComparison] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
-      const [advResp, basicResp, agResp] = await Promise.all([
+      const [advResp, basicResp, agResp, tcResp, acResp] = await Promise.all([
         api.get('/api/admin/stats/advanced'),
         api.get('/api/admin/stats'),
         api.get('/api/agencies'),
+        api.get('/api/admin/stats/top-clients'),
+        api.get('/api/admin/stats/agency-comparison'),
       ]);
       setStats(advResp.data);
       setBasicStats(basicResp.data);
       setAgencies(agResp.data || []);
+      setTopClients(tcResp.data || []);
+      setAgencyComparison(acResp.data || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   }, []);
