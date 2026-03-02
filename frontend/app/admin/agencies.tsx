@@ -59,17 +59,19 @@ export default function AgenciesPage() {
   const handleImpersonate = async (agency: Agency) => {
     if (!agency.admin_id) { alert('Aucun admin pour cette agence'); return; }
     setImpersonating(agency.id);
+    // Open window IMMEDIATELY in click context (before async call) to avoid popup blocker
+    const newWindow = typeof window !== 'undefined' ? window.open('', '_blank') : null;
     try {
       const token = await AsyncStorage.getItem('token');
       const res = await axios.post(`${API_URL}/api/admin/impersonate/${agency.admin_id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const { access_token } = res.data;
-      // Open agency-app in new tab with token in URL hash (not leaked in server logs)
-      if (typeof window !== 'undefined') {
-        window.open(`${API_URL}/agency-app#imp_token=${access_token}`, '_blank');
+      if (newWindow) {
+        newWindow.location.href = `${API_URL}/agency-app#imp_token=${access_token}`;
       }
     } catch (e: any) {
+      if (newWindow) newWindow.close();
       alert(e.response?.data?.detail || 'Erreur d\'impersonation');
     } finally { setImpersonating(null); }
   };
