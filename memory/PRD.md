@@ -16,67 +16,38 @@ Build a complete car rental solution named "LogiRent" with:
   models.py          # Pydantic models
   deps.py            # Dependencies, JWT auth helpers
   routes/
-    auth.py          # User auth: login, register, profile, forgot-password
+    auth.py          # User auth + impersonation endpoint
     vehicles.py      # Vehicle CRUD, availability
     reservations.py  # Reservation management
     notifications.py # Notification endpoints
     payments.py      # Stripe payment integration
     admin.py         # Admin dashboard, stats, users, calendar, overdue
-    agencies.py      # Agency CRUD, public pages, mobile app endpoints
+    agencies.py      # Agency CRUD (now returns admin_id)
     navixy.py        # GPS tracking integration
-    contracts.py     # ABICAR-style contract generation, field editing, signing, PDF
+    contracts.py     # ABICAR-style contract with editable fields, signing, PDF
   utils/
-    email.py         # Email templates (Resend)
-    helpers.py       # Utility functions
-    notifications.py # Notification creation helpers
-  tests/
-    test_backend_refactoring_regression.py
-    test_abicar_contracts.py
-    test_contract_update_fields.py
+    email.py, helpers.py, notifications.py
 ```
 
 ### Frontend (React Native / Expo)
 ```
-/app/frontend/
-  app/
-    agency-app/
-      book.tsx                  # Booking flow - auto-generates contract after reservation
-      complete-contract.tsx     # NEW: Contract completion + client signing screen
-      reservations.tsx          # Reservation list
-    admin/                      # Super admin web interface
-    (tabs)/                     # Client-facing app
-    contract/[id].tsx           # Contract view (ABICAR-style)
+/app/frontend/app/
+  agency-app/
+    book.tsx                  # Booking flow -> auto-generates contract
+    complete-contract.tsx     # Contract completion + client signing
+  admin/
+    agencies.tsx              # "Login as" impersonation button (no more passwords)
+  contract/[id].tsx           # Contract view (ABICAR-style)
 ```
 
-## What's Been Implemented
-- Full vehicle catalog with search/filter
-- Reservation system with calendar
-- Multi-role auth (client, admin, super_admin)
-- Agency management (CRUD, public pages)
-- **ABICAR-style contract PDF**: header, vehicle, tenant, dates/km, pricing grid, legal conditions, financial, signature, footer
-- **Contract auto-generation**: after reservation creation, contract auto-generated with pre-filled data
-- **Editable contract fields**: 25 editable fields (vehicle plate/color, client nationality/license, km, pricing)
-- **On-screen signing**: client signs directly on computer/tablet screen
-- Stripe payment integration
-- GPS tracking (Navixy)
-- Email notifications (Resend)
-- Admin dashboard with stats
-- QR code scanning
-- i18n (FR/EN)
-
 ## Completed Tasks
-- [2026-03-02] Backend refactoring: 3704-line server.py → 17 modular files. 70 tests passed.
-- [2026-03-02] Contract PDF redesigned to ABICAR format. 16 tests passed.
-- [2026-03-02] Contract legal text updated with Swiss CO/LP references.
-- [2026-03-02] Contract completion flow: auto-generation after reservation, field editing, on-screen signing. 16 tests passed.
-- [2026-03-02] Bug fix: PDF generation crash with string numeric values.
+- [2026-03-02] Backend refactoring: 3704-line server.py -> 17 modular files. 70 tests passed.
+- [2026-03-02] ABICAR contract PDF with Swiss CO/LP legal text. 16 tests passed.
+- [2026-03-02] Contract auto-generation after reservation + editable fields + on-screen signing. 16 tests passed.
+- [2026-03-02] Super Admin impersonation: "Login as user" replaces access links/passwords in agencies page.
 
 ## 3rd Party Integrations
-- Stripe (Payments)
-- Resend (Email)
-- Navixy (GPS Tracking)
-- OpenAI GPT-5.2 (via emergentintegrations)
-- Expo Barcode Scanner, react-qr-code, reportlab, expo-linear-gradient
+Stripe, Resend, Navixy, OpenAI GPT-5.2 (emergentintegrations), Expo Barcode Scanner, react-qr-code, reportlab, expo-linear-gradient
 
 ## Prioritized Backlog
 
