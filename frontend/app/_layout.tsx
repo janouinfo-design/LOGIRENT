@@ -159,7 +159,27 @@ export default function RootLayout() {
   const { loadUser, isLoading } = useAuthStore();
   const { loadTheme } = useThemeStore();
 
-  useEffect(() => { loadUser(); loadTheme(); }, []);
+  useEffect(() => {
+    const init = async () => {
+      // Handle impersonation token from URL hash BEFORE loadUser
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash;
+        if (hash.includes('imp_token=')) {
+          const impToken = hash.split('imp_token=')[1];
+          if (impToken) {
+            const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+            const axios = (await import('axios')).default;
+            await AsyncStorage.setItem('token', impToken);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${impToken}`;
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }
+      }
+      await loadUser();
+      loadTheme();
+    };
+    init();
+  }, []);
 
   if (isLoading) {
     return <View style={styles.loadingBox}><ActivityIndicator size="large" color="#7C3AED" /></View>;
