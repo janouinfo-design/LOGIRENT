@@ -125,7 +125,7 @@ export function PhotoManagementModal({ visible, vehicle, C, onClose, onRefresh }
         if (m) { contentType = m[1]; base64Data = m[2]; }
       }
       if (base64Data) {
-        const resp = await (await import('../../api/axios')).default.post(`/api/admin/vehicles/${vehicle.id}/photos/base64`, { image: base64Data, content_type: contentType });
+        const resp = await api.post(`/api/admin/vehicles/${vehicle.id}/photos/base64`, { image: base64Data, content_type: contentType });
         setPhotos(prev => [...prev, resp.data.photo]);
         onRefresh();
         alert('Photo ajoutee !');
@@ -139,7 +139,7 @@ export function PhotoManagementModal({ visible, vehicle, C, onClose, onRefresh }
     const ok = Platform.OS === 'web' ? window.confirm('Supprimer ?') : true;
     if (!ok) return;
     try {
-      await (await import('../../api/axios')).default.delete(`/api/admin/vehicles/${vehicle.id}/photos/${idx}`);
+      await api.delete(`/api/admin/vehicles/${vehicle.id}/photos/${idx}`);
       setPhotos(prev => prev.filter((_, i) => i !== idx));
       onRefresh();
     } catch { alert('Erreur de suppression'); }
