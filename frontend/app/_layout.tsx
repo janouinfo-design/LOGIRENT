@@ -132,7 +132,7 @@ function AppContent() {
 export default function RootLayout() {
   const { loadUser, isLoading, isAuthenticated } = useAuthStore();
   const { loadTheme } = useThemeStore();
-  const { registerPushToken, fetchUnreadCount } = useNotificationStore();
+  const { fetchUnreadCount } = useNotificationStore();
 
   useEffect(() => {
     const init = async () => {
@@ -153,10 +153,9 @@ export default function RootLayout() {
     init();
   }, []);
 
-  // Register push token and start polling when authenticated
+  // Start polling when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      registerPushToken();
       fetchUnreadCount();
       const interval = setInterval(fetchUnreadCount, 15000);
       return () => clearInterval(interval);

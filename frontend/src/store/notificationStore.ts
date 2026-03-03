@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { Platform } from 'react-native';
 import api from '../api/axios';
 
 export interface Notification {
@@ -18,38 +17,17 @@ interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
   isLoading: boolean;
-  pushToken: string | null;
   fetchNotifications: () => Promise<void>;
   fetchUnreadCount: () => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   deleteNotification: (id: string) => Promise<void>;
-  registerPushToken: () => Promise<void>;
-}
-
-async function getExpoPushToken(): Promise<string | null> {
-  if (Platform.OS === 'web') return null;
-  try {
-    const Notifications = await import('expo-notifications');
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') return null;
-    const tokenData = await Notifications.getExpoPushTokenAsync();
-    return tokenData.data;
-  } catch {
-    return null;
-  }
 }
 
 export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
-  pushToken: null,
 
   fetchNotifications: async () => {
     set({ isLoading: true });
@@ -100,18 +78,5 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         unreadCount: notif && !notif.read ? Math.max(0, unreadCount - 1) : unreadCount,
       });
     } catch {}
-  },
-
-  registerPushToken: async () => {
-    const token = await getExpoPushToken();
-    if (token) {
-      set({ pushToken: token });
-      try {
-        await api.post('/api/notifications/register-token', {
-          token,
-          device_type: Platform.OS,
-        });
-      } catch {}
-    }
   },
 }));
