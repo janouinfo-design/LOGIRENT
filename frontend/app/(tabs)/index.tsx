@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
+import { ClientNavBar } from '../../src/components/ClientNavBar';
 import { useI18n } from '../../src/i18n';
 import { useThemeStore } from '../../src/store/themeStore';
 
@@ -109,6 +110,9 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
+
+        {/* Navigation Menu */}
+        <ClientNavBar />
 
         {/* Hero Section */}
         <AnimatedSection delay={0}>

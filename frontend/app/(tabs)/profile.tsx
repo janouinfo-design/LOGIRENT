@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuthStore } from '../../src/store/authStore';
+import { ClientNavBar } from '../../src/components/ClientNavBar';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -167,6 +168,9 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: C.bg }]} showsVerticalScrollIndicator={false}>
+      {/* Navigation Menu */}
+      <ClientNavBar />
+
       <View style={styles.content}>
         {/* Profile Header */}
         <View style={[styles.header, { backgroundColor: C.bg }]}>
