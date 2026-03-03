@@ -287,7 +287,7 @@ export default function AgencyReservations() {
                                 } : {}),
                               }}>
                                 {isStart && (
-                                  <Text style={{ color: '#fff', fontSize: 9, fontWeight: '900', paddingLeft: 4, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 }} numberOfLines={1}>
+                                  <Text style={{ color: '#fff', fontSize: 11, fontWeight: '900', paddingLeft: 4, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }} numberOfLines={1}>
                                     {statusLabel(resForDay.status)}
                                   </Text>
                                 )}
@@ -319,8 +319,8 @@ export default function AgencyReservations() {
                       }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
                           <Text style={{ color: C.text, fontSize: 11, fontWeight: '800', flex: 1 }} numberOfLines={1}>{v.brand} {v.model}</Text>
-                          <View style={{ paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: color + '20' }}>
-                            <Text style={{ color, fontSize: 8, fontWeight: '700' }}>{statusLabel(r.status)}</Text>
+                          <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: color + '25' }}>
+                            <Text style={{ color, fontSize: 11, fontWeight: '800' }}>{statusLabel(r.status)}</Text>
                           </View>
                         </View>
                         <Text style={{ color: C.textLight, fontSize: 10 }}>{r.start?.slice(5, 10)} → {r.end?.slice(5, 10)}</Text>
@@ -337,7 +337,7 @@ export default function AgencyReservations() {
                                 borderWidth: 1, borderColor: r.status === s ? (RES_COLORS[s] || C.textLight) : C.border,
                               }}
                             >
-                              <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 7, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+                              <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 9, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
                             </TouchableOpacity>
                           ))}
                         </View>
@@ -387,8 +387,8 @@ export default function AgencyReservations() {
                   {/* Header: Client + Status badge */}
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                     <Text style={{ color: C.text, fontSize: 12, fontWeight: '800', flex: 1 }} numberOfLines={1}>{item.user_name}</Text>
-                    <View style={[st.badge, { backgroundColor: sc + '20' }]}>
-                      <Text style={{ color: sc, fontSize: 9, fontWeight: '700' }}>{statusLabel(item.status)}</Text>
+                    <View style={[st.badge, { backgroundColor: sc + '25' }]}>
+                      <Text style={{ color: sc, fontSize: 13, fontWeight: '800' }}>{statusLabel(item.status)}</Text>
                     </View>
                   </View>
                   {/* Vehicle */}
@@ -419,7 +419,7 @@ export default function AgencyReservations() {
                         }}
                         data-testid={`status-${item.id}-${s}`}
                       >
-                        <Text style={{ color: item.status === s ? statusColor(s) : C.textLight, fontSize: 8, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+                        <Text style={{ color: item.status === s ? statusColor(s) : C.textLight, fontSize: 10, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>

@@ -310,48 +310,49 @@ export default function AgencyTracking() {
           </View>
         )}
 
-        {/* Vehicle list */}
+        {/* Vehicle list - 4 column grid */}
         {!error && filteredPositions.length > 0 && (
           <>
             <Text style={[s.sectionTitle, { color: C.text }]}>Véhicules ({filteredPositions.length}{search ? ` / ${positions.length}` : ''})</Text>
-            {filteredPositions.map((p) => (
-              <TouchableOpacity
-                key={p.tracker_id}
-                style={[
-                  s.vehicleCard,
-                  { backgroundColor: C.card, borderColor: selectedTracker?.tracker_id === p.tracker_id ? C.accent : C.border },
-                  selectedTracker?.tracker_id === p.tracker_id && { borderWidth: 2 }
-                ]}
-                onPress={() => setSelectedTracker(p)}
-                data-testid={`vehicle-tracker-${p.tracker_id}`}
-              >
-                <View style={s.vehicleHeader}>
-                  <View style={[s.dot, { backgroundColor: getStatusColor(p) }]} />
-                  <Text style={[s.vehicleName, { color: C.text }]} numberOfLines={1}>{p.label}</Text>
-                  <View style={[s.badge, { backgroundColor: getStatusColor(p) + '20' }]}>
-                    <Text style={[s.badgeText, { color: getStatusColor(p) }]}>{getStatusLabel(p)}</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+              {filteredPositions.map((p) => (
+                <TouchableOpacity
+                  key={p.tracker_id}
+                  style={[
+                    s.vehicleCard,
+                    { backgroundColor: C.card, borderColor: selectedTracker?.tracker_id === p.tracker_id ? C.accent : C.border, width: '23.5%' },
+                    selectedTracker?.tracker_id === p.tracker_id && { borderWidth: 2 }
+                  ]}
+                  onPress={() => setSelectedTracker(p)}
+                  data-testid={`vehicle-tracker-${p.tracker_id}`}
+                >
+                  {/* Status icon top */}
+                  <View style={{ alignItems: 'center', paddingVertical: 10, position: 'relative' }}>
+                    <View style={[{ width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', backgroundColor: getStatusColor(p) + '20' }]}>
+                      <Ionicons name={p.connection_status === 'active' ? (p.movement_status === 'moving' ? 'car-sport' : 'car') : 'cloud-offline'} size={18} color={getStatusColor(p)} />
+                    </View>
+                    {selectedTracker?.tracker_id === p.tracker_id && (
+                      <View style={{ position: 'absolute', top: 4, right: 4, width: 16, height: 16, borderRadius: 8, backgroundColor: C.accent, justifyContent: 'center', alignItems: 'center' }}>
+                        <Ionicons name="location" size={10} color="#fff" />
+                      </View>
+                    )}
                   </View>
-                </View>
-                <View style={s.vehicleDetails}>
-                  {p.lat && p.lng ? (
-                    <Text style={[s.detailText, { color: C.textLight }]}>
-                      {p.lat?.toFixed(4)}, {p.lng?.toFixed(4)} | {p.speed} km/h
+                  {/* Info */}
+                  <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
+                    <Text style={[s.vehicleName, { textAlign: 'center', fontSize: 11 }]} numberOfLines={1}>{p.label}</Text>
+                    <View style={[s.badge, { backgroundColor: getStatusColor(p) + '20', alignSelf: 'center', marginTop: 4 }]}>
+                      <Text style={[s.badgeText, { color: getStatusColor(p), fontSize: 10 }]}>{getStatusLabel(p)}</Text>
+                    </View>
+                    {p.lat && p.lng ? (
+                      <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', marginTop: 4, fontSize: 9 }]}>{p.speed} km/h</Text>
+                    ) : null}
+                    <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', fontSize: 8, marginTop: 2 }]}>
+                      {p.ignition ? 'Moteur ON' : 'Moteur OFF'}
                     </Text>
-                  ) : (
-                    <Text style={[s.detailText, { color: C.textLight }]}>Position non disponible</Text>
-                  )}
-                  <Text style={[s.detailText, { color: C.textLight }]}>
-                    Moteur: {p.ignition ? 'Allumé' : 'Éteint'} | MAJ: {p.last_update || 'N/A'}
-                  </Text>
-                </View>
-                {selectedTracker?.tracker_id === p.tracker_id && (
-                  <View style={[s.selectedIndicator, { backgroundColor: C.accent + '15' }]}>
-                    <Ionicons name="location" size={14} color={C.accent} />
-                    <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Affiché sur la carte</Text>
                   </View>
-                )}
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))}
+            </View>
           </>
         )}
 
