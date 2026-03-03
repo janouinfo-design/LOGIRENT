@@ -159,7 +159,7 @@ export const GanttChart = ({
               const isHighlighted = highlightId === r.id;
               return (
                 <Animated.View key={r.id} style={{
-                  width: '48.5%', backgroundColor: C.card, borderRadius: 10,
+                  width: '32%', backgroundColor: C.card, borderRadius: 10,
                   borderWidth: isHighlighted ? 2 : 1, borderColor: isHighlighted ? '#fff' : C.border,
                   borderLeftWidth: 4, borderLeftColor: color, padding: 12,
                   ...(isHighlighted ? { opacity: highlightAnim } : {}),

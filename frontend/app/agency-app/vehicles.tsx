@@ -216,7 +216,7 @@ export default function AgencyVehicles() {
 
   const CARD_GAP = 10;
   const PADDING = 16;
-  const NUM_COLS = 2;
+  const NUM_COLS = 3;
   const cardW = (SCREEN_W - PADDING * 2 - CARD_GAP * (NUM_COLS - 1)) / NUM_COLS;
 
   if (loading) return <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
@@ -244,7 +244,7 @@ export default function AgencyVehicles() {
       </ScrollView>
 
       {/* Vehicle Grid - 4 columns */}
-      <FlatList data={filtered} keyExtractor={(item) => item.id} numColumns={2}
+      <FlatList data={filtered} keyExtractor={(item) => item.id} numColumns={3}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: PADDING, paddingTop: 8, paddingBottom: 32 }}
         columnWrapperStyle={{ gap: CARD_GAP, marginBottom: CARD_GAP }}

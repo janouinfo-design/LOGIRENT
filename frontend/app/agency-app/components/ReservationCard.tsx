@@ -30,7 +30,7 @@ interface ReservationCardProps {
 
 export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPress }: ReservationCardProps) => {
   const sc = statusColor(item.status);
-  const cardW = (Dimensions.get('window').width - 32 - 16) / 2;
+  const cardW = (Dimensions.get('window').width - 32 - 24) / 3;
 
   return (
     <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, width: cardW, borderLeftWidth: 4, borderLeftColor: sc }]} data-testid={`res-${item.id}`}>

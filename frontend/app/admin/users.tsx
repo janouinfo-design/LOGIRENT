@@ -114,7 +114,7 @@ export default function AdminUsers() {
 
   const renderItem = ({ item }: { item: User }) => {
     const ri = getRating(item.client_rating);
-    const cardW = (SCREEN_W - 32 - 16) / 2;
+    const cardW = (SCREEN_W - 32 - 24) / 3;
     return (
       <TouchableOpacity style={[st.card, { backgroundColor: C.card, width: cardW }]} onPress={() => openModal(item)} data-testid={`user-card-${item.id}`}>
         {/* Avatar */}
@@ -155,7 +155,7 @@ export default function AdminUsers() {
         {Platform.OS === 'web' && <input ref={(el: any) => { importRef.current = el; }} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' } as any} onChange={handleImport} />}
       </View>
       <FlatList data={users} renderItem={renderItem} keyExtractor={i => i.id} contentContainerStyle={{ padding: 16 }}
-        numColumns={2}
+        numColumns={3}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchUsers(); setRefreshing(false); }} />}
         ListEmptyComponent={!loading ? <View style={{ alignItems: 'center', paddingTop: 60 }}><Ionicons name="people-outline" size={48} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 12 }}>Aucun utilisateur</Text></View> : null}

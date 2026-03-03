@@ -139,7 +139,7 @@ export default function AdminVehicles() {
 
   const renderItem = ({ item }: { item: Vehicle }) => {
     const sc = getVehicleStatusColor(item.status, C);
-    const cardW = (SCREEN_W - 32 - 16) / 2;
+    const cardW = (SCREEN_W - 32 - 24) / 3;
     return (
       <View style={[st.card, { backgroundColor: C.card, width: cardW }]} data-testid={`vehicle-card-${item.id}`}>
         {/* Photo */}
@@ -195,7 +195,7 @@ export default function AdminVehicles() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <FlatList data={vehicles} renderItem={renderItem} keyExtractor={i => i.id}
-        numColumns={2}
+        numColumns={3}
         contentContainerStyle={{ padding: 16 }}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchVehicles(); setRefreshing(false); }} />}
