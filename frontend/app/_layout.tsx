@@ -68,7 +68,7 @@ function TopNavBar() {
               data-testid={`nav-${tab.name}`}
             >
               <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={isMobile ? 20 : 22} color={active ? T.accent : T.textLight} />
-              {!isMobile && <Text style={[styles.navLabel, { color: active ? T.accent : T.textLight }, active && { fontWeight: '600' }]}>{tab.label}</Text>}
+              <Text style={[styles.navLabel, { color: active ? T.accent : T.textLight, fontSize: isMobile ? 9 : 12 }, active && { fontWeight: '600' }]}>{tab.label}</Text>
             </TouchableOpacity>
           );
         })}
