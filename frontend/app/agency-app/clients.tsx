@@ -268,16 +268,16 @@ export default function AgencyClients() {
               {/* Info */}
               <View style={s.cardBody}>
                 <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
-                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 1 }} numberOfLines={1}>{item.email || '-'}</Text>
-                {item.phone ? <Text style={{ color: C.textLight, fontSize: 10 }} numberOfLines={1}>{item.phone}</Text> : null}
+                <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
+                {item.phone ? <Text style={{ color: C.textLight, fontSize: 12, marginTop: 1 }} numberOfLines={1}>{item.phone}</Text> : null}
                 <View style={s.cardFooter}>
                   {item.reservation_count !== undefined && item.reservation_count > 0 ? (
                     <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
-                      <Text style={{ color: C.accent, fontSize: 9, fontWeight: '700' }}>{item.reservation_count} res.</Text>
+                      <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>{item.reservation_count} res.</Text>
                     </View>
                   ) : (
                     <View style={[s.resCountBadge, { backgroundColor: C.border + '30' }]}>
-                      <Text style={{ color: C.textLight, fontSize: 9 }}>0 res.</Text>
+                      <Text style={{ color: C.textLight, fontSize: 12 }}>0 res.</Text>
                     </View>
                   )}
                 </View>
@@ -579,7 +579,7 @@ const s = StyleSheet.create({
   cardAvatarImg: { width: '100%', height: 70 },
   ratingOverlay: { position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   cardBody: { padding: 8 },
-  cardName: { fontSize: 12, fontWeight: '800' },
+  cardName: { fontSize: 14, fontWeight: '800' },
   cardFooter: { marginTop: 4 },
   resCountBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },

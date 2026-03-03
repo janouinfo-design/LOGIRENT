@@ -267,13 +267,13 @@ export default function AgencyVehicles() {
                 {/* Status badge overlay */}
                 <View style={[st.statusOverlay, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
                   <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: sc.text }} />
-                  <Text style={{ color: sc.text, fontSize: 9, fontWeight: '800' }}>{sc.label}</Text>
+                  <Text style={{ color: sc.text, fontSize: 11, fontWeight: '800' }}>{sc.label}</Text>
                 </View>
                 {/* Doc count badge */}
                 {docCount > 0 && (
                   <View style={[st.docCountBadge, { backgroundColor: '#3B82F6' }]} data-testid={`doc-count-${item.id}`}>
-                    <Ionicons name="document-attach" size={10} color="#fff" />
-                    <Text style={{ color: '#fff', fontSize: 9, fontWeight: '700' }}>{docCount}</Text>
+                    <Ionicons name="document-attach" size={11} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{docCount}</Text>
                   </View>
                 )}
               </View>
@@ -281,18 +281,18 @@ export default function AgencyVehicles() {
               {/* Info */}
               <View style={st.cardInfo}>
                 <Text style={[st.vehicleName, { color: C.text }]} numberOfLines={1}>{item.brand} {item.model}</Text>
-                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 1 }}>{item.year} | {item.type}</Text>
+                <Text style={{ color: C.textLight, fontSize: 12, marginTop: 2 }}>{item.year} | {item.type}</Text>
                 {item.plate_number ? (
                   <View style={[st.plateTag, { backgroundColor: C.accent + '15', borderColor: C.accent + '40' }]}>
-                    <Text style={{ color: C.accent, fontSize: 9, fontWeight: '700' }}>{item.plate_number}</Text>
+                    <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700' }}>{item.plate_number}</Text>
                   </View>
                 ) : null}
                 <View style={st.cardMeta}>
-                  <Text style={{ color: C.textLight, fontSize: 9 }}>{item.seats}pl | {item.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11 }}>{item.seats}pl | {item.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
                 </View>
                 <View style={st.priceRow}>
                   <Text style={[st.price, { color: C.accent }]}>CHF {item.price_per_day}</Text>
-                  <Text style={{ color: C.textLight, fontSize: 9 }}>/jour</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11 }}>/jour</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -555,7 +555,7 @@ const st = StyleSheet.create({
   statusOverlay: { position: 'absolute', bottom: 4, left: 4, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
   docCountBadge: { position: 'absolute', top: 4, right: 4, flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8 },
   cardInfo: { padding: 8 },
-  vehicleName: { fontSize: 12, fontWeight: '800' },
+  vehicleName: { fontSize: 14, fontWeight: '800' },
   plateTag: { marginTop: 3, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, alignSelf: 'flex-start', borderWidth: 1 },
   cardMeta: { marginTop: 2 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 4 },

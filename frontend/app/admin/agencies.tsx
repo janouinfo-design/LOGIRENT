@@ -192,12 +192,12 @@ export default function AgenciesPage() {
 
                   {/* Name */}
                   <View style={{ paddingHorizontal: 10, paddingBottom: 8 }}>
-                    <Text style={[styles.agencyName, { fontSize: 13 }]} numberOfLines={1}>{agency.name}</Text>
-                    {agency.email && <Text style={[styles.agencyEmail, { fontSize: 10 }]} numberOfLines={1}>{agency.email}</Text>}
+                    <Text style={[styles.agencyName, { fontSize: 15 }]} numberOfLines={1}>{agency.name}</Text>
+                    {agency.email && <Text style={[styles.agencyEmail, { fontSize: 12 }]} numberOfLines={1}>{agency.email}</Text>}
                     {agency.address && (
                       <View style={[styles.infoRow, { marginTop: 3, marginBottom: 0 }]}>
-                        <Ionicons name="location-outline" size={11} color={COLORS.textLight} />
-                        <Text style={[styles.infoText, { fontSize: 10 }]} numberOfLines={1}>{agency.address}</Text>
+                        <Ionicons name="location-outline" size={12} color={COLORS.textLight} />
+                        <Text style={[styles.infoText, { fontSize: 12 }]} numberOfLines={1}>{agency.address}</Text>
                       </View>
                     )}
                   </View>
@@ -205,16 +205,16 @@ export default function AgenciesPage() {
                   {/* Stats */}
                   <View style={[styles.statsRow, { paddingHorizontal: 8, paddingTop: 6, paddingBottom: 8, gap: 4 }]}>
                     <View style={[styles.statItem]}>
-                      <Text style={[styles.statValue, { fontSize: 15 }]}>{agency.vehicle_count}</Text>
-                      <Text style={[styles.statLabel, { fontSize: 9 }]}>Veh.</Text>
+                      <Text style={[styles.statValue, { fontSize: 17 }]}>{agency.vehicle_count}</Text>
+                      <Text style={[styles.statLabel, { fontSize: 11 }]}>Veh.</Text>
                     </View>
                     <View style={[styles.statItem]}>
-                      <Text style={[styles.statValue, { fontSize: 15 }]}>{agency.reservation_count}</Text>
-                      <Text style={[styles.statLabel, { fontSize: 9 }]}>Res.</Text>
+                      <Text style={[styles.statValue, { fontSize: 17 }]}>{agency.reservation_count}</Text>
+                      <Text style={[styles.statLabel, { fontSize: 11 }]}>Res.</Text>
                     </View>
                     <View style={[styles.statItem]}>
-                      <Text style={[styles.statValue, { fontSize: 15 }]}>{agency.admin_count}</Text>
-                      <Text style={[styles.statLabel, { fontSize: 9 }]}>Adm.</Text>
+                      <Text style={[styles.statValue, { fontSize: 17 }]}>{agency.admin_count}</Text>
+                      <Text style={[styles.statLabel, { fontSize: 11 }]}>Adm.</Text>
                     </View>
                   </View>
 
@@ -232,7 +232,7 @@ export default function AgenciesPage() {
                         ) : (
                           <Ionicons name="log-in" size={14} color="#FFF" />
                         )}
-                        <Text style={[styles.impersonateBtnText, { fontSize: 10 }]} numberOfLines={1}>
+                        <Text style={[styles.impersonateBtnText, { fontSize: 12 }]} numberOfLines={1}>
                           {impersonating === agency.id ? '...' : 'Connexion Admin'}
                         </Text>
                       </TouchableOpacity>
@@ -243,7 +243,7 @@ export default function AgenciesPage() {
                       data-testid={`qr-agency-${agency.id}`}
                     >
                       <Ionicons name="qr-code-outline" size={13} color="#FFF" />
-                      <Text style={[styles.qrBtnText, { fontSize: 10 }]}>QR Codes</Text>
+                      <Text style={[styles.qrBtnText, { fontSize: 12 }]}>QR Codes</Text>
                     </TouchableOpacity>
                   </View>
                 </View>

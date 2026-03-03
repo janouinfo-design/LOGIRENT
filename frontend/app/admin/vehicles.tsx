@@ -151,14 +151,14 @@ export default function AdminVehicles() {
           )}
           <TouchableOpacity style={[st.statusBadge, { backgroundColor: sc + '20', position: 'absolute', bottom: 4, left: 4 }]} onPress={() => handleStatusChange(item)}>
             <View style={[st.dot, { backgroundColor: sc }]} />
-            <Text style={{ fontSize: 9, fontWeight: '700', color: sc }}>{getVehicleStatusLabel(item.status)}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: sc }}>{getVehicleStatusLabel(item.status)}</Text>
           </TouchableOpacity>
         </View>
         {/* Info */}
         <View style={{ padding: 8 }}>
-          <Text style={{ fontSize: 11, fontWeight: '800', color: C.text }} numberOfLines={1}>{item.brand} {item.model}</Text>
-          <Text style={{ fontSize: 9, color: C.textLight, marginTop: 1 }}>{item.year} | {item.type} | {item.seats}pl</Text>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: C.accent, marginTop: 4 }}>CHF {item.price_per_day}/j</Text>
+          <Text style={{ fontSize: 13, fontWeight: '800', color: C.text }} numberOfLines={1}>{item.brand} {item.model}</Text>
+          <Text style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{item.year} | {item.type} | {item.seats}pl</Text>
+          <Text style={{ fontSize: 14, fontWeight: '800', color: C.accent, marginTop: 4 }}>CHF {item.price_per_day}/j</Text>
         </View>
         {/* Actions */}
         <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 6, paddingBottom: 8 }}>

@@ -122,21 +122,21 @@ export default function AdminUsers() {
           {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={st.avatar} /> :
             <View style={[st.avatar, { backgroundColor: C.bg }]}><Text style={{ fontSize: 18, fontWeight: '700', color: C.accent }}>{item.name.charAt(0).toUpperCase()}</Text></View>}
           <View style={[st.ratingDot, { backgroundColor: ri.color }]}><Ionicons name={ri.icon as any} size={10} color="#fff" /></View>
-          {item.blocked && <View style={[st.blockedBadge, { backgroundColor: C.error + '20', position: 'absolute', top: 6, right: 6 }]}><Text style={{ color: C.error, fontSize: 8, fontWeight: '700' }}>Bloque</Text></View>}
+          {item.blocked && <View style={[st.blockedBadge, { backgroundColor: C.error + '20', position: 'absolute', top: 6, right: 6 }]}><Text style={{ color: C.error, fontSize: 10, fontWeight: '700' }}>Bloque</Text></View>}
         </View>
         {/* Info */}
         <View style={{ paddingHorizontal: 8, paddingBottom: 10 }}>
-          <Text style={{ fontSize: 11, fontWeight: '800', color: C.text, textAlign: 'center' }} numberOfLines={1}>{item.name}</Text>
-          <Text style={{ fontSize: 9, color: C.textLight, textAlign: 'center', marginTop: 1 }} numberOfLines={1}>{item.email}</Text>
-          {item.phone && <Text style={{ fontSize: 9, color: C.textLight, textAlign: 'center' }} numberOfLines={1}>{item.phone}</Text>}
+          <Text style={{ fontSize: 13, fontWeight: '800', color: C.text, textAlign: 'center' }} numberOfLines={1}>{item.name}</Text>
+          <Text style={{ fontSize: 11, color: C.textLight, textAlign: 'center', marginTop: 2 }} numberOfLines={1}>{item.email}</Text>
+          {item.phone && <Text style={{ fontSize: 11, color: C.textLight, textAlign: 'center' }} numberOfLines={1}>{item.phone}</Text>}
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
-              <Ionicons name="calendar" size={10} color={C.textLight} />
-              <Text style={{ fontSize: 9, color: C.textLight }}>{item.reservation_count}</Text>
+              <Ionicons name="calendar" size={11} color={C.textLight} />
+              <Text style={{ fontSize: 11, color: C.textLight }}>{item.reservation_count}</Text>
             </View>
             <View style={[st.ratingTag, { backgroundColor: ri.color + '20', paddingHorizontal: 6, paddingVertical: 2 }]}>
-              <Ionicons name={ri.icon as any} size={9} color={ri.color} />
-              <Text style={{ fontSize: 9, fontWeight: '600', color: ri.color }}>{ri.label}</Text>
+              <Ionicons name={ri.icon as any} size={10} color={ri.color} />
+              <Text style={{ fontSize: 11, fontWeight: '600', color: ri.color }}>{ri.label}</Text>
             </View>
           </View>
         </View>

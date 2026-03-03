@@ -339,14 +339,14 @@ export default function AgencyTracking() {
                   </View>
                   {/* Info */}
                   <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
-                    <Text style={[s.vehicleName, { textAlign: 'center', fontSize: 11 }]} numberOfLines={1}>{p.label}</Text>
+                    <Text style={[s.vehicleName, { textAlign: 'center', fontSize: 13 }]} numberOfLines={1}>{p.label}</Text>
                     <View style={[s.badge, { backgroundColor: getStatusColor(p) + '20', alignSelf: 'center', marginTop: 4 }]}>
-                      <Text style={[s.badgeText, { color: getStatusColor(p), fontSize: 10 }]}>{getStatusLabel(p)}</Text>
+                      <Text style={[s.badgeText, { color: getStatusColor(p), fontSize: 12 }]}>{getStatusLabel(p)}</Text>
                     </View>
                     {p.lat && p.lng ? (
-                      <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', marginTop: 4, fontSize: 9 }]}>{p.speed} km/h</Text>
+                      <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', marginTop: 4, fontSize: 11 }]}>{p.speed} km/h</Text>
                     ) : null}
-                    <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', fontSize: 8, marginTop: 2 }]}>
+                    <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', fontSize: 11, marginTop: 2 }]}>
                       {p.ignition ? 'Moteur ON' : 'Moteur OFF'}
                     </Text>
                   </View>
