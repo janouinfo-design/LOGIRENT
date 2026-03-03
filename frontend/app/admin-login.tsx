@@ -177,6 +177,15 @@ export default function AdminLogin() {
                 {isRegister ? 'Déjà admin ? Se connecter' : 'Nouvelle agence ? Créer un compte'}
               </Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.superAdminBtn}
+              onPress={() => router.push('/super-admin' as any)}
+              data-testid="super-admin-link"
+            >
+              <Ionicons name="shield" size={16} color={COLORS.accent} />
+              <Text style={styles.superAdminText}>Super Admin</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -205,4 +214,6 @@ const styles = StyleSheet.create({
   submitText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
   switchBtn: { alignItems: 'center', paddingVertical: 12 },
   switchText: { color: COLORS.accent, fontSize: 14, fontWeight: '500' },
+  superAdminBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, marginTop: 8 },
+  superAdminText: { color: COLORS.accent, fontSize: 13, fontWeight: '600' },
 });
