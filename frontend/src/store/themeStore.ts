@@ -49,17 +49,12 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   colors: lightTheme,
 
   toggleTheme: async () => {
-    const newMode = get().mode === 'dark' ? 'light' : 'dark';
-    set({ mode: newMode, colors: newMode === 'dark' ? darkTheme : lightTheme });
-    try { await AsyncStorage.setItem('theme_mode', newMode); } catch {}
+    // Dark mode disabled - always light
   },
 
   loadTheme: async () => {
-    try {
-      const saved = await AsyncStorage.getItem('theme_mode');
-      if (saved === 'light' || saved === 'dark') {
-        set({ mode: saved, colors: saved === 'dark' ? darkTheme : lightTheme });
-      }
-    } catch {}
+    // Always force light mode
+    set({ mode: 'light', colors: lightTheme });
+    try { await AsyncStorage.setItem('theme_mode', 'light'); } catch {}
   },
 }));

@@ -200,11 +200,7 @@ export default function AgencyProfile() {
           <Ionicons name="settings" size={20} color={C.primary} />
           <Text style={[s.sectionTitle, { color: C.text }]}>Paramètres</Text>
         </View>
-        <TouchableOpacity style={[s.menuItem, { borderBottomColor: C.border }]} onPress={toggleTheme} testID="profile-theme-toggle">
-          <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
-          <Text style={[s.menuText, { color: C.text }]}>{mode === 'dark' ? 'Mode clair' : 'Mode sombre'}</Text>
-          <Ionicons name="chevron-forward" size={18} color={C.textLight} />
-        </TouchableOpacity>
+        {/* Theme toggle removed - light mode only */}
         <TouchableOpacity style={[s.menuItem, { borderBottomColor: C.border }]} onPress={() => router.push('/agency-app/tracking')} testID="profile-gps-settings">
           <Ionicons name="navigate-outline" size={20} color={C.textLight} />
           <Text style={[s.menuText, { color: C.text }]}>Configuration GPS Navixy</Text>

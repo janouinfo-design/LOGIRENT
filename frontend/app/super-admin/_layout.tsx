@@ -45,9 +45,7 @@ export default function SuperAdminLayout() {
         </View>
         <View style={s.topBarRight}>
           <Text style={[s.userName, { color: C.textLight }]}>{user.name}</Text>
-          <TouchableOpacity onPress={toggleTheme} testID="sa-theme-toggle">
-            <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
-          </TouchableOpacity>
+          {/* Theme toggle removed - light mode only */}
           <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} testID="sa-logout-btn">
             <Ionicons name="log-out-outline" size={22} color={C.textLight} />
           </TouchableOpacity>

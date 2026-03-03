@@ -70,9 +70,7 @@ export default function AgencyAppLayout() {
             </View>
           </View>
           <View style={s.headerRight}>
-            <TouchableOpacity onPress={toggleTheme} style={s.iconBtn} data-testid="agency-theme-toggle">
-              <Ionicons name={mode === 'dark' ? 'sunny' : 'moon'} size={20} color={C.textLight} />
-            </TouchableOpacity>
+            {/* Theme toggle removed - light mode only */}
             <TouchableOpacity onPress={() => { fetchNotifications(); setShowNotifs(true); }} style={s.iconBtn} data-testid="agency-notification-bell">
               <Ionicons name="notifications" size={20} color={C.textLight} />
               {unreadCount > 0 && (
