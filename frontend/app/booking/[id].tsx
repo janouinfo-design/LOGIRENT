@@ -141,7 +141,7 @@ export default function BookingScreen() {
       }
 
       // Initiate payment (card or twint via Stripe)
-      const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://booking-hub-dev-4.preview.emergentagent.com';
+      const originUrl = process.env.EXPO_PUBLIC_BACKEND_URL;
       const paymentMethodType = paymentMethod === 'twint' ? 'twint' : 'card';
       const paymentData = await initiatePayment(reservation.id, originUrl, paymentMethodType);
 
