@@ -383,7 +383,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
     borderWidth: 1.5,
   },
-  catPillActive: { },
+  catPillActive: { backgroundColor: '#7C3AED', borderColor: '#7C3AED' },
   catText: { fontSize: 13, fontWeight: '600' },
   catTextActive: { color: '#FFFFFF' },
   resultsRow: {
