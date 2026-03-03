@@ -34,6 +34,7 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
+  const [uploadModal, setUploadModal] = useState<null | 'id' | 'license'>(null);
   const idInputRef = useRef<HTMLInputElement | null>(null);
   const licenseInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -149,13 +150,19 @@ export default function ProfileScreen() {
       ref.current?.click();
       return;
     }
-    // Native: show choice between camera and gallery
-    const title = type === 'id' ? 'Pièce d\'identité' : 'Permis de conduire';
-    Alert.alert(title, 'Comment souhaitez-vous ajouter votre document ?', [
-      { text: 'Prendre une photo', onPress: () => takePhoto(type) },
-      { text: 'Choisir depuis la galerie', onPress: () => pickFromGallery(type) },
-      { text: 'Annuler', style: 'cancel' },
-    ]);
+    // Native: show in-app modal instead of Alert.alert
+    setUploadModal(type);
+  };
+
+  const handleUploadChoice = async (choice: 'camera' | 'gallery') => {
+    const type = uploadModal;
+    setUploadModal(null);
+    if (!type) return;
+    if (choice === 'camera') {
+      await takePhoto(type);
+    } else {
+      await pickFromGallery(type);
+    }
   };
 
   const menuItems = [
@@ -297,6 +304,30 @@ export default function ProfileScreen() {
 
         <View style={{ height: 40 }} />
       </View>
+
+      {/* Upload Choice Modal */}
+      {uploadModal && (
+        <View style={uploadModalStyles.overlay}>
+          <View style={uploadModalStyles.card}>
+            <Text style={uploadModalStyles.title}>
+              {uploadModal === 'id' ? 'Pièce d\'identité' : 'Permis de conduire'}
+            </Text>
+            <Text style={uploadModalStyles.subtitle}>Comment souhaitez-vous ajouter votre document ?</Text>
+            <TouchableOpacity style={uploadModalStyles.btn} onPress={() => handleUploadChoice('camera')}>
+              <Ionicons name="camera" size={24} color="#7C3AED" />
+              <Text style={uploadModalStyles.btnText}>Prendre une photo</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={uploadModalStyles.btn} onPress={() => handleUploadChoice('gallery')}>
+              <Ionicons name="images" size={24} color="#7C3AED" />
+              <Text style={uploadModalStyles.btnText}>Choisir depuis la galerie</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={uploadModalStyles.cancelBtn} onPress={() => setUploadModal(null)}>
+              <Text style={uploadModalStyles.cancelText}>Annuler</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
     </ScrollView>
   );
 }
@@ -339,4 +370,59 @@ const styles = StyleSheet.create({
   menuText: { fontSize: 14 },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, padding: 14, borderRadius: 14, gap: 8, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
   logoutText: { fontSize: 14, fontWeight: '600' },
+});
+
+const uploadModalStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    width: 320,
+    maxWidth: '90%',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3EEFF',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    gap: 14,
+  },
+  btnText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#7C3AED',
+  },
+  cancelBtn: {
+    alignItems: 'center',
+    padding: 14,
+    marginTop: 4,
+  },
+  cancelText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
 });
