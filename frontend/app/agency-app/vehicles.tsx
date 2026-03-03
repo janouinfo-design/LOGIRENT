@@ -61,6 +61,8 @@ export default function AgencyVehicles() {
   const [selectedDocType, setSelectedDocType] = useState('carte_grise');
   const [docExpiryDate, setDocExpiryDate] = useState('');
 
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
   const fetchVehicles = useCallback(async () => {
     try {
       const params: any = {};
@@ -157,6 +159,64 @@ export default function AgencyVehicles() {
       } finally { setUploadingDoc(false); }
     };
     input.click();
+  };
+
+  const handlePhotoUpload = async () => {
+    if (!editVehicle) return;
+    if (Platform.OS !== 'web') {
+      Alert.alert('Info', 'Upload de photos disponible uniquement sur le web');
+      return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.multiple = true;
+    input.onchange = async (e: any) => {
+      const files = Array.from(e.target.files || []) as File[];
+      if (!files.length) return;
+      setUploadingPhoto(true);
+      try {
+        for (const file of files) {
+          if (file.size > 5 * 1024 * 1024) {
+            window.alert(`${file.name} trop volumineux (max 5 MB)`);
+            continue;
+          }
+          const formData = new FormData();
+          formData.append('file', file);
+          await api.post(
+            `/api/admin/vehicles/${editVehicle.id}/photos`,
+            formData,
+            { headers: { 'Content-Type': 'multipart/form-data' } }
+          );
+        }
+        const vRes = await api.get(`/api/vehicles/${editVehicle.id}`);
+        setEditVehicle(vRes.data);
+        await fetchVehicles();
+      } catch (e: any) {
+        const msg = e.response?.data?.detail || 'Erreur lors de l\'upload photo';
+        window.alert(msg);
+      } finally { setUploadingPhoto(false); }
+    };
+    input.click();
+  };
+
+  const handleDeletePhoto = async (photoIndex: number) => {
+    if (!editVehicle) return;
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm('Supprimer cette photo ?')
+      : await new Promise(resolve => Alert.alert('Confirmer', 'Supprimer cette photo ?', [{ text: 'Non', onPress: () => resolve(false) }, { text: 'Oui', onPress: () => resolve(true) }]));
+    if (!confirmed) return;
+    try {
+      const photos = [...(editVehicle.photos || [])];
+      photos.splice(photoIndex, 1);
+      await api.put(`/api/admin/vehicles/${editVehicle.id}`, { photos });
+      const vRes = await api.get(`/api/vehicles/${editVehicle.id}`);
+      setEditVehicle(vRes.data);
+      await fetchVehicles();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
   };
 
   const handleDeleteDocument = async (docId: string) => {
@@ -294,6 +354,10 @@ export default function AgencyVehicles() {
                   <Text style={[st.price, { color: C.accent }]}>CHF {item.price_per_day}</Text>
                   <Text style={{ color: C.textLight, fontSize: 11 }}>/jour</Text>
                 </View>
+                <TouchableOpacity onPress={() => openEdit(item)} style={[st.editBtn, { backgroundColor: C.accent }]} data-testid={`edit-vehicle-${item.id}`}>
+                  <Ionicons name="create-outline" size={14} color="#fff" />
+                  <Text style={st.editBtnText}>Modifier</Text>
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           );
@@ -311,7 +375,7 @@ export default function AgencyVehicles() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 500 }}>
+            <ScrollView showsVerticalScrollIndicator={true} style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 20 }}>
               {/* Status Selection */}
               <Text style={[st.fieldLabel, { color: C.textLight }]}>Statut</Text>
               <View style={st.statusRow}>
@@ -425,6 +489,47 @@ export default function AgencyVehicles() {
               {/* Description */}
               <Text style={[st.fieldLabel, { color: C.textLight }]}>Description</Text>
               <TextInput style={[st.input, st.textArea, { color: C.text, borderColor: C.border }]} value={editForm.description} onChangeText={v => setEditForm({ ...editForm, description: v })} multiline numberOfLines={3} data-testid="edit-description" />
+
+              {/* ===== PHOTOS SECTION ===== */}
+              <View style={[st.sectionHeader, { borderTopColor: C.border }]}>
+                <Ionicons name="images" size={16} color={C.accent} />
+                <Text style={[st.sectionTitle, { color: C.text }]}>Photos ({editVehicle?.photos?.length || 0})</Text>
+              </View>
+
+              {/* Photos Grid */}
+              {editVehicle?.photos && editVehicle.photos.length > 0 ? (
+                <View style={st.photosGrid}>
+                  {editVehicle.photos.map((photo, idx) => (
+                    <View key={idx} style={st.photoThumb}>
+                      <Image source={{ uri: photo }} style={st.photoThumbImg} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => handleDeletePhoto(idx)} style={st.photoDeleteBtn} data-testid={`delete-photo-${idx}`}>
+                        <Ionicons name="close-circle" size={22} color="#EF4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={{ alignItems: 'center', paddingVertical: 12, opacity: 0.5 }}>
+                  <Ionicons name="images-outline" size={28} color={C.textLight} />
+                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>Aucune photo</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                onPress={handlePhotoUpload}
+                disabled={uploadingPhoto}
+                style={[st.uploadBtn, { borderColor: '#10B981', backgroundColor: '#10B98110' }]}
+                data-testid="upload-photo-btn"
+              >
+                {uploadingPhoto ? (
+                  <ActivityIndicator size="small" color="#10B981" />
+                ) : (
+                  <>
+                    <Ionicons name="camera" size={18} color="#10B981" />
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700' }}>Ajouter des photos</Text>
+                  </>
+                )}
+              </TouchableOpacity>
 
               {/* ===== DOCUMENTS SECTION ===== */}
               <View style={[st.sectionHeader, { borderTopColor: C.border }]}>
@@ -560,8 +665,14 @@ const st = StyleSheet.create({
   cardMeta: { marginTop: 2 },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 4 },
   price: { fontSize: 14, fontWeight: '800' },
+  editBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, borderRadius: 8, marginTop: 8 },
+  editBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  photosGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  photoThumb: { position: 'relative', width: 90, height: 70, borderRadius: 8, overflow: 'hidden' },
+  photoThumbImg: { width: '100%', height: '100%' },
+  photoDeleteBtn: { position: 'absolute', top: -4, right: -4, backgroundColor: '#fff', borderRadius: 11 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalBox: { width: '100%', maxWidth: 560, borderRadius: 16, padding: 20, maxHeight: '90%' },
+  modalBox: { width: '100%', maxWidth: 560, borderRadius: 16, padding: 20, maxHeight: '85%', flex: 0 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: '800' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 16, marginTop: 16, marginBottom: 10, borderTopWidth: 1 },
