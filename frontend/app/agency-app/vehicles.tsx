@@ -62,6 +62,7 @@ export default function AgencyVehicles() {
   const [docExpiryDate, setDocExpiryDate] = useState('');
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   const fetchVehicles = useCallback(async () => {
     try {
@@ -501,7 +502,9 @@ export default function AgencyVehicles() {
                 <View style={st.photosGrid}>
                   {editVehicle.photos.map((photo, idx) => (
                     <View key={idx} style={st.photoThumb}>
-                      <Image source={{ uri: photo }} style={st.photoThumbImg} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => setPreviewPhoto(photo)} activeOpacity={0.8}>
+                        <Image source={{ uri: photo }} style={st.photoThumbImg} resizeMode="cover" />
+                      </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleDeletePhoto(idx)} style={st.photoDeleteBtn} data-testid={`delete-photo-${idx}`}>
                         <Ionicons name="close-circle" size={22} color="#EF4444" />
                       </TouchableOpacity>
@@ -642,6 +645,18 @@ export default function AgencyVehicles() {
           </View>
         </View>
       </Modal>
+
+      {/* Photo Preview Modal */}
+      <Modal visible={!!previewPhoto} transparent animationType="fade" onRequestClose={() => setPreviewPhoto(null)}>
+        <TouchableOpacity style={st.previewOverlay} activeOpacity={1} onPress={() => setPreviewPhoto(null)}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+            <Image source={{ uri: previewPhoto || '' }} style={st.previewImage} resizeMode="contain" />
+          </TouchableOpacity>
+          <TouchableOpacity style={st.previewCloseBtn} onPress={() => setPreviewPhoto(null)} data-testid="close-preview">
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -692,4 +707,7 @@ const st = StyleSheet.create({
   docItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
   docIconBox: { width: 36, height: 36, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   docActionBtn: { padding: 6, marginLeft: 4 },
+  previewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
+  previewImage: { width: SCREEN_W * 0.9, height: SCREEN_W * 0.65, borderRadius: 12 },
+  previewCloseBtn: { position: 'absolute', top: 40, right: 20, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
 });
