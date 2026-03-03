@@ -2,6 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
   const { colors: C } = useThemeStore();
@@ -10,7 +11,17 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { display: 'none' },
+        tabBarStyle: {
+          backgroundColor: C.card || '#FFFFFF',
+          borderTopColor: C.border || '#E5E7EB',
+          borderTopWidth: 1,
+          height: Platform.OS === 'android' ? 65 : 85,
+          paddingBottom: Platform.OS === 'android' ? 8 : 28,
+          paddingTop: 6,
+        },
+        tabBarActiveTintColor: '#7C3AED',
+        tabBarInactiveTintColor: C.textLight || '#9CA3AF',
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tabs.Screen name="index" options={{
