@@ -43,6 +43,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Booking→Contract→Planning flow: After confirming reservation, navigates to contract page (auto-filled with client identity + vehicle data). After signing, 'Voir sur le planning' button leads to planning with pulsing highlight. Contract auto-fills nationality, license, dates, plate, color, chassis. 7 pytest tests passed (iteration 34).
 - [2026-03-02] Fix: Mouse signature canvas rewritten with native DOM event listeners (bypasses React Native Web interception). Clear/Confirm buttons work. 9 pytest tests passed (iteration 35).
 - [2026-03-02] Reservations in 4-column vignettes: Both list view and planning-below cards now 4-column grids. Inline status change buttons (Conf/Activ/Termi/Annul) on every card for quick status updates.
+- [2026-03-03] GPS Tracking 4-column grid: Vehicle list on tracking page converted to 4-column card grid (23.5% width). Status text size increased on reservations: planning badges 11px, list badges 13px, inline buttons 9-10px. 8/8 frontend tests passed (iteration 36).
 
 ## Key API Endpoints (New)
 - `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
