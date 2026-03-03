@@ -66,7 +66,7 @@ class UserProfile(BaseModel):
     client_rating: Optional[str] = None
     admin_notes: Optional[str] = None
     birth_place: Optional[str] = None
-    birth_year: Optional[int] = None
+    date_of_birth: Optional[str] = None
     license_number: Optional[str] = None
     license_issue_date: Optional[str] = None
     license_expiry_date: Optional[str] = None
@@ -81,6 +81,12 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
+    birth_place: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    license_number: Optional[str] = None
+    license_issue_date: Optional[str] = None
+    license_expiry_date: Optional[str] = None
+    nationality: Optional[str] = None
 
 
 class AdminUserUpdate(BaseModel):
@@ -91,7 +97,7 @@ class AdminUserUpdate(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     birth_place: Optional[str] = None
-    birth_year: Optional[int] = None
+    date_of_birth: Optional[str] = None
     license_number: Optional[str] = None
     license_issue_date: Optional[str] = None
     license_expiry_date: Optional[str] = None
@@ -259,7 +265,7 @@ class QuickClientCreate(BaseModel):
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
     birth_place: Optional[str] = None
-    birth_year: Optional[int] = None
+    date_of_birth: Optional[str] = None
     license_number: Optional[str] = None
     license_issue_date: Optional[str] = None
     license_expiry_date: Optional[str] = None

@@ -15,7 +15,7 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newBirthPlace, setNewBirthPlace] = useState('');
-  const [newBirthYear, setNewBirthYear] = useState('');
+  const [newBirthDate, setNewBirthDate] = useState('');
   const [newLicenseNumber, setNewLicenseNumber] = useState('');
   const [newLicenseIssue, setNewLicenseIssue] = useState('');
   const [newLicenseExpiry, setNewLicenseExpiry] = useState('');
@@ -24,7 +24,7 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
 
   const resetForm = () => {
     setNewName(''); setNewPhone(''); setNewEmail('');
-    setNewBirthPlace(''); setNewBirthYear(''); setNewLicenseNumber('');
+    setNewBirthPlace(''); setNewBirthDate(''); setNewLicenseNumber('');
     setNewLicenseIssue(''); setNewLicenseExpiry(''); setNewNationality('');
   };
 
@@ -33,7 +33,7 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
       Platform.OS === 'web' ? window.alert('Le nom est obligatoire') : Alert.alert('Erreur', 'Le nom est obligatoire');
       return;
     }
-    if (!newBirthPlace || !newBirthYear || !newLicenseNumber || !newLicenseIssue || !newLicenseExpiry || !newNationality) {
+    if (!newBirthPlace || !newBirthDate || !newLicenseNumber || !newLicenseIssue || !newLicenseExpiry || !newNationality) {
       const msg = 'Veuillez remplir tous les champs obligatoires';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Champs manquants', msg);
       return;
@@ -42,7 +42,7 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
     try {
       await api.post('/api/admin/quick-client', {
         name: newName, phone: newPhone || null, email: newEmail || null,
-        birth_place: newBirthPlace, birth_year: parseInt(newBirthYear) || null,
+        birth_place: newBirthPlace, date_of_birth: newBirthDate,
         license_number: newLicenseNumber, license_issue_date: newLicenseIssue,
         license_expiry_date: newLicenseExpiry, nationality: newNationality,
       });
@@ -83,8 +83,8 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
                 <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Geneve" placeholderTextColor={C.textLight} value={newBirthPlace} onChangeText={setNewBirthPlace} data-testid="new-birth-place" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[st.label, { color: C.textLight }]}>Annee de naissance *</Text>
-                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="1990" placeholderTextColor={C.textLight} value={newBirthYear} onChangeText={setNewBirthYear} keyboardType="numeric" data-testid="new-birth-year" />
+                <Text style={[st.label, { color: C.textLight }]}>Date de naissance *</Text>
+                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={newBirthDate} onChangeText={setNewBirthDate} data-testid="new-birth-date" />
               </View>
             </View>
 

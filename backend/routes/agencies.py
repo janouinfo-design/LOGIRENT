@@ -152,7 +152,7 @@ async def create_quick_client(data: QuickClientCreate, user: dict = Depends(get_
         "phone": data.phone,
         "address": None, "id_photo": None, "license_photo": None,
         "birth_place": data.birth_place,
-        "birth_year": data.birth_year,
+        "date_of_birth": data.date_of_birth,
         "license_number": data.license_number,
         "license_issue_date": data.license_issue_date,
         "license_expiry_date": data.license_expiry_date,

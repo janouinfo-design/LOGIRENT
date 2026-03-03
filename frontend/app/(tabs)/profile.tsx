@@ -30,6 +30,12 @@ export default function ProfileScreen() {
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
+  const [birthPlace, setBirthPlace] = useState(user?.birth_place || '');
+  const [dateOfBirth, setDateOfBirth] = useState(user?.date_of_birth || '');
+  const [licenseNumber, setLicenseNumber] = useState(user?.license_number || '');
+  const [licenseIssueDate, setLicenseIssueDate] = useState(user?.license_issue_date || '');
+  const [licenseExpiryDate, setLicenseExpiryDate] = useState(user?.license_expiry_date || '');
+  const [nationality, setNationality] = useState(user?.nationality || '');
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
@@ -43,7 +49,17 @@ export default function ProfileScreen() {
   }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
-    if (user) { setName(user.name || ''); setPhone(user.phone || ''); setAddress(user.address || ''); }
+    if (user) {
+      setName(user.name || '');
+      setPhone(user.phone || '');
+      setAddress(user.address || '');
+      setBirthPlace(user.birth_place || '');
+      setDateOfBirth(user.date_of_birth || '');
+      setLicenseNumber(user.license_number || '');
+      setLicenseIssueDate(user.license_issue_date || '');
+      setLicenseExpiryDate(user.license_expiry_date || '');
+      setNationality(user.nationality || '');
+    }
   }, [user]);
 
   if (isLoading || !user) {
@@ -58,11 +74,28 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await updateProfile({ name, phone, address });
+      await updateProfile({
+        name, phone, address,
+        birth_place: birthPlace,
+        date_of_birth: dateOfBirth,
+        license_number: licenseNumber,
+        license_issue_date: licenseIssueDate,
+        license_expiry_date: licenseExpiryDate,
+        nationality,
+      });
       setEditing(false);
-      Alert.alert('Succès', 'Profil mis à jour');
+      if (Platform.OS === 'web') {
+        window.alert('Profil mis à jour avec succès');
+      } else {
+        Alert.alert('Succès', 'Profil mis à jour');
+      }
     } catch (error: any) {
-      Alert.alert('Erreur', error.message);
+      const msg = error.message || 'Erreur';
+      if (Platform.OS === 'web') {
+        window.alert(msg);
+      } else {
+        Alert.alert('Erreur', msg);
+      }
     } finally { setLoading(false); }
   };
 
@@ -200,9 +233,83 @@ export default function ProfileScreen() {
             <Input label="Nom complet" value={name} onChangeText={setName} icon="person" />
             <Input label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" icon="call" />
             <Input label="Adresse" value={address} onChangeText={setAddress} icon="location" />
+
+            <View style={styles.identitySection}>
+              <View style={styles.identitySectionHeader}>
+                <Ionicons name="id-card" size={16} color={_C.purple} />
+                <Text style={styles.identitySectionTitle}>Identité & Permis</Text>
+              </View>
+
+              <View style={styles.fieldRow}>
+                <View style={{ flex: 1 }}>
+                  <Input label="Lieu de naissance" value={birthPlace} onChangeText={setBirthPlace} icon="location-outline" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Input label="Date de naissance (JJ-MM-AAAA)" value={dateOfBirth} onChangeText={setDateOfBirth} icon="calendar-outline" />
+                </View>
+              </View>
+
+              <Input label="Nationalité" value={nationality} onChangeText={setNationality} icon="globe-outline" />
+              <Input label="N° Permis de conduire" value={licenseNumber} onChangeText={setLicenseNumber} icon="car-outline" />
+
+              <View style={styles.fieldRow}>
+                <View style={{ flex: 1 }}>
+                  <Input label="Date d'émission permis" value={licenseIssueDate} onChangeText={setLicenseIssueDate} icon="calendar-outline" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Input label="Date d'expiration permis" value={licenseExpiryDate} onChangeText={setLicenseExpiryDate} icon="calendar-outline" />
+                </View>
+              </View>
+            </View>
+
             <View style={styles.btnRow}>
               <Button title="Annuler" onPress={() => setEditing(false)} variant="outline" style={{ flex: 1 }} />
               <Button title="Enregistrer" onPress={handleSave} loading={loading} style={{ flex: 1 }} />
+            </View>
+          </View>
+        )}
+
+        {/* Identity Info (read-only) */}
+        {!editing && (user?.birth_place || user?.date_of_birth || user?.license_number || user?.nationality) && (
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: C.text }]}>Informations d'identité</Text>
+            <View style={[styles.infoCard, { backgroundColor: C.card, borderColor: C.border }]}>
+              {user.date_of_birth && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Date de naissance</Text>
+                  <Text style={[styles.infoValue, { color: C.text }]}>{user.date_of_birth}</Text>
+                </View>
+              )}
+              {user.birth_place && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Lieu de naissance</Text>
+                  <Text style={[styles.infoValue, { color: C.text }]}>{user.birth_place}</Text>
+                </View>
+              )}
+              {user.nationality && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Nationalité</Text>
+                  <Text style={[styles.infoValue, { color: C.text }]}>{user.nationality}</Text>
+                </View>
+              )}
+              {user.license_number && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>N° Permis</Text>
+                  <Text style={[styles.infoValue, { color: C.text }]}>{user.license_number}</Text>
+                </View>
+              )}
+              {user.license_issue_date && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Émission permis</Text>
+                  <Text style={[styles.infoValue, { color: C.text }]}>{user.license_issue_date}</Text>
+                </View>
+              )}
+              {user.license_expiry_date && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Expiration permis</Text>
+                  <Text style={[styles.infoValue, { color: C.text }]}>{user.license_expiry_date}</Text>
+                </View>
+              )}
             </View>
           </View>
         )}
@@ -347,6 +454,14 @@ const styles = StyleSheet.create({
   section: { padding: 20 },
   sectionTitle: { fontSize: 17, fontWeight: '700', marginBottom: 14 },
   btnRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  fieldRow: { flexDirection: 'row', gap: 12 },
+  identitySection: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#E5E7EB' },
+  identitySectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  identitySectionTitle: { fontSize: 15, fontWeight: '700', color: '#7C3AED' },
+  infoCard: { borderRadius: 14, borderWidth: 1, padding: 16 },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  infoLabel: { fontSize: 13, color: '#6B7280', fontWeight: '500' },
+  infoValue: { fontSize: 14, fontWeight: '600' },
   alert: { flexDirection: 'row', backgroundColor: '#FEF3C7', borderRadius: 12, padding: 14, marginBottom: 16, alignItems: 'center', gap: 10 },
   alertText: { flex: 1, fontSize: 13, color: '#92400E', lineHeight: 18 },
   docsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },

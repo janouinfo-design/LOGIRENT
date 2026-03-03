@@ -14,7 +14,7 @@ interface Client {
   client_rating?: string; reservation_count?: number; created_at?: string;
   profile_photo?: string; address?: string; admin_notes?: string;
   total_spent?: number; total_reservations?: number;
-  birth_place?: string; birth_year?: number; license_number?: string;
+  birth_place?: string; date_of_birth?: string; license_number?: string;
   license_issue_date?: string; license_expiry_date?: string; nationality?: string;
 }
 

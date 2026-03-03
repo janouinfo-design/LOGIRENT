@@ -16,7 +16,7 @@ interface Client {
   client_rating?: string; reservation_count?: number; created_at?: string;
   profile_photo?: string; address?: string; admin_notes?: string;
   total_spent?: number; total_reservations?: number;
-  birth_place?: string; birth_year?: number; license_number?: string;
+  birth_place?: string; date_of_birth?: string; license_number?: string;
   license_issue_date?: string; license_expiry_date?: string; nationality?: string;
 }
 
@@ -38,7 +38,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   const [editRating, setEditRating] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [editBirthPlace, setEditBirthPlace] = useState('');
-  const [editBirthYear, setEditBirthYear] = useState('');
+  const [editBirthDate, setEditBirthDate] = useState('');
   const [editLicenseNumber, setEditLicenseNumber] = useState('');
   const [editLicenseIssue, setEditLicenseIssue] = useState('');
   const [editLicenseExpiry, setEditLicenseExpiry] = useState('');
@@ -54,7 +54,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       setEditRating(client.client_rating || '');
       setEditNotes(client.admin_notes || '');
       setEditBirthPlace(client.birth_place || '');
-      setEditBirthYear(client.birth_year ? String(client.birth_year) : '');
+      setEditBirthDate(client.date_of_birth || '');
       setEditLicenseNumber(client.license_number || '');
       setEditLicenseIssue(client.license_issue_date || '');
       setEditLicenseExpiry(client.license_expiry_date || '');
@@ -67,7 +67,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
         setEditAddress(d.address || '');
         setEditNotes(d.admin_notes || '');
         setEditBirthPlace(d.birth_place || '');
-        setEditBirthYear(d.birth_year ? String(d.birth_year) : '');
+        setEditBirthDate(d.date_of_birth || '');
         setEditLicenseNumber(d.license_number || '');
         setEditLicenseIssue(d.license_issue_date || '');
         setEditLicenseExpiry(d.license_expiry_date || '');
@@ -79,8 +79,8 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
 
   const saveEdit = async () => {
     if (!client) return;
-    if (!editBirthPlace || !editBirthYear || !editLicenseNumber || !editLicenseIssue || !editLicenseExpiry || !editNationality) {
-      const msg = 'Veuillez remplir tous les champs obligatoires (lieu/annee naissance, permis, nationalite)';
+    if (!editBirthPlace || !editBirthDate || !editLicenseNumber || !editLicenseIssue || !editLicenseExpiry || !editNationality) {
+      const msg = 'Veuillez remplir tous les champs obligatoires (lieu/date naissance, permis, nationalite)';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Champs manquants', msg);
       return;
     }
@@ -95,7 +95,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       if (editNotes !== (ref.admin_notes || '')) payload.admin_notes = editNotes;
       if (editRating !== (ref.client_rating || '')) payload.client_rating = editRating || null;
       payload.birth_place = editBirthPlace;
-      payload.birth_year = parseInt(editBirthYear) || null;
+      payload.date_of_birth = editBirthDate;
       payload.license_number = editLicenseNumber;
       payload.license_issue_date = editLicenseIssue;
       payload.license_expiry_date = editLicenseExpiry;
@@ -160,8 +160,8 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthPlace ? '#EF444450' : C.border }]} value={editBirthPlace} onChangeText={setEditBirthPlace} placeholder="Geneve" placeholderTextColor={C.textLight} data-testid="edit-birth-place" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Annee de naissance *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthYear ? '#EF444450' : C.border }]} value={editBirthYear} onChangeText={setEditBirthYear} placeholder="1990" placeholderTextColor={C.textLight} keyboardType="numeric" data-testid="edit-birth-year" />
+                  <Text style={[st.label, { color: C.textLight }]}>Date de naissance *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={setEditBirthDate} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-birth-date" />
                 </View>
               </View>
 

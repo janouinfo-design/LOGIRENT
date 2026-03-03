@@ -53,7 +53,16 @@ interface User {
   address?: string;
   id_photo?: string;
   license_photo?: string;
-  role?: string;  // client, admin, super_admin
+  profile_photo?: string;
+  birth_place?: string;
+  date_of_birth?: string;
+  license_number?: string;
+  license_issue_date?: string;
+  license_expiry_date?: string;
+  nationality?: string;
+  client_rating?: string;
+  admin_notes?: string;
+  role?: string;
   agency_id?: string;
   agency_name?: string;
   created_at: string;
