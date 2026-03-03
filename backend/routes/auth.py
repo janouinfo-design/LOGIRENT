@@ -100,7 +100,63 @@ async def login(credentials: UserLogin):
 
 @router.post("/auth/forgot-password")
 async def forgot_password(request: ForgotPasswordRequest):
-    return {"message": "If the email exists, a password reset link will be sent"}
+    user = await db.users.find_one({"email": request.email.lower()})
+    if user:
+        reset_token = str(uuid.uuid4())
+        await db.password_resets.insert_one({
+            "user_id": user['id'],
+            "email": user['email'],
+            "token": reset_token,
+            "created_at": datetime.utcnow(),
+            "used": False
+        })
+        try:
+            from utils.email import send_email
+            reset_html = f"""
+            <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+                <h2 style="color:#7C3AED;">LogiRent - Réinitialisation du mot de passe</h2>
+                <p>Bonjour {user.get('name','')},</p>
+                <p>Voici votre code de réinitialisation :</p>
+                <div style="background:#F3EEFF;padding:16px;border-radius:8px;text-align:center;margin:20px 0;">
+                    <span style="font-size:24px;font-weight:bold;color:#7C3AED;letter-spacing:2px;">{reset_token[:8].upper()}</span>
+                </div>
+                <p>Ce code expire dans 30 minutes.</p>
+                <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
+            </div>
+            """
+            await send_email(user['email'], "LogiRent - Réinitialisation du mot de passe", reset_html)
+        except Exception as e:
+            logger.error(f"Failed to send reset email: {e}")
+    return {"message": "Si l'email existe, un code de réinitialisation a été envoyé"}
+
+
+@router.post("/auth/reset-password")
+async def reset_password(data: dict):
+    code = data.get("code", "").strip().upper()
+    new_password = data.get("new_password", "")
+    if not code or not new_password:
+        raise HTTPException(status_code=400, detail="Code et nouveau mot de passe requis")
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit contenir au moins 6 caractères")
+
+    reset = await db.password_resets.find_one({"used": False})
+    found = None
+    async for r in db.password_resets.find({"used": False}).sort("created_at", -1).limit(50):
+        if r['token'][:8].upper() == code:
+            elapsed = (datetime.utcnow() - r['created_at']).total_seconds()
+            if elapsed < 1800:
+                found = r
+                break
+
+    if not found:
+        raise HTTPException(status_code=400, detail="Code invalide ou expiré")
+
+    await db.users.update_one(
+        {"id": found['user_id']},
+        {"$set": {"password_hash": hash_password(new_password)}}
+    )
+    await db.password_resets.update_one({"token": found['token']}, {"$set": {"used": True}})
+    return {"message": "Mot de passe réinitialisé avec succès"}
 
 
 @router.get("/auth/profile", response_model=UserProfile)
