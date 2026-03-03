@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, A
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../src/store/authStore';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import { useI18n } from '../../src/i18n';
@@ -78,7 +77,6 @@ function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; d
 export default function HomeScreen() {
   const { colors: C } = useThemeStore();
   const router = useRouter();
-  const { user } = useAuthStore();
   const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
   const { lang, t } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
@@ -87,16 +85,12 @@ export default function HomeScreen() {
   const isMobile = width < 1024;
 
   useEffect(() => {
-    const filters: any = {};
-    if (user?.agency_id) filters.agency_id = user.agency_id;
-    fetchVehicles(filters);
-  }, [user?.agency_id]);
+    fetchVehicles({});
+  }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    const filters: any = {};
-    if (user?.agency_id) filters.agency_id = user.agency_id;
-    await fetchVehicles(filters);
+    await fetchVehicles({});
     setRefreshing(false);
   };
 
@@ -104,7 +98,6 @@ export default function HomeScreen() {
     setSelectedType(typeId);
     const type = typeId === 'all' ? undefined : typeId;
     const filters: any = { type };
-    if (user?.agency_id) filters.agency_id = user.agency_id;
     setFilters(filters);
     fetchVehicles(filters);
   };

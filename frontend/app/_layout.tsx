@@ -24,9 +24,11 @@ function TopNavBar() {
   const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
   const { mode, colors: T, toggleTheme } = useThemeStore();
   const { lang, setLang } = useI18n();
+  const { logout } = useAuthStore();
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
   const [showNotifs, setShowNotifs] = React.useState(false);
+  const [showUserMenu, setShowUserMenu] = React.useState(false);
 
   useEffect(() => {
     fetchUnreadCount();
@@ -81,11 +83,22 @@ function TopNavBar() {
             <View style={styles.badge} data-testid="client-notif-badge"><Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>
           )}
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.langBtn, lang === 'fr' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('fr')} data-testid="lang-fr">
-          <Text style={[styles.langFlag, { color: T.text }]}>FR</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.langBtn, lang === 'en' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('en')} data-testid="lang-en">
-          <Text style={[styles.langFlag, { color: T.text }]}>EN</Text>
+        {!isMobile && (
+          <>
+            <TouchableOpacity style={[styles.langBtn, lang === 'fr' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('fr')} data-testid="lang-fr">
+              <Text style={[styles.langFlag, { color: T.text }]}>FR</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.langBtn, lang === 'en' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('en')} data-testid="lang-en">
+              <Text style={[styles.langFlag, { color: T.text }]}>EN</Text>
+            </TouchableOpacity>
+          </>
+        )}
+        <TouchableOpacity
+          style={[styles.iconBtn, { backgroundColor: '#EF4444' + '18', marginLeft: 4 }]}
+          onPress={() => { logout(); router.replace('/login' as any); }}
+          data-testid="topnav-logout-btn"
+        >
+          <Ionicons name="log-out-outline" size={18} color="#EF4444" />
         </TouchableOpacity>
       </View>
 
