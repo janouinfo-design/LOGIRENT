@@ -183,12 +183,18 @@ export default function HomeScreen() {
                 return (
                   <TouchableOpacity
                     key={type.id}
-                    style={[styles.catPill, active && styles.catPillActive]}
+                    style={[
+                      styles.catPill,
+                      {
+                        backgroundColor: active ? '#7C3AED' : '#FFFFFF',
+                        borderColor: active ? '#7C3AED' : '#D1D5DB',
+                      },
+                    ]}
                     onPress={() => handleTypeSelect(type.id)}
                     data-testid={`category-${type.id}`}
                   >
-                    <Ionicons name={type.icon as any} size={18} color={active ? '#FFFFFF' : C.purple} />
-                    <Text style={[styles.catText, active && styles.catTextActive]}>
+                    <Ionicons name={type.icon as any} size={18} color={active ? '#FFFFFF' : '#7C3AED'} />
+                    <Text style={[styles.catText, { color: active ? '#FFFFFF' : '#1F2937' }]}>
                       {typeNameMap[lang]?.[type.id] || type.id}
                     </Text>
                   </TouchableOpacity>
