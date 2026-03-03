@@ -8,13 +8,13 @@ import { useAuthStore } from '../src/store/authStore';
 const COLORS = {
   primary: '#6C2BD9',
   primaryDark: '#5521B5',
-  background: '#0F0B1A',
-  card: '#1A1425',
-  text: '#FFFFFF',
-  textLight: '#9CA3AF',
-  border: '#2D2640',
+  background: '#F8FAFC',
+  card: '#FFFFFF',
+  text: '#1E293B',
+  textLight: '#64748B',
+  border: '#E2E8F0',
   error: '#EF4444',
-  accent: '#A78BFA',
+  accent: '#7C3AED',
 };
 
 export default function AdminLogin() {
@@ -27,6 +27,7 @@ export default function AdminLogin() {
   const [agencyName, setAgencyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -53,7 +54,6 @@ export default function AdminLogin() {
         router.replace('/admin');
       } else {
         await adminLogin(email, password);
-        // Role-based redirect handled by useEffect after state update
       }
     } catch (err: any) {
       setError(err.message || 'Erreur de connexion');
@@ -148,9 +148,12 @@ export default function AdminLogin() {
                   placeholderTextColor={COLORS.textLight}
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   data-testid="admin-login-password"
                 />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn} data-testid="admin-password-toggle">
+                  <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={COLORS.textLight} />
+                </TouchableOpacity>
               </View>
             </View>
 
@@ -184,18 +187,19 @@ export default function AdminLogin() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { flexGrow: 1, padding: 24 },
-  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: COLORS.card, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  backBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: COLORS.card, alignItems: 'center', justifyContent: 'center', marginBottom: 24, borderWidth: 1, borderColor: COLORS.border },
   header: { alignItems: 'center', marginBottom: 32 },
-  iconContainer: { width: 80, height: 80, borderRadius: 20, backgroundColor: COLORS.card, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  iconContainer: { width: 80, height: 80, borderRadius: 20, backgroundColor: '#F3EEFF', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   title: { fontSize: 28, fontWeight: '800', color: COLORS.text, marginBottom: 8 },
   subtitle: { fontSize: 15, color: COLORS.textLight, textAlign: 'center' },
-  errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(239,68,68,0.15)', padding: 12, borderRadius: 10, marginBottom: 16, gap: 8 },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2', padding: 12, borderRadius: 10, marginBottom: 16, gap: 8 },
   errorText: { color: COLORS.error, fontSize: 14, flex: 1 },
   form: { gap: 16 },
   inputGroup: { gap: 6 },
-  label: { fontSize: 13, fontWeight: '600', color: COLORS.textLight },
+  label: { fontSize: 13, fontWeight: '600', color: COLORS.text },
   inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card, borderRadius: 12, borderWidth: 1, borderColor: COLORS.border, paddingHorizontal: 14, gap: 10, height: 52 },
   input: { flex: 1, color: COLORS.text, fontSize: 15 },
+  eyeBtn: { padding: 4 },
   submitBtn: { backgroundColor: COLORS.primary, borderRadius: 12, height: 52, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   submitBtnDisabled: { opacity: 0.6 },
   submitText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
