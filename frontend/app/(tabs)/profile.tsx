@@ -358,9 +358,13 @@ export default function ProfileScreen() {
               ) : (
                 <View style={styles.noDoc}><Ionicons name="card-outline" size={36} color={C.gray} /><Text style={styles.noDocText}>Non téléchargée</Text></View>
               )}
-              <TouchableOpacity style={[styles.docBtn, user.id_photo && styles.docBtnOutline]} onPress={() => pickAndUpload('id')} data-testid="upload-id-btn">
-                {uploadingId ? <ActivityIndicator size="small" color={user.id_photo ? C.purple : '#FFF'} /> : (
-                  <Text style={[styles.docBtnText, user.id_photo && styles.docBtnTextOutline]}>{user.id_photo ? 'Modifier' : 'Télécharger'}</Text>
+              <TouchableOpacity
+                style={[styles.docBtn, { backgroundColor: user.id_photo ? '#EDE9FE' : '#7C3AED' }]}
+                onPress={() => pickAndUpload('id')}
+                data-testid="upload-id-btn"
+              >
+                {uploadingId ? <ActivityIndicator size="small" color={user.id_photo ? '#7C3AED' : '#FFF'} /> : (
+                  <Text style={[styles.docBtnText, { color: user.id_photo ? '#7C3AED' : '#FFF' }]}>{user.id_photo ? 'Modifier' : 'Télécharger'}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -379,9 +383,13 @@ export default function ProfileScreen() {
               ) : (
                 <View style={styles.noDoc}><Ionicons name="id-card-outline" size={36} color={C.gray} /><Text style={styles.noDocText}>Non téléchargé</Text></View>
               )}
-              <TouchableOpacity style={[styles.docBtn, user.license_photo && styles.docBtnOutline]} onPress={() => pickAndUpload('license')} data-testid="upload-license-btn">
-                {uploadingLicense ? <ActivityIndicator size="small" color={user.license_photo ? C.purple : '#FFF'} /> : (
-                  <Text style={[styles.docBtnText, user.license_photo && styles.docBtnTextOutline]}>{user.license_photo ? 'Modifier' : 'Télécharger'}</Text>
+              <TouchableOpacity
+                style={[styles.docBtn, { backgroundColor: user.license_photo ? '#EDE9FE' : '#7C3AED' }]}
+                onPress={() => pickAndUpload('license')}
+                data-testid="upload-license-btn"
+              >
+                {uploadingLicense ? <ActivityIndicator size="small" color={user.license_photo ? '#7C3AED' : '#FFF'} /> : (
+                  <Text style={[styles.docBtnText, { color: user.license_photo ? '#7C3AED' : '#FFF' }]}>{user.license_photo ? 'Modifier' : 'Télécharger'}</Text>
                 )}
               </TouchableOpacity>
             </View>
