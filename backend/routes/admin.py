@@ -320,10 +320,17 @@ async def get_admin_users(skip: int = 0, limit: int = 20, user: dict = Depends(g
         total = await db.users.count_documents(query)
 
     for u in users:
-        u['reservation_count'] = await db.reservations.count_documents(
-            {"user_id": u['id']} if is_super else {"user_id": u['id'], "agency_id": agency_id}
-        )
         u['_id'] = str(u['_id'])
+
+    # Batch fetch reservation counts
+    user_ids = [u['id'] for u in users]
+    pipeline = [
+        {"$match": {"user_id": {"$in": user_ids}} if is_super else {"user_id": {"$in": user_ids}, "agency_id": agency_id}},
+        {"$group": {"_id": "$user_id", "count": {"$sum": 1}}}
+    ]
+    counts = {r['_id']: r['count'] async for r in db.reservations.aggregate(pipeline)}
+    for u in users:
+        u['reservation_count'] = counts.get(u['id'], 0)
 
     return {"users": users, "total": total}
 
@@ -572,13 +579,21 @@ async def get_admin_reservations(skip: int = 0, limit: int = 20, status: Optiona
     reservations = await db.reservations.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.reservations.count_documents(query)
 
+    # Batch fetch users and vehicles
+    user_ids = list(set(r.get('user_id') for r in reservations if r.get('user_id')))
+    vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
+    users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(len(user_ids))
+    vehicles_list = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(vehicle_ids))
+    users_map = {u['id']: u for u in users_list}
+    vehicles_map = {v['id']: v for v in vehicles_list}
+
     for res in reservations:
         res['_id'] = str(res['_id'])
-        res_user = await db.users.find_one({"id": res['user_id']})
-        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
-        res['user_name'] = res_user['name'] if res_user else 'Unknown'
-        res['user_email'] = res_user['email'] if res_user else 'Unknown'
-        res['vehicle_name'] = f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Unknown'
+        u = users_map.get(res.get('user_id'))
+        v = vehicles_map.get(res.get('vehicle_id'))
+        res['user_name'] = u['name'] if u else 'Unknown'
+        res['user_email'] = u['email'] if u else 'Unknown'
+        res['vehicle_name'] = f"{v['brand']} {v['model']}" if v else 'Unknown'
 
     return {"reservations": reservations, "total": total}
 
@@ -685,10 +700,15 @@ async def get_admin_payments(skip: int = 0, limit: int = 20, user: dict = Depend
     transactions = await db.payment_transactions.find({}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.payment_transactions.count_documents({})
 
+    # Batch fetch users
+    tx_user_ids = list(set(tx.get('user_id') for tx in transactions if tx.get('user_id')))
+    tx_users = await db.users.find({"id": {"$in": tx_user_ids}}, {"_id": 0, "id": 1, "email": 1}).to_list(len(tx_user_ids))
+    tx_users_map = {u['id']: u for u in tx_users}
+
     for tx in transactions:
         tx['_id'] = str(tx['_id'])
-        tx_user = await db.users.find_one({"id": tx['user_id']})
-        tx['user_email'] = tx_user['email'] if tx_user else 'Unknown'
+        u = tx_users_map.get(tx.get('user_id'))
+        tx['user_email'] = u['email'] if u else 'Unknown'
 
     return {"transactions": transactions, "total": total}
 
@@ -716,18 +736,26 @@ async def get_admin_calendar(month: int = None, year: int = None, user: dict = D
 
     reservations = await db.reservations.find(cal_query).to_list(500)
 
+    # Batch fetch users and vehicles
+    cal_user_ids = list(set(r.get('user_id') for r in reservations if r.get('user_id')))
+    cal_vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
+    cal_users = await db.users.find({"id": {"$in": cal_user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "phone": 1}).to_list(len(cal_user_ids))
+    cal_vehicles = await db.vehicles.find({"id": {"$in": cal_vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(cal_vehicle_ids))
+    cal_users_map = {u['id']: u for u in cal_users}
+    cal_vehicles_map = {v['id']: v for v in cal_vehicles}
+
     events = []
     for res in reservations:
-        res_user = await db.users.find_one({"id": res['user_id']})
-        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        u = cal_users_map.get(res.get('user_id'))
+        v = cal_vehicles_map.get(res.get('vehicle_id'))
         is_overdue = res['status'] == 'active' and res['end_date'] < now
 
         events.append({
             "id": res['id'],
-            "user_name": res_user['name'] if res_user else 'Inconnu',
-            "user_email": res_user['email'] if res_user else '',
-            "user_phone": res_user.get('phone', '') if res_user else '',
-            "vehicle_name": f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Inconnu',
+            "user_name": u['name'] if u else 'Inconnu',
+            "user_email": u['email'] if u else '',
+            "user_phone": u.get('phone', '') if u else '',
+            "vehicle_name": f"{v['brand']} {v['model']}" if v else 'Inconnu',
             "vehicle_id": res.get('vehicle_id', ''),
             "start_date": res['start_date'].isoformat(),
             "end_date": res['end_date'].isoformat(),
@@ -748,16 +776,24 @@ async def get_overdue_reservations(user: dict = Depends(get_admin_user)):
     now = datetime.utcnow()
     overdue_reservations = await db.reservations.find({"status": "active", "end_date": {"$lt": now}}).sort("end_date", 1).to_list(100)
 
+    # Batch fetch users and vehicles
+    od_user_ids = list(set(r.get('user_id') for r in overdue_reservations if r.get('user_id')))
+    od_vehicle_ids = list(set(r.get('vehicle_id') for r in overdue_reservations if r.get('vehicle_id')))
+    od_users = await db.users.find({"id": {"$in": od_user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "phone": 1}).to_list(len(od_user_ids))
+    od_vehicles = await db.vehicles.find({"id": {"$in": od_vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(od_vehicle_ids))
+    od_users_map = {u['id']: u for u in od_users}
+    od_vehicles_map = {v['id']: v for v in od_vehicles}
+
     results = []
     for res in overdue_reservations:
-        res_user = await db.users.find_one({"id": res['user_id']})
-        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        u = od_users_map.get(res.get('user_id'))
+        v = od_vehicles_map.get(res.get('vehicle_id'))
         results.append({
             "id": res['id'],
-            "user_name": res_user['name'] if res_user else 'Inconnu',
-            "user_email": res_user['email'] if res_user else '',
-            "user_phone": res_user.get('phone', '') if res_user else '',
-            "vehicle_name": f"{vehicle['brand']} {vehicle['model']}" if vehicle else 'Inconnu',
+            "user_name": u['name'] if u else 'Inconnu',
+            "user_email": u['email'] if u else '',
+            "user_phone": u.get('phone', '') if u else '',
+            "vehicle_name": f"{v['brand']} {v['model']}" if v else 'Inconnu',
             "start_date": res['start_date'].isoformat(),
             "end_date": res['end_date'].isoformat(),
             "total_days": res.get('total_days', 0),

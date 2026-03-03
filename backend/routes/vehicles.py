@@ -44,16 +44,14 @@ async def get_vehicles(
     vehicles = await db.vehicles.find(query).to_list(100)
 
     if start_date and end_date:
-        available_vehicles = []
-        for vehicle in vehicles:
-            overlap = await db.reservations.find_one({
-                "vehicle_id": vehicle['id'],
-                "status": {"$in": ["pending", "confirmed", "active"]},
-                "$or": [{"start_date": {"$lt": end_date}, "end_date": {"$gt": start_date}}]
-            })
-            if not overlap:
-                available_vehicles.append(vehicle)
-        vehicles = available_vehicles
+        vehicle_ids = [v['id'] for v in vehicles]
+        overlapping = await db.reservations.find({
+            "vehicle_id": {"$in": vehicle_ids},
+            "status": {"$in": ["pending", "confirmed", "active"]},
+            "$or": [{"start_date": {"$lt": end_date}, "end_date": {"$gt": start_date}}]
+        }, {"_id": 0, "vehicle_id": 1}).to_list(None)
+        blocked_ids = set(r['vehicle_id'] for r in overlapping)
+        vehicles = [v for v in vehicles if v['id'] not in blocked_ids]
 
     return [Vehicle(**v) for v in vehicles]
 
@@ -304,7 +302,7 @@ async def get_document_alerts(
 
     agency_id = user.get("agency_id")
     query = {"agency_id": agency_id} if agency_id else {}
-    vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(None)
+    vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(200)
 
     alerts = []
     for v in vehicles:
