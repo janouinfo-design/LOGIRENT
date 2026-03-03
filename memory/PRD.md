@@ -11,7 +11,9 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - `app/super-admin/` - statistics.tsx, agencies.tsx, reservations.tsx, vehicles.tsx, users.tsx
 - `app/super-admin/components/` - ReservationComponents.tsx, VehicleComponents.tsx, UserComponents.tsx
 - `app/agency-app/` - statistics.tsx, book.tsx, clients.tsx, reservations.tsx, vehicles.tsx, tracking.tsx
+- `app/agency-app/components/` - EditClientModal.tsx, NewClientModal.tsx, ImportClientModal.tsx, GanttChart.tsx, ReservationCard.tsx, ReservationActionModal.tsx
 - `app/admin/` - statistics.tsx
+- `app/(auth)/` - login.tsx, register.tsx
 
 ## Key API Endpoints
 - `POST /api/auth/login` - Login (returns access_token)
@@ -22,6 +24,9 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - `GET /api/admin/stats/revenue-forecast` - AI-powered revenue forecast (GPT-5.2)
 - `POST /api/admin/impersonate/{user_id}` - Super admin impersonation
 - `PUT /api/contracts/{contract_id}` - Update contract with signature
+- `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
+- `GET /api/vehicles/{id}/documents/{doc_id}/download` - Download vehicle document
+- `DELETE /api/admin/vehicles/{id}/documents/{doc_id}` - Soft-delete vehicle document
 
 ## Completed Tasks
 - [2026-03-02] Backend refactoring: 3704->167 lines entry point. 70 tests.
@@ -32,24 +37,20 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Frontend refactoring: super-admin pages refactored (-64%).
 - [2026-03-02] Analytics dashboards: Top Clients + Agency Comparison sections.
 - [2026-03-02] AI Revenue Forecast (GPT-5.2): Endpoint + frontend charts for both super-admin and agency-admin. 16 tests passed.
-- [2026-03-02] Fix: Impersonation token via URL hash instead of localStorage swap. Both sessions now independent.
-- [2026-03-02] Vehicle fields: Added plate_number, chassis_number, color to Vehicle model and edit UI.
-- [2026-03-02] Vehicle document upload: Object Storage integration (Emergent), upload/download/delete endpoints. Frontend document management in edit modal (carte grise, assurance, controle technique, photos). 19 tests passed.
-- [2026-03-02] Booking flow redirect: After confirming reservation, navigates to reservations planning page with pulsing highlight on the new reservation bar + success banner for 4 seconds.
-- [2026-03-02] Lists to vignettes: Converted clients list and booking vehicle selection to 4-column card grids with photos/avatars, badges, and compact info.
-- [2026-03-02] Document expiration system: Added expiry_date to documents, GET /api/admin/vehicles/document-alerts endpoint (30-day warning), color-coded badges in vehicle edit modal (green/orange/red), dashboard alerts section. 10 tests passed.
-- [2026-03-02] Super admin vignettes: Converted agencies, vehicles, and users lists to 4-column card grids. Agencies show stats/action buttons, vehicles show photos/status/price, users show avatars/ratings. 10 tests passed (iteration 32).
-- [2026-03-02] Client identity/license fields: Added birth_place, birth_year, license_number, license_issue_date, license_expiry_date, nationality to client profiles. Required fields with red border validation. Edit + creation modals updated. 9 pytest tests passed (iteration 33).
-- [2026-03-02] Booking→Contract→Planning flow: After confirming reservation, navigates to contract page (auto-filled with client identity + vehicle data). After signing, 'Voir sur le planning' button leads to planning with pulsing highlight. Contract auto-fills nationality, license, dates, plate, color, chassis. 7 pytest tests passed (iteration 34).
-- [2026-03-02] Fix: Mouse signature canvas rewritten with native DOM event listeners (bypasses React Native Web interception). Clear/Confirm buttons work. 9 pytest tests passed (iteration 35).
-- [2026-03-02] Reservations in 4-column vignettes: Both list view and planning-below cards now 4-column grids. Inline status change buttons (Conf/Activ/Termi/Annul) on every card for quick status updates.
-- [2026-03-03] GPS Tracking 4-column grid: Vehicle list on tracking page converted to 4-column card grid (23.5% width). Status text size increased on reservations: planning badges 11px, list badges 13px, inline buttons 9-10px. 8/8 frontend tests passed (iteration 36).
-- [2026-03-03] Global text size increase: Increased font sizes across ALL 6 card grid pages - Agency Clients (name 14, email 13, phone 12, badge 12), Agency Vehicles (name 14, status 11, plate 11, year 12), Agency Tracking (name 13, status 12, speed/moteur 11), Super Admin Agencies (name 15, email/address 12, stat labels 11, buttons 12), Super Admin Vehicles (name 13, type 11, status 11, price 14), Super Admin Users (name 13, email/phone 11, rating 11). 6/6 tests passed (iteration 37).
-
-## Key API Endpoints (New)
-- `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
-- `GET /api/vehicles/{id}/documents/{doc_id}/download` - Download vehicle document
-- `DELETE /api/admin/vehicles/{id}/documents/{doc_id}` - Soft-delete vehicle document
+- [2026-03-02] Fix: Impersonation token via URL hash instead of localStorage swap.
+- [2026-03-02] Vehicle fields: plate_number, chassis_number, color.
+- [2026-03-02] Vehicle document upload: Object Storage integration (Emergent). 19 tests passed.
+- [2026-03-02] Booking flow redirect: After confirming reservation, pulsing highlight + success banner.
+- [2026-03-02] Lists to vignettes: 4-column card grids with photos/avatars/badges.
+- [2026-03-02] Document expiration system: color-coded badges. 10 tests passed.
+- [2026-03-02] Super admin vignettes: agencies, vehicles, users lists to 4-column card grids. 10 tests passed.
+- [2026-03-02] Client identity/license fields. 9 pytest tests passed.
+- [2026-03-02] Booking->Contract->Planning flow: auto-filled contract. 7 pytest tests passed.
+- [2026-03-02] Fix: Mouse signature canvas with native DOM event listeners. 9 pytest tests passed.
+- [2026-03-02] Reservations in 4-column vignettes with inline status change buttons.
+- [2026-03-03] GPS Tracking 4-column grid + status text size increase. 8/8 tests passed.
+- [2026-03-03] Global text size increase across all 6 card grid pages. 6/6 tests passed.
+- [2026-03-03] Component refactoring: Extracted 6 sub-components from clients.tsx and reservations.tsx into /agency-app/components/. 100% frontend test pass rate (iteration 38).
 
 ## 3rd Party Integrations
 - Stripe (Payments)
@@ -65,6 +66,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 ### P2: Driver/Agent Application
 ### P3: App Store Deployment
 ### Optional: book.tsx cleanup/refactoring
+### Optional: Move /agency-app/components/ to /src/components/agency/ to avoid expo-router route warnings
 
 ## Test Credentials
 - Super Admin: test@example.com / password123
