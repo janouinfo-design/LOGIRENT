@@ -98,7 +98,16 @@ async def get_vehicle_availability(vehicle_id: str, month: int = None, year: int
 # Admin vehicle routes
 @router.post("/admin/vehicles", response_model=Vehicle)
 async def create_vehicle(vehicle_data: VehicleCreate, user: dict = Depends(get_agency_admin)):
-    vehicle = Vehicle(**vehicle_data.dict())
+    # Filter out None values and set defaults for required fields
+    vehicle_dict = {k: v for k, v in vehicle_data.dict().items() if v is not None}
+    # Set default status if not provided
+    if 'status' not in vehicle_dict or vehicle_dict.get('status') is None:
+        vehicle_dict['status'] = 'available'
+    # Set default documents if not provided
+    if 'documents' not in vehicle_dict or vehicle_dict.get('documents') is None:
+        vehicle_dict['documents'] = []
+    
+    vehicle = Vehicle(**vehicle_dict)
     vehicle.agency_id = user.get('agency_id')
     await db.vehicles.insert_one(vehicle.dict())
     return vehicle

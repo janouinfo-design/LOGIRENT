@@ -6,131 +6,157 @@ The user wants to build a complete car rental solution named LogiRent.
 *   **Project Goal**: Client Mobile/Web App, Admin Web Back-office (Super Admin & Agency Admin), and a future Driver/Agent App.
 *   **Client App**: Branding, i18n (FR/EN), Auth, Vehicle Catalog, Reservations with calendar, Payments.
 *   **Admin Back-office**:
-    *   **Super Admin ()**: Manage all agencies (including activation/deactivation), global stats.
+    *   **Super Admin ()**: Manage all agencies, global stats.
     *   **Agency Admin ()**: Manage own fleet, reservations, clients, stats.
 *   **Key changes from this session**:
-    1.  **Completed Client Profile Overhaul**: Finished the refactor to replace  with  (format ) and added all missing identity fields across the mobile app and admin panels.
-    2.  **Date Input Masking**: Implemented a user-friendly date mask () for all date input fields.
-    3.  **UI/UX Improvements**:
-        *   Fixed invisible document upload buttons on the mobile profile page.
-        *   Overhauled all admin/agency pages to be more readable on tablets by increasing font sizes and adjusting grid layouts to 3 columns.
-        *   Forced a light theme across the entire application and removed all dark mode toggles.
-    4.  **New Super Admin Feature**: Implemented the ability for Super Admins to activate and deactivate agency admin accounts. Deactivated admins are blocked from logging in.
+    1.  **In-App Notification System**: A full in-app notification center was built for clients, with backend triggers for all key events (reservations, payments, reminders).
+    2.  **Deployment Readiness**: Critical deployment blockers were resolved, including fixing 7 major N+1 database queries, correcting environment variables, and fixing the payment redirect URL.
+    3.  **Forgot Password Feature**: A complete password reset flow was implemented, using Resend to send recovery emails.
+    4.  **Vehicle Management Overhaul (Agency)**: Agency admins can now add, edit, and manage photos for vehicles. This includes an Add Vehicle button, an Edit button on each vehicle card, and a photo manager within the edit modal with a full-screen preview.
+    5.  **UI/UX Fixes**: Corrected the admin login page to a light theme, added a password visibility toggle (eye icon), and added a Super Admin access link.
 
 **User's preferred language**: French
 
 **what currently exists?**
-The application is a full-stack car rental solution named LogiRent. In this session, the agent completed a large, multi-part feature and bug-fixing cycle driven by user feedback.
+The application is a full-stack car rental solution. This session focused on implementing several major features and preparing the application for deployment.
 
-First, the agent finished the client profile refactoring that was in progress, synchronizing the data model ( and other identity fields) across the backend, the mobile client app, and the web admin panels.
+A complete in-app notification system was built, providing clients with real-time updates. An attempt to add native push notifications was reverted due to an Expo SDK incompatibility.
 
-Following user requests, the agent then implemented a date input mask, fixed critical UI bugs (invisible buttons), completely overhauled the admin UIs for better tablet readability (larger text, 3-column layout), and enforced a light theme application-wide.
+Significant backend work was done to make the app production-ready by fixing severe N+1 query performance issues. A full Forgot Password feature was implemented.
 
-A new feature was added for Super Admins to activate or deactivate agency accounts, including backend logic to block logins from deactivated users. Finally, the agent clarified a user's confusion about data synchronization, explaining it was due to observing two different user accounts, and provided instructions on how to deploy the application. The application is currently in a stable state with all user-reported issues resolved.
+The Agency Admin panel was heavily enhanced with vehicle management capabilities, including adding new vehicles, editing existing ones, and managing vehicle photos with an uploader and previewer. However, the Add Vehicle modal is currently broken.
+
+Several UI bugs, like the admin login theme and password visibility, were also fixed.
 
 **Last working item**:
-- **Last item agent was working**: The agent provided the user with instructions on how to deploy the application using the Emergent platform's Deploy feature. This was in response to the user's message deployer.
-- **Status**: NONE (The agent's action was to provide information, which is complete).
-- **Agent Testing Done**: Y/N: N/A
-- **Which testing method agent to use?**: N/A
-- **User Testing Done**: Y/N: N (Awaiting user action based on the provided instructions).
+- **Last item agent was working**: Fixing the Add Vehicle modal in the Agency Admin panel. The modal appears, but the form fields inside it are not visible.
+- **Status**: IN PROGRESS
+- **Agent Testing Done**: N
+- **Which testing method agent to use?** Frontend testing agent. First, the agent needs to fix the UI and verify it with a screenshot. Then, the full creation flow should be tested.
+- **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-- None.
+- **Issue 1: Add Vehicle modal form is not displaying (P0)**
+  - **Attempted fixes**: The agent tried several approaches (, fixed heights,  with , ) which failed to render the form content within the modal on React Native Web.
+  - **Next debug checklist**:
+      - **File**: 
+      - **Action**: The working Edit Vehicle modal () is in the same file. The next agent should simplify the Add Vehicle modal () by copying the exact JSX structure and styling of the working edit modal, as the problem is likely a subtle layout or styling conflict with React Native Web.
+  - **Why fix this issue and what will be achieved with the fix?**: This is a core feature for agency admins to manage their vehicle fleet. Fixing it will complete the vehicle CRUD functionality.
+  - **Status**: IN PROGRESS
+  - **Is recurring issue?**: N
+  - **Should Test frontend/backend/both after fix?**: Frontend
+  - **Blocked on other issue**: None
 
 **In progress Task List**:
-- None.
+- **Task 1: Complete Add Vehicle functionality (P0)**
+  - **Where to resume**: Fix the UI bug in the Add Vehicle modal located in .
+  - **What will be achieved with this?**: Agency admins will be able to create and add new vehicles to the platform.
+  - **Status**: IN PROGRESS
+  - **Should Test frontend/backend/both after fix?**: Frontend
+  - **Blocked on something**: Blocked on **Issue 1**.
 
 **Upcoming and Future Tasks**
 - **Upcoming Tasks**:
-    - **Push Notifications (P1)**: Implement native push notifications for key events (e.g., reservation confirmation, payment success).
+    - **Push Notifications (P1)**: Re-implement native push notifications. The previous attempt with  failed due to an Expo SDK 53 incompatibility. A new approach or library is needed.
 - **Future Tasks**:
     - **Driver/Agent Application (P2)**: Build a separate mobile application for drivers/agents.
     - **App Store Deployment (P3)**: Prepare and submit the mobile apps to the Apple App Store and Google Play Store.
 
 **Completed work in this session**
-- **Client Profile Refactor (COMPLETED)**: Finished the frontend implementation in , , and  to align with the new backend model (using  and all identity fields).
-- **Date Input Mask (COMPLETED)**: Created a  utility and applied a  input mask to all date fields in the client profile and admin modals.
-- **Admin Panel UI Overhaul (COMPLETED)**: Increased font sizes and changed grid layouts to 3 columns on all , , and  pages for improved readability.
-- **Light Theme Enforcement (COMPLETED)**: Modified  to force a light theme and removed all dark mode toggle buttons from the UI layouts.
-- **Agency Activation Feature (COMPLETED)**:
-    - Added an  field to the backend  model.
-    - Created a  endpoint.
-    - Updated login logic to block deactivated users.
-    - Added activate/deactivate buttons and status indicators to the super admin UI.
+- **In-App Notification System (COMPLETED)**:
+    - Backend triggers for reservation, payment, and reminders (, ).
+    - Client-facing notification center UI ().
+- **Deployment Readiness (COMPLETED)**:
+    - Optimized 7 critical N+1 queries in , , .
+    - Corrected Stripe redirect URL in .
+    - Added missing  to  files.
+- **Forgot Password Feature (COMPLETED)**:
+    - Backend API for token generation and password reset ().
+    - Frontend pages for forgot/reset password flow ().
+- **Vehicle Management (Agency Panel) (PARTIALLY COMPLETED)**:
+    - Edit button on vehicle cards opening a modal ().
+    - Photo upload, deletion, and full-screen preview in edit modal ().
+    - Add Vehicle button and modal structure () - **(NOTE: Modal UI is broken)**.
 - **Bug Fixes (COMPLETED)**:
-    - Fixed invisible Télécharger / Modifier buttons on the mobile profile page by correcting styles.
-    - Resolved Metro bundler cache issues by forcing restarts and cleaning the cache.
-    - Corrected hardcoded dark theme colors on the super admin page.
-- **UI Cleanup (COMPLETED)**: Removed the Super Admin access link from the agency admin's profile page.
+    - Fixed Admin login page theme and added password visibility toggle ().
+    - Added Super Admin link to admin login page.
+    - Resolved data issue preventing a vehicle photo from displaying.
 
 **Earlier issues found/mentioned but not fixed**
-- None.
+- **Issue 1: Resend Domain Not Verified**
+  - **Debug checklist**: The user needs to add and verify their domain () in their Resend account settings for password reset emails to work.
+  - **Why to solve this issue and what will be achieved with this?**: This will make the Forgot Password feature fully functional.
+  - **Should Test frontend/backend/both after fix**: Backend (by triggering an email).
+  - **Is recurring issue?**: N
 
 **Known issue recurrence from previous fork**
-- **Metro Bundler Cache**: This issue recurred multiple times. UI changes, especially style updates and the creation of new files (), often did not appear on the user's device without a manual frontend service restart (frontend: ERROR (no such process)
-frontend: ERROR (no such process)) and a full cache-clearing reload of the Expo Go app. This remains a development workflow bottleneck.
+- **Metro Bundler Cache**: This issue persisted throughout the session. UI changes frequently required a manual frontend service restart (expo: ERROR (not running)
+expo: started) and a full cache-clearing reload of the Expo Go app. This remains a development workflow bottleneck.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend**: React Native (Expo), Expo Router, Zustand, Component-level styling.
-- **Backend**: FastAPI, Pydantic models.
-- **Development Workflow**: Heavy reliance on manual cache clearing for the Expo Metro bundler.
-- **State Management**: Cross-interface data synchronization between mobile client and web admin panels.
+- **Backend**: FastAPI, MongoDB,  for cron jobs, N+1 query optimization using the  operator.
+- **Frontend**: React Native (Expo), Expo Router, Zustand for state management. Frequent layout challenges with  and  components in React Native Web.
+- **Email Integration**: Resend API for transactional emails.
+- **Deployment**: Fixed critical performance and configuration blockers identified by the health check agent.
 
 **key DB schema**
-- **users**:
-    - : (string, ) - Replaces .
-    - : (boolean, default: ) - Used to enable/disable agency admin accounts.
-    - All other identity fields (, etc.) are now functionally integrated.
+- **notifications**: (New Collection) 
+- **users**: Added  and  fields for the password reset flow.
+- **vehicles**: The  field (array of image URLs) is now fully integrated into the add/edit flow.
 
 **changes in tech stack**
-- None.
+- : Installed for backend cron jobs.
+- : Was installed and subsequently removed due to incompatibility with the current Expo Go SDK version.
 
 **All files of reference**
-- **Backend**: , , 
-- **Frontend (Profile & Modals)**: , , 
-- **Frontend (Admin Layouts)**: All  files under , , and .
-- **Frontend (State & Utils)**: , , 
+- : **(Primary file for the current blocker)**. Contains all vehicle list, add, and edit logic.
+- : Contains the Forgot Password logic.
+- : Contains the core notification creation logic.
+- , : Examples of N+1 query fixes.
 
 **Areas that need refactoring**:
-- None. The app is in a stable, refactored state.
+- The  file is now over 800 lines long and handles multiple responsibilities (list, filter, add modal, edit modal, photo preview). It should be broken down into smaller, reusable components (e.g., , , ).
 
 **key api endpoints**
-- **** (NEW): Toggles the  status of an agency admin user.
-- ****: Updated to reject login attempts from users where  is .
+- **** (NEW): Initiates the password reset process.
+- **** (NEW): Completes the password reset.
+- **** (NEW): Uploads photos for a vehicle.
+- **** (NEW): Creates a new vehicle (backend is ready, frontend is blocked).
+- **** (NEW): Fetches notifications for the logged-in user.
 
 **Critical Info for New Agent**
-- **Metro Cache is Unreliable**: This is the most critical issue. If UI changes do not appear, your first step must be to restart the frontend service (frontend: ERROR (no such process)
-frontend: ERROR (no such process)) and instruct the user to perform a hard reload (fully close and reopen the Expo Go app). This is a recurring problem.
-- **User Account Confusion**: Be aware that the user may compare their own admin account on the mobile app with a different test client account on the web admin, leading to perceived sync issues. Always verify the email addresses being compared.
-- **Forced Light Theme**: The application is now hardcoded to light mode. Do not implement any theme-switching logic. All new components must be styled for a light background.
+- **Fix Add Vehicle Modal First**: Your immediate priority is to fix the broken Add Vehicle modal UI in . The form content is not rendering. Use the working Edit Vehicle modal in the same file as a direct template for the fix.
+- **Expect Metro Cache Issues**: Be prepared for UI changes not appearing immediately. The standard fix is to restart the frontend service (expo: stopped
+expo: started) and instruct the user to fully close and reopen the Expo Go application.
+- **Remind User about Resend**: The Forgot Password feature will not send emails to  users until the user verifies their domain on the Resend website. You should remind them of this requirement.
+- **Push Notifications are Disabled**: Do not attempt to use . It was removed due to being incompatible with the project's Expo SDK version. Any new implementation of push notifications requires a different approach.
 
 **documents and test reports created in this job**
 - 
 -  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: User asked how to deploy the application. (Agent provided instructions).
-2.  ****: User reported the Super Admin link was still visible. (Agent restarted Metro).
-3.  ****: User requested to remove the Super Admin link from the agency profile. (Completed).
-4.  ****: User reported dark mode issue on super admin page and requested the activate/deactivate feature. (Completed).
-5.  ****: User requested to disable dark mode everywhere. (Completed).
-6.  ****: User reported the admin grid was still 2 columns. (Agent restarted Metro).
-7.  ****: User requested a 3-column layout for admin pages. (Completed).
-8.  ****: User reported that text and cards on admin pages were too small. (Completed).
-9.  ****: User acknowledged a fix was working.
-10. ****: User reported that the document upload buttons were still invisible. (Fixed).
+1.  ****: User requested an add vehicle button. (Implemented, but the modal is broken).
+2.  ****: User requested a full-screen photo preview when clicking on a thumbnail. (Implemented).
+3.  ****: User requested an Edit button on vehicle cards to manage photos. (Implemented).
+4.  ****: User reported a photo was not showing for a specific vehicle. (Fixed; it was a data issue with a duplicate vehicle).
+5.  ****: User reported not receiving the password reset email. (Diagnosed; the sending domain is not verified on Resend).
+6.  ****: User asked for a specific client's password. (Agent explained it's hashed and reset it manually).
+7.  ****: User reported missing vehicle images and a broken forgot password link. (Both issues were investigated and addressed).
+8.  ****: User confirmed the Link Domain option is missing in their deployed app view.
+9.  ****: User could not find the custom domain button.
+10. ****: User asked how to use their custom domain () with the deployed app.
 
 **Project Health Check:**
-- **Broken**: No. The application is stable and all user-reported issues from this session have been resolved.
+- **Broken**: Yes. The Add Vehicle feature, a core piece of functionality, is incomplete due to a UI bug.
 - **Mocked**: None.
 
 **3rd Party Integrations**
 - **Stripe** (Payments) — requires User API Key.
-- **Resend** (Email Notifications) — requires User API Key.
+- **Resend** (Email Notifications) — requires User API Key and domain verification.
 - **Navixy** (GPS Tracking) - Configured per-agency.
 - **OpenAI (via )** — uses Emergent LLM Key.
 - **MinIO Object Storage (via )** — used for document uploads.
@@ -138,10 +164,10 @@ frontend: ERROR (no such process)) and instruct the user to perform a hard reloa
 - **reportlab** (Python library for PDF Generation).
 
 **Testing status**
-- **Testing agent used after significant changes**: YES,  was generated after the profile refactor.
+- **Testing agent used after significant changes**: YES
 - **Troubleshoot agent used after agent stuck in loop**: NO
-- **Test files created**:  was created.
-- **Known regressions**: None.
+- **Test files created**: None
+- **Known regressions**: None
 
 **Credentials to test flow:**
 - **Super Admin**:  / 
@@ -149,4 +175,4 @@ frontend: ERROR (no such process)) and instruct the user to perform a hard reloa
 - **Client**:  / 
 
 **What agent forgot to execute**
-- Nothing. The agent successfully addressed a wide range of user requests and bug reports during the session.</analysis>
+- The agent did not successfully fix the Add Vehicle modal. After several complex failed attempts, a simpler approach of mirroring the working Edit Vehicle modal's structure should have been prioritized.</analysis>

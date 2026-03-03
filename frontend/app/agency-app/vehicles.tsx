@@ -63,6 +63,13 @@ export default function AgencyVehicles() {
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newVehicle, setNewVehicle] = useState({
+    brand: '', model: '', year: new Date().getFullYear(), type: 'sedan',
+    price_per_day: 0, seats: 5, transmission: 'automatic', fuel_type: 'essence',
+    plate_number: '', color: '', location: '', description: ''
+  });
+  const [addLoading, setAddLoading] = useState(false);
 
   const fetchVehicles = useCallback(async () => {
     try {
@@ -120,6 +127,41 @@ export default function AgencyVehicles() {
       const msg = e.response?.data?.detail || 'Erreur lors de la sauvegarde';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
     } finally { setSaving(false); }
+  };
+
+  const handleAddVehicle = async () => {
+    if (!newVehicle.brand || !newVehicle.model || !newVehicle.price_per_day) {
+      const msg = 'Veuillez remplir la marque, le modèle et le prix';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+      return;
+    }
+    setAddLoading(true);
+    try {
+      await api.post('/api/admin/vehicles', {
+        brand: newVehicle.brand,
+        model: newVehicle.model,
+        year: newVehicle.year,
+        type: newVehicle.type,
+        price_per_day: newVehicle.price_per_day,
+        seats: newVehicle.seats,
+        transmission: newVehicle.transmission,
+        fuel_type: newVehicle.fuel_type,
+        plate_number: newVehicle.plate_number || null,
+        color: newVehicle.color || null,
+        location: newVehicle.location || 'Geneva',
+        description: newVehicle.description || '',
+      });
+      setShowAddModal(false);
+      setNewVehicle({
+        brand: '', model: '', year: new Date().getFullYear(), type: 'sedan',
+        price_per_day: 0, seats: 5, transmission: 'automatic', fuel_type: 'essence',
+        plate_number: '', color: '', location: '', description: ''
+      });
+      await fetchVehicles();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur lors de la création';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    } finally { setAddLoading(false); }
   };
 
   const handleDocumentUpload = async () => {
@@ -304,7 +346,15 @@ export default function AgencyVehicles() {
         ))}
       </ScrollView>
 
-      {/* Vehicle Grid - 4 columns */}
+      {/* Add Vehicle Button + Grid */}
+      <View style={{ paddingHorizontal: 16, paddingBottom: 8 }}>
+        <TouchableOpacity onPress={() => setShowAddModal(true)} style={[st.addVehicleBtn, { backgroundColor: C.accent }]} data-testid="add-vehicle-btn">
+          <Ionicons name="add-circle" size={20} color="#fff" />
+          <Text style={st.addVehicleBtnText}>Ajouter un véhicule</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Vehicle Grid - 3 columns */}
       <FlatList data={filtered} keyExtractor={(item) => item.id} numColumns={3}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: PADDING, paddingTop: 8, paddingBottom: 32 }}
@@ -657,6 +707,105 @@ export default function AgencyVehicles() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* Add Vehicle Modal */}
+      <Modal visible={showAddModal} transparent animationType="slide" onRequestClose={() => setShowAddModal(false)}>
+        <View style={st.modalOverlay}>
+          <View style={[st.modalBox, { backgroundColor: C.card, maxHeight: '90%' }]}>
+            <View style={st.modalHeader}>
+              <Text style={[st.modalTitle, { color: C.text }]}>Nouveau véhicule</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} data-testid="close-add-modal">
+                <Ionicons name="close" size={24} color={C.textLight} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={true} contentContainerStyle={{ paddingBottom: 20 }}>
+              <View style={{ gap: 10 }}>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Marque *</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={newVehicle.brand} onChangeText={v => setNewVehicle(p => ({ ...p, brand: v }))} placeholder="Ex: BMW" placeholderTextColor={C.textLight} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Modèle *</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={newVehicle.model} onChangeText={v => setNewVehicle(p => ({ ...p, model: v }))} placeholder="Ex: Series 3" placeholderTextColor={C.textLight} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Année</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={String(newVehicle.year)} onChangeText={v => setNewVehicle(p => ({ ...p, year: parseInt(v) || 2024 }))} keyboardType="numeric" />
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Prix/jour (CHF) *</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={String(newVehicle.price_per_day || '')} onChangeText={v => setNewVehicle(p => ({ ...p, price_per_day: parseFloat(v) || 0 }))} keyboardType="numeric" placeholder="120" placeholderTextColor={C.textLight} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Places</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={String(newVehicle.seats)} onChangeText={v => setNewVehicle(p => ({ ...p, seats: parseInt(v) || 5 }))} keyboardType="numeric" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Plaque</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={newVehicle.plate_number} onChangeText={v => setNewVehicle(p => ({ ...p, plate_number: v }))} placeholder="GE 123456" placeholderTextColor={C.textLight} />
+                  </View>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Couleur</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={newVehicle.color} onChangeText={v => setNewVehicle(p => ({ ...p, color: v }))} placeholder="Noir" placeholderTextColor={C.textLight} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[st.fieldLabel, { color: C.text }]}>Localisation</Text>
+                    <TextInput style={[st.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={newVehicle.location} onChangeText={v => setNewVehicle(p => ({ ...p, location: v }))} placeholder="Genève" placeholderTextColor={C.textLight} />
+                  </View>
+                </View>
+                <View>
+                  <Text style={[st.fieldLabel, { color: C.text }]}>Type</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                    {['sedan', 'suv', 'utilitaire', 'citadine', 'berline', 'break'].map(t => (
+                      <TouchableOpacity key={t} onPress={() => setNewVehicle(p => ({ ...p, type: t }))} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: newVehicle.type === t ? C.accent : C.border }}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: newVehicle.type === t ? '#fff' : C.text }}>{t}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                <View>
+                  <Text style={[st.fieldLabel, { color: C.text }]}>Transmission</Text>
+                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                    {['automatic', 'manual'].map(t => (
+                      <TouchableOpacity key={t} onPress={() => setNewVehicle(p => ({ ...p, transmission: t }))} style={{ flex: 1, paddingVertical: 8, borderRadius: 8, backgroundColor: newVehicle.transmission === t ? C.accent : C.border, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: newVehicle.transmission === t ? '#fff' : C.text }}>{t === 'automatic' ? 'Automatique' : 'Manuelle'}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+                <View>
+                  <Text style={[st.fieldLabel, { color: C.text }]}>Carburant</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                    {['essence', 'diesel', 'electric', 'hybrid'].map(t => (
+                      <TouchableOpacity key={t} onPress={() => setNewVehicle(p => ({ ...p, fuel_type: t }))} style={{ paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, backgroundColor: newVehicle.fuel_type === t ? C.accent : C.border }}>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: newVehicle.fuel_type === t ? '#fff' : C.text }}>{t}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </ScrollView>
+            <View style={{ flexDirection: 'row', gap: 10, paddingTop: 12 }}>
+              <TouchableOpacity onPress={() => setShowAddModal(false)} style={[st.actionBtn, { borderWidth: 1, borderColor: C.border }]}>
+                <Text style={{ color: C.text, fontSize: 14, fontWeight: '600' }}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddVehicle} disabled={addLoading} style={[st.actionBtn, { backgroundColor: '#10B981', opacity: addLoading ? 0.6 : 1 }]} data-testid="save-add-vehicle-btn">
+                {addLoading ? <ActivityIndicator size="small" color="#fff" /> : (
+                  <>
+                    <Ionicons name="add-circle" size={18} color="#fff" />
+                    <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Créer le véhicule</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -687,7 +836,7 @@ const st = StyleSheet.create({
   photoThumbImg: { width: '100%', height: '100%' },
   photoDeleteBtn: { position: 'absolute', top: -4, right: -4, backgroundColor: '#fff', borderRadius: 11 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
-  modalBox: { width: '100%', maxWidth: 560, borderRadius: 16, padding: 20, maxHeight: '85%', flex: 0 },
+  modalBox: { width: '100%', maxWidth: 560, borderRadius: 16, padding: 20 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   modalTitle: { fontSize: 18, fontWeight: '800' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 16, marginTop: 16, marginBottom: 10, borderTopWidth: 1 },
@@ -710,4 +859,7 @@ const st = StyleSheet.create({
   previewOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.9)', justifyContent: 'center', alignItems: 'center' },
   previewImage: { width: SCREEN_W * 0.9, height: SCREEN_W * 0.65, borderRadius: 12 },
   previewCloseBtn: { position: 'absolute', top: 40, right: 20, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  addVehicleBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 10 },
+  addVehicleBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  addFormGrid: { gap: 12 },
 });

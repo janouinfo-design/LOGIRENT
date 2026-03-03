@@ -8,7 +8,7 @@ import os
 import random
 import string
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://booking-hub-dev-4.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://vehicle-fleet-dev.preview.emergentagent.com').rstrip('/')
 
 # Known test data
 LOGIRENT_GENEVA_ID = "63683791-8741-445a-be42-9e74861bee89"
