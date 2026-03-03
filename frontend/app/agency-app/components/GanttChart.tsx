@@ -150,7 +150,7 @@ export const GanttChart = ({
 
         {/* Planning cards below the Gantt */}
         <View style={{ padding: 16, paddingTop: 12 }}>
-          <Text style={{ color: C.text, fontSize: 14, fontWeight: '800', marginBottom: 10 }}>
+          <Text style={{ color: C.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
             Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0)})
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -159,28 +159,28 @@ export const GanttChart = ({
               const isHighlighted = highlightId === r.id;
               return (
                 <Animated.View key={r.id} style={{
-                  width: '23.5%', backgroundColor: C.card, borderRadius: 10,
+                  width: '48.5%', backgroundColor: C.card, borderRadius: 10,
                   borderWidth: isHighlighted ? 2 : 1, borderColor: isHighlighted ? '#fff' : C.border,
-                  borderLeftWidth: 3, borderLeftColor: color, padding: 8,
+                  borderLeftWidth: 4, borderLeftColor: color, padding: 12,
                   ...(isHighlighted ? { opacity: highlightAnim } : {}),
                 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
-                    <Text style={{ color: C.text, fontSize: 11, fontWeight: '800', flex: 1 }} numberOfLines={1}>{v.brand} {v.model}</Text>
-                    <View style={{ paddingHorizontal: 6, paddingVertical: 2, borderRadius: 5, backgroundColor: color + '25' }}>
-                      <Text style={{ color, fontSize: 11, fontWeight: '800' }}>{statusLabel(r.status)}</Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={{ color: C.text, fontSize: 16, fontWeight: '800', flex: 1 }} numberOfLines={1}>{v.brand} {v.model}</Text>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: color + '25' }}>
+                      <Text style={{ color, fontSize: 14, fontWeight: '800' }}>{statusLabel(r.status)}</Text>
                     </View>
                   </View>
-                  <Text style={{ color: C.textLight, fontSize: 10 }}>{r.start?.slice(5, 10)} -> {r.end?.slice(5, 10)}</Text>
-                  {r.user_name ? <Text style={{ color: C.textLight, fontSize: 10 }} numberOfLines={1}>{r.user_name}</Text> : null}
-                  <View style={{ flexDirection: 'row', gap: 3, marginTop: 5, flexWrap: 'wrap' }}>
+                  <Text style={{ color: C.textLight, fontSize: 14 }}>{r.start?.slice(5, 10)} -> {r.end?.slice(5, 10)}</Text>
+                  {r.user_name ? <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2 }} numberOfLines={1}>{r.user_name}</Text> : null}
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                     {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
                       <TouchableOpacity key={s} onPress={() => updateStatus(r.id, s)}
                         style={{
-                          paddingHorizontal: 4, paddingVertical: 2, borderRadius: 3,
+                          paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5,
                           backgroundColor: r.status === s ? (RES_COLORS[s] || C.textLight) + '30' : 'transparent',
                           borderWidth: 1, borderColor: r.status === s ? (RES_COLORS[s] || C.textLight) : C.border,
                         }}>
-                        <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 9, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+                        <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 13, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>

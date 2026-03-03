@@ -139,7 +139,7 @@ export default function AdminVehicles() {
 
   const renderItem = ({ item }: { item: Vehicle }) => {
     const sc = getVehicleStatusColor(item.status, C);
-    const cardW = (SCREEN_W - 32 - 30) / 4;
+    const cardW = (SCREEN_W - 32 - 16) / 2;
     return (
       <View style={[st.card, { backgroundColor: C.card, width: cardW }]} data-testid={`vehicle-card-${item.id}`}>
         {/* Photo */}
@@ -151,14 +151,14 @@ export default function AdminVehicles() {
           )}
           <TouchableOpacity style={[st.statusBadge, { backgroundColor: sc + '20', position: 'absolute', bottom: 4, left: 4 }]} onPress={() => handleStatusChange(item)}>
             <View style={[st.dot, { backgroundColor: sc }]} />
-          <Text style={{ fontSize: 11, fontWeight: '700', color: sc }}>{getVehicleStatusLabel(item.status)}</Text>
+          <Text style={{ fontSize: 14, fontWeight: '700', color: sc }}>{getVehicleStatusLabel(item.status)}</Text>
           </TouchableOpacity>
         </View>
         {/* Info */}
-        <View style={{ padding: 8 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: C.text }} numberOfLines={1}>{item.brand} {item.model}</Text>
-          <Text style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{item.year} | {item.type} | {item.seats}pl</Text>
-          <Text style={{ fontSize: 14, fontWeight: '800', color: C.accent, marginTop: 4 }}>CHF {item.price_per_day}/j</Text>
+        <View style={{ padding: 10 }}>
+          <Text style={{ fontSize: 17, fontWeight: '800', color: C.text }} numberOfLines={1}>{item.brand} {item.model}</Text>
+          <Text style={{ fontSize: 14, color: C.textLight, marginTop: 2 }}>{item.year} | {item.type} | {item.seats}pl</Text>
+          <Text style={{ fontSize: 17, fontWeight: '800', color: C.accent, marginTop: 4 }}>CHF {item.price_per_day}/j</Text>
         </View>
         {/* Actions */}
         <View style={{ flexDirection: 'row', gap: 4, paddingHorizontal: 6, paddingBottom: 8 }}>
@@ -195,7 +195,7 @@ export default function AdminVehicles() {
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
       <FlatList data={vehicles} renderItem={renderItem} keyExtractor={i => i.id}
-        numColumns={4}
+        numColumns={2}
         contentContainerStyle={{ padding: 16 }}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchVehicles(); setRefreshing(false); }} />}

@@ -217,7 +217,7 @@ export default function AgencyReservations() {
           </View>
 
           <FlatList data={filtered} keyExtractor={(item) => item.id}
-            numColumns={4}
+            numColumns={2}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
             contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
             columnWrapperStyle={{ gap: 10, marginBottom: 10 }}

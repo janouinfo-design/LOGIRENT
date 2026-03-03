@@ -114,7 +114,7 @@ export default function AdminUsers() {
 
   const renderItem = ({ item }: { item: User }) => {
     const ri = getRating(item.client_rating);
-    const cardW = (SCREEN_W - 32 - 30) / 4;
+    const cardW = (SCREEN_W - 32 - 16) / 2;
     return (
       <TouchableOpacity style={[st.card, { backgroundColor: C.card, width: cardW }]} onPress={() => openModal(item)} data-testid={`user-card-${item.id}`}>
         {/* Avatar */}
@@ -126,9 +126,9 @@ export default function AdminUsers() {
         </View>
         {/* Info */}
         <View style={{ paddingHorizontal: 8, paddingBottom: 10 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: C.text, textAlign: 'center' }} numberOfLines={1}>{item.name}</Text>
-          <Text style={{ fontSize: 11, color: C.textLight, textAlign: 'center', marginTop: 2 }} numberOfLines={1}>{item.email}</Text>
-          {item.phone && <Text style={{ fontSize: 11, color: C.textLight, textAlign: 'center' }} numberOfLines={1}>{item.phone}</Text>}
+          <Text style={{ fontSize: 16, fontWeight: '800', color: C.text, textAlign: 'center' }} numberOfLines={1}>{item.name}</Text>
+          <Text style={{ fontSize: 14, color: C.textLight, textAlign: 'center', marginTop: 2 }} numberOfLines={1}>{item.email}</Text>
+          {item.phone && <Text style={{ fontSize: 14, color: C.textLight, textAlign: 'center' }} numberOfLines={1}>{item.phone}</Text>}
           <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
               <Ionicons name="calendar" size={11} color={C.textLight} />
@@ -155,7 +155,7 @@ export default function AdminUsers() {
         {Platform.OS === 'web' && <input ref={(el: any) => { importRef.current = el; }} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' } as any} onChange={handleImport} />}
       </View>
       <FlatList data={users} renderItem={renderItem} keyExtractor={i => i.id} contentContainerStyle={{ padding: 16 }}
-        numColumns={4}
+        numColumns={2}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchUsers(); setRefreshing(false); }} />}
         ListEmptyComponent={!loading ? <View style={{ alignItems: 'center', paddingTop: 60 }}><Ionicons name="people-outline" size={48} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 12 }}>Aucun utilisateur</Text></View> : null}

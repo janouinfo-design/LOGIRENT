@@ -30,48 +30,48 @@ interface ReservationCardProps {
 
 export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPress }: ReservationCardProps) => {
   const sc = statusColor(item.status);
-  const cardW = (Dimensions.get('window').width - 32 - 30) / 4;
+  const cardW = (Dimensions.get('window').width - 32 - 16) / 2;
 
   return (
-    <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, width: cardW, borderLeftWidth: 3, borderLeftColor: sc }]} data-testid={`res-${item.id}`}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-        <Text style={{ color: C.text, fontSize: 12, fontWeight: '800', flex: 1 }} numberOfLines={1}>{item.user_name}</Text>
+    <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, width: cardW, borderLeftWidth: 4, borderLeftColor: sc }]} data-testid={`res-${item.id}`}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <Text style={{ color: C.text, fontSize: 18, fontWeight: '800', flex: 1 }} numberOfLines={1}>{item.user_name}</Text>
         <View style={[st.badge, { backgroundColor: sc + '25' }]}>
-          <Text style={{ color: sc, fontSize: 13, fontWeight: '800' }}>{statusLabel(item.status)}</Text>
+          <Text style={{ color: sc, fontSize: 16, fontWeight: '800' }}>{statusLabel(item.status)}</Text>
         </View>
       </View>
-      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 4 }} numberOfLines={1}>{item.vehicle_name}</Text>
-      <Text style={{ color: C.textLight, fontSize: 10 }}>
+      <Text style={{ color: C.textLight, fontSize: 15, marginBottom: 4, fontWeight: '600' }} numberOfLines={1}>{item.vehicle_name}</Text>
+      <Text style={{ color: C.textLight, fontSize: 14 }}>
         {item.start_date ? format(new Date(item.start_date), 'dd MMM', { locale: fr }) : ''} - {item.end_date ? format(new Date(item.end_date), 'dd MMM', { locale: fr }) : ''}
       </Text>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-        <Text style={{ color: C.accent, fontSize: 12, fontWeight: '800' }}>CHF {item.total_price?.toFixed(0)}</Text>
-        <View style={{ paddingHorizontal: 5, paddingVertical: 2, borderRadius: 4, backgroundColor: item.payment_status === 'paid' ? '#10B98118' : '#F59E0B18' }}>
-          <Text style={{ color: item.payment_status === 'paid' ? '#10B981' : '#F59E0B', fontSize: 8, fontWeight: '700' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+        <Text style={{ color: C.accent, fontSize: 17, fontWeight: '800' }}>CHF {item.total_price?.toFixed(0)}</Text>
+        <View style={{ paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, backgroundColor: item.payment_status === 'paid' ? '#10B98118' : '#F59E0B18' }}>
+          <Text style={{ color: item.payment_status === 'paid' ? '#10B981' : '#F59E0B', fontSize: 13, fontWeight: '700' }}>
             {item.payment_status === 'paid' ? 'Paye' : 'Non paye'}
           </Text>
         </View>
       </View>
       {/* Inline status change */}
-      <View style={{ flexDirection: 'row', gap: 3, marginTop: 6, flexWrap: 'wrap' }}>
+      <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
         {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
           <TouchableOpacity key={s} onPress={() => updateStatus(item.id, s)}
             style={{
-              paddingHorizontal: 5, paddingVertical: 3, borderRadius: 4,
+              paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6,
               backgroundColor: item.status === s ? statusColor(s) + '30' : 'transparent',
               borderWidth: 1, borderColor: item.status === s ? statusColor(s) : C.border,
             }}
             data-testid={`status-${item.id}-${s}`}>
-            <Text style={{ color: item.status === s ? statusColor(s) : C.textLight, fontSize: 10, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+            <Text style={{ color: item.status === s ? statusColor(s) : C.textLight, fontSize: 14, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
           </TouchableOpacity>
         ))}
       </View>
       <TouchableOpacity
-        style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6, paddingTop: 6, borderTopWidth: 1, borderTopColor: C.border }}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border }}
         onPress={() => onActionPress(item)}
         data-testid={`actions-${item.id}`}>
-        <Ionicons name="ellipsis-horizontal" size={14} color={C.accent} />
-        <Text style={{ color: C.accent, fontSize: 10, fontWeight: '600' }}>Actions</Text>
+        <Ionicons name="ellipsis-horizontal" size={18} color={C.accent} />
+        <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Actions</Text>
       </TouchableOpacity>
     </View>
   );
