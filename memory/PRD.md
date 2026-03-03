@@ -44,6 +44,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-02] Fix: Mouse signature canvas rewritten with native DOM event listeners (bypasses React Native Web interception). Clear/Confirm buttons work. 9 pytest tests passed (iteration 35).
 - [2026-03-02] Reservations in 4-column vignettes: Both list view and planning-below cards now 4-column grids. Inline status change buttons (Conf/Activ/Termi/Annul) on every card for quick status updates.
 - [2026-03-03] GPS Tracking 4-column grid: Vehicle list on tracking page converted to 4-column card grid (23.5% width). Status text size increased on reservations: planning badges 11px, list badges 13px, inline buttons 9-10px. 8/8 frontend tests passed (iteration 36).
+- [2026-03-03] Global text size increase: Increased font sizes across ALL 6 card grid pages - Agency Clients (name 14, email 13, phone 12, badge 12), Agency Vehicles (name 14, status 11, plate 11, year 12), Agency Tracking (name 13, status 12, speed/moteur 11), Super Admin Agencies (name 15, email/address 12, stat labels 11, buttons 12), Super Admin Vehicles (name 13, type 11, status 11, price 14), Super Admin Users (name 13, email/phone 11, rating 11). 6/6 tests passed (iteration 37).
 
 ## Key API Endpoints (New)
 - `POST /api/admin/vehicles/{id}/documents?doc_type=carte_grise` - Upload vehicle document
