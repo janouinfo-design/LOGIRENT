@@ -134,6 +134,75 @@ function TopNavBar() {
   );
 }
 
+function BottomTabBar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const tabs = [
+    { name: 'index', route: '/(tabs)', icon: 'home', iconOutline: 'home-outline', label: 'Accueil' },
+    { name: 'vehicles', route: '/(tabs)/vehicles', icon: 'car', iconOutline: 'car-outline', label: 'Véhicules' },
+    { name: 'reservations', route: '/(tabs)/reservations', icon: 'calendar', iconOutline: 'calendar-outline', label: 'Locations' },
+    { name: 'profile', route: '/(tabs)/profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
+  ];
+
+  const isActive = (route: string) => {
+    if (route === '/(tabs)') return pathname === '/' || pathname === '' || pathname === '/index';
+    return pathname.includes(route.replace('/(tabs)', ''));
+  };
+
+  return (
+    <View style={bottomStyles.bar}>
+      {tabs.map((tab) => {
+        const active = isActive(tab.route);
+        return (
+          <TouchableOpacity
+            key={tab.name}
+            style={[bottomStyles.tab, active && bottomStyles.tabActive]}
+            onPress={() => router.push(tab.route as any)}
+            data-testid={`bottom-tab-${tab.name}`}
+          >
+            <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={22} color={active ? '#7C3AED' : '#6B7280'} />
+            <Text style={[bottomStyles.label, active && bottomStyles.labelActive]}>{tab.label}</Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
+
+const bottomStyles = StyleSheet.create({
+  bar: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 2,
+    borderTopColor: '#7C3AED',
+    paddingTop: 10,
+    paddingBottom: 16,
+    height: 60,
+    flexShrink: 0,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  tabActive: {
+    backgroundColor: '#7C3AED14',
+    borderRadius: 12,
+    marginHorizontal: 4,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  labelActive: {
+    color: '#7C3AED',
+    fontWeight: '700',
+  },
+});
+
 function AppContent() {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuthStore();
@@ -143,26 +212,31 @@ function AppContent() {
   const isLanding = pathname === '/' && !isAuthenticated;
   const isAuth = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.includes('admin-login');
   const showNav = !isLanding && !isAuth && !isAdminUser && isAuthenticated;
+  const isClientTab = showNav && (pathname === '/' || pathname === '' || pathname === '/index' || pathname.includes('/vehicles') || pathname.includes('/reservations') || pathname.includes('/profile'));
+  const showBottomTab = showNav && !isAdminUser && (isClientTab || pathname.includes('(tabs)'));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: T.navBg }} edges={['top']}>
       <View style={{ flex: 1, backgroundColor: T.bg }}>
         {showNav && <TopNavBar />}
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: T.bg },
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="(auth)/login" />
-          <Stack.Screen name="(auth)/register" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="vehicle/[id]" />
-          <Stack.Screen name="booking/[id]" />
-          <Stack.Screen name="payment-success" />
-          <Stack.Screen name="payment-cancel" />
-        </Stack>
+        <View style={{ flex: 1 }}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: T.bg },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)/login" />
+            <Stack.Screen name="(auth)/register" />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="vehicle/[id]" />
+            <Stack.Screen name="booking/[id]" />
+            <Stack.Screen name="payment-success" />
+            <Stack.Screen name="payment-cancel" />
+          </Stack>
+          {/* Bottom tab bar removed - handled at screen level */}
+        </View>
       </View>
     </SafeAreaView>
   );
