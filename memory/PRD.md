@@ -45,12 +45,21 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-03] **Feature**: Dark mode completely disabled — forced light mode in themeStore, removed all toggle buttons from layouts.
 - [2026-03-03] **Feature**: Super Admin can now activate/deactivate agency admin accounts. Backend endpoint PUT /api/admin/agencies/{id}/toggle-active. Login blocked for deactivated accounts with "Votre compte a été désactivé" message. Visual indicator on deactivated cards.
 - [2026-03-03] **Bug fix**: Super Admin agencies page was hardcoded with dark theme colors — replaced with light colors.
+- [2026-03-03] **Feature**: Complete Push Notification System (P1):
+  - Backend: Notification triggers for ALL events (reservation creation, cancellation, payment success, status changes, reminders)
+  - Backend: Expo Push API integration for native push notifications + push token registration endpoint
+  - Backend: Hourly cron job for reservation reminders (day before)
+  - Backend: `create_notification` and `notify_admins_of_agency` utility functions
+  - Frontend: Dedicated notification center page at `/(tabs)/notifications` with pull-to-refresh, mark-all-read, delete, and empty state
+  - Frontend: Notification badge on NavBar (top + bottom) with real-time polling (15s interval)
+  - Frontend: Push token registration on app startup (native only)
+  - Recipients: Clients + Agency Admins
+  - Events: reservation_created, reservation_confirmed, reservation_cancelled, client_cancelled, payment_success, payment_received, reservation_reminder, reservation_active, reservation_completed, late_return, new_message
 
 ## 3rd Party Integrations
-- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (Revenue Forecast), Emergent Object Storage (Documents)
+- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (Revenue Forecast), Emergent Object Storage (Documents), Expo Push API (Notifications)
 
 ## Prioritized Backlog
-### P1: Push Notifications (Firebase)
 ### P2: Driver/Agent Application
 ### P3: App Store Deployment
 ### Optional: book.tsx cleanup, move /agency-app/components/ outside app/ dir
