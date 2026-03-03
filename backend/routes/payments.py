@@ -6,6 +6,7 @@ from database import db, STRIPE_API_KEY
 from models import CheckoutRequest, PaymentTransaction
 from deps import get_current_user
 from utils.email import send_reservation_confirmation
+from utils.notifications import create_notification, notify_admins_of_agency
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -92,6 +93,20 @@ async def get_payment_status(session_id: str, user: dict = Depends(get_current_u
                 vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
                 if reservation and vehicle:
                     await send_reservation_confirmation(user, vehicle, reservation)
+                    # Notify client: payment success
+                    vname = f"{vehicle['brand']} {vehicle['model']}"
+                    await create_notification(
+                        user['id'], 'payment_success',
+                        f"Votre paiement de CHF {reservation['total_price']:.2f} pour {vname} a été confirmé.",
+                        transaction['reservation_id']
+                    )
+                    # Notify agency admins: payment received
+                    if reservation.get('agency_id'):
+                        await notify_admins_of_agency(
+                            reservation['agency_id'], 'payment_received',
+                            f"Paiement de CHF {reservation['total_price']:.2f} reçu de {user['name']} pour {vname}.",
+                            transaction['reservation_id']
+                        )
             except Exception as email_error:
                 logger.error(f"Failed to send confirmation email: {email_error}")
 

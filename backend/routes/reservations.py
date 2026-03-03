@@ -7,6 +7,7 @@ from database import db
 from models import Reservation, ReservationCreate, ReservationUpdate, ReservationOption
 from deps import get_current_user
 from utils.email import send_cash_reservation_email
+from utils.notifications import create_notification, notify_admins_of_agency
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -75,6 +76,28 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
         except Exception as email_error:
             logger.error(f"Failed to send cash reservation email: {email_error}")
 
+    # Notify client: reservation created
+    vname = f"{vehicle['brand']} {vehicle['model']}"
+    try:
+        await create_notification(
+            user['id'], 'reservation_created',
+            f"Votre réservation pour {vname} du {reservation.start_date.strftime('%d/%m/%Y')} au {reservation.end_date.strftime('%d/%m/%Y')} a été créée.",
+            reservation.id
+        )
+    except Exception as e:
+        logger.error(f"Failed to create client notification: {e}")
+
+    # Notify agency admins: new reservation
+    if vehicle.get('agency_id'):
+        try:
+            await notify_admins_of_agency(
+                vehicle['agency_id'], 'new_reservation',
+                f"Nouvelle réservation de {user['name']} pour {vname} ({reservation.start_date.strftime('%d/%m/%Y')} - {reservation.end_date.strftime('%d/%m/%Y')}).",
+                reservation.id
+            )
+        except Exception as e:
+            logger.error(f"Failed to notify agency admins: {e}")
+
     return reservation
 
 
@@ -141,4 +164,28 @@ async def cancel_reservation(reservation_id: str, user: dict = Depends(get_curre
         {"id": reservation_id},
         {"$set": {"status": "cancelled", "updated_at": datetime.utcnow()}}
     )
+
+    # Notify agency admins about client cancellation
+    vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
+    vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Véhicule"
+    if reservation.get('agency_id'):
+        try:
+            await notify_admins_of_agency(
+                reservation['agency_id'], 'client_cancelled',
+                f"{user['name']} a annulé sa réservation pour {vname} ({reservation.get('start_date', datetime.utcnow()).strftime('%d/%m/%Y')}).",
+                reservation_id
+            )
+        except Exception as e:
+            logger.error(f"Failed to notify agency of cancellation: {e}")
+
+    # Notify client: cancellation confirmed
+    try:
+        await create_notification(
+            user['id'], 'reservation_cancelled',
+            f"Votre réservation pour {vname} a été annulée.",
+            reservation_id
+        )
+    except Exception as e:
+        logger.error(f"Failed to create cancellation notification: {e}")
+
     return {"message": "Reservation cancelled"}

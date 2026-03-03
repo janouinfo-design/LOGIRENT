@@ -18,6 +18,7 @@ from routes.admin import router as admin_router, overdue_cron_loop
 from routes.agencies import router as agencies_router
 from routes.navixy import router as navixy_router
 from routes.contracts import router as contracts_router
+from utils.notifications import create_notification
 
 # Create the main app
 app = FastAPI(title="LogiRent API", version="1.0.0")
@@ -155,10 +156,56 @@ app.add_middleware(
 )
 
 
+async def _check_reminders_task():
+    """Send reminder notifications for reservations starting tomorrow"""
+    from datetime import timedelta
+    now = datetime.utcnow()
+    tomorrow_start = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+    tomorrow_end = tomorrow_start + timedelta(days=1)
+
+    upcoming = await db.reservations.find({
+        "status": {"$in": ["confirmed", "pending_cash"]},
+        "start_date": {"$gte": tomorrow_start, "$lt": tomorrow_end}
+    }).to_list(100)
+
+    created = 0
+    for res in upcoming:
+        existing = await db.notifications.find_one({
+            "reservation_id": res['id'],
+            "type": "reservation_reminder"
+        })
+        if existing:
+            continue
+
+        vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
+        vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Véhicule"
+
+        await create_notification(
+            res['user_id'], 'reservation_reminder',
+            f"Rappel : Votre location de {vname} commence demain le {res['start_date'].strftime('%d/%m/%Y')}.",
+            res['id']
+        )
+        created += 1
+    return created
+
+
+async def reminder_cron_loop():
+    while True:
+        try:
+            created = await _check_reminders_task()
+            if created > 0:
+                logger.info(f"Reminder cron: sent {created} reminder notifications")
+        except Exception as e:
+            logger.error(f"Reminder cron error: {e}")
+        await asyncio.sleep(3600)
+
+
 @app.on_event("startup")
 async def startup_cron():
     asyncio.create_task(overdue_cron_loop())
+    asyncio.create_task(reminder_cron_loop())
     logger.info("Overdue cron job started (checks every hour)")
+    logger.info("Reminder cron job started (checks every hour)")
     try:
         from utils.storage import init_storage
         init_storage()

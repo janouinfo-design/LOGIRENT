@@ -11,7 +11,7 @@ import requests
 import os
 import uuid
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://fleet-admin-test.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://booking-hub-dev-4.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 AGENCY_ADMIN_EMAIL = "admin-geneva@logirent.ch"

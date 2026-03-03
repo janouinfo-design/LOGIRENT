@@ -1,8 +1,41 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
 from database import db
 from deps import get_current_user
 
 router = APIRouter()
+
+
+class PushTokenRegister(BaseModel):
+    token: str
+    device_type: Optional[str] = "unknown"
+
+
+@router.post("/notifications/register-token")
+async def register_push_token(data: PushTokenRegister, user: dict = Depends(get_current_user)):
+    existing = await db.push_tokens.find_one({"token": data.token})
+    if existing:
+        await db.push_tokens.update_one(
+            {"token": data.token},
+            {"$set": {"user_id": user['id'], "device_type": data.device_type, "updated_at": datetime.utcnow()}}
+        )
+    else:
+        await db.push_tokens.insert_one({
+            "user_id": user['id'],
+            "token": data.token,
+            "device_type": data.device_type,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+        })
+    return {"message": "Token enregistré"}
+
+
+@router.delete("/notifications/unregister-token")
+async def unregister_push_token(data: PushTokenRegister, user: dict = Depends(get_current_user)):
+    await db.push_tokens.delete_one({"token": data.token, "user_id": user['id']})
+    return {"message": "Token supprimé"}
 
 
 @router.get("/notifications")
@@ -35,3 +68,15 @@ async def mark_all_notifications_read(user: dict = Depends(get_current_user)):
         {"$set": {"read": True}}
     )
     return {"message": "Toutes les notifications marquées comme lues"}
+
+
+@router.delete("/notifications/{notification_id}")
+async def delete_notification(notification_id: str, user: dict = Depends(get_current_user)):
+    await db.notifications.delete_one({"id": notification_id, "user_id": user['id']})
+    return {"message": "Notification supprimée"}
+
+
+@router.delete("/notifications/clear-all")
+async def clear_all_notifications(user: dict = Depends(get_current_user)):
+    await db.notifications.delete_many({"user_id": user['id']})
+    return {"message": "Toutes les notifications supprimées"}

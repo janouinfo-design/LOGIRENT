@@ -667,6 +667,13 @@ async def update_payment_status(reservation_id: str, payment_status: str, user: 
             vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
             if res_user and vehicle:
                 await send_reservation_confirmation(res_user, vehicle, reservation)
+                # Notify client: payment confirmed by admin
+                vname = f"{vehicle['brand']} {vehicle['model']}"
+                await create_notification(
+                    res_user['id'], 'payment_success',
+                    f"Votre paiement de CHF {reservation['total_price']:.2f} pour {vname} a été confirmé.",
+                    reservation_id
+                )
         except Exception as email_error:
             logger.error(f"Failed to send confirmation email: {email_error}")
 

@@ -3,11 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
+import { useNotificationStore } from '../../src/store/notificationStore';
 
 const tabs = [
   { name: 'index', route: '/(tabs)', icon: 'home', iconOutline: 'home-outline', label: 'Accueil' },
-  { name: 'vehicles', route: '/(tabs)/vehicles', icon: 'car', iconOutline: 'car-outline', label: 'Véhicules' },
+  { name: 'vehicles', route: '/(tabs)/vehicles', icon: 'car', iconOutline: 'car-outline', label: 'Vehicules' },
   { name: 'reservations', route: '/(tabs)/reservations', icon: 'calendar', iconOutline: 'calendar-outline', label: 'Locations' },
+  { name: 'notifications', route: '/(tabs)/notifications', icon: 'notifications', iconOutline: 'notifications-outline', label: 'Notifs' },
   { name: 'profile', route: '/(tabs)/profile', icon: 'person', iconOutline: 'person-outline', label: 'Profil' },
 ];
 
@@ -15,6 +17,7 @@ export function ClientNavBar() {
   const router = useRouter();
   const pathname = usePathname();
   const { logout } = useAuthStore();
+  const { unreadCount } = useNotificationStore();
 
   const isActive = (route: string) => {
     if (route === '/(tabs)') return pathname === '/' || pathname === '' || pathname === '/index';
@@ -25,13 +28,22 @@ export function ClientNavBar() {
     <View style={s.bar}>
       {tabs.map((tab) => {
         const active = isActive(tab.route);
+        const isNotif = tab.name === 'notifications';
         return (
           <TouchableOpacity
             key={tab.name}
             style={[s.tab, active && s.tabActive]}
             onPress={() => router.push(tab.route as any)}
+            data-testid={`nav-tab-${tab.name}`}
           >
-            <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={26} color={active ? '#7C3AED' : '#6B7280'} />
+            <View style={{ position: 'relative' }}>
+              <Ionicons name={(active ? tab.icon : tab.iconOutline) as any} size={26} color={active ? '#7C3AED' : '#6B7280'} />
+              {isNotif && unreadCount > 0 && (
+                <View style={s.badge} data-testid="navbar-notif-badge">
+                  <Text style={s.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                </View>
+              )}
+            </View>
             <Text style={[s.label, active && s.labelActive]}>{tab.label}</Text>
           </TouchableOpacity>
         );
@@ -39,6 +51,7 @@ export function ClientNavBar() {
       <TouchableOpacity
         style={[s.tab, { backgroundColor: '#FEE2E2' }]}
         onPress={() => { logout(); router.replace('/login' as any); }}
+        data-testid="nav-tab-logout"
       >
         <Ionicons name="log-out-outline" size={26} color="#EF4444" />
         <Text style={[s.label, { color: '#EF4444' }]}>Quitter</Text>
@@ -72,7 +85,7 @@ const s = StyleSheet.create({
     backgroundColor: '#F3EEFF',
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
     color: '#6B7280',
     marginTop: 4,
@@ -80,5 +93,24 @@ const s = StyleSheet.create({
   labelActive: {
     color: '#7C3AED',
     fontWeight: '700',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -8,
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: '800',
   },
 });

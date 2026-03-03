@@ -16,7 +16,7 @@ import os
 import time
 import uuid
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://fleet-staging-2.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://booking-hub-dev-4.preview.emergentagent.com')
 
 # Test credentials from the problem statement
 SUPER_ADMIN = {"email": "test@example.com", "password": "password123"}
