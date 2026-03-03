@@ -1,27 +1,24 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeStore } from '../../src/store/themeStore';
-import { Platform } from 'react-native';
 
 export default function TabLayout() {
-  const { colors: C } = useThemeStore();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: C.card || '#FFFFFF',
-          borderTopColor: C.border || '#E5E7EB',
-          borderTopWidth: 1,
-          height: Platform.OS === 'android' ? 65 : 85,
-          paddingBottom: Platform.OS === 'android' ? 8 : 28,
-          paddingTop: 6,
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E5E7EB',
+          borderTopWidth: 2,
+          height: 70,
+          paddingBottom: 10,
+          paddingTop: 8,
+          elevation: 10,
         },
         tabBarActiveTintColor: '#7C3AED',
-        tabBarInactiveTintColor: C.textLight || '#9CA3AF',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarInactiveTintColor: '#6B7280',
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '700' },
       }}
     >
       <Tabs.Screen name="index" options={{
