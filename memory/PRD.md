@@ -40,6 +40,11 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-03] **Bug fix**: Logout inaccessible on mobile (added bottom tab bar + red logout icon in top navbar, hid FR/EN on mobile).
 - [2026-03-03] **Feature**: Complete client profile overhaul — replaced birth_year with date_of_birth (DD-MM-YYYY) across backend + frontend. Added all identity fields (birth_place, date_of_birth, nationality, license_number, license_issue_date, license_expiry_date) to client profile page (read + edit), admin EditClientModal, and NewClientModal. 100% test pass rate (backend 10/10, frontend verified).
 - [2026-03-03] **Bug fix**: Document upload buttons invisible on Android native — applied inline backgroundColor (#7C3AED for upload, #EDE9FE for modify) instead of StyleSheet-based conditional styles that weren't merging correctly on native.
+- [2026-03-03] **Feature**: Grid layout changed from 4 to 3 columns across all admin pages (reservations, vehicles, clients, users, GanttChart).
+- [2026-03-03] **Feature**: Font sizes increased ~50% across all admin card components for better readability.
+- [2026-03-03] **Feature**: Dark mode completely disabled — forced light mode in themeStore, removed all toggle buttons from layouts.
+- [2026-03-03] **Feature**: Super Admin can now activate/deactivate agency admin accounts. Backend endpoint PUT /api/admin/agencies/{id}/toggle-active. Login blocked for deactivated accounts with "Votre compte a été désactivé" message. Visual indicator on deactivated cards.
+- [2026-03-03] **Bug fix**: Super Admin agencies page was hardcoded with dark theme colors — replaced with light colors.
 
 ## 3rd Party Integrations
 - Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (Revenue Forecast), Emergent Object Storage (Documents)

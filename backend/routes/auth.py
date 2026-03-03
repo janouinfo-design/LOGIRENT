@@ -88,6 +88,9 @@ async def login(credentials: UserLogin):
     if not user or not verify_password(credentials.password, user['password_hash']):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
+    if user.get('is_active') is False:
+        raise HTTPException(status_code=403, detail="Votre compte a été désactivé. Contactez l'administrateur.")
+
     role = user.get('role', 'client')
     token = create_token(user['id'], user['email'], role)
     profile = await build_user_profile(user)

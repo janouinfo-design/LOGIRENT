@@ -842,3 +842,29 @@ async def overdue_cron_loop():
 async def check_overdue_and_notify(user: dict = Depends(get_admin_user)):
     created = await _check_overdue_task()
     return {"message": f"Checked overdue reservations. Created {created} new notifications."}
+
+
+
+@router.put("/admin/agencies/{agency_id}/toggle-active")
+async def toggle_agency_active(agency_id: str, user: dict = Depends(get_admin_user)):
+    if user.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="Super admin only")
+    
+    agency = await db.agencies.find_one({"id": agency_id})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agency not found")
+    
+    current_status = agency.get('is_active', True)
+    new_status = not current_status
+    
+    # Update agency status
+    await db.agencies.update_one({"id": agency_id}, {"$set": {"is_active": new_status}})
+    
+    # Also update all admin users of this agency
+    await db.users.update_many(
+        {"agency_id": agency_id, "role": "admin"},
+        {"$set": {"is_active": new_status}}
+    )
+    
+    status_text = "activé" if new_status else "désactivé"
+    return {"message": f"Agence {status_text}", "is_active": new_status}

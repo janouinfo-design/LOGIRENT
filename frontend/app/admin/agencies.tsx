@@ -11,12 +11,12 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const SCREEN_W = Dimensions.get('window').width;
 const COLORS = {
   primary: '#6C2BD9',
-  background: '#0F0B1A',
-  card: '#1A1425',
-  text: '#FFFFFF',
-  textLight: '#9CA3AF',
-  border: '#2D2640',
-  accent: '#A78BFA',
+  background: '#FAFAFA',
+  card: '#FFFFFF',
+  text: '#1A1A2E',
+  textLight: '#6B7280',
+  border: '#E5E7EB',
+  accent: '#7C3AED',
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
@@ -38,6 +38,7 @@ interface Agency {
   admin_email?: string;
   admin_name?: string;
   admin_password_display?: string;
+  is_active?: boolean;
 }
 
 export default function AgenciesPage() {
@@ -130,6 +131,20 @@ export default function AgenciesPage() {
     }
   };
 
+  const handleToggleActive = async (agency: Agency) => {
+    const action = agency.is_active !== false ? 'désactiver' : 'activer';
+    if (!confirm(`Voulez-vous ${action} l'agence ${agency.name} ?`)) return;
+    try {
+      const storeToken = useAuthStore.getState().token;
+      await axios.put(`${API_URL}/api/admin/agencies/${agency.id}/toggle-active`, {}, {
+        headers: { Authorization: `Bearer ${storeToken}` }
+      });
+      fetchAgencies();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Erreur');
+    }
+  };
+
   const openEdit = (agency: Agency) => {
     setEditAgency(agency);
     setForm({ name: agency.name, address: agency.address || '', phone: agency.phone || '', email: agency.email || '', admin_name: '', admin_email: '', admin_password: '', navixy_api_url: agency.navixy_api_url || '', navixy_hash: agency.navixy_hash || '' });
@@ -174,7 +189,13 @@ export default function AgenciesPage() {
             {agencies.map((agency) => {
               const cardW = (SCREEN_W - 40 - 30) / 4;
               return (
-                <View key={agency.id} style={[styles.agencyCard, { width: cardW }]} data-testid={`agency-card-${agency.id}`}>
+                <View key={agency.id} style={[styles.agencyCard, { width: cardW, opacity: agency.is_active === false ? 0.6 : 1 }]} data-testid={`agency-card-${agency.id}`}>
+                  {/* Status badge */}
+                  {agency.is_active === false && (
+                    <View style={{ backgroundColor: '#EF4444', paddingVertical: 4, alignItems: 'center' }}>
+                      <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>COMPTE DESACTIVE</Text>
+                    </View>
+                  )}
                   {/* Icon + Actions */}
                   <View style={{ alignItems: 'center', paddingTop: 14, paddingBottom: 8, position: 'relative' }}>
                     <View style={styles.cardIcon}>
@@ -244,6 +265,21 @@ export default function AgenciesPage() {
                     >
                       <Ionicons name="qr-code-outline" size={13} color="#FFF" />
                       <Text style={[styles.qrBtnText, { fontSize: 12 }]}>QR Codes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        backgroundColor: agency.is_active !== false ? '#EF444420' : '#10B98120',
+                        paddingVertical: 7, borderRadius: 6, borderWidth: 1,
+                        borderColor: agency.is_active !== false ? '#EF4444' : '#10B981',
+                      }}
+                      onPress={() => handleToggleActive(agency)}
+                      data-testid={`toggle-active-${agency.id}`}
+                    >
+                      <Ionicons name={agency.is_active !== false ? 'close-circle' : 'checkmark-circle'} size={14} color={agency.is_active !== false ? '#EF4444' : '#10B981'} />
+                      <Text style={{ color: agency.is_active !== false ? '#EF4444' : '#10B981', fontSize: 12, fontWeight: '700' }}>
+                        {agency.is_active !== false ? 'Désactiver' : 'Activer'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
