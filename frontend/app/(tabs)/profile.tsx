@@ -8,6 +8,7 @@ import { ClientNavBar } from '../../src/components/ClientNavBar';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
+import { formatDateInput } from '../../src/utils/dateMask';
 
 const _C = {
   purple: '#7C3AED',
@@ -245,7 +246,7 @@ export default function ProfileScreen() {
                   <Input label="Lieu de naissance" value={birthPlace} onChangeText={setBirthPlace} icon="location-outline" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Input label="Date de naissance (JJ-MM-AAAA)" value={dateOfBirth} onChangeText={setDateOfBirth} icon="calendar-outline" />
+                  <Input label="Date de naissance (JJ-MM-AAAA)" value={dateOfBirth} onChangeText={(v: string) => setDateOfBirth(formatDateInput(v))} icon="calendar-outline" />
                 </View>
               </View>
 
@@ -254,10 +255,10 @@ export default function ProfileScreen() {
 
               <View style={styles.fieldRow}>
                 <View style={{ flex: 1 }}>
-                  <Input label="Date d'émission permis" value={licenseIssueDate} onChangeText={setLicenseIssueDate} icon="calendar-outline" />
+                  <Input label="Date d'émission permis" value={licenseIssueDate} onChangeText={(v: string) => setLicenseIssueDate(formatDateInput(v))} icon="calendar-outline" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Input label="Date d'expiration permis" value={licenseExpiryDate} onChangeText={setLicenseExpiryDate} icon="calendar-outline" />
+                  <Input label="Date d'expiration permis" value={licenseExpiryDate} onChangeText={(v: string) => setLicenseExpiryDate(formatDateInput(v))} icon="calendar-outline" />
                 </View>
               </View>
             </View>

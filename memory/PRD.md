@@ -39,6 +39,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-03] **Bug fix**: Client app vehicles not showing (removed agency_id filter for client users).
 - [2026-03-03] **Bug fix**: Logout inaccessible on mobile (added bottom tab bar + red logout icon in top navbar, hid FR/EN on mobile).
 - [2026-03-03] **Feature**: Complete client profile overhaul — replaced birth_year with date_of_birth (DD-MM-YYYY) across backend + frontend. Added all identity fields (birth_place, date_of_birth, nationality, license_number, license_issue_date, license_expiry_date) to client profile page (read + edit), admin EditClientModal, and NewClientModal. 100% test pass rate (backend 10/10, frontend verified).
+- [2026-03-03] **Enhancement**: Added automatic date input mask (JJ-MM-AAAA) with `formatDateInput` utility. Auto-inserts dashes while typing and validates real dates. Applied to all date fields across client profile, admin edit/new client modals.
 
 ## 3rd Party Integrations
 - Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (Revenue Forecast), Emergent Object Storage (Documents)

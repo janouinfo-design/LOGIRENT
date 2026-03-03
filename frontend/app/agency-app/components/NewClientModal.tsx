@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, TextInput, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
+import { formatDateInput } from '../../../src/utils/dateMask';
 
 interface Props {
   visible: boolean;
@@ -84,7 +85,7 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[st.label, { color: C.textLight }]}>Date de naissance *</Text>
-                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={newBirthDate} onChangeText={setNewBirthDate} data-testid="new-birth-date" />
+                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={newBirthDate} onChangeText={(v) => setNewBirthDate(formatDateInput(v))} data-testid="new-birth-date" />
               </View>
             </View>
 
@@ -97,11 +98,11 @@ export const NewClientModal = ({ visible, onClose, C, onCreated }: Props) => {
             <View style={{ flexDirection: 'row', gap: 10 }}>
               <View style={{ flex: 1 }}>
                 <Text style={[st.label, { color: C.textLight }]}>Date d'emission *</Text>
-                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={newLicenseIssue} onChangeText={setNewLicenseIssue} data-testid="new-license-issue" />
+                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={newLicenseIssue} onChangeText={(v) => setNewLicenseIssue(formatDateInput(v))} data-testid="new-license-issue" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[st.label, { color: C.textLight }]}>Date d'expiration *</Text>
-                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} value={newLicenseExpiry} onChangeText={setNewLicenseExpiry} data-testid="new-license-expiry" />
+                <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={newLicenseExpiry} onChangeText={(v) => setNewLicenseExpiry(formatDateInput(v))} data-testid="new-license-expiry" />
               </View>
             </View>
 

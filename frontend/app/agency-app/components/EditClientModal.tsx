@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Image, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
+import { formatDateInput } from '../../../src/utils/dateMask';
 
 const RATINGS = [
   { value: 'vip', label: 'VIP', icon: 'star' as const, color: '#8B5CF6' },
@@ -161,7 +162,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.label, { color: C.textLight }]}>Date de naissance *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={setEditBirthDate} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-birth-date" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={(v) => setEditBirthDate(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-birth-date" />
                 </View>
               </View>
 
@@ -174,11 +175,11 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.label, { color: C.textLight }]}>Date d'emission *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={setEditLicenseIssue} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} data-testid="edit-license-issue" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={(v) => setEditLicenseIssue(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-license-issue" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.label, { color: C.textLight }]}>Date d'expiration *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={setEditLicenseExpiry} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} data-testid="edit-license-expiry" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={(v) => setEditLicenseExpiry(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-license-expiry" />
                 </View>
               </View>
 
