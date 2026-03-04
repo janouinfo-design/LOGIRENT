@@ -153,14 +153,14 @@ export default function TimesheetsScreen() {
                           onPress={() => handleApprove(entry.id)}
                           data-testid={`approve-${entry.id}`}
                         >
-                          <Text style={styles.actionBtnText}>\u2713</Text>
+                          <Text style={styles.actionBtnText}>{'✓'}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={styles.actionBtnReject}
                           onPress={() => handleReject(entry.id)}
                           data-testid={`reject-${entry.id}`}
                         >
-                          <Text style={styles.actionBtnText}>\u2717</Text>
+                          <Text style={styles.actionBtnText}>{'✗'}</Text>
                         </TouchableOpacity>
                       </>
                     )}

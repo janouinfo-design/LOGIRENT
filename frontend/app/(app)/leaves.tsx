@@ -94,7 +94,7 @@ export default function LeavesScreen() {
                   <View style={styles.cardInfo}>
                     {isManager && <Text style={styles.cardName}>{l.user_name}</Text>}
                     <View style={styles.typeBadge}><Text style={styles.typeText}>{typeLabel(l.type)}</Text></View>
-                    <Text style={styles.cardDates}>{l.start_date} \u2192 {l.end_date}</Text>
+                    <Text style={styles.cardDates}>{l.start_date} {'→'} {l.end_date}</Text>
                     {l.reason ? <Text style={styles.cardReason}>{l.reason}</Text> : null}
                   </View>
                   <View style={styles.cardActions}>
