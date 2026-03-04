@@ -17,6 +17,7 @@ export default function Root({ children }: PropsWithChildren) {
           If you want to enable scrolling, remove `ScrollViewStyleReset` and
           set `overflow: auto` on the body style below.
         */}
+        <title>TimeSheet - Gestion du temps</title>
         <ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{

@@ -1,25 +1,25 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
+import { router } from 'expo-router';
+import { colors } from '../src/theme/constants';
 
 export default function Index() {
-  const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!loading) {
       if (user) {
-        router.replace('/home');
+        router.replace('/(app)');
       } else {
         router.replace('/login');
       }
     }
-  }, [user, isLoading]);
+  }, [user, loading]);
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#22C55E" />
+      <ActivityIndicator size="large" color={colors.primary} />
     </View>
   );
 }
@@ -27,8 +27,8 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: colors.background,
   },
 });

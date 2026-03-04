@@ -1763,7 +1763,7 @@ async def generate_excel_report(
     
     wb = Workbook()
     ws = wb.active
-    ws.title = f"Rapport {target_month:02d}/{target_year}"
+    ws.title = f"Rapport {target_month:02d}-{target_year}"
     
     ws.append(['Rapport de temps', '', '', '', '', '', ''])
     ws.append([f"Employé: {target_user['first_name']} {target_user['last_name']}", '', '', '', '', '', ''])
