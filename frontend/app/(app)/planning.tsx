@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, ActivityIndicator, Pressable } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
@@ -35,6 +35,7 @@ export default function PlanningScreen() {
   const [filterDept, setFilterDept] = useState('');
   const [search, setSearch] = useState('');
   const [selectedCell, setSelectedCell] = useState<{ userId: string; date: string; name: string } | null>(null);
+  const scrollRef = useRef<ScrollView>(null);
 
   const getDateRange = useCallback(() => {
     if (period === 'week') {
@@ -111,7 +112,7 @@ export default function PlanningScreen() {
   const getDayOfWeek = (d: string) => { const dt = new Date(d + 'T00:00:00'); const dow = dt.getDay(); return dow === 0 ? 6 : dow - 1; };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView ref={scrollRef} style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.title} data-testid="planning-title">Planning</Text>
       </View>
@@ -209,7 +210,7 @@ export default function PlanningScreen() {
                   const bg = day ? (LOC_COLORS[day.type === 'work' ? day.location : day.type] || '#94A3B8') : 'transparent';
                   return (
                     <Pressable key={d} style={[styles.dayCell, dow >= 5 && styles.dayCellWeekend, isToday && styles.dayCellTodayBg, isSelected && styles.dayCellSelected]}
-                      onPress={() => { if (day) setSelectedCell({ userId: p.user_id, date: d, name: p.name }); }}
+                      onPress={() => { if (day) { setSelectedCell({ userId: p.user_id, date: d, name: p.name }); setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150); } }}
                     >
                       {day ? (
                         <View style={[styles.dayBlock, { backgroundColor: bg + '22', borderColor: bg }]}>
