@@ -5,7 +5,7 @@ Focused TimeSheet API Test - Core Functionality Verification
 import requests
 import json
 
-BACKEND_URL = "https://timesheet-app-152.preview.emergentagent.com/api"
+BACKEND_URL = "https://timesheet-gps-1.preview.emergentagent.com/api"
 ADMIN_CREDS = {"email": "admin@timesheet.ch", "password": "admin123"}
 
 def test_core_endpoints():

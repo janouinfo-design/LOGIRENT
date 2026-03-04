@@ -19,6 +19,17 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from openpyxl import Workbook
 from bson import ObjectId
+import math
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate distance in meters between two GPS coordinates."""
+    R = 6371000  # Earth radius in meters
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlambda = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -173,6 +184,9 @@ class ProjectCreate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     hourly_rate: Optional[float] = 0.0
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    geofence_radius: Optional[int] = 100  # meters
 
 class ProjectResponse(BaseModel):
     id: str
@@ -188,6 +202,9 @@ class ProjectResponse(BaseModel):
     status: str
     created_at: datetime
     is_active: bool
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    geofence_radius: Optional[int] = 100
 
 class ProjectUpdate(BaseModel):
     name: Optional[str] = None
@@ -200,6 +217,9 @@ class ProjectUpdate(BaseModel):
     hourly_rate: Optional[float] = None
     status: Optional[str] = None
     is_active: Optional[bool] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    geofence_radius: Optional[int] = None
 
 # Timesheet Models
 class TimesheetCreate(BaseModel):
@@ -207,6 +227,8 @@ class TimesheetCreate(BaseModel):
     activity_id: Optional[str] = None
     comment: Optional[str] = ""
     billable: bool = True
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 class TimesheetResponse(BaseModel):
     id: str
@@ -633,6 +655,9 @@ async def create_project(data: ProjectCreate, user=Depends(get_manager_user)):
         'start_date': data.start_date,
         'end_date': data.end_date,
         'hourly_rate': data.hourly_rate or 0.0,
+        'latitude': data.latitude,
+        'longitude': data.longitude,
+        'geofence_radius': data.geofence_radius or 100,
         'status': 'active',
         'is_active': True,
         'created_at': datetime.utcnow()
@@ -675,7 +700,10 @@ async def get_projects(active_only: bool = True, user=Depends(get_current_user))
             hourly_rate=p.get('hourly_rate', 0.0),
             status=p.get('status', 'active'),
             created_at=p.get('created_at', datetime.utcnow()),
-            is_active=p.get('is_active', True)
+            is_active=p.get('is_active', True),
+            latitude=p.get('latitude'),
+            longitude=p.get('longitude'),
+            geofence_radius=p.get('geofence_radius', 100)
         ))
     return result
 
@@ -762,15 +790,32 @@ async def clock_in(data: TimesheetCreate, user=Depends(get_current_user)):
     })
     if stale:
         close_time = stale.get('clock_in', datetime.utcnow())
-        # If stale entry is from today, close it; if from another day, close at end of that day
         if stale.get('date') == today:
             close_time = datetime.utcnow()
         else:
-            close_time = stale['clock_in'] + timedelta(hours=8)  # Auto-close at 8h
+            close_time = stale['clock_in'] + timedelta(hours=8)
         await db.timeentries.update_one(
             {'_id': stale['_id']},
             {'$set': {'clock_out': close_time, 'status': TimesheetStatus.PENDING}}
         )
+    
+    # GPS geofence validation
+    if data.project_id:
+        project = await db.projects.find_one({'_id': ObjectId(data.project_id)})
+        if project and project.get('latitude') and project.get('longitude'):
+            if not data.latitude or not data.longitude:
+                raise HTTPException(status_code=400, detail="Position GPS requise pour ce projet")
+            
+            distance = haversine_distance(
+                data.latitude, data.longitude,
+                project['latitude'], project['longitude']
+            )
+            radius = project.get('geofence_radius', 100)
+            if distance > radius:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Vous êtes à {int(distance)}m du projet. Vous devez être à moins de {radius}m pour pointer."
+                )
     
     entry_doc = {
         'user_id': user_id,

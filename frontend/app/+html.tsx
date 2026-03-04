@@ -18,6 +18,7 @@ export default function Root({ children }: PropsWithChildren) {
           set `overflow: auto` on the body style below.
         */}
         <title>TimeSheet - Gestion du temps</title>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{

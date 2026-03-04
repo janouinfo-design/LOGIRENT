@@ -11,7 +11,7 @@ import time
 from datetime import datetime, date, timedelta
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://timesheet-app-152.preview.emergentagent.com/api"
+BACKEND_URL = "https://timesheet-gps-1.preview.emergentagent.com/api"
 
 # Test credentials - Updated for production deployment
 ADMIN_CREDS = {"email": "admin@timesheet.ch", "password": "admin123"}

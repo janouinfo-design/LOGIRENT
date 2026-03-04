@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
 import { getCurrentEntry, clockIn, clockOut, startBreak, endBreak, getWeeklyStats, getDashboardStats, getTimeEntries, getProjects, updateTimeEntry } from '../../src/services/api';
+import { LeafletMap } from '../../src/components/LeafletMap';
 
 interface CurrentEntry {
   active: boolean;
@@ -55,10 +56,29 @@ export default function Dashboard() {
   const [actionLoading, setActionLoading] = useState('');
   const [showProjectPicker, setShowProjectPicker] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [userLat, setUserLat] = useState<number | null>(null);
+  const [userLng, setUserLng] = useState<number | null>(null);
+  const [gpsError, setGpsError] = useState('');
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Watch GPS position
+  useEffect(() => {
+    if (Platform.OS === 'web' && navigator.geolocation) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setUserLat(pos.coords.latitude);
+          setUserLng(pos.coords.longitude);
+          setGpsError('');
+        },
+        (err) => setGpsError('GPS non disponible'),
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
   }, []);
 
   const loadData = useCallback(async () => {
@@ -92,7 +112,10 @@ export default function Dashboard() {
   const handleAction = async (action: string) => {
     setActionLoading(action);
     try {
-      if (action === 'clockin') await clockIn({});
+      if (action === 'clockin') {
+        // Send GPS coordinates with clock-in
+        await clockIn({ latitude: userLat, longitude: userLng });
+      }
       else if (action === 'clockout') await clockOut({});
       else if (action === 'break') {
         if (current?.on_break) await endBreak();
@@ -116,6 +139,20 @@ export default function Dashboard() {
       alert(err.response?.data?.detail || 'Erreur');
     }
   };
+
+  // Compute selected project with geofence
+  const selectedProject = projects.find(p => p.id === current?.entry?.project_id);
+  const projectHasGeo = selectedProject?.latitude && selectedProject?.longitude;
+  const getDistance = () => {
+    if (!projectHasGeo || !userLat || !userLng) return null;
+    const R = 6371000;
+    const dLat = (selectedProject.latitude - userLat) * Math.PI / 180;
+    const dLon = (selectedProject.longitude - userLng) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(userLat * Math.PI / 180) * Math.cos(selectedProject.latitude * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+  const distance = getDistance();
+  const isInZone = distance !== null ? distance <= (selectedProject?.geofence_radius || 100) : null;
 
   const formatTime = (d: Date) =>
     `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
