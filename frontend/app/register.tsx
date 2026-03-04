@@ -71,7 +71,7 @@ export default function RegisterScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={24} color="#111827" />
           </TouchableOpacity>
 
           <View style={styles.header}>
@@ -82,11 +82,11 @@ export default function RegisterScreen() {
           <View style={styles.form}>
             <View style={styles.row}>
               <View style={[styles.inputContainer, { flex: 1 }]}>
-                <Ionicons name="person-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+                <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Prénom"
-                  placeholderTextColor="#6B7280"
+                  placeholderTextColor="#9CA3AF"
                   value={firstName}
                   onChangeText={setFirstName}
                   autoCapitalize="words"
@@ -97,7 +97,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Nom"
-                  placeholderTextColor="#6B7280"
+                  placeholderTextColor="#9CA3AF"
                   value={lastName}
                   onChangeText={setLastName}
                   autoCapitalize="words"
@@ -106,11 +106,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -120,11 +120,11 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Mot de passe"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -133,17 +133,17 @@ export default function RegisterScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color="#6B7280"
+                  color="#9CA3AF"
                 />
               </TouchableOpacity>
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="shield-checkmark-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Ionicons name="shield-checkmark-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Confirmer le mot de passe"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 secureTextEntry={!showPassword}
@@ -180,7 +180,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
   },
   keyboardView: {
     flex: 1,
@@ -202,12 +202,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   form: {
     gap: 16,
@@ -219,17 +219,19 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 56,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    color: '#FFFFFF',
+    color: '#111827',
     fontSize: 16,
   },
   button: {
@@ -253,7 +255,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   loginText: {
-    color: '#9CA3AF',
+    color: '#6B7280',
     fontSize: 15,
   },
   loginTextBold: {

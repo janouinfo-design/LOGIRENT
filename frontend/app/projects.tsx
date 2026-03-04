@@ -132,7 +132,7 @@ export default function ProjectsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          <Ionicons name="arrow-back" size={24} color="#111827" />
         </TouchableOpacity>
         <Text style={styles.title}>Projets / Chantiers</Text>
         {isManager ? (
@@ -153,7 +153,7 @@ export default function ProjectsScreen() {
       >
         {projects.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="briefcase-outline" size={48} color="#6B7280" />
+            <Ionicons name="briefcase-outline" size={48} color="#9CA3AF" />
             <Text style={styles.emptyText}>Aucun projet</Text>
             {isManager && (
               <TouchableOpacity style={styles.emptyButton} onPress={openCreateModal}>
@@ -172,7 +172,7 @@ export default function ProjectsScreen() {
                   <Text style={styles.projectName}>{project.name}</Text>
                   {project.location && (
                     <View style={styles.locationRow}>
-                      <Ionicons name="location-outline" size={14} color="#9CA3AF" />
+                      <Ionicons name="location-outline" size={14} color="#6B7280" />
                       <Text style={styles.projectLocation}>{project.location}</Text>
                     </View>
                   )}
@@ -220,7 +220,7 @@ export default function ProjectsScreen() {
                 {editingProject ? 'Modifier le projet' : 'Nouveau projet'}
               </Text>
               <TouchableOpacity onPress={() => setShowModal(false)}>
-                <Ionicons name="close" size={24} color="#FFFFFF" />
+                <Ionicons name="close" size={24} color="#111827" />
               </TouchableOpacity>
             </View>
             
@@ -229,7 +229,7 @@ export default function ProjectsScreen() {
               <TextInput
                 style={styles.textInput}
                 placeholder="ex: Chantier Lausanne"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={projectName}
                 onChangeText={setProjectName}
               />
@@ -238,7 +238,7 @@ export default function ProjectsScreen() {
               <TextInput
                 style={styles.textInput}
                 placeholder="ex: Rue de la Gare 15, Lausanne"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={projectLocation}
                 onChangeText={setProjectLocation}
               />
@@ -247,7 +247,7 @@ export default function ProjectsScreen() {
               <TextInput
                 style={[styles.textInput, styles.textArea]}
                 placeholder="Description du projet..."
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={projectDescription}
                 onChangeText={setProjectDescription}
                 multiline
@@ -278,7 +278,7 @@ export default function ProjectsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
   },
   header: {
     flexDirection: 'row',
@@ -286,6 +286,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backBtn: {
     width: 44,
@@ -293,9 +296,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   addBtn: {
     width: 44,
@@ -334,10 +337,15 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   projectCard: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   projectHeader: {
     flexDirection: 'row',
@@ -347,7 +355,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#22C55E20',
+    backgroundColor: '#D1FAE5',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -358,7 +366,7 @@ const styles = StyleSheet.create({
   projectName: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   locationRow: {
     flexDirection: 'row',
@@ -368,7 +376,7 @@ const styles = StyleSheet.create({
   },
   projectLocation: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   projectDescription: {
     fontSize: 14,
@@ -382,7 +390,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#374151',
+    borderTopColor: '#E5E7EB',
   },
   editBtn: {
     flexDirection: 'row',
@@ -391,7 +399,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#3B82F620',
+    backgroundColor: '#DBEAFE',
   },
   editBtnText: {
     fontSize: 14,
@@ -405,7 +413,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    backgroundColor: '#EF444420',
+    backgroundColor: '#FEE2E2',
   },
   deleteBtnText: {
     fontSize: 14,
@@ -414,11 +422,11 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -429,12 +437,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#1F2937',
+    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   modalBody: {
     padding: 20,
@@ -442,16 +450,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginBottom: 8,
     marginTop: 16,
   },
   textInput: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 16,
-    color: '#FFFFFF',
+    color: '#111827',
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   textArea: {
     minHeight: 100,

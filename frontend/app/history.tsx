@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { format, subDays, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '../src/context/AuthContext';
 import EntryCard from '../src/components/EntryCard';
@@ -67,13 +67,31 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Top Navigation */}
+      <View style={styles.topNav}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/home')}>
+          <Ionicons name="home-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Accueil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
+          <Ionicons name="list" size={22} color="#22C55E" />
+          <Text style={[styles.navLabel, styles.navLabelActive]}>Historique</Text>
+        </TouchableOpacity>
+        {isManager && (
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
+            <Ionicons name="stats-chart-outline" size={22} color="#6B7280" />
+            <Text style={styles.navLabel}>Gestion</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
+          <Ionicons name="person-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Profil</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
         <Text style={styles.title}>Historique</Text>
-        <View style={styles.placeholder} />
       </View>
 
       {/* Filter Tabs */}
@@ -120,7 +138,7 @@ export default function HistoryScreen() {
       >
         {entries.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="calendar-outline" size={48} color="#6B7280" />
+            <Ionicons name="calendar-outline" size={48} color="#9CA3AF" />
             <Text style={styles.emptyText}>Aucun pointage pour cette période</Text>
           </View>
         ) : (
@@ -129,28 +147,6 @@ export default function HistoryScreen() {
           ))
         )}
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/home')}>
-          <Ionicons name="home-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Accueil</Text>
-        </TouchableOpacity>
-        <View style={[styles.navItem, styles.navItemActive]}>
-          <Ionicons name="list" size={24} color="#22C55E" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Historique</Text>
-        </View>
-        {isManager && (
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
-            <Ionicons name="stats-chart-outline" size={24} color="#6B7280" />
-            <Text style={styles.navLabel}>Gestion</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-          <Ionicons name="person-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Profil</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -158,27 +154,39 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
+  },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  navItemActive: {},
+  navLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  navLabelActive: {
+    color: '#22C55E',
+    fontWeight: '600',
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-  },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  placeholder: {
-    width: 44,
+    color: '#111827',
   },
   filterContainer: {
     flexDirection: 'row',
@@ -191,15 +199,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 8,
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   filterTabActive: {
     backgroundColor: '#22C55E',
+    borderColor: '#22C55E',
   },
   filterText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   filterTextActive: {
     color: '#FFFFFF',
@@ -212,19 +223,24 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
     gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   summaryValue: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   summaryLabel: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#6B7280',
   },
   scrollView: {
@@ -232,7 +248,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingTop: 0,
   },
   emptyState: {
     alignItems: 'center',
@@ -242,31 +258,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#6B7280',
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: '#1F2937',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  navItemActive: {},
-  navLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  navLabelActive: {
-    color: '#22C55E',
   },
 });

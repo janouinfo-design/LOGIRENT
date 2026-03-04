@@ -54,7 +54,7 @@ export default function LoginScreen() {
         >
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Ionicons name="time" size={48} color="#22C55E" />
+              <Ionicons name="time" size={48} color="#FFFFFF" />
             </View>
             <Text style={styles.title}>TimeSheet</Text>
             <Text style={styles.subtitle}>Gestion du temps de travail</Text>
@@ -62,11 +62,11 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Email"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -76,11 +76,11 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#6B7280" style={styles.inputIcon} />
+              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Mot de passe"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -89,7 +89,7 @@ export default function LoginScreen() {
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                   size={20}
-                  color="#6B7280"
+                  color="#9CA3AF"
                 />
               </TouchableOpacity>
             </View>
@@ -124,7 +124,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
   },
   keyboardView: {
     flex: 1,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: '#22C55E20',
+    backgroundColor: '#22C55E',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   form: {
     gap: 16,
@@ -163,17 +163,19 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 16,
     height: 56,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    color: '#FFFFFF',
+    color: '#111827',
     fontSize: 16,
   },
   button: {
@@ -197,7 +199,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   registerText: {
-    color: '#9CA3AF',
+    color: '#6B7280',
     fontSize: 15,
   },
   registerTextBold: {

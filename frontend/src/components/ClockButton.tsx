@@ -78,13 +78,13 @@ const styles = StyleSheet.create({
   },
   elapsedLabel: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginBottom: 4,
   },
   elapsedTime: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
     fontVariant: ['tabular-nums'],
   },
   button: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -103,11 +103,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   subLabel: {
     marginTop: 4,
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
 });

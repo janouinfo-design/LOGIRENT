@@ -25,9 +25,11 @@ import {
   endBreak,
   getProjects,
   getWeeklyStats,
+  getDashboardStats,
   Project,
   CurrentEntry,
   WeeklyStats,
+  DashboardStats,
 } from '../src/services/api';
 
 export default function HomeScreen() {
@@ -37,6 +39,7 @@ export default function HomeScreen() {
   const [currentEntry, setCurrentEntry] = useState<CurrentEntry | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [comment, setComment] = useState('');
   const [showProjectPicker, setShowProjectPicker] = useState(false);
@@ -46,47 +49,52 @@ export default function HomeScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [entryRes, projectsRes, statsRes] = await Promise.all([
-        getCurrentEntry(),
+      const [projectsRes, statsRes] = await Promise.all([
         getProjects(),
         getWeeklyStats(),
       ]);
       
-      setCurrentEntry(entryRes.data);
       setProjects(projectsRes.data);
       setWeeklyStats(statsRes.data);
       
-      if (entryRes.data.entry?.project_id) {
-        setSelectedProjectId(entryRes.data.entry.project_id);
-      }
-      if (entryRes.data.entry?.comment) {
-        setComment(entryRes.data.entry.comment);
+      // Only fetch current entry for non-managers
+      if (!isManager) {
+        const entryRes = await getCurrentEntry();
+        setCurrentEntry(entryRes.data);
+        if (entryRes.data.entry?.project_id) {
+          setSelectedProjectId(entryRes.data.entry.project_id);
+        }
+        if (entryRes.data.entry?.comment) {
+          setComment(entryRes.data.entry.comment);
+        }
+      } else {
+        // Fetch dashboard stats for managers
+        const dashRes = await getDashboardStats();
+        setDashboardStats(dashRes.data);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }, []);
+  }, [isManager]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Update elapsed time
+  // Update elapsed time (only for employees)
   useEffect(() => {
     let interval: NodeJS.Timeout;
     
-    if (currentEntry?.active && currentEntry.entry?.clock_in) {
+    if (!isManager && currentEntry?.active && currentEntry.entry?.clock_in) {
       const updateTime = () => {
         const clockIn = new Date(currentEntry.entry!.clock_in);
         const now = new Date();
         let diff = Math.floor((now.getTime() - clockIn.getTime()) / 1000);
         
-        // Subtract break time if on break
         if (currentEntry.on_break && currentEntry.entry?.break_start) {
           const breakStart = new Date(currentEntry.entry.break_start);
           diff -= Math.floor((now.getTime() - breakStart.getTime()) / 1000);
         }
-        // Subtract completed break time
         if (currentEntry.entry?.break_start && currentEntry.entry?.break_end) {
           const breakDuration = Math.floor(
             (new Date(currentEntry.entry.break_end).getTime() - 
@@ -110,7 +118,7 @@ export default function HomeScreen() {
     }
     
     return () => clearInterval(interval);
-  }, [currentEntry]);
+  }, [currentEntry, isManager]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -122,11 +130,9 @@ export default function HomeScreen() {
     setIsLoading(true);
     try {
       if (!currentEntry?.active) {
-        // Clock in
         await clockIn({ project_id: selectedProjectId || undefined, comment: comment || undefined });
         Alert.alert('Succès', 'Pointage début enregistré');
       } else {
-        // Clock out
         await clockOut({ project_id: selectedProjectId || undefined, comment: comment || undefined });
         Alert.alert('Succès', 'Pointage fin enregistré');
         setComment('');
@@ -169,6 +175,28 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Top Navigation */}
+      <View style={styles.topNav}>
+        <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
+          <Ionicons name="home" size={22} color="#22C55E" />
+          <Text style={[styles.navLabel, styles.navLabelActive]}>Accueil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/history')}>
+          <Ionicons name="list" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Historique</Text>
+        </TouchableOpacity>
+        {isManager && (
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
+            <Ionicons name="stats-chart" size={22} color="#6B7280" />
+            <Text style={styles.navLabel}>Gestion</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
+          <Ionicons name="person" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Profil</Text>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -182,115 +210,132 @@ export default function HomeScreen() {
             <Text style={styles.greeting}>Bonjour,</Text>
             <Text style={styles.userName}>{user?.first_name} {user?.last_name}</Text>
           </View>
-          <View style={styles.headerRight}>
-            {isManager && (
-              <Ionicons 
-                name="shield-checkmark" 
-                size={20} 
-                color="#22C55E" 
-                style={styles.managerBadge}
-              />
-            )}
-          </View>
-        </View>
-
-        {/* Clock Button */}
-        <View style={styles.clockSection}>
-          <ClockButton
-            state={getClockState()}
-            onPress={handleClockAction}
-            isLoading={isLoading}
-            elapsedTime={currentEntry?.active ? elapsedTime : undefined}
-          />
-          
-          {currentEntry?.active && (
-            <View style={styles.breakSection}>
-              <BreakButton
-                isOnBreak={currentEntry.on_break || false}
-                onPress={handleBreakAction}
-                disabled={isLoading}
-              />
+          {isManager && (
+            <View style={styles.managerBadge}>
+              <Ionicons name="shield-checkmark" size={16} color="#FFFFFF" />
+              <Text style={styles.managerText}>Manager</Text>
             </View>
           )}
         </View>
 
-        {/* Project & Comment */}
-        <View style={styles.inputSection}>
-          <ProjectSelectorButton
-            project={selectedProject || null}
-            onPress={() => setShowProjectPicker(true)}
-          />
-          
-          <View style={styles.commentContainer}>
-            <Ionicons name="chatbubble-outline" size={20} color="#6B7280" />
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Ajouter un commentaire..."
-              placeholderTextColor="#6B7280"
-              value={comment}
-              onChangeText={setComment}
-              multiline
-            />
+        {/* Manager Dashboard View */}
+        {isManager && dashboardStats && (
+          <View style={styles.managerSection}>
+            <Text style={styles.sectionTitle}>Vue d'ensemble</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Ionicons name="people" size={28} color="#3B82F6" />
+                <Text style={styles.statValue}>{dashboardStats.total_employees}</Text>
+                <Text style={styles.statLabel}>Employés</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Ionicons name="pulse" size={28} color="#22C55E" />
+                <Text style={styles.statValue}>{dashboardStats.active_today}</Text>
+                <Text style={styles.statLabel}>Actifs</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Ionicons name="time" size={28} color="#F59E0B" />
+                <Text style={styles.statValue}>{dashboardStats.pending_entries}</Text>
+                <Text style={styles.statLabel}>En attente</Text>
+              </View>
+            </View>
+            
+            <TouchableOpacity 
+              style={styles.managerButton}
+              onPress={() => router.push('/dashboard')}
+            >
+              <Text style={styles.managerButtonText}>Voir les pointages en attente</Text>
+              <Ionicons name="arrow-forward" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.projectButton}
+              onPress={() => router.push('/projects')}
+            >
+              <Ionicons name="briefcase-outline" size={20} color="#22C55E" />
+              <Text style={styles.projectButtonText}>Gérer les projets</Text>
+            </TouchableOpacity>
           </View>
-        </View>
+        )}
+
+        {/* Employee Clock View */}
+        {!isManager && (
+          <>
+            <View style={styles.clockSection}>
+              <ClockButton
+                state={getClockState()}
+                onPress={handleClockAction}
+                isLoading={isLoading}
+                elapsedTime={currentEntry?.active ? elapsedTime : undefined}
+              />
+              
+              {currentEntry?.active && (
+                <View style={styles.breakSection}>
+                  <BreakButton
+                    isOnBreak={currentEntry.on_break || false}
+                    onPress={handleBreakAction}
+                    disabled={isLoading}
+                  />
+                </View>
+              )}
+            </View>
+
+            {/* Project & Comment */}
+            <View style={styles.inputSection}>
+              <ProjectSelectorButton
+                project={selectedProject || null}
+                onPress={() => setShowProjectPicker(true)}
+              />
+              
+              <View style={styles.commentContainer}>
+                <Ionicons name="chatbubble-outline" size={20} color="#6B7280" />
+                <TextInput
+                  style={styles.commentInput}
+                  placeholder="Ajouter un commentaire..."
+                  placeholderTextColor="#9CA3AF"
+                  value={comment}
+                  onChangeText={setComment}
+                  multiline
+                />
+              </View>
+            </View>
+          </>
+        )}
 
         {/* Weekly Stats */}
         {weeklyStats && (
           <View style={styles.statsSection}>
             <Text style={styles.sectionTitle}>Cette semaine</Text>
-            <StatsCard
-              title="Heures travaillées"
-              value={`${weeklyStats.total_hours.toFixed(1)}h`}
-              subtitle={`sur ${weeklyStats.contract_hours}h`}
-              icon="time-outline"
-              color="#22C55E"
-            />
-            <StatsCard
-              title="Heures supplémentaires"
-              value={`${weeklyStats.overtime_hours.toFixed(1)}h`}
-              icon="trending-up-outline"
-              color="#F59E0B"
-            />
-            <StatsCard
-              title="Jours travaillés"
-              value={weeklyStats.days_worked}
-              subtitle="cette semaine"
-              icon="calendar-outline"
-              color="#3B82F6"
-            />
+            <View style={styles.weeklyStatsRow}>
+              <View style={styles.weeklyStatCard}>
+                <Ionicons name="time-outline" size={24} color="#22C55E" />
+                <Text style={styles.weeklyStatValue}>{weeklyStats.total_hours.toFixed(1)}h</Text>
+                <Text style={styles.weeklyStatLabel}>Travaillées</Text>
+              </View>
+              <View style={styles.weeklyStatCard}>
+                <Ionicons name="trending-up-outline" size={24} color="#F59E0B" />
+                <Text style={styles.weeklyStatValue}>{weeklyStats.overtime_hours.toFixed(1)}h</Text>
+                <Text style={styles.weeklyStatLabel}>Supplémentaires</Text>
+              </View>
+              <View style={styles.weeklyStatCard}>
+                <Ionicons name="calendar-outline" size={24} color="#3B82F6" />
+                <Text style={styles.weeklyStatValue}>{weeklyStats.days_worked}</Text>
+                <Text style={styles.weeklyStatLabel}>Jours</Text>
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <View style={[styles.navItem, styles.navItemActive]}>
-          <Ionicons name="home" size={24} color="#22C55E" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Accueil</Text>
-        </View>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/history')}>
-          <Ionicons name="list" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Historique</Text>
-        </TouchableOpacity>
-        {isManager && (
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
-            <Ionicons name="stats-chart" size={24} color="#6B7280" />
-            <Text style={styles.navLabel}>Gestion</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-          <Ionicons name="person" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Profil</Text>
-        </TouchableOpacity>
-      </View>
-
-      <ProjectPicker
-        projects={projects}
-        selectedId={selectedProjectId}
-        onSelect={setSelectedProjectId}
-        visible={showProjectPicker}
-        onClose={() => setShowProjectPicker(false)}
-      />
+      {!isManager && (
+        <ProjectPicker
+          projects={projects}
+          selectedId={selectedProjectId}
+          onSelect={setSelectedProjectId}
+          visible={showProjectPicker}
+          onClose={() => setShowProjectPicker(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -298,59 +343,167 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
+  },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  navItemActive: {},
+  navLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  navLabelActive: {
+    color: '#22C55E',
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   greeting: {
-    fontSize: 16,
-    color: '#9CA3AF',
+    fontSize: 14,
+    color: '#6B7280',
   },
   userName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    color: '#111827',
   },
   managerBadge: {
-    marginLeft: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#22C55E',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  managerText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  managerSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+  },
+  managerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#22C55E',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 12,
+  },
+  managerButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  projectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#22C55E',
+    gap: 8,
+  },
+  projectButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#22C55E',
   },
   clockSection: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   breakSection: {
     marginTop: 24,
   },
   inputSection: {
     gap: 12,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   commentContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 14,
     gap: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   commentInput: {
     flex: 1,
-    color: '#FFFFFF',
+    color: '#111827',
     fontSize: 15,
     minHeight: 40,
     maxHeight: 80,
@@ -358,36 +511,31 @@ const styles = StyleSheet.create({
   statsSection: {
     marginTop: 8,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 16,
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  weeklyStatsRow: {
     flexDirection: 'row',
-    backgroundColor: '#1F2937',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    gap: 12,
   },
-  navItem: {
+  weeklyStatCard: {
     flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
-    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  navItemActive: {},
-  navLabel: {
-    fontSize: 12,
+  weeklyStatValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 8,
+  },
+  weeklyStatLabel: {
+    fontSize: 11,
     color: '#6B7280',
-  },
-  navLabelActive: {
-    color: '#22C55E',
+    marginTop: 4,
   },
 });

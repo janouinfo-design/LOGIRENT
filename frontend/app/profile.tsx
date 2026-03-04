@@ -49,7 +49,6 @@ export default function ProfileScreen() {
       return;
     }
     
-    // Validate date format (YYYY-MM-DD)
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(absenceStartDate) || !dateRegex.test(absenceEndDate)) {
       Alert.alert('Erreur', 'Format de date invalide. Utilisez AAAA-MM-JJ');
@@ -95,16 +94,29 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+      {/* Top Navigation */}
+      <View style={styles.topNav}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/home')}>
+          <Ionicons name="home-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Accueil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/history')}>
+          <Ionicons name="list-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Historique</Text>
+        </TouchableOpacity>
+        {isManager && (
+          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
+            <Ionicons name="stats-chart-outline" size={22} color="#6B7280" />
+            <Text style={styles.navLabel}>Gestion</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Profil</Text>
-          <View style={styles.placeholder} />
-        </View>
+        )}
+        <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
+          <Ionicons name="person" size={22} color="#22C55E" />
+          <Text style={[styles.navLabel, styles.navLabelActive]}>Profil</Text>
+        </TouchableOpacity>
+      </View>
 
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Profile Card */}
         <View style={styles.profileCard}>
           <View style={styles.avatarContainer}>
@@ -129,7 +141,7 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>Informations du contrat</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Ionicons name="time-outline" size={20} color="#9CA3AF" />
+              <Ionicons name="time-outline" size={20} color="#6B7280" />
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Heures contractuelles</Text>
                 <Text style={styles.infoValue}>{user?.contract_hours}h / semaine</Text>
@@ -146,28 +158,28 @@ export default function ProfileScreen() {
             style={styles.actionCard}
             onPress={() => setShowAbsenceModal(true)}
           >
-            <View style={styles.actionIconContainer}>
+            <View style={[styles.actionIconContainer, { backgroundColor: '#DBEAFE' }]}>
               <Ionicons name="calendar-outline" size={24} color="#3B82F6" />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Demander une absence</Text>
               <Text style={styles.actionSubtitle}>Vacances, maladie, formation...</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.actionCard}
             onPress={() => router.push('/history')}
           >
-            <View style={styles.actionIconContainer}>
+            <View style={[styles.actionIconContainer, { backgroundColor: '#D1FAE5' }]}>
               <Ionicons name="document-text-outline" size={24} color="#22C55E" />
             </View>
             <View style={styles.actionContent}>
               <Text style={styles.actionTitle}>Mes rapports</Text>
               <Text style={styles.actionSubtitle}>Consulter l'historique</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#6B7280" />
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
           </TouchableOpacity>
         </View>
 
@@ -177,28 +189,6 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Se déconnecter</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/home')}>
-          <Ionicons name="home-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Accueil</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/history')}>
-          <Ionicons name="list-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Historique</Text>
-        </TouchableOpacity>
-        {isManager && (
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/dashboard')}>
-            <Ionicons name="stats-chart-outline" size={24} color="#6B7280" />
-            <Text style={styles.navLabel}>Gestion</Text>
-          </TouchableOpacity>
-        )}
-        <View style={[styles.navItem, styles.navItemActive]}>
-          <Ionicons name="person" size={24} color="#22C55E" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Profil</Text>
-        </View>
-      </View>
 
       {/* Absence Modal */}
       <Modal
@@ -212,7 +202,7 @@ export default function ProfileScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Demander une absence</Text>
               <TouchableOpacity onPress={() => setShowAbsenceModal(false)}>
-                <Ionicons name="close" size={24} color="#FFFFFF" />
+                <Ionicons name="close" size={24} color="#111827" />
               </TouchableOpacity>
             </View>
             
@@ -231,7 +221,7 @@ export default function ProfileScreen() {
                     <Ionicons 
                       name={type.icon as any} 
                       size={24} 
-                      color={absenceType === type.value ? '#22C55E' : '#9CA3AF'} 
+                      color={absenceType === type.value ? '#22C55E' : '#6B7280'} 
                     />
                     <Text style={[
                       styles.typeLabel,
@@ -247,7 +237,7 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.dateInput}
                 placeholder="2025-07-15"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={absenceStartDate}
                 onChangeText={setAbsenceStartDate}
               />
@@ -256,7 +246,7 @@ export default function ProfileScreen() {
               <TextInput
                 style={styles.dateInput}
                 placeholder="2025-07-20"
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={absenceEndDate}
                 onChangeText={setAbsenceEndDate}
               />
@@ -265,7 +255,7 @@ export default function ProfileScreen() {
               <TextInput
                 style={[styles.dateInput, styles.commentInput]}
                 placeholder="Raison de l'absence..."
-                placeholderTextColor="#6B7280"
+                placeholderTextColor="#9CA3AF"
                 value={absenceComment}
                 onChangeText={setAbsenceComment}
                 multiline
@@ -291,38 +281,48 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
+  },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  navItemActive: {},
+  navLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  navLabelActive: {
+    color: '#22C55E',
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  placeholder: {
-    width: 44,
+    padding: 20,
   },
   profileCard: {
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   avatarContainer: {
     width: 80,
@@ -341,18 +341,18 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
     marginBottom: 4,
   },
   profileEmail: {
     fontSize: 16,
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginBottom: 12,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#22C55E20',
+    backgroundColor: '#D1FAE5',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -364,19 +364,23 @@ const styles = StyleSheet.create({
     color: '#22C55E',
   },
   section: {
-    paddingHorizontal: 20,
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginBottom: 12,
   },
   infoCard: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   infoRow: {
     flexDirection: 'row',
@@ -393,21 +397,25 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   actionIconContainer: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#111827',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -418,7 +426,7 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   actionSubtitle: {
     fontSize: 14,
@@ -429,51 +437,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#EF4444',
     gap: 8,
+    marginTop: 8,
   },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#EF4444',
   },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: '#1F2937',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  navItemActive: {},
-  navLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  navLabelActive: {
-    color: '#22C55E',
-  },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -484,12 +466,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#1F2937',
+    borderBottomColor: '#E5E7EB',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   modalBody: {
     padding: 20,
@@ -497,7 +479,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginBottom: 8,
     marginTop: 16,
   },
@@ -508,31 +490,34 @@ const styles = StyleSheet.create({
   },
   typeCard: {
     width: '47%',
-    backgroundColor: '#1F2937',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     gap: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   typeCardActive: {
-    backgroundColor: '#22C55E20',
-    borderWidth: 1,
+    backgroundColor: '#D1FAE5',
     borderColor: '#22C55E',
   },
   typeLabel: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   typeLabelActive: {
     color: '#22C55E',
     fontWeight: '600',
   },
   dateInput: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 16,
-    color: '#FFFFFF',
+    color: '#111827',
     fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   commentInput: {
     minHeight: 80,

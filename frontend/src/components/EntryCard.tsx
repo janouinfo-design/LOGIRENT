@@ -17,11 +17,11 @@ export default function EntryCard({ entry, showUser, onApprove, onReject, showAc
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'approved':
-        return { color: '#22C55E', label: 'Approuvé', icon: 'checkmark-circle' as const };
+        return { color: '#22C55E', bgColor: '#D1FAE5', label: 'Approuvé', icon: 'checkmark-circle' as const };
       case 'rejected':
-        return { color: '#EF4444', label: 'Refusé', icon: 'close-circle' as const };
+        return { color: '#EF4444', bgColor: '#FEE2E2', label: 'Refusé', icon: 'close-circle' as const };
       default:
-        return { color: '#F59E0B', label: 'En attente', icon: 'time' as const };
+        return { color: '#F59E0B', bgColor: '#FEF3C7', label: 'En attente', icon: 'time' as const };
     }
   };
 
@@ -53,7 +53,7 @@ export default function EntryCard({ entry, showUser, onApprove, onReject, showAc
             <Text style={styles.userName}>{entry.user_name}</Text>
           )}
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
+        <View style={[styles.statusBadge, { backgroundColor: statusConfig.bgColor }]}>
           <Ionicons name={statusConfig.icon} size={14} color={statusConfig.color} />
           <Text style={[styles.statusText, { color: statusConfig.color }]}>
             {statusConfig.label}
@@ -85,14 +85,14 @@ export default function EntryCard({ entry, showUser, onApprove, onReject, showAc
 
       {entry.project_name && (
         <View style={styles.projectRow}>
-          <Ionicons name="briefcase-outline" size={16} color="#9CA3AF" />
+          <Ionicons name="briefcase-outline" size={16} color="#6B7280" />
           <Text style={styles.projectName}>{entry.project_name}</Text>
         </View>
       )}
 
       {entry.comment && (
         <View style={styles.commentRow}>
-          <Ionicons name="chatbubble-outline" size={14} color="#6B7280" />
+          <Ionicons name="chatbubble-outline" size={14} color="#9CA3AF" />
           <Text style={styles.comment}>{entry.comment}</Text>
         </View>
       )}
@@ -122,10 +122,15 @@ export default function EntryCard({ entry, showUser, onApprove, onReject, showAc
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   header: {
     flexDirection: 'row',
@@ -136,12 +141,12 @@ const styles = StyleSheet.create({
   date: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#111827',
     textTransform: 'capitalize',
   },
   userName: {
     fontSize: 13,
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginTop: 2,
   },
   statusBadge: {
@@ -159,7 +164,7 @@ const styles = StyleSheet.create({
   timeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     padding: 12,
   },
@@ -170,7 +175,7 @@ const styles = StyleSheet.create({
   timeDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#374151',
+    backgroundColor: '#E5E7EB',
   },
   timeLabel: {
     fontSize: 11,
@@ -180,7 +185,7 @@ const styles = StyleSheet.create({
   timeValue: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   totalHours: {
     color: '#22C55E',
@@ -193,7 +198,7 @@ const styles = StyleSheet.create({
   },
   projectName: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   commentRow: {
     flexDirection: 'row',
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
   },
   comment: {
     fontSize: 13,
-    color: '#6B7280',
+    color: '#9CA3AF',
     flex: 1,
   },
   overtimeRow: {

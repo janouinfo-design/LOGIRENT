@@ -29,7 +29,7 @@ export default function ProjectPicker({ projects, selectedId, onSelect, visible,
         <Ionicons 
           name={item.id ? 'briefcase' : 'remove-circle-outline'} 
           size={20} 
-          color={selectedId === item.id ? '#22C55E' : '#9CA3AF'} 
+          color={selectedId === item.id ? '#22C55E' : '#6B7280'} 
         />
         <Text style={[
           styles.itemText,
@@ -56,7 +56,7 @@ export default function ProjectPicker({ projects, selectedId, onSelect, visible,
           <View style={styles.header}>
             <Text style={styles.title}>Sélectionner un projet</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color="#FFFFFF" />
+              <Ionicons name="close" size={24} color="#111827" />
             </TouchableOpacity>
           </View>
           
@@ -80,11 +80,11 @@ interface ProjectSelectorButtonProps {
 export function ProjectSelectorButton({ project, onPress }: ProjectSelectorButtonProps) {
   return (
     <TouchableOpacity style={styles.selector} onPress={onPress}>
-      <Ionicons name="briefcase-outline" size={20} color="#9CA3AF" />
+      <Ionicons name="briefcase-outline" size={20} color="#6B7280" />
       <Text style={styles.selectorText}>
         {project ? project.name : 'Sélectionner un projet'}
       </Text>
-      <Ionicons name="chevron-down" size={20} color="#9CA3AF" />
+      <Ionicons name="chevron-down" size={20} color="#6B7280" />
     </TouchableOpacity>
   );
 }
@@ -92,11 +92,11 @@ export function ProjectSelectorButton({ project, onPress }: ProjectSelectorButto
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#111827',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '70%',
@@ -107,12 +107,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#1F2937',
+    borderBottomColor: '#E5E7EB',
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   closeBtn: {
     padding: 4,
@@ -127,11 +127,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: '#1F2937',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   itemSelected: {
-    backgroundColor: '#22C55E20',
-    borderWidth: 1,
+    backgroundColor: '#D1FAE5',
     borderColor: '#22C55E',
   },
   itemContent: {
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
   },
   itemText: {
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#111827',
   },
   itemTextSelected: {
     color: '#22C55E',
@@ -150,14 +151,16 @@ const styles = StyleSheet.create({
   selector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     padding: 14,
     borderRadius: 12,
     gap: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   selectorText: {
     flex: 1,
     fontSize: 15,
-    color: '#FFFFFF',
+    color: '#111827',
   },
 });

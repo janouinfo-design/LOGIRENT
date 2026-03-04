@@ -57,7 +57,6 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     if (!isManager) {
-      // Redirect to home only if we're sure user is loaded
       const timer = setTimeout(() => {
         if (!isManager) {
           router.replace('/home');
@@ -126,14 +125,31 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Top Navigation */}
+      <View style={styles.topNav}>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/home')}>
+          <Ionicons name="home-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Accueil</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/history')}>
+          <Ionicons name="list-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Historique</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.navItem, styles.navItemActive]}>
+          <Ionicons name="stats-chart" size={22} color="#22C55E" />
+          <Text style={[styles.navLabel, styles.navLabelActive]}>Gestion</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
+          <Ionicons name="person-outline" size={22} color="#6B7280" />
+          <Text style={styles.navLabel}>Profil</Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
         <Text style={styles.title}>Gestion</Text>
         <TouchableOpacity onPress={() => router.push('/projects')} style={styles.headerBtn}>
-          <Ionicons name="briefcase-outline" size={24} color="#FFFFFF" />
+          <Ionicons name="briefcase-outline" size={24} color="#22C55E" />
         </TouchableOpacity>
       </View>
 
@@ -171,30 +187,26 @@ export default function DashboardScreen() {
       >
         {activeTab === 'overview' && stats && (
           <View style={styles.statsGrid}>
-            <StatsCard
-              title="Employés"
-              value={stats.total_employees}
-              icon="people-outline"
-              color="#3B82F6"
-            />
-            <StatsCard
-              title="Actifs aujourd'hui"
-              value={stats.active_today}
-              icon="pulse-outline"
-              color="#22C55E"
-            />
-            <StatsCard
-              title="Pointages en attente"
-              value={stats.pending_entries}
-              icon="time-outline"
-              color="#F59E0B"
-            />
-            <StatsCard
-              title="Absences en attente"
-              value={stats.pending_absences}
-              icon="calendar-outline"
-              color="#EF4444"
-            />
+            <View style={styles.statCard}>
+              <Ionicons name="people-outline" size={28} color="#3B82F6" />
+              <Text style={styles.statValue}>{stats.total_employees}</Text>
+              <Text style={styles.statLabel}>Employés</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Ionicons name="pulse-outline" size={28} color="#22C55E" />
+              <Text style={styles.statValue}>{stats.active_today}</Text>
+              <Text style={styles.statLabel}>Actifs aujourd'hui</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Ionicons name="time-outline" size={28} color="#F59E0B" />
+              <Text style={styles.statValue}>{stats.pending_entries}</Text>
+              <Text style={styles.statLabel}>Pointages en attente</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Ionicons name="calendar-outline" size={28} color="#EF4444" />
+              <Text style={styles.statValue}>{stats.pending_absences}</Text>
+              <Text style={styles.statLabel}>Absences en attente</Text>
+            </View>
           </View>
         )}
 
@@ -242,7 +254,7 @@ export default function DashboardScreen() {
                   </View>
                   
                   <View style={styles.absenceDates}>
-                    <Ionicons name="calendar-outline" size={16} color="#9CA3AF" />
+                    <Ionicons name="calendar-outline" size={16} color="#6B7280" />
                     <Text style={styles.absenceDateText}>
                       {absence.start_date} → {absence.end_date}
                     </Text>
@@ -274,26 +286,6 @@ export default function DashboardScreen() {
           </View>
         )}
       </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/home')}>
-          <Ionicons name="home-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Accueil</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/history')}>
-          <Ionicons name="list-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Historique</Text>
-        </TouchableOpacity>
-        <View style={[styles.navItem, styles.navItemActive]}>
-          <Ionicons name="stats-chart" size={24} color="#22C55E" />
-          <Text style={[styles.navLabel, styles.navLabelActive]}>Gestion</Text>
-        </View>
-        <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-          <Ionicons name="person-outline" size={24} color="#6B7280" />
-          <Text style={styles.navLabel}>Profil</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -301,7 +293,30 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
+    backgroundColor: '#F9FAFB',
+  },
+  topNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
+  navItemActive: {},
+  navLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  navLabelActive: {
+    color: '#22C55E',
+    fontWeight: '600',
   },
   header: {
     flexDirection: 'row',
@@ -310,21 +325,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  backBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-  },
   title: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   headerBtn: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
+    padding: 8,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -339,16 +346,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
     gap: 6,
   },
   tabActive: {
     backgroundColor: '#22C55E',
+    borderColor: '#22C55E',
   },
   tabText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   tabTextActive: {
     color: '#FFFFFF',
@@ -362,7 +372,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   badgeText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
@@ -371,10 +381,36 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingTop: 0,
   },
   statsGrid: {
-    gap: 0,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  statCard: {
+    width: '47%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  statValue: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 4,
+    textAlign: 'center',
   },
   emptyState: {
     alignItems: 'center',
@@ -386,10 +422,15 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   absenceCard: {
-    backgroundColor: '#1F2937',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   absenceHeader: {
     flexDirection: 'row',
@@ -400,17 +441,17 @@ const styles = StyleSheet.create({
   absenceUser: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#111827',
   },
   absenceType: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
     marginTop: 2,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F59E0B20',
+    backgroundColor: '#FEF3C7',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
@@ -429,7 +470,7 @@ const styles = StyleSheet.create({
   },
   absenceDateText: {
     fontSize: 14,
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   absenceComment: {
     fontSize: 14,
@@ -465,31 +506,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '600',
     fontSize: 14,
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    backgroundColor: '#1F2937',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  navItemActive: {},
-  navLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  navLabelActive: {
-    color: '#22C55E',
   },
 });
