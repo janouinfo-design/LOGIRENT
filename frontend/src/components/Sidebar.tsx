@@ -27,14 +27,12 @@ const menuItems: MenuItem[] = [
   { label: 'Analytique', path: '/(app)/analytics', icon: 'insights', roles: ['admin', 'manager'] },
   { label: 'Factures', path: '/(app)/invoices', icon: 'receipt', roles: ['admin', 'manager'] },
   { label: 'Paie', path: '/(app)/payroll', icon: 'account-balance', roles: ['admin', 'manager'] },
-  { label: 'Notifications', path: '/(app)/notifications', icon: 'notifications' },
   { label: 'Utilisateurs', path: '/(app)/users', icon: 'people', roles: ['admin', 'manager'] },
   { label: 'Departements', path: '/(app)/departments', icon: 'business', roles: ['admin'] },
   { label: 'Clients', path: '/(app)/clients', icon: 'group-work', roles: ['admin', 'manager'] },
   { label: 'Activites', path: '/(app)/activities', icon: 'local-activity', roles: ['admin', 'manager'] },
   { label: 'Abonnement', path: '/(app)/subscriptions', icon: 'card-membership', roles: ['admin'] },
   { label: 'Journal d\'audit', path: '/(app)/audit', icon: 'history', roles: ['admin'] },
-  { label: 'Profil', path: '/(app)/profile', icon: 'person' },
 ];
 
 const SIDEBAR_EXPANDED = 240;
