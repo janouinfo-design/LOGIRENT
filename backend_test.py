@@ -11,7 +11,7 @@ import time
 from datetime import datetime, date, timedelta
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://work-hours-tracker-27.preview.emergentagent.com/api"
+BACKEND_URL = "https://timesheet-app-152.preview.emergentagent.com/api"
 
 # Test credentials
 MANAGER_CREDS = {"email": "manager@test.ch", "password": "test123"}

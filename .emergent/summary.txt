@@ -1,0 +1,180 @@
+<analysis>
+<original_problem_statement>
+The user wants to build a comprehensive time-tracking mobile application named TimeSheet. The initial request outlined a mobile app for employees and managers with features for clocking in/out, managing projects, handling overtime, and generating reports, compliant with Swiss labor laws.
+
+Later, the user provided a much more detailed specification for a full-blown SaaS platform. This expanded scope includes a multi-layered architecture (web/mobile frontend, backend API, PostgreSQL DB), multi-tenancy (Companies, Clients, Departments), billable activities, invoicing, advanced reporting, audit logs, and a more complex relational database schema. The ultimate goal is to build this advanced SaaS platform.
+
+PRODUCT REQUIREMENTS:
+- **User Roles:** Employee, Manager, Administrator.
+- **Time Tracking:** Clock-in/out buttons, manual timesheets, and a START/STOP timer.
+- **Project Management:** Associate time with specific projects, clients, and billable activities.
+- **Approval Workflow:** Managers must validate employee timesheets.
+- **Absence Management:** Track vacations, sick leave, etc.
+- **SaaS Features:** Multi-company/client support, department management.
+- **Billing &amp; Invoicing:** Track billable hours and generate invoices.
+- **Reporting:** Advanced reports by employee, project, and time period.
+- **Admin Panel:** Manage users, system settings, and billing.
+- **Technical Stack:** React Native (Expo) for mobile, FastAPI for the backend, and a PostgreSQL-style database schema (currently on MongoDB).
+</original_problem_statement>
+**User's preferred language**: fr
+
+**what currently exists?**
+The project is in a state of major transition. A first version of the app was created with basic time-tracking for a single company, including user roles, clock-in/out, and an approval flow. This version received UI updates (light theme, top navigation for managers) and was populated with test data (employees and timesheets).
+
+However, following a new, more complex set of requirements, the **backend has been completely rewritten**. It now features a sophisticated data model to support a multi-tenant SaaS application (Companies, Clients, Departments, Activities, Invoicing, etc.) and a corresponding set of new API endpoints. The database has been seeded with initial data for these new models.
+
+The **frontend is now severely out of sync** with the new backend. It is still coded against the old, simpler data model and is therefore non-functional. The app is currently broken.
+
+**Last working item**:
+- Last item agent was working: The agent was in the middle of a major overhaul to align the application with the new, complex SaaS specifications. It had just finished a complete rewrite of the backend data models and API endpoints in  and had started adapting the frontend by modifying the API service layer in .
+- Status: IN PROGRESS
+- Agent Testing Done: N
+- Which testing method agent to use? backend testing agent
+- User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  Issue 1:  (P0) Frontend-Backend Desynchronization
+
+  Issues Detail:
+  - Issue 1: 
+     - **Description**: The entire frontend is built on an old, simple data model, while the backend has been completely refactored to support a complex SaaS architecture. This makes the application fundamentally broken as the UI cannot communicate with the API correctly.
+     - Attempted fixes: The agent only began to address this by starting to edit the  file. No other part of the frontend has been touched.
+     - Next debug checklist: 
+       1.  Complete the update of  to include all new API endpoints from .
+       2.  Refactor the authentication flow and user context (, ) to handle the new  and  models.
+       3.  Rewrite every screen in  (, , , , etc.) to fetch and display data from the new API endpoints and use the new data structures.
+       4.  Create new admin screens for managing Companies, Clients, Departments, and Activities.
+     - Why fix this issue and what will be achieved with the fix? This is the most critical issue. Fixing it will align the frontend with the backend, making the application functional again and implementing the user's new core requirements for the SaaS platform.
+     - Status:  NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on other issue: None
+
+**In progress Task List**:
+  Task 1:  (P0) Full Application Overhaul to SaaS Model
+
+ Task Detail:
+  - Task 1: 
+     - Where to resume: Continue refactoring the frontend. The next logical step is to finish updating  and then move on to refactoring the authentication context and the main application screens, one by one.
+     - What will be achieved with this? This will transform the application from a simple time-tracker into the foundational version of the multi-tenant SaaS platform requested by the user.
+     - Status:  IN PROGRESS
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: None
+
+**Upcoming and Future Tasks**
+Upcoming Tasks:
+- **P1: Implement Admin Panels:** Create frontend screens for administrators to manage , , , , and .
+- **P1: Refactor Project Management:** Update the Projects screen to handle the new, more detailed  model (including client, budget, status).
+- **P2: Implement Billable Activities:** Allow users to select a billable  when creating a  entry.
+- **P2: Refactor Timesheet Creation:** Modify the clock-in/timesheet creation process to include the selection of .
+
+Future Tasks:
+- **Implement Invoicing Module:** Build the UI and logic for generating invoices from billable timesheets (Module 7).
+- **Implement Advanced Reporting:** Create the UI for the various reports specified (by project, employee, etc.) (Module 8).
+- **Implement Notifications Module:** Add in-app or push notifications for required actions (Module 9).
+- **Implement START/STOP Timer:** Add a real-time timer as an alternative method for time tracking.
+- **Implement Audit Logs:** Create a view for administrators to see a log of all major actions.
+- **Implement SaaS Subscription Plans:** Add logic to handle different feature sets based on subscription tiers (Basic, Pro, Enterprise).
+
+**Completed work in this session**
+- **Initial Application Scaffolding:** A full-stack Expo/FastAPI application was created from scratch.
+- **Basic Feature Implementation:** Implemented user authentication (employee/manager), basic time tracking, project assignment, and a manager approval workflow.
+- **UI/UX Customization:**
+    - The app's theme was changed from dark to light.
+    - The manager's view was updated to have top navigation instead of bottom tabs.
+    - The main clock-in button was hidden for the manager role.
+- **Test Data Population:** The database was seeded with multiple employees and a week's worth of timesheet entries for testing purposes.
+- **Major Backend Refactoring:** The entire backend () was rewritten with new data models (User, Company, Client, Project, Activity, etc.) and new API endpoints to match the expanded SaaS requirements. The database was re-seeded with this new structure.
+
+**Earlier issues found/mentioned but not fixed**
+   - None. The agent was diligent in fixing issues as they arose.
+
+**Known issue recurrence from previous fork**
+  - None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frontend:** React Native (Expo)
+-   **Routing:**  (file-based)
+-   **Backend:** FastAPI (Python)
+-   **Database:** MongoDB with Beanie (Pydantic-based ODM) emulating a relational structure.
+-   **Styling:** React Native .
+
+**key DB schema**
+The database schema has been completely redesigned. It is now defined by the Pydantic models within  and includes the following collections (tables):
+-   : {id, name, email, password, role, department_id, ...}
+-   : {id, name, address, ...}
+-   : {id, name, ...}
+-   : {id, name, client_id, budget, status, ...}
+-   : {id, name, email, ...}
+-   : {id, name, billable, ...}
+-   : {id, user_id, project_id, activity_id, start_time, end_time, status, ...}
+-   And others: , , , , , .
+
+**changes in tech stack**
+- The backend's data modeling approach has fundamentally changed from a simple set of models to a complex, relational-style schema implemented on MongoDB via the Beanie ODM.
+
+**All files of reference**
+-   : **Most Critical File.** Contains the entire new backend logic, including all new data models and API endpoints for the SaaS platform.
+-   : The central API service for the frontend. It was being updated to match the new backend and is incomplete.
+-   : All files in this directory represent the old application's UI and logic. They all need to be completely rewritten.
+
+**Areas that need refactoring**:
+-   **The entire frontend application.** It is functionally obsolete due to the backend rewrite.
+-   The temporary data seeding endpoints in  (, , ) should be removed once the application is stable.
+-   The component  should be renamed or removed, as navigation has been moved to the top tab bar in .
+
+**key api endpoints**
+The API has been completely overhauled. The new endpoints follow a RESTful pattern for the new models, such as:
+-    (Login)
+-   
+-   , 
+-   , 
+-   , 
+-   
+-   , 
+-   And many more for all the new entities.
+
+**Critical Info for New Agent**
+The user has pivoted from a simple mobile app to a complex multi-tenant SaaS platform. The previous agent has already performed the massive task of refactoring the entire backend to support this new vision. Your primary and immediate goal is to **bring the frontend up to speed**. The application is currently broken because the frontend and backend are completely desynchronized. You must start by updating the frontend's API service layer and then rewrite all screens to use the new data models and API endpoints. Do not attempt to fix or build upon the old UI logic; it must be replaced.
+
+**documents created in this job**
+-  was updated during the session.
+
+**Last 10 User Messages and any pending HUMAN messages**
+- : User sent a new, comprehensive CAHIER DES CHARGES for a full SaaS platform. **Status: IN PROGRESS**.
+- : Agent confirmed creation of 41 new timesheets.
+- : User requested to create timesheet data for one week for all employees. **Status: Completed**.
+- : Agent confirmed creation of 5 new employees.
+- : User requested to add 5 more employees. **Status: Completed**.
+- : Agent confirmed UI changes were complete.
+- : User requested major UI changes: remove manager clock-in button, move nav to top, and switch to a light theme. **Status: Completed**.
+- : Agent confirmed manager login was working.
+- : User reported being unable to log into the manager account. **Status: Resolved**.
+- : User asked for the login link for the application. **Status: Resolved**.
+
+**Project Health Check:**
+-   **Broken**: The frontend is not compatible with the rewritten backend. The application will not function until the frontend is refactored.
+
+**3rd Party Integrations**
+- : Used in the backend for generating test data.
+- No other 3rd party integrations have been implemented yet.
+
+**Testing status**
+  - Testing agent used after significant changes: YES, the backend was tested *before* the most recent major refactor. The new backend is untested.
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: None.
+  - Known regressions: The entire application is a regression as it's non-functional.
+
+**Credentials to test flow:**
+The previous credentials may no longer work as the database was re-seeded. The seeding script in  created a new admin user:
+-   **Email**: 
+-   **Mot de passe**: 
+
+**What agent forgot to execute**
+- The agent's work was interrupted, not forgotten. The main pending action is the complete refactoring of the frontend to match the new backend.
+- The temporary data-seeding API endpoints in  were not removed, which should be done before considering the feature complete.
+
+</analysis>
