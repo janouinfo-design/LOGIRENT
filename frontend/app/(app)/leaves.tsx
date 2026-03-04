@@ -9,6 +9,9 @@ const leaveTypes = [
   { key: 'sick', label: 'Maladie' },
   { key: 'accident', label: 'Accident' },
   { key: 'training', label: 'Formation' },
+  { key: 'maternity', label: 'Maternite' },
+  { key: 'paternity', label: 'Paternite' },
+  { key: 'special', label: 'Conge special' },
 ];
 
 export default function LeavesScreen() {

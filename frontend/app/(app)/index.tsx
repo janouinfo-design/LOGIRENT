@@ -3,7 +3,7 @@ import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator, Modal
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
-import { getCurrentEntry, clockIn, clockOut, startBreak, endBreak, getWeeklyStats, getDashboardStats, getTimeEntries, getProjects, updateTimeEntry } from '../../src/services/api';
+import { getCurrentEntry, clockIn, clockOut, startBreak, endBreak, getWeeklyStats, getDashboardStats, getTimeEntries, getProjects, updateTimeEntry, getBalances } from '../../src/services/api';
 import { LeafletMap } from '../../src/components/LeafletMap';
 
 interface CurrentEntry {
@@ -55,6 +55,7 @@ export default function Dashboard() {
   const [dashStats, setDashStats] = useState<DashboardStats | null>(null);
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [balances, setBalances] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState('');
   const [showProjectPicker, setShowProjectPicker] = useState(false);
@@ -64,6 +65,7 @@ export default function Dashboard() {
   const [gpsError, setGpsError] = useState('');
   // Project selected BEFORE clock-in
   const [preSelectedProjectId, setPreSelectedProjectId] = useState<string | null>(null);
+  const [workLocation, setWorkLocation] = useState<string>('office');
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -88,14 +90,16 @@ export default function Dashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const [currentRes, weekRes, projRes] = await Promise.all([
+      const [currentRes, weekRes, projRes, balRes] = await Promise.all([
         getCurrentEntry(),
         getWeeklyStats(),
         getProjects({ active_only: true }),
+        getBalances(),
       ]);
       setCurrent(currentRes.data);
       setWeekStats(weekRes.data);
       setProjects(projRes.data);
+      setBalances(balRes.data);
 
       if (user?.role === 'manager' || user?.role === 'admin') {
         const [dashRes, entriesRes] = await Promise.all([
@@ -121,7 +125,8 @@ export default function Dashboard() {
         await clockIn({
           project_id: preSelectedProjectId,
           latitude: userLat,
-          longitude: userLng
+          longitude: userLng,
+          work_location: workLocation
         });
         setPreSelectedProjectId(null);
       }
@@ -331,6 +336,19 @@ export default function Dashboard() {
                 <MaterialIcons name="warning" size={13} color={colors.warning} /> Selectionnez un projet pour pointer
               </Text>
             )}
+
+            {/* Work Location Selector */}
+            {preSelectedProjectId && (
+              <View style={styles.locationRow}>
+                <Text style={styles.locationLabel}>Lieu :</Text>
+                {[{k:'office',l:'Bureau',i:'business'},{k:'home',l:'Teletravail',i:'home'},{k:'onsite',l:'Chantier',i:'construction'}].map(loc => (
+                  <Pressable key={loc.k} style={[styles.locationChip, workLocation === loc.k && styles.locationChipActive]} onPress={() => setWorkLocation(loc.k)}>
+                    <MaterialIcons name={loc.i as any} size={14} color={workLocation === loc.k ? '#FFF' : colors.textLight} />
+                    <Text style={[styles.locationChipText, workLocation === loc.k && styles.locationChipTextActive]}>{loc.l}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -458,6 +476,48 @@ export default function Dashboard() {
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{weekStats.days_worked}</Text>
             <Text style={styles.statLabel}>Jours travailles</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Balances (Soldes) */}
+      {balances && (
+        <View>
+          <Text style={styles.sectionTitle}>Mes soldes</Text>
+          <View style={styles.statsGrid}>
+            <View style={[styles.statCard, styles.statCardGreen]}>
+              <Text style={[styles.statValue, { color: colors.success }]}>{balances.vacation_remaining}</Text>
+              <Text style={styles.statLabel}>Vacances restantes</Text>
+              <Text style={styles.statSub}>{balances.vacation_used} / {balances.vacation_total} jours pris</Text>
+            </View>
+            <View style={[styles.statCard, styles.statCardYellow]}>
+              <Text style={[styles.statValue, { color: colors.warning }]}>{balances.overtime_hours}h</Text>
+              <Text style={styles.statLabel}>Heures supplementaires</Text>
+            </View>
+            <View style={[styles.statCard, styles.statCardBlue]}>
+              <Text style={[styles.statValue, { color: colors.primary }]}>{balances.month_hours}h</Text>
+              <Text style={styles.statLabel}>Heures ce mois</Text>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${Math.min(100, (balances.month_hours / balances.month_target) * 100)}%`, backgroundColor: colors.primary }]} />
+              </View>
+            </View>
+            <View style={styles.statCard}>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={[styles.statValue, { color: '#2563EB', fontSize: fontSize.md }]}>{balances.office_days}</Text>
+                  <Text style={styles.statSub}>Bureau</Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={[styles.statValue, { color: '#7C3AED', fontSize: fontSize.md }]}>{balances.telework_days}</Text>
+                  <Text style={styles.statSub}>Teletravail</Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={[styles.statValue, { color: '#059669', fontSize: fontSize.md }]}>{balances.onsite_days}</Text>
+                  <Text style={styles.statSub}>Chantier</Text>
+                </View>
+              </View>
+              <Text style={styles.statLabel}>Repartition mois</Text>
+            </View>
           </View>
         </View>
       )}
@@ -707,6 +767,32 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  /* Work Location Selector */
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#DBEAFE',
+  },
+  locationLabel: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
+  locationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  locationChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  locationChipText: { fontSize: fontSize.xs, color: colors.textLight, fontWeight: '600' },
+  locationChipTextActive: { color: '#FFF' },
+
   /* Geofence Section */
   geoSection: {
     backgroundColor: '#F8FAFC',
@@ -796,6 +882,7 @@ const styles = StyleSheet.create({
   statCardRed: { borderLeftWidth: 4, borderLeftColor: colors.error },
   statValue: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text, marginBottom: 2 },
   statLabel: { fontSize: fontSize.xs, color: colors.textLight },
+  statSub: { fontSize: 10, color: colors.textLight, marginTop: 2 },
   progressBar: { height: 5, backgroundColor: colors.borderLight, borderRadius: 3, marginTop: spacing.sm, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 3 },
 
