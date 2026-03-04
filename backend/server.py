@@ -755,14 +755,22 @@ async def clock_in(data: TimesheetCreate, user=Depends(get_current_user)):
     today = datetime.utcnow().date().isoformat()
     user_id = str(user['_id'])
     
-    existing = await db.timeentries.find_one({
+    # Auto-close any stale open entries (from previous days or abandoned sessions)
+    stale = await db.timeentries.find_one({
         'user_id': user_id,
-        'date': today,
         'clock_out': None
     })
-    
-    if existing:
-        raise HTTPException(status_code=400, detail="Déjà pointé aujourd'hui")
+    if stale:
+        close_time = stale.get('clock_in', datetime.utcnow())
+        # If stale entry is from today, close it; if from another day, close at end of that day
+        if stale.get('date') == today:
+            close_time = datetime.utcnow()
+        else:
+            close_time = stale['clock_in'] + timedelta(hours=8)  # Auto-close at 8h
+        await db.timeentries.update_one(
+            {'_id': stale['_id']},
+            {'$set': {'clock_out': close_time, 'status': TimesheetStatus.PENDING}}
+        )
     
     entry_doc = {
         'user_id': user_id,
@@ -888,10 +896,20 @@ async def get_current_entry(user=Depends(get_current_user)):
     today = datetime.utcnow().date().isoformat()
     user_id = str(user['_id'])
     
+    # First look for an active entry (clock_out is None)
     entry = await db.timeentries.find_one({
         'user_id': user_id,
-        'date': today
+        'date': today,
+        'clock_out': None
     })
+    
+    # If no active entry, get the most recent completed one
+    if not entry:
+        cursor = db.timeentries.find(
+            {'user_id': user_id, 'date': today}
+        ).sort('clock_in', -1).limit(1)
+        entries = await cursor.to_list(1)
+        entry = entries[0] if entries else None
     
     if not entry:
         return {'active': False, 'entry': None}

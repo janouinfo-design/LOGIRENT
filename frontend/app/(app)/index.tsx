@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
@@ -139,7 +139,7 @@ export default function Dashboard() {
       </View>
 
       {/* Pointage Card */}
-      <View style={styles.punchCard} data-testid="clock-section">
+      <View style={styles.punchCard} testID="clock-section">
         {/* Status + Timer Row */}
         <View style={styles.timerRow}>
           <View style={styles.timerLeft}>
@@ -203,11 +203,11 @@ export default function Dashboard() {
         {/* 3 Action Buttons - Always visible, high contrast */}
         <View style={styles.actionRow}>
           {/* Arrivée */}
-          <TouchableOpacity
+          <Pressable
             style={[styles.actionBtn, isActive ? styles.btnGreenDisabled : styles.btnGreen]}
             onPress={() => handleAction('clockin')}
             disabled={isActive || actionLoading !== ''}
-            data-testid="clock-in-button"
+            testID="clock-in-button"
           >
             {actionLoading === 'clockin' ? (
               <ActivityIndicator color="#FFF" size="small" />
@@ -217,14 +217,14 @@ export default function Dashboard() {
             <Text style={[styles.actionLabel, isActive && styles.actionLabelDisabled]}>
               Arrivée
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Pause */}
-          <TouchableOpacity
+          <Pressable
             style={[styles.actionBtn, !isActive ? styles.btnOrangeDisabled : (isOnBreak ? styles.btnOrangeActive : styles.btnOrange)]}
             onPress={() => handleAction('break')}
             disabled={!isActive || actionLoading !== ''}
-            data-testid="break-button"
+            testID="break-button"
           >
             {actionLoading === 'break' ? (
               <ActivityIndicator color="#FFF" size="small" />
@@ -238,14 +238,14 @@ export default function Dashboard() {
             <Text style={[styles.actionLabel, !isActive && styles.actionLabelDisabled]}>
               {isOnBreak ? 'Reprendre' : 'Pause'}
             </Text>
-          </TouchableOpacity>
+          </Pressable>
 
           {/* Départ */}
-          <TouchableOpacity
+          <Pressable
             style={[styles.actionBtn, !isActive ? styles.btnRedDisabled : styles.btnRed]}
             onPress={() => handleAction('clockout')}
             disabled={!isActive || actionLoading !== ''}
-            data-testid="clock-out-button"
+            testID="clock-out-button"
           >
             {actionLoading === 'clockout' ? (
               <ActivityIndicator color="#FFF" size="small" />
@@ -255,7 +255,7 @@ export default function Dashboard() {
             <Text style={[styles.actionLabel, !isActive && styles.actionLabelDisabled]}>
               Départ
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
       </View>
 
