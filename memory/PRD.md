@@ -16,7 +16,7 @@ Plateforme SaaS complete de gestion du temps et des ressources humaines pour ent
 ├── frontend/app/(app)/
 │   ├── index.tsx               # Dashboard (pointage + soldes + geofencing)
 │   ├── timesheets.tsx          # Feuilles de temps
-│   ├── projects.tsx            # Gestion projets (carte GPS interactive)
+│   ├── projects.tsx            # Gestion projets (budget, taux, heures/mois, GPS)
 │   ├── planning.tsx            # Planning equipes (calendrier hebdo)
 │   ├── leaves.tsx              # Absences (7 types)
 │   ├── expenses.tsx            # Notes de frais
@@ -41,7 +41,7 @@ Plateforme SaaS complete de gestion du temps et des ressources humaines pour ent
     └── MapPicker.tsx           # Carte interactive (admin projets)
 ```
 
-## ALL FEATURES IMPLEMENTED (March 4, 2026)
+## ALL FEATURES IMPLEMENTED
 
 ### 1. Pointage / Timbrage
 - Clock-in/out + pauses, timer temps reel
@@ -112,13 +112,33 @@ Plateforme SaaS complete de gestion du temps et des ressources humaines pour ent
 ### 17. Gestion admin complete
 - Utilisateurs, Departements, Clients, Activites, Roles (Admin/Manager/Employe)
 
+### 18. Module Projets ameliore (Mars 4, 2026)
+- Champ devise (CHF, EUR, USD) par projet
+- 3 cartes resume par projet: Budget total, Taux horaire, Heures consommees ce mois
+- Endpoints: GET /api/projects/monthly-hours (batch), GET /api/projects/{id}/monthly-hours (detail)
+- Calcul automatique des heures et couts par mois
+
 ## Credentials
 - Admin: admin@timesheet.ch / admin123
 - Manager: manager@test.ch / test123
 - Employee: employe@test.ch / test123
 
-## Remaining (Nice to Have)
+## Remaining P1 Tasks
+- Connecter les modules placeholder aux APIs backend:
+  - Absences: types de conges + workflow approbation
+  - Notes de frais: integration complete
+  - Dossier RH: stockage fichiers
+  - Messagerie: implementation temps reel (WebSockets)
+  - Planning & Horaires
+  - Factures
+  - Paie: export logiciels suisses
+
+## Remaining P2/P3/P4 (Nice to Have)
 - Mode hors ligne PWA (Service Worker)
+- Plans d'abonnement SaaS avec gating
 - Application mobile native (Expo Go)
 - SSO / LDAP integration
 - Integration ProConcept, Opale
+
+## Refactoring Needed
+- Decouper server.py monolithique en modules (routes, models, services)
