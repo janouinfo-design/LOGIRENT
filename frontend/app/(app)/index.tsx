@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
-import { colors, fontSize, spacing, borderRadius, shadows } from '../../src/theme/constants';
+import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
 import { getCurrentEntry, clockIn, clockOut, startBreak, endBreak, getWeeklyStats, getDashboardStats, getTimeEntries } from '../../src/services/api';
 
 interface CurrentEntry {
@@ -42,7 +43,7 @@ export default function Dashboard() {
   const [dashStats, setDashStats] = useState<DashboardStats | null>(null);
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState('');
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -74,47 +75,22 @@ export default function Dashboard() {
     }
   }, [user]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
-  const handleClockIn = async () => {
-    setActionLoading(true);
+  const handleAction = async (action: string) => {
+    setActionLoading(action);
     try {
-      await clockIn({});
-      await loadData();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Erreur');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleClockOut = async () => {
-    setActionLoading(true);
-    try {
-      await clockOut({});
-      await loadData();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Erreur');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleBreak = async () => {
-    setActionLoading(true);
-    try {
-      if (current?.on_break) {
-        await endBreak();
-      } else {
-        await startBreak();
+      if (action === 'clockin') await clockIn({});
+      else if (action === 'clockout') await clockOut({});
+      else if (action === 'break') {
+        if (current?.on_break) await endBreak();
+        else await startBreak();
       }
       await loadData();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Erreur');
     } finally {
-      setActionLoading(false);
+      setActionLoading('');
     }
   };
 
@@ -127,6 +103,16 @@ export default function Dashboard() {
     return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   };
 
+  const getElapsedTime = () => {
+    if (!current?.active || !current.entry) return '00:00:00';
+    const start = new Date(current.entry.clock_in).getTime();
+    const elapsed = Math.floor((now.getTime() - start) / 1000);
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    const s = elapsed % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -135,96 +121,158 @@ export default function Dashboard() {
     );
   }
 
+  const isActive = current?.active || false;
+  const isOnBreak = current?.on_break || false;
   const isManager = user?.role === 'manager' || user?.role === 'admin';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Bonjour, {user?.first_name}</Text>
           <Text style={styles.dateText}>{formatDate(now)}</Text>
         </View>
-        <View style={styles.clock}>
-          <Text style={styles.clockText}>{formatTime(now)}</Text>
+        <View style={styles.liveClockBox}>
+          <Text style={styles.liveClockText}>{formatTime(now)}</Text>
         </View>
       </View>
 
-      {/* Clock In/Out Section */}
-      <View style={styles.clockSection} data-testid="clock-section">
-        <View style={styles.clockCard}>
-          <View style={styles.clockCardHeader}>
-            <Text style={styles.clockCardTitle}>
-              {current?.active ? 'En service' : 'Hors service'}
-            </Text>
-            <View style={[styles.statusDot, current?.active ? styles.statusActive : styles.statusInactive]} />
-          </View>
-
-          {current?.active && current.entry && (
-            <View style={styles.clockInfo}>
-              <View style={styles.clockInfoItem}>
-                <Text style={styles.clockInfoLabel}>Début</Text>
-                <Text style={styles.clockInfoValue}>
-                  {new Date(current.entry.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}
-                </Text>
-              </View>
-              <View style={styles.clockInfoItem}>
-                <Text style={styles.clockInfoLabel}>Heures</Text>
-                <Text style={styles.clockInfoValue}>{current.entry.total_hours.toFixed(1)}h</Text>
-              </View>
-              <View style={styles.clockInfoItem}>
-                <Text style={styles.clockInfoLabel}>Pause</Text>
-                <Text style={styles.clockInfoValue}>{current.entry.break_hours.toFixed(1)}h</Text>
-              </View>
-              {current.entry.project_name && (
-                <View style={styles.clockInfoItem}>
-                  <Text style={styles.clockInfoLabel}>Projet</Text>
-                  <Text style={styles.clockInfoValue}>{current.entry.project_name}</Text>
-                </View>
-              )}
+      {/* Pointage Card - New Design */}
+      <View style={styles.punchCard} data-testid="clock-section">
+        {/* Status + Timer */}
+        <View style={styles.timerSection}>
+          <View style={styles.timerLeft}>
+            <View style={[styles.statusIndicator, isActive ? (isOnBreak ? styles.statusBreak : styles.statusOn) : styles.statusOff]}>
+              <MaterialIcons
+                name={isActive ? (isOnBreak ? 'pause' : 'play-arrow') : 'power-settings-new'}
+                size={28}
+                color="#FFF"
+              />
             </View>
-          )}
-
-          <View style={styles.clockActions}>
-            {!current?.active ? (
-              <TouchableOpacity
-                style={styles.clockInBtn}
-                onPress={handleClockIn}
-                disabled={actionLoading}
-                data-testid="clock-in-button"
-              >
-                {actionLoading ? (
-                  <ActivityIndicator color="#FFF" />
-                ) : (
-                  <Text style={styles.clockBtnText}>Pointer l'arrivée</Text>
-                )}
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.clockBtnRow}>
-                <TouchableOpacity
-                  style={[styles.breakBtn, current.on_break && styles.breakBtnActive]}
-                  onPress={handleBreak}
-                  disabled={actionLoading}
-                  data-testid="break-button"
-                >
-                  <Text style={[styles.breakBtnText, current.on_break && styles.breakBtnTextActive]}>
-                    {current.on_break ? 'Fin de pause' : 'Pause'}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.clockOutBtn}
-                  onPress={handleClockOut}
-                  disabled={actionLoading}
-                  data-testid="clock-out-button"
-                >
-                  {actionLoading ? (
-                    <ActivityIndicator color="#FFF" />
-                  ) : (
-                    <Text style={styles.clockBtnText}>Pointer le départ</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            )}
+            <View style={styles.statusTextContainer}>
+              <Text style={styles.statusTitle}>
+                {isActive ? (isOnBreak ? 'En pause' : 'En service') : 'Hors service'}
+              </Text>
+              <Text style={styles.statusSubtitle}>
+                {isActive
+                  ? `Depuis ${new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}`
+                  : 'Pointez pour commencer'}
+              </Text>
+            </View>
           </View>
+          <View style={styles.timerRight}>
+            <Text style={[styles.timerText, isActive && styles.timerTextActive]}>
+              {getElapsedTime()}
+            </Text>
+            <Text style={styles.timerLabel}>Temps écoulé</Text>
+          </View>
+        </View>
+
+        {/* Shift Details - Always visible */}
+        <View style={styles.shiftDetails}>
+          <View style={styles.shiftItem}>
+            <MaterialIcons name="login" size={18} color={colors.textLight} />
+            <View style={styles.shiftItemText}>
+              <Text style={styles.shiftLabel}>Arrivée</Text>
+              <Text style={styles.shiftValue}>
+                {isActive ? new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.shiftDivider} />
+          <View style={styles.shiftItem}>
+            <MaterialIcons name="schedule" size={18} color={colors.textLight} />
+            <View style={styles.shiftItemText}>
+              <Text style={styles.shiftLabel}>Heures</Text>
+              <Text style={styles.shiftValue}>
+                {isActive ? `${current!.entry!.total_hours.toFixed(1)}h` : '0.0h'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.shiftDivider} />
+          <View style={styles.shiftItem}>
+            <MaterialIcons name="free-breakfast" size={18} color={colors.textLight} />
+            <View style={styles.shiftItemText}>
+              <Text style={styles.shiftLabel}>Pause</Text>
+              <Text style={styles.shiftValue}>
+                {isActive ? `${current!.entry!.break_hours.toFixed(1)}h` : '0.0h'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.shiftDivider} />
+          <View style={styles.shiftItem}>
+            <MaterialIcons name="folder-open" size={18} color={colors.textLight} />
+            <View style={styles.shiftItemText}>
+              <Text style={styles.shiftLabel}>Projet</Text>
+              <Text style={styles.shiftValue} numberOfLines={1}>
+                {isActive && current!.entry!.project_name ? current!.entry!.project_name : 'Aucun'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 3 Action Buttons - Always visible */}
+        <View style={styles.actionButtons}>
+          {/* Pointer l'arrivée */}
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnGreen, isActive && styles.actionBtnDisabled]}
+            onPress={() => handleAction('clockin')}
+            disabled={isActive || actionLoading !== ''}
+            data-testid="clock-in-button"
+          >
+            {actionLoading === 'clockin' ? (
+              <ActivityIndicator color="#FFF" size="small" />
+            ) : (
+              <MaterialIcons name="login" size={24} color={isActive ? 'rgba(255,255,255,0.5)' : '#FFF'} />
+            )}
+            <Text style={[styles.actionBtnLabel, isActive && styles.actionBtnLabelDisabled]}>
+              Arrivée
+            </Text>
+          </TouchableOpacity>
+
+          {/* Pause */}
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              styles.actionBtnOrange,
+              !isActive && styles.actionBtnDisabled,
+              isOnBreak && styles.actionBtnOrangeActive,
+            ]}
+            onPress={() => handleAction('break')}
+            disabled={!isActive || actionLoading !== ''}
+            data-testid="break-button"
+          >
+            {actionLoading === 'break' ? (
+              <ActivityIndicator color="#FFF" size="small" />
+            ) : (
+              <MaterialIcons
+                name={isOnBreak ? 'play-arrow' : 'pause'}
+                size={24}
+                color={!isActive ? 'rgba(255,255,255,0.5)' : '#FFF'}
+              />
+            )}
+            <Text style={[styles.actionBtnLabel, !isActive && styles.actionBtnLabelDisabled]}>
+              {isOnBreak ? 'Reprendre' : 'Pause'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Pointer le départ */}
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnRed, !isActive && styles.actionBtnDisabled]}
+            onPress={() => handleAction('clockout')}
+            disabled={!isActive || actionLoading !== ''}
+            data-testid="clock-out-button"
+          >
+            {actionLoading === 'clockout' ? (
+              <ActivityIndicator color="#FFF" size="small" />
+            ) : (
+              <MaterialIcons name="logout" size={24} color={!isActive ? 'rgba(255,255,255,0.5)' : '#FFF'} />
+            )}
+            <Text style={[styles.actionBtnLabel, !isActive && styles.actionBtnLabelDisabled]}>
+              Départ
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -291,7 +339,7 @@ export default function Dashboard() {
                 <Text style={styles.entryDate}>{entry.date}</Text>
               </View>
               <Text style={styles.entryHours}>{entry.duration.toFixed(1)}h</Text>
-              <View style={[styles.statusBadge, styles.statusPending]}>
+              <View style={styles.statusBadge}>
                 <Text style={styles.statusBadgeText}>En attente</Text>
               </View>
             </View>
@@ -303,141 +351,119 @@ export default function Dashboard() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  contentContainer: {
-    padding: spacing.lg,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+  contentContainer: { padding: spacing.lg },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  greeting: {
-    fontSize: fontSize.xl,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  dateText: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-    marginTop: 2,
-  },
-  clock: {
-    backgroundColor: colors.surface,
+  greeting: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
+  dateText: { fontSize: fontSize.sm, color: colors.textLight, marginTop: 2 },
+  liveClockBox: {
+    backgroundColor: colors.secondary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    ...shadows.sm,
   },
-  clockText: {
+  liveClockText: {
     fontSize: fontSize.xl,
     fontWeight: '700',
-    color: colors.text,
+    color: '#FFF',
     fontVariant: ['tabular-nums'],
   },
-  clockSection: {
-    marginBottom: spacing.lg,
-  },
-  clockCard: {
+
+  /* Punch Card */
+  punchCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
-    ...shadows.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  clockCardHeader: {
+
+  timerSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  clockCardTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  statusActive: {
-    backgroundColor: colors.success,
-  },
-  statusInactive: {
-    backgroundColor: colors.textLight,
-  },
-  clockInfo: {
-    flexDirection: 'row',
-    gap: spacing.xl,
     marginBottom: spacing.lg,
-    paddingBottom: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
   },
-  clockInfoItem: {},
-  clockInfoLabel: {
-    fontSize: fontSize.xs,
+  timerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  statusIndicator: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusOn: { backgroundColor: colors.success },
+  statusOff: { backgroundColor: '#94A3B8' },
+  statusBreak: { backgroundColor: colors.warning },
+  statusTextContainer: {},
+  statusTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
+  statusSubtitle: { fontSize: fontSize.sm, color: colors.textLight, marginTop: 2 },
+
+  timerRight: { alignItems: 'flex-end' },
+  timerText: {
+    fontSize: 32,
+    fontWeight: '800',
     color: colors.textLight,
-    textTransform: 'uppercase',
-    marginBottom: 2,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 1,
   },
-  clockInfoValue: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
+  timerTextActive: { color: colors.text },
+  timerLabel: { fontSize: fontSize.xs, color: colors.textLight, marginTop: 2 },
+
+  /* Shift Details */
+  shiftDetails: {
+    flexDirection: 'row',
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
   },
-  clockActions: {},
-  clockInBtn: {
-    backgroundColor: colors.success,
-    paddingVertical: 16,
-    borderRadius: borderRadius.sm,
-    alignItems: 'center',
-  },
-  clockOutBtn: {
+  shiftItem: {
     flex: 1,
-    backgroundColor: colors.error,
-    paddingVertical: 16,
-    borderRadius: borderRadius.sm,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
   },
-  clockBtnText: {
-    color: '#FFF',
-    fontSize: fontSize.md,
-    fontWeight: '700',
-  },
-  clockBtnRow: {
+  shiftItemText: {},
+  shiftLabel: { fontSize: fontSize.xs, color: colors.textLight, textTransform: 'uppercase' },
+  shiftValue: { fontSize: fontSize.md, fontWeight: '600', color: colors.text },
+  shiftDivider: { width: 1, backgroundColor: colors.border, marginHorizontal: spacing.sm },
+
+  /* Action Buttons */
+  actionButtons: {
     flexDirection: 'row',
     gap: spacing.md,
   },
-  breakBtn: {
+  actionBtn: {
     flex: 1,
-    backgroundColor: colors.surface,
-    paddingVertical: 16,
-    borderRadius: borderRadius.sm,
+    paddingVertical: 18,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.warning,
+    justifyContent: 'center',
+    gap: spacing.xs,
   },
-  breakBtnActive: {
-    backgroundColor: colors.warningLight,
-  },
-  breakBtnText: {
-    color: colors.warning,
-    fontSize: fontSize.md,
+  actionBtnGreen: { backgroundColor: '#10B981' },
+  actionBtnOrange: { backgroundColor: '#F59E0B' },
+  actionBtnOrangeActive: { backgroundColor: '#D97706' },
+  actionBtnRed: { backgroundColor: '#EF4444' },
+  actionBtnDisabled: { opacity: 0.35 },
+  actionBtnLabel: {
+    color: '#FFF',
+    fontSize: fontSize.sm,
     fontWeight: '700',
+    marginTop: 2,
   },
-  breakBtnTextActive: {
-    color: '#92400E',
-  },
+  actionBtnLabelDisabled: { color: 'rgba(255,255,255,0.6)' },
+
+  /* Stats Grid */
   statsGrid: {
     flexDirection: 'row',
     gap: spacing.md,
@@ -450,55 +476,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.lg,
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  statCardBlue: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
-  },
-  statCardGreen: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.success,
-  },
-  statCardYellow: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.warning,
-  },
-  statCardRed: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.error,
-  },
-  statValue: {
-    fontSize: fontSize.xxl,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  statLabel: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  progressBar: {
-    height: 6,
-    backgroundColor: colors.borderLight,
-    borderRadius: 3,
-    marginTop: spacing.sm,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.primary,
-    borderRadius: 3,
-  },
-  sectionTitle: {
-    fontSize: fontSize.lg,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: spacing.md,
-  },
-  section: {
-    marginBottom: spacing.lg,
-  },
+  statCardBlue: { borderLeftWidth: 4, borderLeftColor: colors.primary },
+  statCardGreen: { borderLeftWidth: 4, borderLeftColor: colors.success },
+  statCardYellow: { borderLeftWidth: 4, borderLeftColor: colors.warning },
+  statCardRed: { borderLeftWidth: 4, borderLeftColor: colors.error },
+  statValue: { fontSize: fontSize.xxl, fontWeight: '800', color: colors.text, marginBottom: spacing.xs },
+  statLabel: { fontSize: fontSize.sm, color: colors.textLight },
+  progressBar: { height: 6, backgroundColor: colors.borderLight, borderRadius: 3, marginTop: spacing.sm, overflow: 'hidden' },
+  progressFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 3 },
+
+  sectionTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
+  section: { marginBottom: spacing.lg },
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -506,37 +497,18 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.sm,
     marginBottom: spacing.sm,
-    ...shadows.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  entryInfo: {
-    flex: 1,
-  },
-  entryName: {
-    fontSize: fontSize.md,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  entryDate: {
-    fontSize: fontSize.sm,
-    color: colors.textLight,
-  },
-  entryHours: {
-    fontSize: fontSize.md,
-    fontWeight: '700',
-    color: colors.text,
-    marginRight: spacing.md,
-  },
+  entryInfo: { flex: 1 },
+  entryName: { fontSize: fontSize.md, fontWeight: '600', color: colors.text },
+  entryDate: { fontSize: fontSize.sm, color: colors.textLight },
+  entryHours: { fontSize: fontSize.md, fontWeight: '700', color: colors.text, marginRight: spacing.md },
   statusBadge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-  },
-  statusPending: {
     backgroundColor: colors.warningLight,
   },
-  statusBadgeText: {
-    fontSize: fontSize.xs,
-    fontWeight: '600',
-    color: '#92400E',
-  },
+  statusBadgeText: { fontSize: fontSize.xs, fontWeight: '600', color: '#92400E' },
 });
