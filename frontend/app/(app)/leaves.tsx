@@ -6,13 +6,13 @@ import { useAuth } from '../../src/context/AuthContext';
 import { getLeaves, createLeave, updateLeave, deleteLeave, approveLeave, rejectLeave } from '../../src/services/api';
 
 const leaveTypes = [
-  { key: 'vacation', label: 'Vacances' },
-  { key: 'sick', label: 'Maladie' },
-  { key: 'accident', label: 'Accident' },
-  { key: 'training', label: 'Formation' },
-  { key: 'maternity', label: 'Maternite' },
-  { key: 'paternity', label: 'Paternite' },
-  { key: 'special', label: 'Conge special' },
+  { key: 'vacation', label: 'Vacances', icon: 'beach-access', color: '#F59E0B' },
+  { key: 'sick', label: 'Maladie', icon: 'local-hospital', color: '#EF4444' },
+  { key: 'accident', label: 'Accident', icon: 'warning', color: '#DC2626' },
+  { key: 'training', label: 'Formation', icon: 'school', color: '#6366F1' },
+  { key: 'maternity', label: 'Maternite', icon: 'child-friendly', color: '#EC4899' },
+  { key: 'paternity', label: 'Paternite', icon: 'child-friendly', color: '#8B5CF6' },
+  { key: 'special', label: 'Conge special', icon: 'event-busy', color: '#F97316' },
 ];
 
 export default function LeavesScreen() {
@@ -27,87 +27,45 @@ export default function LeavesScreen() {
   const isManager = user?.role === 'manager' || user?.role === 'admin';
 
   const loadData = useCallback(async () => {
-    try {
-      const res = await getLeaves();
-      setLeaves(res.data);
-    } catch (err) {
-      console.log('Error:', err);
-    } finally {
-      setLoading(false);
-    }
+    try { const res = await getLeaves(); setLeaves(res.data); } catch (err) { console.log(err); } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const resetForm = () => {
-    setForm({ type: 'vacation', start_date: '', end_date: '', reason: '' });
-    setEditId(null);
-  };
+  const resetForm = () => { setForm({ type: 'vacation', start_date: '', end_date: '', reason: '' }); setEditId(null); };
 
   const handleCreate = async () => {
-    if (!form.start_date || !form.end_date) {
-      alert('Veuillez remplir les dates');
-      return;
-    }
+    if (!form.start_date || !form.end_date) { alert('Veuillez remplir les dates'); return; }
     try {
-      if (editId) {
-        await updateLeave(editId, form);
-      } else {
-        await createLeave(form);
-      }
-      setShowModal(false);
-      resetForm();
-      await loadData();
-    } catch (err: any) {
-      alert(err.response?.data?.detail || 'Erreur');
-    }
+      if (editId) { await updateLeave(editId, form); } else { await createLeave(form); }
+      setShowModal(false); resetForm(); await loadData();
+    } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); }
   };
 
   const handleEdit = (l: any) => {
     setForm({ type: l.type, start_date: l.start_date, end_date: l.end_date, reason: l.reason || '' });
-    setEditId(l.id);
-    setShowModal(true);
+    setEditId(l.id); setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    try { await deleteLeave(id); await loadData(); } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); }
-  };
+  const handleDelete = async (id: string) => { try { await deleteLeave(id); await loadData(); } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); } };
+  const handleApprove = async (id: string) => { try { await approveLeave(id); await loadData(); } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); } };
+  const handleReject = async (id: string) => { try { await rejectLeave(id); await loadData(); } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); } };
 
-  const handleApprove = async (id: string) => {
-    try { await approveLeave(id); await loadData(); } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); }
-  };
-
-  const handleReject = async (id: string) => {
-    try { await rejectLeave(id); await loadData(); } catch (err: any) { alert(err.response?.data?.detail || 'Erreur'); }
-  };
-
-  const typeLabel = (t: string) => leaveTypes.find((lt) => lt.key === t)?.label || t;
+  const getTypeConfig = (t: string) => leaveTypes.find((lt) => lt.key === t) || { key: t, label: t, icon: 'event-busy', color: '#94A3B8' };
   const statusColor = (s: string) => {
-    switch (s) {
-      case 'approved': return { bg: colors.successLight, text: '#065F46' };
-      case 'rejected': return { bg: colors.errorLight, text: '#991B1B' };
-      default: return { bg: colors.warningLight, text: '#92400E' };
-    }
-  };
-  const statusLabel = (s: string) => {
-    switch (s) {
-      case 'approved': return 'Approuvee';
-      case 'rejected': return 'Refusee';
-      default: return 'En attente';
-    }
+    switch (s) { case 'approved': return { bg: '#D1FAE5', text: '#065F46', label: 'Approuvee' }; case 'rejected': return { bg: '#FEE2E2', text: '#991B1B', label: 'Refusee' }; default: return { bg: '#FEF3C7', text: '#92400E', label: 'En attente' }; }
   };
 
   const filtered = leaves.filter(l => {
-    const matchSearch = `${l.user_name || ''} ${typeLabel(l.type)} ${l.reason || ''} ${l.start_date} ${l.end_date}`.toLowerCase().includes(search.toLowerCase());
+    const tc = getTypeConfig(l.type);
+    const matchSearch = `${l.user_name || ''} ${tc.label} ${l.reason || ''} ${l.start_date} ${l.end_date}`.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === 'all' || l.status === filterStatus;
     return matchSearch && matchStatus;
   });
 
   const statusFilters = [
-    { key: 'all', label: 'Tous' },
-    { key: 'pending', label: 'En attente' },
-    { key: 'approved', label: 'Approuvees' },
-    { key: 'rejected', label: 'Refusees' },
+    { key: 'all', label: 'Tous' }, { key: 'pending', label: 'En attente' },
+    { key: 'approved', label: 'Approuvees' }, { key: 'rejected', label: 'Refusees' },
   ];
 
   return (
@@ -119,82 +77,73 @@ export default function LeavesScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search bar */}
       <View style={styles.searchRow} data-testid="leaves-search-bar">
         <MaterialIcons name="search" size={20} color={colors.textLight} style={{ marginRight: spacing.sm }} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher par nom, type, raison..."
-          value={search}
-          onChangeText={setSearch}
-          placeholderTextColor={colors.textLight}
-          data-testid="leaves-search-input"
-        />
-        {search.length > 0 && (
-          <TouchableOpacity onPress={() => setSearch('')}>
-            <MaterialIcons name="close" size={18} color={colors.textLight} />
-          </TouchableOpacity>
-        )}
+        <TextInput style={styles.searchInput} placeholder="Rechercher par nom, type, raison..." value={search} onChangeText={setSearch} placeholderTextColor={colors.textLight} data-testid="leaves-search-input" />
+        {search.length > 0 && <TouchableOpacity onPress={() => setSearch('')}><MaterialIcons name="close" size={18} color={colors.textLight} /></TouchableOpacity>}
       </View>
 
-      {/* Status filters */}
       <View style={styles.filterRow}>
         {statusFilters.map(f => (
-          <TouchableOpacity
-            key={f.key}
-            style={[styles.filterChip, filterStatus === f.key && styles.filterChipActive]}
-            onPress={() => setFilterStatus(f.key)}
-            data-testid={`filter-${f.key}`}
-          >
+          <TouchableOpacity key={f.key} style={[styles.filterChip, filterStatus === f.key && styles.filterChipActive]} onPress={() => setFilterStatus(f.key)} data-testid={`filter-${f.key}`}>
             <Text style={[styles.filterChipText, filterStatus === f.key && styles.filterChipTextActive]}>{f.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
-      ) : filtered.length === 0 ? (
+      {loading ? <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /> : filtered.length === 0 ? (
         <View style={styles.empty}><Text style={styles.emptyText}>Aucune absence trouvee</Text></View>
       ) : (
-        <View style={styles.list}>
+        <View style={styles.grid}>
           {filtered.map((l) => {
+            const tc = getTypeConfig(l.type);
             const sc = statusColor(l.status);
             const canEdit = l.status === 'pending' && (l.user_id === user?.id || isManager);
             return (
               <View key={l.id} style={styles.card} data-testid={`leave-card-${l.id}`}>
-                <View style={styles.cardRow}>
-                  <View style={styles.cardInfo}>
-                    {isManager && <Text style={styles.cardName}>{l.user_name}</Text>}
-                    <View style={styles.typeBadge}><Text style={styles.typeText}>{typeLabel(l.type)}</Text></View>
-                    <Text style={styles.cardDates}>{l.start_date} {'→'} {l.end_date}</Text>
-                    {l.reason ? <Text style={styles.cardReason}>{l.reason}</Text> : null}
+                <View style={styles.cardTop}>
+                  <View style={[styles.typeIcon, { backgroundColor: tc.color + '18' }]}>
+                    <MaterialIcons name={tc.icon as any} size={20} color={tc.color} />
                   </View>
-                  <View style={styles.cardActions}>
-                    <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}>
-                      <Text style={[styles.statusText, { color: sc.text }]}>{statusLabel(l.status)}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}>
+                    <Text style={[styles.statusText, { color: sc.text }]}>{sc.label}</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.cardType}>{tc.label}</Text>
+                {isManager && <Text style={styles.cardName}>{l.user_name}</Text>}
+
+                <View style={styles.dateRow}>
+                  <MaterialIcons name="date-range" size={14} color={colors.textLight} />
+                  <Text style={styles.dateText}>{l.start_date} → {l.end_date}</Text>
+                </View>
+
+                {l.reason ? <Text style={styles.cardReason} numberOfLines={2}>{l.reason}</Text> : null}
+
+                <View style={styles.cardFooter}>
+                  {canEdit && (
+                    <View style={styles.editRow}>
+                      <TouchableOpacity style={styles.editBtn} onPress={() => handleEdit(l)} data-testid={`edit-leave-${l.id}`}>
+                        <MaterialIcons name="edit" size={14} color={colors.primary} />
+                        <Text style={styles.editBtnText}>Modifier</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => handleDelete(l.id)} data-testid={`delete-leave-${l.id}`}>
+                        <MaterialIcons name="delete-outline" size={16} color={colors.error} />
+                      </TouchableOpacity>
                     </View>
-                    {canEdit && (
-                      <View style={styles.editRow}>
-                        <TouchableOpacity style={styles.editBtn} onPress={() => handleEdit(l)} data-testid={`edit-leave-${l.id}`}>
-                          <MaterialIcons name="edit" size={14} color={colors.primary} />
-                          <Text style={styles.editBtnText}>Modifier</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleDelete(l.id)} data-testid={`delete-leave-${l.id}`}>
-                          <MaterialIcons name="delete-outline" size={16} color={colors.error} />
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                    {isManager && l.status === 'pending' && (
-                      <View style={styles.actionRow}>
-                        <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(l.id)} data-testid={`approve-leave-${l.id}`}>
-                          <Text style={styles.approveBtnText}>Approuver</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(l.id)} data-testid={`reject-leave-${l.id}`}>
-                          <Text style={styles.rejectBtnText}>Refuser</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </View>
+                  )}
+                  {isManager && l.status === 'pending' && (
+                    <View style={styles.actionRow}>
+                      <TouchableOpacity style={styles.approveBtn} onPress={() => handleApprove(l.id)} data-testid={`approve-leave-${l.id}`}>
+                        <MaterialIcons name="check" size={14} color="#065F46" />
+                        <Text style={styles.approveBtnText}>Approuver</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.rejectBtn} onPress={() => handleReject(l.id)} data-testid={`reject-leave-${l.id}`}>
+                        <MaterialIcons name="close" size={14} color="#991B1B" />
+                        <Text style={styles.rejectBtnText}>Refuser</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
               </View>
             );
@@ -207,15 +156,14 @@ export default function LeavesScreen() {
           <View style={styles.modal}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{editId ? 'Modifier l\'absence' : 'Demande d\'absence'}</Text>
-              <TouchableOpacity onPress={() => { setShowModal(false); resetForm(); }}>
-                <MaterialIcons name="close" size={24} color={colors.textLight} />
-              </TouchableOpacity>
+              <TouchableOpacity onPress={() => { setShowModal(false); resetForm(); }}><MaterialIcons name="close" size={24} color={colors.textLight} /></TouchableOpacity>
             </View>
             <Text style={styles.label}>Type</Text>
             <View style={styles.typeRow}>
               {leaveTypes.map((lt) => (
-                <TouchableOpacity key={lt.key} style={[styles.typeBtn, form.type === lt.key && styles.typeBtnActive]} onPress={() => setForm({ ...form, type: lt.key })}>
-                  <Text style={[styles.typeBtnText, form.type === lt.key && styles.typeBtnTextActive]}>{lt.label}</Text>
+                <TouchableOpacity key={lt.key} style={[styles.typeBtn, form.type === lt.key && { backgroundColor: lt.color, borderColor: lt.color }]} onPress={() => setForm({ ...form, type: lt.key })}>
+                  <MaterialIcons name={lt.icon as any} size={14} color={form.type === lt.key ? '#FFF' : lt.color} />
+                  <Text style={[styles.typeBtnText, form.type === lt.key && { color: '#FFF', fontWeight: '600' }]}>{lt.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -243,16 +191,7 @@ const styles = StyleSheet.create({
   title: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
   addBtn: { backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.sm },
   addBtnText: { color: '#FFF', fontSize: fontSize.sm, fontWeight: '600' },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    marginBottom: spacing.md,
-  },
+  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, marginBottom: spacing.md },
   searchInput: { flex: 1, paddingVertical: 12, fontSize: fontSize.md, color: colors.text },
   filterRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.lg },
   filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
@@ -261,26 +200,35 @@ const styles = StyleSheet.create({
   filterChipTextActive: { color: '#FFF', fontWeight: '600' },
   empty: { alignItems: 'center', paddingVertical: spacing.xxl },
   emptyText: { fontSize: fontSize.md, color: colors.textLight },
-  list: { gap: spacing.md },
-  card: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  cardRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  cardInfo: { flex: 1 },
-  cardName: { fontSize: fontSize.md, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },
-  typeBadge: { backgroundColor: colors.primaryLight, alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 3, borderRadius: borderRadius.full, marginBottom: spacing.sm },
-  typeText: { fontSize: fontSize.xs, fontWeight: '600', color: colors.primary },
-  cardDates: { fontSize: fontSize.sm, color: colors.text, marginBottom: spacing.xs },
-  cardReason: { fontSize: fontSize.sm, color: colors.textLight },
-  cardActions: { alignItems: 'flex-end', gap: spacing.sm },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    padding: spacing.lg,
+    minWidth: 280,
+    flex: 1,
+    maxWidth: '48%',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  typeIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: borderRadius.full },
   statusText: { fontSize: fontSize.xs, fontWeight: '600' },
-  editRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  cardType: { fontSize: fontSize.md, fontWeight: '700', color: colors.text, marginBottom: 2 },
+  cardName: { fontSize: fontSize.sm, color: colors.primary, fontWeight: '500', marginBottom: spacing.sm },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.xs },
+  dateText: { fontSize: fontSize.sm, color: colors.textLight },
+  cardReason: { fontSize: fontSize.xs, color: colors.textLight, marginTop: spacing.xs },
+  cardFooter: { marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderLight, gap: spacing.sm },
+  editRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   editBtnText: { fontSize: fontSize.sm, color: colors.primary, fontWeight: '500' },
-  actionRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
-  approveBtn: { backgroundColor: colors.successLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: borderRadius.sm },
-  approveBtnText: { color: '#065F46', fontSize: fontSize.sm, fontWeight: '600' },
-  rejectBtn: { backgroundColor: colors.errorLight, paddingHorizontal: 12, paddingVertical: 6, borderRadius: borderRadius.sm },
-  rejectBtnText: { color: '#991B1B', fontSize: fontSize.sm, fontWeight: '600' },
+  actionRow: { flexDirection: 'row', gap: spacing.sm },
+  approveBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#D1FAE5', paddingHorizontal: 10, paddingVertical: 6, borderRadius: borderRadius.sm, flex: 1, justifyContent: 'center' },
+  approveBtnText: { color: '#065F46', fontSize: fontSize.xs, fontWeight: '600' },
+  rejectBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#FEE2E2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: borderRadius.sm, flex: 1, justifyContent: 'center' },
+  rejectBtnText: { color: '#991B1B', fontSize: fontSize.xs, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modal: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.lg, width: '90%', maxWidth: 500 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
@@ -288,10 +236,8 @@ const styles = StyleSheet.create({
   label: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: 12, fontSize: fontSize.md, color: colors.text, marginBottom: spacing.md, backgroundColor: colors.background },
   typeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
-  typeBtn: { paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
-  typeBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  typeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
   typeBtnText: { fontSize: fontSize.sm, color: colors.textLight },
-  typeBtnTextActive: { color: '#FFF', fontWeight: '600' },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md },
   cancelBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.sm },
   cancelBtnText: { color: colors.textLight, fontSize: fontSize.md },
