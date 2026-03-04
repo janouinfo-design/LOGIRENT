@@ -138,85 +138,73 @@ export default function Dashboard() {
         </View>
       </View>
 
-      {/* Pointage Card - New Design */}
+      {/* Pointage Card */}
       <View style={styles.punchCard} data-testid="clock-section">
-        {/* Status + Timer */}
-        <View style={styles.timerSection}>
+        {/* Status + Timer Row */}
+        <View style={styles.timerRow}>
           <View style={styles.timerLeft}>
-            <View style={[styles.statusIndicator, isActive ? (isOnBreak ? styles.statusBreak : styles.statusOn) : styles.statusOff]}>
+            <View style={[styles.statusDot, isActive ? (isOnBreak ? styles.dotBreak : styles.dotOn) : styles.dotOff]}>
               <MaterialIcons
                 name={isActive ? (isOnBreak ? 'pause' : 'play-arrow') : 'power-settings-new'}
-                size={28}
+                size={22}
                 color="#FFF"
               />
             </View>
-            <View style={styles.statusTextContainer}>
+            <View>
               <Text style={styles.statusTitle}>
                 {isActive ? (isOnBreak ? 'En pause' : 'En service') : 'Hors service'}
               </Text>
-              <Text style={styles.statusSubtitle}>
+              <Text style={styles.statusSub}>
                 {isActive
                   ? `Depuis ${new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}`
-                  : 'Pointez pour commencer'}
+                  : 'Pointez pour commencer votre journée'}
               </Text>
             </View>
           </View>
           <View style={styles.timerRight}>
-            <Text style={[styles.timerText, isActive && styles.timerTextActive]}>
+            <Text style={[styles.timerText, isActive && styles.timerTextLive]}>
               {getElapsedTime()}
             </Text>
-            <Text style={styles.timerLabel}>Temps écoulé</Text>
           </View>
         </View>
 
-        {/* Shift Details - Always visible */}
-        <View style={styles.shiftDetails}>
-          <View style={styles.shiftItem}>
-            <MaterialIcons name="login" size={18} color={colors.textLight} />
-            <View style={styles.shiftItemText}>
-              <Text style={styles.shiftLabel}>Arrivée</Text>
-              <Text style={styles.shiftValue}>
-                {isActive ? new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-              </Text>
-            </View>
+        {/* Shift Info Grid - 2x2 on small, 4-col on large */}
+        <View style={styles.shiftGrid}>
+          <View style={styles.shiftCell}>
+            <MaterialIcons name="login" size={20} color={colors.primary} />
+            <Text style={styles.shiftCellLabel}>Arrivée</Text>
+            <Text style={styles.shiftCellValue}>
+              {isActive ? new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+            </Text>
           </View>
-          <View style={styles.shiftDivider} />
-          <View style={styles.shiftItem}>
-            <MaterialIcons name="schedule" size={18} color={colors.textLight} />
-            <View style={styles.shiftItemText}>
-              <Text style={styles.shiftLabel}>Heures</Text>
-              <Text style={styles.shiftValue}>
-                {isActive ? `${current!.entry!.total_hours.toFixed(1)}h` : '0.0h'}
-              </Text>
-            </View>
+          <View style={styles.shiftCell}>
+            <MaterialIcons name="schedule" size={20} color={colors.success} />
+            <Text style={styles.shiftCellLabel}>Heures</Text>
+            <Text style={styles.shiftCellValue}>
+              {isActive ? `${current!.entry!.total_hours.toFixed(1)}h` : '0.0h'}
+            </Text>
           </View>
-          <View style={styles.shiftDivider} />
-          <View style={styles.shiftItem}>
-            <MaterialIcons name="free-breakfast" size={18} color={colors.textLight} />
-            <View style={styles.shiftItemText}>
-              <Text style={styles.shiftLabel}>Pause</Text>
-              <Text style={styles.shiftValue}>
-                {isActive ? `${current!.entry!.break_hours.toFixed(1)}h` : '0.0h'}
-              </Text>
-            </View>
+          <View style={styles.shiftCell}>
+            <MaterialIcons name="free-breakfast" size={20} color={colors.warning} />
+            <Text style={styles.shiftCellLabel}>Pause</Text>
+            <Text style={styles.shiftCellValue}>
+              {isActive ? `${current!.entry!.break_hours.toFixed(1)}h` : '0.0h'}
+            </Text>
           </View>
-          <View style={styles.shiftDivider} />
-          <View style={styles.shiftItem}>
-            <MaterialIcons name="folder-open" size={18} color={colors.textLight} />
-            <View style={styles.shiftItemText}>
-              <Text style={styles.shiftLabel}>Projet</Text>
-              <Text style={styles.shiftValue} numberOfLines={1}>
-                {isActive && current!.entry!.project_name ? current!.entry!.project_name : 'Aucun'}
-              </Text>
-            </View>
+          <View style={styles.shiftCell}>
+            <MaterialIcons name="folder-open" size={20} color="#8B5CF6" />
+            <Text style={styles.shiftCellLabel}>Projet</Text>
+            <Text style={styles.shiftCellValue} numberOfLines={1}>
+              {isActive && current!.entry!.project_name ? current!.entry!.project_name : 'Aucun'}
+            </Text>
           </View>
         </View>
 
-        {/* 3 Action Buttons - Always visible */}
-        <View style={styles.actionButtons}>
-          {/* Pointer l'arrivée */}
+        {/* 3 Action Buttons - Always visible, high contrast */}
+        <View style={styles.actionRow}>
+          {/* Arrivée */}
           <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnGreen, isActive && styles.actionBtnDisabled]}
+            style={[styles.actionBtn, isActive ? styles.btnGreenDisabled : styles.btnGreen]}
             onPress={() => handleAction('clockin')}
             disabled={isActive || actionLoading !== ''}
             data-testid="clock-in-button"
@@ -224,21 +212,16 @@ export default function Dashboard() {
             {actionLoading === 'clockin' ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
-              <MaterialIcons name="login" size={24} color={isActive ? 'rgba(255,255,255,0.5)' : '#FFF'} />
+              <MaterialIcons name="login" size={26} color={isActive ? '#9CA3AF' : '#FFF'} />
             )}
-            <Text style={[styles.actionBtnLabel, isActive && styles.actionBtnLabelDisabled]}>
+            <Text style={[styles.actionLabel, isActive && styles.actionLabelDisabled]}>
               Arrivée
             </Text>
           </TouchableOpacity>
 
           {/* Pause */}
           <TouchableOpacity
-            style={[
-              styles.actionBtn,
-              styles.actionBtnOrange,
-              !isActive && styles.actionBtnDisabled,
-              isOnBreak && styles.actionBtnOrangeActive,
-            ]}
+            style={[styles.actionBtn, !isActive ? styles.btnOrangeDisabled : (isOnBreak ? styles.btnOrangeActive : styles.btnOrange)]}
             onPress={() => handleAction('break')}
             disabled={!isActive || actionLoading !== ''}
             data-testid="break-button"
@@ -248,18 +231,18 @@ export default function Dashboard() {
             ) : (
               <MaterialIcons
                 name={isOnBreak ? 'play-arrow' : 'pause'}
-                size={24}
-                color={!isActive ? 'rgba(255,255,255,0.5)' : '#FFF'}
+                size={26}
+                color={!isActive ? '#9CA3AF' : '#FFF'}
               />
             )}
-            <Text style={[styles.actionBtnLabel, !isActive && styles.actionBtnLabelDisabled]}>
+            <Text style={[styles.actionLabel, !isActive && styles.actionLabelDisabled]}>
               {isOnBreak ? 'Reprendre' : 'Pause'}
             </Text>
           </TouchableOpacity>
 
-          {/* Pointer le départ */}
+          {/* Départ */}
           <TouchableOpacity
-            style={[styles.actionBtn, styles.actionBtnRed, !isActive && styles.actionBtnDisabled]}
+            style={[styles.actionBtn, !isActive ? styles.btnRedDisabled : styles.btnRed]}
             onPress={() => handleAction('clockout')}
             disabled={!isActive || actionLoading !== ''}
             data-testid="clock-out-button"
@@ -267,9 +250,9 @@ export default function Dashboard() {
             {actionLoading === 'clockout' ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
-              <MaterialIcons name="logout" size={24} color={!isActive ? 'rgba(255,255,255,0.5)' : '#FFF'} />
+              <MaterialIcons name="logout" size={26} color={!isActive ? '#9CA3AF' : '#FFF'} />
             )}
-            <Text style={[styles.actionBtnLabel, !isActive && styles.actionBtnLabelDisabled]}>
+            <Text style={[styles.actionLabel, !isActive && styles.actionLabelDisabled]}>
               Départ
             </Text>
           </TouchableOpacity>
@@ -281,20 +264,20 @@ export default function Dashboard() {
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{weekStats.total_hours.toFixed(1)}h</Text>
-            <Text style={styles.statLabel}>Heures cette semaine</Text>
+            <Text style={styles.statLabel}>Heures / semaine</Text>
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${Math.min(100, (weekStats.total_hours / weekStats.contract_hours) * 100)}%` }]} />
             </View>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{weekStats.billable_hours.toFixed(1)}h</Text>
-            <Text style={styles.statLabel}>Heures facturables</Text>
+            <Text style={styles.statLabel}>Facturables</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, weekStats.overtime_hours > 0 && { color: colors.warning }]}>
               {weekStats.overtime_hours.toFixed(1)}h
             </Text>
-            <Text style={styles.statLabel}>Heures supplémentaires</Text>
+            <Text style={styles.statLabel}>Supplémentaires</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{weekStats.days_worked}</Text>
@@ -303,7 +286,7 @@ export default function Dashboard() {
         </View>
       )}
 
-      {/* Manager Dashboard Stats */}
+      {/* Manager Stats */}
       {isManager && dashStats && (
         <View>
           <Text style={styles.sectionTitle}>Vue d'ensemble</Text>
@@ -322,13 +305,13 @@ export default function Dashboard() {
             </View>
             <View style={[styles.statCard, styles.statCardRed]}>
               <Text style={[styles.statValue, { color: colors.error }]}>{dashStats.pending_leaves}</Text>
-              <Text style={styles.statLabel}>Absences en attente</Text>
+              <Text style={styles.statLabel}>Absences</Text>
             </View>
           </View>
         </View>
       )}
 
-      {/* Recent Pending Entries for Managers */}
+      {/* Pending Entries */}
       {isManager && recentEntries.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pointages en attente</Text>
@@ -339,8 +322,8 @@ export default function Dashboard() {
                 <Text style={styles.entryDate}>{entry.date}</Text>
               </View>
               <Text style={styles.entryHours}>{entry.duration.toFixed(1)}h</Text>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusBadgeText}>En attente</Text>
+              <View style={styles.pendingBadge}>
+                <Text style={styles.pendingBadgeText}>En attente</Text>
               </View>
             </View>
           ))}
@@ -352,25 +335,26 @@ export default function Dashboard() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  contentContainer: { padding: spacing.lg },
+  contentContainer: { padding: spacing.md },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
+  /* Header */
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
   greeting: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
   dateText: { fontSize: fontSize.sm, color: colors.textLight, marginTop: 2 },
   liveClockBox: {
     backgroundColor: colors.secondary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
     borderRadius: borderRadius.md,
   },
   liveClockText: {
-    fontSize: fontSize.xl,
+    fontSize: fontSize.lg,
     fontWeight: '700',
     color: '#FFF',
     fontVariant: ['tabular-nums'],
@@ -380,102 +364,116 @@ const styles = StyleSheet.create({
   punchCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
 
-  timerSection: {
+  /* Timer Row */
+  timerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
-  timerLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  statusIndicator: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  timerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  statusDot: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statusOn: { backgroundColor: colors.success },
-  statusOff: { backgroundColor: '#94A3B8' },
-  statusBreak: { backgroundColor: colors.warning },
-  statusTextContainer: {},
-  statusTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
-  statusSubtitle: { fontSize: fontSize.sm, color: colors.textLight, marginTop: 2 },
+  dotOn: { backgroundColor: colors.success },
+  dotOff: { backgroundColor: '#94A3B8' },
+  dotBreak: { backgroundColor: colors.warning },
+  statusTitle: { fontSize: fontSize.md, fontWeight: '700', color: colors.text },
+  statusSub: { fontSize: fontSize.xs, color: colors.textLight, marginTop: 1 },
 
-  timerRight: { alignItems: 'flex-end' },
+  timerRight: {},
   timerText: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: '800',
-    color: colors.textLight,
+    color: '#CBD5E1',
     fontVariant: ['tabular-nums'],
-    letterSpacing: 1,
   },
-  timerTextActive: { color: colors.text },
-  timerLabel: { fontSize: fontSize.xs, color: colors.textLight, marginTop: 2 },
+  timerTextLive: { color: colors.text },
 
-  /* Shift Details */
-  shiftDetails: {
+  /* Shift Info Grid */
+  shiftGrid: {
     flexDirection: 'row',
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  shiftItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
     gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  shiftItemText: {},
-  shiftLabel: { fontSize: fontSize.xs, color: colors.textLight, textTransform: 'uppercase' },
-  shiftValue: { fontSize: fontSize.md, fontWeight: '600', color: colors.text },
-  shiftDivider: { width: 1, backgroundColor: colors.border, marginHorizontal: spacing.sm },
+  shiftCell: {
+    flex: 1,
+    minWidth: 100,
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.sm,
+    padding: spacing.sm,
+    alignItems: 'center',
+    gap: 4,
+  },
+  shiftCellLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  shiftCellValue: {
+    fontSize: fontSize.md,
+    fontWeight: '700',
+    color: colors.text,
+  },
 
   /* Action Buttons */
-  actionButtons: {
+  actionRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   actionBtn: {
     flex: 1,
-    paddingVertical: 18,
+    paddingVertical: 16,
     borderRadius: borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.xs,
+    gap: 4,
   },
-  actionBtnGreen: { backgroundColor: '#10B981' },
-  actionBtnOrange: { backgroundColor: '#F59E0B' },
-  actionBtnOrangeActive: { backgroundColor: '#D97706' },
-  actionBtnRed: { backgroundColor: '#EF4444' },
-  actionBtnDisabled: { opacity: 0.35 },
-  actionBtnLabel: {
+  /* Active button styles - solid, high contrast */
+  btnGreen: { backgroundColor: '#059669' },
+  btnOrange: { backgroundColor: '#D97706' },
+  btnOrangeActive: { backgroundColor: '#B45309' },
+  btnRed: { backgroundColor: '#DC2626' },
+  /* Disabled button styles - light bg with dark text border */
+  btnGreenDisabled: { backgroundColor: '#E5E7EB', borderWidth: 1, borderColor: '#D1D5DB' },
+  btnOrangeDisabled: { backgroundColor: '#E5E7EB', borderWidth: 1, borderColor: '#D1D5DB' },
+  btnRedDisabled: { backgroundColor: '#E5E7EB', borderWidth: 1, borderColor: '#D1D5DB' },
+
+  actionLabel: {
     color: '#FFF',
-    fontSize: fontSize.sm,
+    fontSize: 13,
     fontWeight: '700',
-    marginTop: 2,
   },
-  actionBtnLabelDisabled: { color: 'rgba(255,255,255,0.6)' },
+  actionLabelDisabled: {
+    color: '#6B7280',
+  },
 
   /* Stats Grid */
   statsGrid: {
     flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
     flexWrap: 'wrap',
   },
   statCard: {
     flex: 1,
-    minWidth: 180,
+    minWidth: 140,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    padding: spacing.lg,
+    padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -483,32 +481,32 @@ const styles = StyleSheet.create({
   statCardGreen: { borderLeftWidth: 4, borderLeftColor: colors.success },
   statCardYellow: { borderLeftWidth: 4, borderLeftColor: colors.warning },
   statCardRed: { borderLeftWidth: 4, borderLeftColor: colors.error },
-  statValue: { fontSize: fontSize.xxl, fontWeight: '800', color: colors.text, marginBottom: spacing.xs },
-  statLabel: { fontSize: fontSize.sm, color: colors.textLight },
-  progressBar: { height: 6, backgroundColor: colors.borderLight, borderRadius: 3, marginTop: spacing.sm, overflow: 'hidden' },
+  statValue: { fontSize: fontSize.xl, fontWeight: '800', color: colors.text, marginBottom: 2 },
+  statLabel: { fontSize: fontSize.xs, color: colors.textLight },
+  progressBar: { height: 5, backgroundColor: colors.borderLight, borderRadius: 3, marginTop: spacing.sm, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: colors.primary, borderRadius: 3 },
 
-  sectionTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.md },
-  section: { marginBottom: spacing.lg },
+  sectionTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.sm },
+  section: { marginBottom: spacing.md },
   entryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.surface,
-    padding: spacing.md,
+    padding: spacing.sm,
     borderRadius: borderRadius.sm,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
   },
   entryInfo: { flex: 1 },
-  entryName: { fontSize: fontSize.md, fontWeight: '600', color: colors.text },
-  entryDate: { fontSize: fontSize.sm, color: colors.textLight },
-  entryHours: { fontSize: fontSize.md, fontWeight: '700', color: colors.text, marginRight: spacing.md },
-  statusBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
+  entryName: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text },
+  entryDate: { fontSize: fontSize.xs, color: colors.textLight },
+  entryHours: { fontSize: fontSize.sm, fontWeight: '700', color: colors.text, marginRight: spacing.sm },
+  pendingBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: borderRadius.full,
     backgroundColor: colors.warningLight,
   },
-  statusBadgeText: { fontSize: fontSize.xs, fontWeight: '600', color: '#92400E' },
+  pendingBadgeText: { fontSize: 10, fontWeight: '600', color: '#92400E' },
 });
