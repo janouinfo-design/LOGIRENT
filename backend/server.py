@@ -192,6 +192,7 @@ class ProjectCreate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     hourly_rate: Optional[float] = 0.0
+    currency: Optional[str] = "CHF"
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     geofence_radius: Optional[int] = 100  # meters
@@ -207,6 +208,7 @@ class ProjectResponse(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     hourly_rate: float
+    currency: str = "CHF"
     status: str
     created_at: datetime
     is_active: bool
@@ -223,6 +225,7 @@ class ProjectUpdate(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     hourly_rate: Optional[float] = None
+    currency: Optional[str] = None
     status: Optional[str] = None
     is_active: Optional[bool] = None
     latitude: Optional[float] = None
@@ -664,6 +667,7 @@ async def create_project(data: ProjectCreate, user=Depends(get_manager_user)):
         'start_date': data.start_date,
         'end_date': data.end_date,
         'hourly_rate': data.hourly_rate or 0.0,
+        'currency': data.currency or "CHF",
         'latitude': data.latitude,
         'longitude': data.longitude,
         'geofence_radius': data.geofence_radius or 100,
@@ -707,6 +711,7 @@ async def get_projects(active_only: bool = True, user=Depends(get_current_user))
             start_date=p.get('start_date'),
             end_date=p.get('end_date'),
             hourly_rate=p.get('hourly_rate', 0.0),
+            currency=p.get('currency', 'CHF'),
             status=p.get('status', 'active'),
             created_at=p.get('created_at', datetime.utcnow()),
             is_active=p.get('is_active', True),
@@ -743,6 +748,7 @@ async def update_project(project_id: str, data: ProjectUpdate, user=Depends(get_
         start_date=project.get('start_date'),
         end_date=project.get('end_date'),
         hourly_rate=project.get('hourly_rate', 0.0),
+        currency=project.get('currency', 'CHF'),
         status=project.get('status', 'active'),
         created_at=project.get('created_at', datetime.utcnow()),
         is_active=project.get('is_active', True),
@@ -756,6 +762,78 @@ async def delete_project(project_id: str, user=Depends(get_manager_user)):
     await db.projects.update_one({'_id': ObjectId(project_id)}, {'$set': {'is_active': False}})
     await create_audit_log(str(user['_id']), "DELETE", "project", project_id)
     return {"message": "Projet désactivé"}
+
+@api_router.get("/projects/monthly-hours")
+async def get_all_projects_monthly_hours(user=Depends(get_current_user)):
+    """Get hours consumed this month for all active projects."""
+    now = datetime.utcnow()
+    month_start = f"{now.year}-{now.month:02d}-01"
+    if now.month == 12:
+        month_end = f"{now.year + 1}-01-01"
+    else:
+        month_end = f"{now.year}-{now.month + 1:02d}-01"
+    
+    projects = await db.projects.find({'is_active': True}).to_list(1000)
+    result = {}
+    
+    for p in projects:
+        pid = str(p['_id'])
+        entries = await db.timeentries.find({
+            'project_id': pid,
+            'date': {'$gte': month_start, '$lt': month_end}
+        }).to_list(5000)
+        
+        total_hours = 0
+        for e in entries:
+            wh, _ = calculate_duration(
+                e.get('clock_in'), e.get('clock_out'),
+                e.get('break_start'), e.get('break_end')
+            )
+            total_hours += wh
+        
+        result[pid] = round(total_hours, 2)
+    
+    return result
+
+@api_router.get("/projects/{project_id}/monthly-hours")
+async def get_project_monthly_hours(project_id: str, user=Depends(get_current_user)):
+    """Get hours consumed for a specific project in the current month."""
+    now = datetime.utcnow()
+    month_start = f"{now.year}-{now.month:02d}-01"
+    if now.month == 12:
+        month_end = f"{now.year + 1}-01-01"
+    else:
+        month_end = f"{now.year}-{now.month + 1:02d}-01"
+    
+    entries = await db.timeentries.find({
+        'project_id': project_id,
+        'date': {'$gte': month_start, '$lt': month_end}
+    }).to_list(5000)
+    
+    total_hours = 0
+    billable_hours = 0
+    for e in entries:
+        wh, _ = calculate_duration(
+            e.get('clock_in'), e.get('clock_out'),
+            e.get('break_start'), e.get('break_end')
+        )
+        total_hours += wh
+        if e.get('billable', True):
+            billable_hours += wh
+    
+    project = await db.projects.find_one({'_id': ObjectId(project_id)})
+    hourly_rate = project.get('hourly_rate', 0) if project else 0
+    currency = project.get('currency', 'CHF') if project else 'CHF'
+    
+    return {
+        'project_id': project_id,
+        'month': now.month,
+        'year': now.year,
+        'total_hours': round(total_hours, 2),
+        'billable_hours': round(billable_hours, 2),
+        'cost': round(total_hours * hourly_rate, 2),
+        'currency': currency
+    }
 
 @api_router.get("/projects/{project_id}/stats")
 async def get_project_stats(project_id: str, user=Depends(get_current_user)):

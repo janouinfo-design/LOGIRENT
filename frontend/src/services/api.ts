@@ -54,6 +54,8 @@ export const createProject = (data: any) => api.post('/projects', data);
 export const updateProject = (id: string, data: any) => api.put(`/projects/${id}`, data);
 export const deleteProject = (id: string) => api.delete(`/projects/${id}`);
 export const getProjectStats = (id: string) => api.get(`/projects/${id}/stats`);
+export const getProjectMonthlyHours = (id: string) => api.get(`/projects/${id}/monthly-hours`);
+export const getAllProjectsMonthlyHours = () => api.get('/projects/monthly-hours');
 
 // Clients
 export const getClients = () => api.get('/clients');

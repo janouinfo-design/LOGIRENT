@@ -1,93 +1,85 @@
-<analysis>
-<original_problem_statement>
-The user wants to build a comprehensive time-tracking mobile application named TimeSheet. The initial request outlined a mobile app for employees and managers with features for clocking in/out, managing projects, handling overtime, and generating reports, compliant with Swiss labor laws.
-
-Later, the user provided a much more detailed specification for a full-blown SaaS platform. This expanded scope includes a multi-layered architecture (web/mobile frontend, backend API, PostgreSQL DB), multi-tenancy (Companies, Clients, Departments), billable activities, invoicing, advanced reporting, audit logs, and a more complex relational database schema. The ultimate goal is to build this advanced SaaS platform.
+<analysis>**original_problem_statement:**
+The user wants to build a comprehensive time-tracking SaaS platform named TimeSheet. The scope evolved from a simple mobile app to a full-stack web application with a rich feature set.
 
 PRODUCT REQUIREMENTS:
 - **User Roles:** Employee, Manager, Administrator.
-- **Time Tracking:** Clock-in/out buttons, manual timesheets, and a START/STOP timer.
-- **Project Management:** Associate time with specific projects, clients, and billable activities.
-- **Approval Workflow:** Managers must validate employee timesheets.
-- **Absence Management:** Track vacations, sick leave, etc.
-- **SaaS Features:** Multi-company/client support, department management.
-- **Billing &amp; Invoicing:** Track billable hours and generate invoices.
-- **Reporting:** Advanced reports by employee, project, and time period.
-- **Admin Panel:** Manage users, system settings, and billing.
-- **Technical Stack:** React Native (Expo) for mobile, FastAPI for the backend, and a PostgreSQL-style database schema (currently on MongoDB).
-</original_problem_statement>
+- **Time Tracking:** Clock-in/out with a timer, pauses, manual entry, project association, and work location (office, home, site).
+- **GPS Geofencing:** Restrict clock-in to a geographic area defined for each project.
+- **Project Management:** Associate time with projects, clients, and activities. Includes project budgeting with currency (CHF), total budget, and hourly rates.
+- **Absence & Leave Management:** Track vacations, sick leave, maternity/paternity, and special leave with an approval workflow.
+- **SaaS & Admin Features:** Multi-company/client support, department management, user administration, and SaaS subscription plans.
+- **Billing & Invoicing:** Track billable hours and generate invoices.
+- **Reporting & Analytics:** Advanced reports, statistics, and a manager dashboard with productivity charts.
+- **HR Modules:** Employee directory, HR document storage, expense claims.
+- **Team & Schedule Management:** Team planning calendars and support for fixed/flexible work schedules.
+- **Communication:** Internal messaging/chat.
+- **Integrations:** Export capabilities for Swiss payroll software (e.g., Cresus, WinBiz, Abacus).
+- **Offline Capability:** Pointing/time-tracking without an internet connection (PWA).
+- **Technical Stack:** React (web), FastAPI (backend), MongoDB.
+
 **User's preferred language**: fr
 
 **what currently exists?**
-The project is in a state of major transition. A first version of the app was created with basic time-tracking for a single company, including user roles, clock-in/out, and an approval flow. This version received UI updates (light theme, top navigation for managers) and was populated with test data (employees and timesheets).
+A comprehensive full-stack web application is in place. The frontend is a responsive React web app, and the backend is powered by FastAPI and MongoDB.
 
-However, following a new, more complex set of requirements, the **backend has been completely rewritten**. It now features a sophisticated data model to support a multi-tenant SaaS application (Companies, Clients, Departments, Activities, Invoicing, etc.) and a corresponding set of new API endpoints. The database has been seeded with initial data for these new models.
-
-The **frontend is now severely out of sync** with the new backend. It is still coded against the old, simpler data model and is therefore non-functional. The app is currently broken.
+The application includes:
+-   **Core Functionality:** User authentication (Admin, Manager, Employee), a responsive dashboard with a complete collapsible sidebar for navigation.
+-   **Time Tracking:** A full-featured module for clocking in/out, taking pauses, selecting a project, and choosing a work location (Office, Home, Site).
+-   **GPS Geofencing:** A completed feature that validates employee location on clock-in. The dashboard displays an interactive map showing the user's position relative to the project's geofence.
+-   **Admin Panels:** Management screens for Users, Departments, Clients, Projects, and Activities. The Project admin panel includes an interactive map to set geofences.
+-   **Dashboard Enhancements:** Real-time balance widgets for employees (vacation, overtime, monthly hours) and an overview section for managers.
+-   **Scaffolded Modules:** Placeholder UI screens and corresponding backend APIs have been created for a wide range of features, including Planning, Expenses, HR Documents, Messaging, Payroll, Reports, Analytics, and Invoicing.
+-   **Functional Analytics:** The Analytics dashboard is functional, displaying KPI cards and charts for monthly hours, hours per project, and work location distribution.
 
 **Last working item**:
-- Last item agent was working: The agent was in the middle of a major overhaul to align the application with the new, complex SaaS specifications. It had just finished a complete rewrite of the backend data models and API endpoints in  and had started adapting the frontend by modifying the API service layer in .
-- Status: IN PROGRESS
+- Last item agent was working: The user requested an enhancement to the Projects module, based on an image provided in the chat.
+- Status: NOT STARTED
 - Agent Testing Done: N
-- Which testing method agent to use? backend testing agent
+- Which testing method agent to use? both
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  Issue 1:  (P0) Frontend-Backend Desynchronization
-
-  Issues Detail:
-  - Issue 1: 
-     - **Description**: The entire frontend is built on an old, simple data model, while the backend has been completely refactored to support a complex SaaS architecture. This makes the application fundamentally broken as the UI cannot communicate with the API correctly.
-     - Attempted fixes: The agent only began to address this by starting to edit the  file. No other part of the frontend has been touched.
-     - Next debug checklist: 
-       1.  Complete the update of  to include all new API endpoints from .
-       2.  Refactor the authentication flow and user context (, ) to handle the new  and  models.
-       3.  Rewrite every screen in  (, , , , etc.) to fetch and display data from the new API endpoints and use the new data structures.
-       4.  Create new admin screens for managing Companies, Clients, Departments, and Activities.
-     - Why fix this issue and what will be achieved with the fix? This is the most critical issue. Fixing it will align the frontend with the backend, making the application functional again and implementing the user's new core requirements for the SaaS platform.
-     - Status:  NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on other issue: None
+  There are no known bugs or recurring issues. The current focus is on implementing new feature requests.
 
 **In progress Task List**:
-  Task 1:  (P0) Full Application Overhaul to SaaS Model
-
- Task Detail:
-  - Task 1: 
-     - Where to resume: Continue refactoring the frontend. The next logical step is to finish updating  and then move on to refactoring the authentication context and the main application screens, one by one.
-     - What will be achieved with this? This will transform the application from a simple time-tracker into the foundational version of the multi-tenant SaaS platform requested by the user.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on something: None
+- None.
 
 **Upcoming and Future Tasks**
+
 Upcoming Tasks:
-- **P1: Implement Admin Panels:** Create frontend screens for administrators to manage , , , , and .
-- **P1: Refactor Project Management:** Update the Projects screen to handle the new, more detailed  model (including client, budget, status).
-- **P2: Implement Billable Activities:** Allow users to select a billable  when creating a  entry.
-- **P2: Refactor Timesheet Creation:** Modify the clock-in/timesheet creation process to include the selection of .
+- **P0: Enhance Project Module (User Request #235):**
+    - Modify the  model and APIs in  to include  (e.g., CHF), , and .
+    - Create a new backend endpoint to calculate hours consumed per project for the current month.
+    - Update the Projects admin page () to:
+        - Include input fields for  and , with CHF specified.
+        - Display three new summary cards for each project: Total Budget, Hourly Rate, and Heures par mois par projet (Hours consumed this month).
+
+- **P1: Implement Full Functionality for Scaffolded Modules:**
+    - The following screens are currently placeholders and need to be wired to their backend APIs to become fully functional:
+        - : Connect the new leave types to the backend.
+        -  (Expenses)
+        -  (HR Documents) - Requires file upload/storage implementation.
+        -  (Messaging) - Requires real-time implementation (e.g., WebSockets).
+        -  &  (Schedules)
+        -  (Invoicing)
+        -  (Payroll): Implement the export logic for Swiss payroll software.
 
 Future Tasks:
-- **Implement Invoicing Module:** Build the UI and logic for generating invoices from billable timesheets (Module 7).
-- **Implement Advanced Reporting:** Create the UI for the various reports specified (by project, employee, etc.) (Module 8).
-- **Implement Notifications Module:** Add in-app or push notifications for required actions (Module 9).
-- **Implement START/STOP Timer:** Add a real-time timer as an alternative method for time tracking.
-- **Implement Audit Logs:** Create a view for administrators to see a log of all major actions.
-- **Implement SaaS Subscription Plans:** Add logic to handle different feature sets based on subscription tiers (Basic, Pro, Enterprise).
+- **P2: Offline Mode (PWA):** Convert the application into a Progressive Web App (PWA) to enable offline time tracking.
+- **P3: SaaS Subscription Plans:** Implement feature gating based on multi-tiered subscription plans.
+- **P4: Native Mobile Application:** Develop a native mobile app version, which was part of the original long-term vision.
 
 **Completed work in this session**
-- **Initial Application Scaffolding:** A full-stack Expo/FastAPI application was created from scratch.
-- **Basic Feature Implementation:** Implemented user authentication (employee/manager), basic time tracking, project assignment, and a manager approval workflow.
-- **UI/UX Customization:**
-    - The app's theme was changed from dark to light.
-    - The manager's view was updated to have top navigation instead of bottom tabs.
-    - The main clock-in button was hidden for the manager role.
-- **Test Data Population:** The database was seeded with multiple employees and a week's worth of timesheet entries for testing purposes.
-- **Major Backend Refactoring:** The entire backend () was rewritten with new data models (User, Company, Client, Project, Activity, etc.) and new API endpoints to match the expanded SaaS requirements. The database was re-seeded with this new structure.
+- **Full Application Scaffolding:** Expanded the application from a basic time tracker to a nearly complete SaaS platform structure by creating backend APIs and placeholder frontend screens for all major features requested by the user (Analytics, Messaging, HR, Payroll, etc.).
+- **GPS Geofencing Feature:** Successfully implemented and tested the end-to-end GPS-restricted clock-in feature, including backend validation and a frontend interactive map.
+- **Enhanced Dashboard:** Added crucial UI elements like a work location selector (Office/Home/Site) and a My Balances widget for employees to track vacation, overtime, and monthly hours in real-time.
+- **Analytics Dashboard:** Implemented a functional analytics page with KPI cards and charts powered by .
+- **Comprehensive Testing:** Performed multiple end-to-end test cycles using the testing agent, achieving 100% pass rates and fixing identified bugs.
+- **Backend Refinements:** Enforced mandatory project selection for clock-ins and added numerous models and API endpoints to support the expanded feature set.
+- **UI/UX Overhaul:** Updated the main sidebar with a complete set of navigation links for all the new modules.
 
 **Earlier issues found/mentioned but not fixed**
-   - None. The agent was diligent in fixing issues as they arose.
+   - None.
 
 **Known issue recurrence from previous fork**
   - None.
@@ -96,85 +88,80 @@ Future Tasks:
 
 
 **Key Technical Concepts**
--   **Frontend:** React Native (Expo)
--   **Routing:**  (file-based)
--   **Backend:** FastAPI (Python)
--   **Database:** MongoDB with Beanie (Pydantic-based ODM) emulating a relational structure.
--   **Styling:** React Native .
+-   **Frontend:** React (via Expo for Web), , , , , .
+-   **Backend:** FastAPI (Python).
+-   **Database:** MongoDB with Beanie (Pydantic-based ODM).
+-   **Geolocation:** Browser Geolocation API (frontend) and Haversine formula (backend).
+-   **Styling:** React Native  API for cross-platform styling.
 
 **key DB schema**
-The database schema has been completely redesigned. It is now defined by the Pydantic models within  and includes the following collections (tables):
--   : {id, name, email, password, role, department_id, ...}
--   : {id, name, address, ...}
--   : {id, name, ...}
--   : {id, name, client_id, budget, status, ...}
--   : {id, name, email, ...}
--   : {id, name, billable, ...}
--   : {id, user_id, project_id, activity_id, start_time, end_time, status, ...}
--   And others: , , , , , .
+-   : Includes , , . **Needs modification** to add , , and .
+-   : Includes .
+-   **New Models:** , , , , , , .
 
 **changes in tech stack**
-- The backend's data modeling approach has fundamentally changed from a simple set of models to a complex, relational-style schema implemented on MongoDB via the Beanie ODM.
+-    and  were added to the frontend for the analytics dashboard.
 
 **All files of reference**
--   : **Most Critical File.** Contains the entire new backend logic, including all new data models and API endpoints for the SaaS platform.
--   : The central API service for the frontend. It was being updated to match the new backend and is incomplete.
--   : All files in this directory represent the old application's UI and logic. They all need to be completely rewritten.
+-   : Contains all backend logic, models, and API endpoints.
+-   : The project management screen, which is the primary file for the next task.
+-   : The main employee dashboard.
+-   : Contains the main layout and sidebar navigation structure.
+-   : Contains all client-side functions for interacting with the backend API.
 
 **Areas that need refactoring**:
--   **The entire frontend application.** It is functionally obsolete due to the backend rewrite.
--   The temporary data seeding endpoints in  (, , ) should be removed once the application is stable.
--   The component  should be renamed or removed, as navigation has been moved to the top tab bar in .
+-   The  file is a monolith containing all models, routes, and logic. It should be refactored into a more structured package (e.g., with , ,  subdirectories) to improve maintainability.
+-   Many of the newly created frontend screens are placeholders and need to be connected to their backend APIs to become functional.
 
 **key api endpoints**
-The API has been completely overhauled. The new endpoints follow a RESTful pattern for the new models, such as:
--    (Login)
--   
--   , 
--   , 
--   , 
--   
--   , 
--   And many more for all the new entities.
+-   : Accepts  and .
+-   : Provides balance data for the employee dashboard.
+-   , : Power the analytics dashboard.
+-   A large number of new endpoints exist for the scaffolded modules (, , , etc.).
 
 **Critical Info for New Agent**
-The user has pivoted from a simple mobile app to a complex multi-tenant SaaS platform. The previous agent has already performed the massive task of refactoring the entire backend to support this new vision. Your primary and immediate goal is to **bring the frontend up to speed**. The application is currently broken because the frontend and backend are completely desynchronized. You must start by updating the frontend's API service layer and then rewrite all screens to use the new data models and API endpoints. Do not attempt to fix or build upon the old UI logic; it must be replaced.
+1.  **Your immediate task is to implement the user's request from message #235 to enhance the Projects module.** This is the highest priority (P0).
+2.  **Task Breakdown:**
+    *   **Backend:** Modify the  model in  to add fields for , , and . Update the corresponding CRUD API endpoints.
+    *   **Backend:** Create a new endpoint (e.g., ) to calculate the hours logged against a project for the current month.
+    *   **Frontend:** Update the project admin page () to display the three new summary cards and add the new fields to the project creation/editing form.
+3.  **Future Work:** After completing the project module enhancement, the next major phase is to implement the functionality for the placeholder screens that were created (Expenses, HR Docs, Messaging, etc.).
+4.  **Refactoring:** Keep in mind the monolithic nature of . While not an immediate task, planning to refactor it will be crucial for the project's long-term health.
 
-**documents created in this job**
--  was updated during the session.
+**documents and test reports created in this job**
+-    (Continuously updated)
+-    to 
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-- : User sent a new, comprehensive CAHIER DES CHARGES for a full SaaS platform. **Status: IN PROGRESS**.
-- : Agent confirmed creation of 41 new timesheets.
-- : User requested to create timesheet data for one week for all employees. **Status: Completed**.
-- : Agent confirmed creation of 5 new employees.
-- : User requested to add 5 more employees. **Status: Completed**.
-- : Agent confirmed UI changes were complete.
-- : User requested major UI changes: remove manager clock-in button, move nav to top, and switch to a light theme. **Status: Completed**.
-- : Agent confirmed manager login was working.
-- : User reported being unable to log into the manager account. **Status: Resolved**.
-- : User asked for the login link for the application. **Status: Resolved**.
+-   : **(PENDING)** User requested enhancements to the Project module: add currency (CHF) to budget/rate, display total budget, and add three summary cards (Total Budget, Hourly Rate, Monthly Hours Consumed).
+-   : Agent confirmed all tests passed for the massive feature scaffolding task.
+-   : User gave the green light to implement the entire project specification.
+-   : User confirmed faire tous le projet complet (do the whole project).
+-   : User provided a detailed list of features for a competing app (tipee) to serve as the main requirements document.
+-   : User asked for login credentials. (Resolved).
 
 **Project Health Check:**
--   **Broken**: The frontend is not compatible with the rewritten backend. The application will not function until the frontend is refactored.
+-   **Broken:** None. The application is stable and running.
+-   **Mocked:** The following frontend modules are currently UI placeholders and not fully functional: , , , , , , . The backend APIs for these modules exist but are not yet integrated into the UI.
 
 **3rd Party Integrations**
-- : Used in the backend for generating test data.
-- No other 3rd party integrations have been implemented yet.
+-   : Used in the backend for generating test data.
+-    & : Used in the frontend for interactive maps.
+-    & : Used in the frontend for the analytics dashboard.
 
 **Testing status**
-  - Testing agent used after significant changes: YES, the backend was tested *before* the most recent major refactor. The new backend is untested.
-  - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None.
-  - Known regressions: The entire application is a regression as it's non-functional.
+-   Testing agent used after significant changes: YES. Multiple comprehensive test runs were executed, and all identified issues were fixed.
+-   Test files created:
+    -   
+    -   
+-   Known regressions: None.
 
 **Credentials to test flow:**
-The previous credentials may no longer work as the database was re-seeded. The seeding script in  created a new admin user:
--   **Email**: 
--   **Mot de passe**: 
+-   **Admin**:  / 
+-   **Manager**:  / 
+-   **Employee**:  / 
 
 **What agent forgot to execute**
-- The agent's work was interrupted, not forgotten. The main pending action is the complete refactoring of the frontend to match the new backend.
-- The temporary data-seeding API endpoints in  were not removed, which should be done before considering the feature complete.
-
-</analysis>
+-   The agent has not yet started the most recent user request to enhance the project module. This is now the primary .</analysis>
