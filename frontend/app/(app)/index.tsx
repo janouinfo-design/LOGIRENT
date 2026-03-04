@@ -43,6 +43,9 @@ interface Project {
   name: string;
   client_name?: string;
   is_active: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  geofence_radius?: number;
 }
 
 export default function Dashboard() {
@@ -59,6 +62,8 @@ export default function Dashboard() {
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
   const [gpsError, setGpsError] = useState('');
+  // Project selected BEFORE clock-in
+  const [preSelectedProjectId, setPreSelectedProjectId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -74,7 +79,7 @@ export default function Dashboard() {
           setUserLng(pos.coords.longitude);
           setGpsError('');
         },
-        (err) => setGpsError('GPS non disponible'),
+        () => setGpsError('GPS non disponible'),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
       );
       return () => navigator.geolocation.clearWatch(watchId);
@@ -113,8 +118,12 @@ export default function Dashboard() {
     setActionLoading(action);
     try {
       if (action === 'clockin') {
-        // Send GPS coordinates with clock-in
-        await clockIn({ latitude: userLat, longitude: userLng });
+        await clockIn({
+          project_id: preSelectedProjectId,
+          latitude: userLat,
+          longitude: userLng
+        });
+        setPreSelectedProjectId(null);
       }
       else if (action === 'clockout') await clockOut({});
       else if (action === 'break') {
@@ -129,6 +138,7 @@ export default function Dashboard() {
     }
   };
 
+  // Project picker for when already clocked in (change project on active entry)
   const handleSelectProject = async (projectId: string | null) => {
     setShowProjectPicker(false);
     if (!current?.active || !current.entry) return;
@@ -140,26 +150,44 @@ export default function Dashboard() {
     }
   };
 
-  // Compute selected project with geofence
-  const selectedProject = projects.find(p => p.id === current?.entry?.project_id);
-  const projectHasGeo = selectedProject?.latitude && selectedProject?.longitude;
-  const getDistance = () => {
-    if (!projectHasGeo || !userLat || !userLng) return null;
+  // Determine which project to check for geofence
+  const isActive = current?.active || false;
+  const isOnBreak = current?.on_break || false;
+  const isManager = user?.role === 'manager' || user?.role === 'admin';
+
+  // The relevant project: if clocked in, use current entry's project; if not, use pre-selected
+  const activeProjectId = isActive ? current?.entry?.project_id : preSelectedProjectId;
+  const activeProject = projects.find(p => p.id === activeProjectId) as Project | undefined;
+  const projectHasGeo = activeProject?.latitude && activeProject?.longitude;
+
+  // Distance calculation
+  const getDistance = (): number | null => {
+    if (!projectHasGeo || !userLat || !userLng || !activeProject?.latitude || !activeProject?.longitude) return null;
     const R = 6371000;
-    const dLat = (selectedProject.latitude - userLat) * Math.PI / 180;
-    const dLon = (selectedProject.longitude - userLng) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(userLat * Math.PI / 180) * Math.cos(selectedProject.latitude * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    const dLat = (activeProject.latitude - userLat) * Math.PI / 180;
+    const dLon = (activeProject.longitude - userLng) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(userLat * Math.PI / 180) * Math.cos(activeProject.latitude * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
+
   const distance = getDistance();
-  const isInZone = distance !== null ? distance <= (selectedProject?.geofence_radius || 100) : null;
+  const geoRadius = activeProject?.geofence_radius || 100;
+  const isInZone = distance !== null ? distance <= geoRadius : null;
+
+  // Clock-in conditions: if project has geofencing, GPS must be available and user must be in zone
+  const gpsRequired = projectHasGeo;
+  const gpsAvailable = userLat !== null && userLng !== null;
+  const canClockIn = !isActive && preSelectedProjectId !== null && (!gpsRequired || (gpsAvailable && isInZone === true));
+
+  const currentProjectName = isActive && current?.entry?.project_name ? current.entry.project_name : 'Aucun';
+  const preSelectedProject = projects.find(p => p.id === preSelectedProjectId);
 
   const formatTime = (d: Date) =>
     `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
 
   const formatDate = (d: Date) => {
     const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-    const months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'];
     return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   };
 
@@ -181,11 +209,6 @@ export default function Dashboard() {
     );
   }
 
-  const isActive = current?.active || false;
-  const isOnBreak = current?.on_break || false;
-  const isManager = user?.role === 'manager' || user?.role === 'admin';
-  const currentProjectName = isActive && current?.entry?.project_name ? current.entry.project_name : 'Aucun';
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       {/* Header */}
@@ -200,7 +223,7 @@ export default function Dashboard() {
       </View>
 
       {/* Pointage Card */}
-      <View style={styles.punchCard} testID="clock-section">
+      <View style={styles.punchCard} data-testid="clock-section">
         {/* Status + Timer Row */}
         <View style={styles.timerRow}>
           <View style={styles.timerLeft}>
@@ -218,7 +241,7 @@ export default function Dashboard() {
               <Text style={styles.statusSub}>
                 {isActive
                   ? `Depuis ${new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' })}`
-                  : 'Pointez pour commencer votre journée'}
+                  : 'Selectionnez un projet puis pointez'}
               </Text>
             </View>
           </View>
@@ -233,7 +256,7 @@ export default function Dashboard() {
         <View style={styles.shiftGrid}>
           <View style={styles.shiftCell}>
             <MaterialIcons name="login" size={20} color={colors.primary} />
-            <Text style={styles.shiftCellLabel}>Arrivée</Text>
+            <Text style={styles.shiftCellLabel}>Arrivee</Text>
             <Text style={styles.shiftCellValue}>
               {isActive ? new Date(current!.entry!.clock_in).toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
             </Text>
@@ -252,16 +275,20 @@ export default function Dashboard() {
               {isActive ? `${current!.entry!.break_hours.toFixed(1)}h` : '0.0h'}
             </Text>
           </View>
-          {/* Project cell - Clickable */}
+          {/* Project cell */}
           <Pressable
-            style={[styles.shiftCell, isActive && styles.shiftCellClickable]}
-            onPress={() => { if (isActive) setShowProjectPicker(true); }}
-            testID="project-picker-trigger"
+            style={[styles.shiftCell, (isActive || !isActive) && styles.shiftCellClickable]}
+            onPress={() => {
+              if (isActive) {
+                setShowProjectPicker(true);
+              }
+            }}
+            data-testid="project-picker-trigger"
           >
             <MaterialIcons name="folder-open" size={20} color="#8B5CF6" />
             <Text style={styles.shiftCellLabel}>Projet</Text>
-            <Text style={[styles.shiftCellValue, isActive && styles.shiftCellValueLink]} numberOfLines={1}>
-              {currentProjectName}
+            <Text style={[styles.shiftCellValue, styles.shiftCellValueLink]} numberOfLines={1}>
+              {isActive ? currentProjectName : (preSelectedProject?.name || 'Aucun')}
             </Text>
             {isActive && (
               <MaterialIcons name="expand-more" size={16} color={colors.primary} style={{ marginTop: 2 }} />
@@ -269,27 +296,118 @@ export default function Dashboard() {
           </Pressable>
         </View>
 
+        {/* Project Selection for Clock-in (shown when NOT active) */}
+        {!isActive && (
+          <View style={styles.projectSelectSection} data-testid="project-select-section">
+            <Text style={styles.projectSelectLabel}>
+              <MaterialIcons name="folder" size={16} color={colors.primary} /> Projet pour le pointage :
+            </Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.projectChips}>
+              {projects.filter(p => p.is_active).map((project) => {
+                const selected = preSelectedProjectId === project.id;
+                return (
+                  <Pressable
+                    key={project.id}
+                    style={[styles.projectChip, selected && styles.projectChipActive]}
+                    onPress={() => setPreSelectedProjectId(selected ? null : project.id)}
+                    data-testid={`project-chip-${project.id}`}
+                  >
+                    {project.latitude && project.longitude && (
+                      <MaterialIcons name="location-on" size={14} color={selected ? '#FFF' : colors.primary} />
+                    )}
+                    <Text style={[styles.projectChipText, selected && styles.projectChipTextActive]}>
+                      {project.name}
+                    </Text>
+                    {selected && <MaterialIcons name="check" size={14} color="#FFF" />}
+                  </Pressable>
+                );
+              })}
+              {projects.filter(p => p.is_active).length === 0 && (
+                <Text style={styles.noProjectText}>Aucun projet actif disponible</Text>
+              )}
+            </ScrollView>
+            {!preSelectedProjectId && (
+              <Text style={styles.projectWarning}>
+                <MaterialIcons name="warning" size={13} color={colors.warning} /> Selectionnez un projet pour pointer
+              </Text>
+            )}
+          </View>
+        )}
+
+        {/* GPS Geofence Section */}
+        {!isActive && preSelectedProjectId && projectHasGeo && activeProject && (
+          <View style={styles.geoSection} data-testid="geofence-section">
+            <View style={styles.geoHeader}>
+              <MaterialIcons name="location-on" size={18} color={colors.primary} />
+              <Text style={styles.geoTitle}>Zone de pointage</Text>
+              {isInZone === true && (
+                <View style={[styles.geoBadge, styles.geoBadgeOk]}>
+                  <MaterialIcons name="check-circle" size={14} color="#065F46" />
+                  <Text style={styles.geoBadgeTextOk}>Dans la zone</Text>
+                </View>
+              )}
+              {isInZone === false && (
+                <View style={[styles.geoBadge, styles.geoBadgeNo]}>
+                  <MaterialIcons name="cancel" size={14} color="#991B1B" />
+                  <Text style={styles.geoBadgeTextNo}>Hors zone ({Math.round(distance!)}m)</Text>
+                </View>
+              )}
+              {isInZone === null && !gpsError && (
+                <View style={[styles.geoBadge, styles.geoBadgeWait]}>
+                  <ActivityIndicator size={12} color={colors.warning} />
+                  <Text style={styles.geoBadgeTextWait}>Localisation...</Text>
+                </View>
+              )}
+              {gpsError && (
+                <View style={[styles.geoBadge, styles.geoBadgeNo]}>
+                  <MaterialIcons name="gps-off" size={14} color="#991B1B" />
+                  <Text style={styles.geoBadgeTextNo}>{gpsError}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Map */}
+            <View style={styles.mapContainer}>
+              <LeafletMap
+                projectLat={activeProject.latitude!}
+                projectLng={activeProject.longitude!}
+                radius={geoRadius}
+                userLat={userLat}
+                userLng={userLng}
+                height={220}
+              />
+            </View>
+
+            {distance !== null && (
+              <Text style={styles.distanceText}>
+                Distance: {distance < 1000 ? `${Math.round(distance)}m` : `${(distance / 1000).toFixed(1)}km`}
+                {' '} / Rayon autorise: {geoRadius}m
+              </Text>
+            )}
+          </View>
+        )}
+
         {/* 3 Action Buttons */}
         <View style={styles.actionRow}>
           <Pressable
-            style={[styles.actionBtn, isActive ? styles.btnGreenDisabled : styles.btnGreen]}
+            style={[styles.actionBtn, isActive || !canClockIn ? styles.btnGreenDisabled : styles.btnGreen]}
             onPress={() => handleAction('clockin')}
-            disabled={isActive || actionLoading !== ''}
-            testID="clock-in-button"
+            disabled={isActive || !canClockIn || actionLoading !== ''}
+            data-testid="clock-in-button"
           >
             {actionLoading === 'clockin' ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
-              <MaterialIcons name="login" size={26} color={isActive ? '#9CA3AF' : '#FFF'} />
+              <MaterialIcons name="login" size={26} color={isActive || !canClockIn ? '#9CA3AF' : '#FFF'} />
             )}
-            <Text style={[styles.actionLabel, isActive && styles.actionLabelDisabled]}>Arrivée</Text>
+            <Text style={[styles.actionLabel, (isActive || !canClockIn) && styles.actionLabelDisabled]}>Arrivee</Text>
           </Pressable>
 
           <Pressable
             style={[styles.actionBtn, !isActive ? styles.btnOrangeDisabled : (isOnBreak ? styles.btnOrangeActive : styles.btnOrange)]}
             onPress={() => handleAction('break')}
             disabled={!isActive || actionLoading !== ''}
-            testID="break-button"
+            data-testid="break-button"
           >
             {actionLoading === 'break' ? (
               <ActivityIndicator color="#FFF" size="small" />
@@ -305,14 +423,14 @@ export default function Dashboard() {
             style={[styles.actionBtn, !isActive ? styles.btnRedDisabled : styles.btnRed]}
             onPress={() => handleAction('clockout')}
             disabled={!isActive || actionLoading !== ''}
-            testID="clock-out-button"
+            data-testid="clock-out-button"
           >
             {actionLoading === 'clockout' ? (
               <ActivityIndicator color="#FFF" size="small" />
             ) : (
               <MaterialIcons name="logout" size={26} color={!isActive ? '#9CA3AF' : '#FFF'} />
             )}
-            <Text style={[styles.actionLabel, !isActive && styles.actionLabelDisabled]}>Départ</Text>
+            <Text style={[styles.actionLabel, !isActive && styles.actionLabelDisabled]}>Depart</Text>
           </Pressable>
         </View>
       </View>
@@ -335,11 +453,11 @@ export default function Dashboard() {
             <Text style={[styles.statValue, weekStats.overtime_hours > 0 && { color: colors.warning }]}>
               {weekStats.overtime_hours.toFixed(1)}h
             </Text>
-            <Text style={styles.statLabel}>Supplémentaires</Text>
+            <Text style={styles.statLabel}>Supplementaires</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{weekStats.days_worked}</Text>
-            <Text style={styles.statLabel}>Jours travaillés</Text>
+            <Text style={styles.statLabel}>Jours travailles</Text>
           </View>
         </View>
       )}
@@ -351,7 +469,7 @@ export default function Dashboard() {
           <View style={styles.statsGrid}>
             <View style={[styles.statCard, styles.statCardBlue]}>
               <Text style={[styles.statValue, { color: colors.primary }]}>{dashStats.total_employees}</Text>
-              <Text style={styles.statLabel}>Employés</Text>
+              <Text style={styles.statLabel}>Employes</Text>
             </View>
             <View style={[styles.statCard, styles.statCardGreen]}>
               <Text style={[styles.statValue, { color: colors.success }]}>{dashStats.active_today}</Text>
@@ -388,32 +506,17 @@ export default function Dashboard() {
         </View>
       )}
 
-      {/* Project Picker Modal */}
+      {/* Project Picker Modal (when already clocked in) */}
       <Modal visible={showProjectPicker} transparent animationType="fade">
         <Pressable style={styles.modalOverlay} onPress={() => setShowProjectPicker(false)}>
           <View style={styles.pickerModal}>
             <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Choisir un projet</Text>
+              <Text style={styles.pickerTitle}>Changer le projet</Text>
               <Pressable onPress={() => setShowProjectPicker(false)}>
                 <MaterialIcons name="close" size={24} color={colors.textLight} />
               </Pressable>
             </View>
 
-            {/* Option: Aucun projet */}
-            <Pressable
-              style={[styles.pickerItem, !current?.entry?.project_id && styles.pickerItemActive]}
-              onPress={() => handleSelectProject(null)}
-            >
-              <MaterialIcons name="block" size={20} color={colors.textLight} />
-              <Text style={styles.pickerItemText}>Aucun projet</Text>
-              {!current?.entry?.project_id && (
-                <MaterialIcons name="check" size={20} color={colors.primary} />
-              )}
-            </Pressable>
-
-            <View style={styles.pickerDivider} />
-
-            {/* Project List */}
             <ScrollView style={styles.pickerList}>
               {projects.filter(p => p.is_active).map((project) => {
                 const isSelected = current?.entry?.project_id === project.id;
@@ -422,7 +525,7 @@ export default function Dashboard() {
                     key={project.id}
                     style={[styles.pickerItem, isSelected && styles.pickerItemActive]}
                     onPress={() => handleSelectProject(project.id)}
-                    testID={`project-option-${project.id}`}
+                    data-testid={`project-option-${project.id}`}
                   >
                     <MaterialIcons name="folder" size={20} color={isSelected ? colors.primary : '#8B5CF6'} />
                     <View style={styles.pickerItemContent}>
@@ -548,6 +651,108 @@ const styles = StyleSheet.create({
   },
   shiftCellValueLink: {
     color: colors.primary,
+  },
+
+  /* Project Selection (pre clock-in) */
+  projectSelectSection: {
+    backgroundColor: '#F0F4FF',
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  projectSelectLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  projectChips: {
+    flexDirection: 'row',
+    marginBottom: spacing.xs,
+  },
+  projectChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    marginRight: spacing.sm,
+  },
+  projectChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  projectChipText: {
+    fontSize: fontSize.sm,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  projectChipTextActive: {
+    color: '#FFF',
+  },
+  noProjectText: {
+    fontSize: fontSize.sm,
+    color: colors.textLight,
+    fontStyle: 'italic',
+  },
+  projectWarning: {
+    fontSize: fontSize.xs,
+    color: colors.warning,
+    marginTop: 4,
+  },
+
+  /* Geofence Section */
+  geoSection: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  geoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    flexWrap: 'wrap',
+  },
+  geoTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: '700',
+    color: colors.text,
+    flex: 1,
+  },
+  geoBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+  },
+  geoBadgeOk: { backgroundColor: '#D1FAE5' },
+  geoBadgeNo: { backgroundColor: '#FEE2E2' },
+  geoBadgeWait: { backgroundColor: '#FEF3C7' },
+  geoBadgeTextOk: { fontSize: 11, fontWeight: '600', color: '#065F46' },
+  geoBadgeTextNo: { fontSize: 11, fontWeight: '600', color: '#991B1B' },
+  geoBadgeTextWait: { fontSize: 11, fontWeight: '600', color: '#92400E' },
+  mapContainer: {
+    borderRadius: borderRadius.md,
+    overflow: 'hidden',
+    marginBottom: spacing.xs,
+  },
+  distanceText: {
+    fontSize: fontSize.xs,
+    color: colors.textLight,
+    textAlign: 'center',
+    marginTop: 4,
   },
 
   actionRow: { flexDirection: 'row', gap: spacing.sm },

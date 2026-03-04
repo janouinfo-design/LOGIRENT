@@ -736,7 +736,10 @@ async def update_project(project_id: str, data: ProjectUpdate, user=Depends(get_
         hourly_rate=project.get('hourly_rate', 0.0),
         status=project.get('status', 'active'),
         created_at=project.get('created_at', datetime.utcnow()),
-        is_active=project.get('is_active', True)
+        is_active=project.get('is_active', True),
+        latitude=project.get('latitude'),
+        longitude=project.get('longitude'),
+        geofence_radius=project.get('geofence_radius', 100)
     )
 
 @api_router.delete("/projects/{project_id}")
@@ -782,6 +785,10 @@ async def get_project_stats(project_id: str, user=Depends(get_current_user)):
 async def clock_in(data: TimesheetCreate, user=Depends(get_current_user)):
     today = datetime.utcnow().date().isoformat()
     user_id = str(user['_id'])
+    
+    # Project is mandatory
+    if not data.project_id:
+        raise HTTPException(status_code=400, detail="Vous devez sélectionner un projet avant de pointer.")
     
     # Auto-close any stale open entries (from previous days or abandoned sessions)
     stale = await db.timeentries.find_one({

@@ -19,6 +19,7 @@ export default function Root({ children }: PropsWithChildren) {
         */}
         <title>TimeSheet - Gestion du temps</title>
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <ScrollViewStyleReset />
         <style
           dangerouslySetInnerHTML={{
