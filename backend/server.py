@@ -2247,6 +2247,31 @@ async def reject_expense(expense_id: str, user=Depends(get_manager_user)):
         await create_notification(exp['user_id'], "Note de frais refusee", f"Votre note de frais de {exp['amount']} CHF a ete refusee", "error")
     return {"message": "Note de frais refusee"}
 
+@api_router.put("/expenses/{expense_id}")
+async def update_expense(expense_id: str, data: dict, user=Depends(get_current_user)):
+    exp = await db.expenses.find_one({'_id': ObjectId(expense_id)})
+    if not exp:
+        raise HTTPException(status_code=404, detail="Note de frais non trouvee")
+    if exp['user_id'] != str(user['_id']) and user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    update_fields = {}
+    for field in ['amount', 'category', 'description', 'date', 'project_id']:
+        if field in data:
+            update_fields[field] = float(data[field]) if field == 'amount' else data[field]
+    if update_fields:
+        await db.expenses.update_one({'_id': ObjectId(expense_id)}, {'$set': update_fields})
+    return {"message": "Note de frais mise a jour"}
+
+@api_router.delete("/expenses/{expense_id}")
+async def delete_expense(expense_id: str, user=Depends(get_current_user)):
+    exp = await db.expenses.find_one({'_id': ObjectId(expense_id)})
+    if not exp:
+        raise HTTPException(status_code=404, detail="Note de frais non trouvee")
+    if exp['user_id'] != str(user['_id']) and user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    await db.expenses.delete_one({'_id': ObjectId(expense_id)})
+    return {"message": "Note de frais supprimee"}
+
 # ===================== EMPLOYEE DIRECTORY =====================
 
 @api_router.get("/directory")

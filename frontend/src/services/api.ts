@@ -134,6 +134,8 @@ export const createExpense = (data: any) => {
 };
 export const approveExpense = (id: string) => api.post(`/expenses/${id}/approve`);
 export const rejectExpense = (id: string) => api.post(`/expenses/${id}/reject`);
+export const updateExpense = (id: string, data: any) => api.put(`/expenses/${id}`, data);
+export const deleteExpense = (id: string) => api.delete(`/expenses/${id}`);
 
 // Directory
 export const getDirectory = () => api.get('/directory');
