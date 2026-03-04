@@ -1,136 +1,124 @@
 # TimeSheet - Plateforme SaaS Complete de Gestion RH
 
 ## Problem Statement
-Plateforme SaaS complete de gestion du temps et des ressources humaines pour entreprises suisses, inspiree de Tipee. Centralise pointage, absences, planning, notes de frais, facturation, rapports et annuaire employes.
+Plateforme SaaS complete de gestion du temps et des ressources humaines pour entreprises suisses, inspiree de Tipee.
 
 ## Tech Stack
-- **Frontend**: Expo Web (React Native Web) with expo-router
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **Maps**: Leaflet.js (GPS geofencing)
+- Frontend: Expo Web (React Native Web) with expo-router
+- Backend: FastAPI (Python)
+- Database: MongoDB
+- Maps: Leaflet.js (GPS geofencing)
 
-## Architecture
+## Architecture - 21 screens, 50+ API endpoints
 ```
 /app
-├── backend/
-│   ├── server.py              # FastAPI - all models, routes, business logic
-│   └── tests/                 # Backend tests
-├── frontend/
-│   ├── app/
-│   │   ├── _layout.tsx        # Root layout
-│   │   ├── +html.tsx          # HTML template (Leaflet CSS+JS)
-│   │   ├── login.tsx          # Login page
-│   │   └── (app)/             # Authenticated routes
-│   │       ├── _layout.tsx    # Sidebar layout
-│   │       ├── index.tsx      # Dashboard (pointage + soldes + geofencing)
-│   │       ├── timesheets.tsx # Feuilles de temps
-│   │       ├── projects.tsx   # Gestion projets (avec carte GPS)
-│   │       ├── planning.tsx   # Planning equipes (calendrier hebdo)
-│   │       ├── leaves.tsx     # Gestion absences (7 types)
-│   │       ├── expenses.tsx   # Notes de frais
-│   │       ├── directory.tsx  # Annuaire employes
-│   │       ├── reports.tsx    # Rapports (PDF/Excel)
-│   │       ├── invoices.tsx   # Facturation
-│   │       ├── notifications.tsx # Centre notifications
-│   │       ├── audit.tsx      # Journal d'audit (admin)
-│   │       ├── users.tsx      # Gestion utilisateurs
-│   │       ├── departments.tsx # Departements
-│   │       ├── clients.tsx    # Clients
-│   │       ├── activities.tsx # Activites
-│   │       └── profile.tsx    # Profil
-│   └── src/
-│       ├── context/AuthContext.tsx
-│       ├── services/api.ts    # API client (all endpoints)
-│       ├── components/
-│       │   ├── Sidebar.tsx    # Navigation sidebar (16 items)
-│       │   ├── LeafletMap.tsx # Carte geofence (dashboard)
-│       │   └── MapPicker.tsx  # Carte interactive (admin projets)
-│       └── theme/constants.ts
+├── backend/server.py           # FastAPI - all models, routes, business logic
+├── frontend/app/(app)/
+│   ├── index.tsx               # Dashboard (pointage + soldes + geofencing)
+│   ├── timesheets.tsx          # Feuilles de temps
+│   ├── projects.tsx            # Gestion projets (carte GPS interactive)
+│   ├── planning.tsx            # Planning equipes (calendrier hebdo)
+│   ├── leaves.tsx              # Absences (7 types)
+│   ├── expenses.tsx            # Notes de frais
+│   ├── messaging.tsx           # Messagerie interne
+│   ├── directory.tsx           # Annuaire employes
+│   ├── documents.tsx           # Dossier RH
+│   ├── reports.tsx             # Rapports (PDF/Excel)
+│   ├── analytics.tsx           # Tableau de bord analytique (graphiques)
+│   ├── invoices.tsx            # Facturation
+│   ├── payroll.tsx             # Variables paie + export suisse
+│   ├── notifications.tsx       # Centre notifications
+│   ├── subscriptions.tsx       # Plans d'abonnement SaaS
+│   ├── audit.tsx               # Journal d'audit
+│   ├── users.tsx               # Gestion utilisateurs
+│   ├── departments.tsx         # Departements
+│   ├── clients.tsx             # Clients
+│   ├── activities.tsx          # Activites
+│   └── profile.tsx             # Profil
+└── frontend/src/components/
+    ├── Sidebar.tsx             # Navigation (21 items, role-based)
+    ├── LeafletMap.tsx          # Carte geofence (dashboard)
+    └── MapPicker.tsx           # Carte interactive (admin projets)
 ```
 
-## What's Implemented (March 4, 2026)
+## ALL FEATURES IMPLEMENTED (March 4, 2026)
 
-### 1. Pointage / Timbrage (COMPLETE)
-- Clock-in/out + pauses
-- GPS geofencing (carte Leaflet, validation distance Haversine)
-- Selection projet obligatoire avant pointage
-- Selection lieu de travail (Bureau/Teletravail/Chantier)
-- Timer temps reel, historique des pointages
+### 1. Pointage / Timbrage
+- Clock-in/out + pauses, timer temps reel
+- GPS geofencing avec carte Leaflet, validation Haversine
+- Selection projet obligatoire + lieu de travail (Bureau/Teletravail/Chantier)
 
-### 2. Soldes en temps reel (COMPLETE)
-- Vacances restantes (25j standard suisse)
-- Heures supplementaires cumulees
-- Heures du mois avec barre de progression
-- Repartition Bureau/Teletravail/Chantier
+### 2. Soldes en temps reel
+- Vacances restantes (25j suisse), heures supplementaires
+- Heures du mois avec progression, repartition lieux
 
-### 3. Gestion des absences (COMPLETE)
-- 7 types: Vacances, Maladie, Accident, Formation, Maternite, Paternite, Conge special
-- Demande par employe, validation par manager
-- Notifications automatiques
+### 3. Gestion des absences (7 types)
+- Vacances, Maladie, Accident, Formation, Maternite, Paternite, Conge special
+- Workflow: demande employe > validation manager > notification
 
-### 4. Planning des equipes (COMPLETE)
-- Calendrier hebdomadaire avec navigation semaines
-- Filtrage par departement
+### 4. Planning des equipes
+- Calendrier hebdomadaire, navigation semaines, filtre departement
 - Legende couleur par type (bureau, teletravail, vacances, maladie...)
-- Vue condensee heures par jour par employe
 
-### 5. Notes de frais (COMPLETE)
-- CRUD complet (creer, lister, approuver, refuser)
-- Categories: Transport, Repas, Materiel, Hebergement, Communication, Autre
-- Association projet optionnelle
-- Resume: approuve, en attente, total
+### 5. Notes de frais
+- CRUD complet avec categories (Transport, Repas, Materiel, etc.)
+- Association projet, approbation manager
 
-### 6. Rapports et Export (COMPLETE)
-- Filtres mois/annee/employe
-- Stats mensuelles (heures totales, facturables, supp, jours)
+### 6. Messagerie interne
+- Conversations multi-participants, envoi/reception messages
+- Rafraichissement auto toutes les 5s, compteur non-lus
+
+### 7. Annuaire employes
+- Cartes avec statut temps reel, recherche
+- Indication lieu de travail actuel
+
+### 8. Dossier RH
+- Documents par categorie (Contrat, Certificat, Formation, Evaluation, Medical...)
+- Filtrage par categorie et employe
+
+### 9. Rapports et Export
+- Filtres mois/annee/employe, stats mensuelles
 - Export PDF et Excel
 
-### 7. Facturation (COMPLETE)
-- Creation factures depuis pointages facturables
-- Selection client et projet
+### 10. Tableau de bord analytique (Manager)
+- KPIs: employes, projets actifs, heures/mois, taux absenteisme
+- Graphiques: heures mensuelles, heures par projet, repartition lieux
+- Taux d'absenteisme mensuel
+
+### 11. Facturation
+- Creation factures depuis pointages, selection client/projet
 - Statuts: Brouillon, Envoyee, Payee, En retard
-- Resume: payees, en cours, total
 
-### 8. Annuaire employes (COMPLETE)
-- Carte par employe avec statut temps reel
-- Recherche par nom/email/departement
-- Indication lieu de travail actuel
-- Resume: actifs, absents, total
+### 12. Variables de paie + Export suisse
+- Calcul automatique: heures, supplementaires, nuit, maladie, vacances, frais, brut
+- Export Cresus (CSV), Abacus (XML), WinBiz (Excel)
+- Tableau detaille par employe
 
-### 9. Notifications (COMPLETE)
-- Centre de notifications (info, success, warning, error)
-- Marquer lu / tout marquer lu
-- Notifications auto sur absences, frais, etc.
+### 13. Horaires fixes/flexibles
+- Definition horaires par jour et par employe
+- Types: fixe ou flexible avec heures hebdo
 
-### 10. Journal d'audit (COMPLETE - admin)
-- Historique toutes actions (CREATE, UPDATE, DELETE, APPROVE, REJECT)
-- Filtre par entite et utilisateur
+### 14. Plans d'abonnement SaaS
+- 3 plans: Basic (5 CHF), Professional (12 CHF), Enterprise (25 CHF)
+- Fonctionnalites differenciees par plan
 
-### 11. Suivi teletravail (COMPLETE)
-- Selection lieu au pointage (Bureau/Teletravail/Chantier)
-- Stats repartition dans "Mes soldes"
-- Visible dans planning et annuaire
+### 15. GPS Geofencing
+- Carte interactive admin (clic pour placer, marqueur deplacable)
+- Rayon configurable 50-500m, validation au pointage
 
-### 12. GPS Geofencing (COMPLETE)
-- Carte interactive dans admin projets (clic pour placer le marqueur)
-- Rayon configurable (50-500m)
-- Validation distance au pointage
-- Blocage si hors zone ou GPS non disponible
+### 16. Notifications + Journal d'audit
+- Centre notifications multi-type, audit complet pour admin
 
-### 13. Gestion admin (COMPLETE)
-- Utilisateurs, Departements, Clients, Activites
-- Roles: Admin, Manager, Employe
-- Filtrage menu selon role
+### 17. Gestion admin complete
+- Utilisateurs, Departements, Clients, Activites, Roles (Admin/Manager/Employe)
 
 ## Credentials
 - Admin: admin@timesheet.ch / admin123
 - Manager: manager@test.ch / test123
 - Employee: employe@test.ch / test123
 
-## P1 (Remaining)
-- Mode hors ligne (PWA)
-- Calcul variables de paie
-- Integration logiciels paie (Cresus, Abacus, WinBiz)
-- Communication interne (messagerie)
-- Dossier collaborateur avec documents RH
-- Horaires fixes/flexibles dans planning
+## Remaining (Nice to Have)
+- Mode hors ligne PWA (Service Worker)
+- Application mobile native (Expo Go)
+- SSO / LDAP integration
+- Integration ProConcept, Opale
