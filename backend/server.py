@@ -2140,7 +2140,21 @@ async def get_planning(
         for e in entries:
             wh, _ = calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))
             loc = e.get('work_location', 'office')
-            days[e['date']] = {'hours': round(wh, 1), 'location': loc, 'type': 'work', 'status': e.get('status', 'pending')}
+            project_name = None
+            if e.get('project_id'):
+                proj = await db.projects.find_one({'_id': ObjectId(e['project_id'])})
+                project_name = proj['name'] if proj else None
+            days[e['date']] = {
+                'hours': round(wh, 1),
+                'location': loc,
+                'type': 'work',
+                'status': e.get('status', 'pending'),
+                'clock_in': e.get('clock_in').isoformat() if e.get('clock_in') else None,
+                'clock_out': e.get('clock_out').isoformat() if e.get('clock_out') else None,
+                'break_start': e.get('break_start').isoformat() if e.get('break_start') else None,
+                'break_end': e.get('break_end').isoformat() if e.get('break_end') else None,
+                'project_name': project_name,
+            }
         
         for lv in leaves:
             try:
