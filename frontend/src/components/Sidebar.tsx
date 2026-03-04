@@ -26,14 +26,22 @@ const mainMenuItems: MenuItem[] = [
   { label: 'Projets', path: '/(app)/projects', icon: 'folder-open' },
   { label: 'Planning', path: '/(app)/planning', icon: 'calendar-today' },
   { label: 'Absences', path: '/(app)/leaves', icon: 'event-busy' },
-  { label: 'Notes de frais', path: '/(app)/expenses', icon: 'receipt-long' },
   { label: 'Annuaire', path: '/(app)/directory', icon: 'contacts' },
   { label: 'Dossier RH', path: '/(app)/documents', icon: 'folder-shared' },
   { label: 'Rapports', path: '/(app)/reports', icon: 'assessment' },
   { label: 'Analytique', path: '/(app)/analytics', icon: 'insights', roles: ['admin', 'manager'] },
-  { label: 'Factures', path: '/(app)/invoices', icon: 'receipt', roles: ['admin', 'manager'] },
-  { label: 'Paie', path: '/(app)/payroll', icon: 'account-balance', roles: ['admin', 'manager'] },
 ];
+
+const comptabiliteGroup: MenuGroup = {
+  label: 'Comptabilite',
+  icon: 'account-balance-wallet',
+  roles: ['admin', 'manager'],
+  children: [
+    { label: 'Factures', path: '/(app)/invoices', icon: 'receipt', roles: ['admin', 'manager'] },
+    { label: 'Paie', path: '/(app)/payroll', icon: 'account-balance', roles: ['admin', 'manager'] },
+    { label: 'Notes de frais', path: '/(app)/expenses', icon: 'receipt-long' },
+  ],
+};
 
 const settingsGroup: MenuGroup = {
   label: 'Parametres',
@@ -58,6 +66,7 @@ export const Sidebar = () => {
   const screenWidth = Dimensions.get('window').width;
   const [expanded, setExpanded] = useState(screenWidth > 900);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [comptaOpen, setComptaOpen] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const canSee = (item: { roles?: string[] }) => {
@@ -66,6 +75,8 @@ export const Sidebar = () => {
   };
 
   const filteredMain = mainMenuItems.filter(canSee);
+  const filteredCompta = comptabiliteGroup.children.filter(canSee);
+  const showCompta = canSee(comptabiliteGroup) && filteredCompta.length > 0;
   const filteredSettings = settingsGroup.children.filter(canSee);
   const showSettings = canSee(settingsGroup) && filteredSettings.length > 0;
 
@@ -75,6 +86,7 @@ export const Sidebar = () => {
   };
 
   const isSettingsActive = filteredSettings.some(c => isActive(c.path));
+  const isComptaActive = filteredCompta.some(c => isActive(c.path));
 
   const sidebarWidth = expanded ? SIDEBAR_EXPANDED : SIDEBAR_COLLAPSED;
 
@@ -112,6 +124,64 @@ export const Sidebar = () => {
             </TouchableOpacity>
           );
         })}
+
+        {/* Comptabilite group */}
+        {showCompta && (
+          <>
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                isComptaActive && !comptaOpen && styles.menuItemActive,
+                !expanded && styles.menuItemCollapsed,
+                { marginTop: spacing.sm },
+              ]}
+              onPress={() => {
+                if (expanded) {
+                  setComptaOpen(!comptaOpen);
+                } else {
+                  setExpanded(true);
+                  setComptaOpen(true);
+                }
+              }}
+              data-testid="sidebar-comptabilite"
+            >
+              <MaterialIcons name="account-balance-wallet" size={22} color={isComptaActive ? '#FFF' : colors.sidebarText} />
+              {expanded && (
+                <>
+                  <Text style={[styles.menuLabel, isComptaActive && styles.menuLabelActive, { flex: 1 }]}>
+                    Comptabilite
+                  </Text>
+                  <MaterialIcons
+                    name={comptaOpen ? 'expand-less' : 'expand-more'}
+                    size={20}
+                    color={colors.sidebarText}
+                  />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {expanded && comptaOpen && (
+              <View style={styles.subMenu}>
+                {filteredCompta.map((child) => {
+                  const active = isActive(child.path);
+                  return (
+                    <TouchableOpacity
+                      key={child.path}
+                      style={[styles.subMenuItem, active && styles.subMenuItemActive]}
+                      onPress={() => router.push(child.path as any)}
+                      data-testid={`sidebar-${child.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <MaterialIcons name={child.icon} size={18} color={active ? '#FFF' : colors.sidebarText} />
+                      <Text style={[styles.subMenuLabel, active && styles.subMenuLabelActive]}>
+                        {child.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </>
+        )}
 
         {/* Parametres group */}
         {showSettings && (

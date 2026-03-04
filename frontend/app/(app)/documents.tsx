@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, TextInput, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
 import { useAuth } from '../../src/context/AuthContext';
 import { getDocuments, createDocument, deleteDocument, getUsers } from '../../src/services/api';
 
-const CATEGORIES = ['Contrat', 'Certificat', 'Formation', 'Evaluation', 'Medical', 'Administratif', 'Autre'];
-const CAT_ICONS: Record<string, string> = { Contrat: 'description', Certificat: 'verified', Formation: 'school', Evaluation: 'star', Medical: 'local-hospital', Administratif: 'folder', Autre: 'insert-drive-file' };
+const CATEGORIES = [
+  { key: 'Contrat', icon: 'description', color: '#2563EB' },
+  { key: 'Certificat', icon: 'verified', color: '#059669' },
+  { key: 'Formation', icon: 'school', color: '#6366F1' },
+  { key: 'Evaluation', icon: 'star', color: '#F59E0B' },
+  { key: 'Medical', icon: 'local-hospital', color: '#EF4444' },
+  { key: 'Administratif', icon: 'folder', color: '#8B5CF6' },
+  { key: 'Autre', icon: 'insert-drive-file', color: '#94A3B8' },
+];
 
 export default function DocumentsScreen() {
   const { user } = useAuth();
@@ -14,8 +21,8 @@ export default function DocumentsScreen() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('');
-  const [filterUser, setFilterUser] = useState('');
   const [form, setForm] = useState({ title: '', category: 'Contrat', content: '', target_user_id: '' });
   const isManager = user?.role === 'manager' || user?.role === 'admin';
 
@@ -23,107 +30,107 @@ export default function DocumentsScreen() {
     try {
       const params: any = {};
       if (filterCat) params.category = filterCat;
-      if (filterUser) params.target_user_id = filterUser;
       const [docRes, usrRes] = await Promise.all([getDocuments(params), isManager ? getUsers() : Promise.resolve({ data: [] })]);
-      setDocs(docRes.data);
-      setUsers(usrRes.data);
-    } catch(e) { console.log(e); }
-    finally { setLoading(false); }
-  }, [filterCat, filterUser]);
-
+      setDocs(docRes.data); setUsers(usrRes.data);
+    } catch (e) { console.log(e); } finally { setLoading(false); }
+  }, [filterCat]);
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleCreate = async () => {
     if (!form.title) return alert('Titre requis');
-    try {
-      await createDocument(form);
-      setShowModal(false);
-      setForm({ title: '', category: 'Contrat', content: '', target_user_id: '' });
-      await loadData();
-    } catch(e: any) { alert(e.response?.data?.detail || 'Erreur'); }
+    try { await createDocument(form); setShowModal(false); setForm({ title: '', category: 'Contrat', content: '', target_user_id: '' }); await loadData(); } catch (e: any) { alert(e.response?.data?.detail || 'Erreur'); }
   };
 
-  const filtered = docs.filter(d => !filterCat || d.category === filterCat);
+  const getCatCfg = (cat: string) => CATEGORIES.find(c => c.key === cat) || CATEGORIES[6];
+
+  const filtered = docs.filter(d => {
+    const matchCat = !filterCat || d.category === filterCat;
+    const matchSearch = `${d.title} ${d.category} ${d.user_name || ''} ${d.content || ''}`.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+
+  const catFilters = [{ key: '', label: 'Tous' }, ...CATEGORIES.map(c => ({ key: c.key, label: c.key }))];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>Dossier RH</Text>
-        <Pressable style={styles.addBtn} onPress={() => setShowModal(true)}><Text style={styles.addBtnText}>+ Nouveau document</Text></Pressable>
+        <Text style={styles.title} data-testid="documents-title">Dossier RH</Text>
+        {isManager && <TouchableOpacity style={styles.addBtn} onPress={() => setShowModal(true)} data-testid="add-document-btn"><Text style={styles.addBtnText}>+ Nouveau document</Text></TouchableOpacity>}
       </View>
 
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
-        <Pressable style={[styles.chip, !filterCat && styles.chipActive]} onPress={() => setFilterCat('')}><Text style={[styles.chipText, !filterCat && styles.chipTextActive]}>Tous</Text></Pressable>
-        {CATEGORIES.map(c => (
-          <Pressable key={c} style={[styles.chip, filterCat === c && styles.chipActive]} onPress={() => setFilterCat(c)}>
-            <Text style={[styles.chipText, filterCat === c && styles.chipTextActive]}>{c}</Text>
-          </Pressable>
+      <View style={styles.searchRow} data-testid="documents-search-bar">
+        <MaterialIcons name="search" size={20} color={colors.textLight} style={{ marginRight: spacing.sm }} />
+        <TextInput style={styles.searchInput} placeholder="Rechercher par titre, categorie, employe..." value={search} onChangeText={setSearch} placeholderTextColor={colors.textLight} data-testid="documents-search-input" />
+        {search.length > 0 && <TouchableOpacity onPress={() => setSearch('')}><MaterialIcons name="close" size={18} color={colors.textLight} /></TouchableOpacity>}
+      </View>
+
+      <View style={styles.filterRow}>
+        {catFilters.map(f => (
+          <TouchableOpacity key={f.key} style={[styles.filterChip, filterCat === f.key && styles.filterChipActive]} onPress={() => setFilterCat(f.key)}>
+            <Text style={[styles.filterChipText, filterCat === f.key && styles.filterChipTextActive]}>{f.label}</Text>
+          </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
-      {isManager && users.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
-          <Pressable style={[styles.chip, !filterUser && styles.chipActive]} onPress={() => setFilterUser('')}><Text style={[styles.chipText, !filterUser && styles.chipTextActive]}>Tous</Text></Pressable>
-          {users.map(u => (
-            <Pressable key={u.id} style={[styles.chip, filterUser === u.id && styles.chipActive]} onPress={() => setFilterUser(u.id)}>
-              <Text style={[styles.chipText, filterUser === u.id && styles.chipTextActive]}>{u.first_name} {u.last_name}</Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
-
-      {loading ? <ActivityIndicator size="large" color={colors.primary} /> : filtered.length === 0 ? (
+      {loading ? <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} /> : filtered.length === 0 ? (
         <View style={styles.empty}><MaterialIcons name="folder-open" size={48} color={colors.borderLight} /><Text style={styles.emptyText}>Aucun document</Text></View>
       ) : (
         <View style={styles.grid}>
-          {filtered.map(doc => (
-            <View key={doc.id} style={styles.card}>
-              <View style={styles.cardIcon}><MaterialIcons name={(CAT_ICONS[doc.category] || 'insert-drive-file') as any} size={28} color={colors.primary} /></View>
-              <Text style={styles.cardTitle}>{doc.title}</Text>
-              <View style={styles.catBadge}><Text style={styles.catBadgeText}>{doc.category}</Text></View>
-              {doc.content ? <Text style={styles.cardContent} numberOfLines={2}>{doc.content}</Text> : null}
-              <View style={styles.cardMeta}>
-                <Text style={styles.metaText}>{doc.user_name}</Text>
-                <Text style={styles.metaText}>{new Date(doc.created_at).toLocaleDateString('fr-CH')}</Text>
+          {filtered.map(doc => {
+            const cfg = getCatCfg(doc.category);
+            return (
+              <View key={doc.id} style={styles.card} data-testid={`doc-card-${doc.id}`}>
+                <View style={styles.cardTop}>
+                  <View style={[styles.catIcon, { backgroundColor: cfg.color + '18' }]}>
+                    <MaterialIcons name={cfg.icon as any} size={20} color={cfg.color} />
+                  </View>
+                  <View style={[styles.catBadge, { backgroundColor: cfg.color + '18' }]}>
+                    <Text style={[styles.catBadgeText, { color: cfg.color }]}>{doc.category}</Text>
+                  </View>
+                </View>
+                <Text style={styles.cardTitle}>{doc.title}</Text>
+                {doc.content ? <Text style={styles.cardContent} numberOfLines={2}>{doc.content}</Text> : null}
+                <View style={styles.cardMeta}>
+                  <View style={styles.metaItem}><MaterialIcons name="person" size={12} color={colors.textLight} /><Text style={styles.metaText}>{doc.user_name}</Text></View>
+                  <View style={styles.metaItem}><MaterialIcons name="date-range" size={12} color={colors.textLight} /><Text style={styles.metaText}>{new Date(doc.created_at).toLocaleDateString('fr-CH')}</Text></View>
+                </View>
+                {isManager && (
+                  <View style={styles.cardFooter}>
+                    <TouchableOpacity style={styles.deleteBtn} onPress={async () => { await deleteDocument(doc.id); loadData(); }} data-testid={`delete-doc-${doc.id}`}>
+                      <MaterialIcons name="delete-outline" size={16} color={colors.error} />
+                      <Text style={styles.deleteBtnText}>Supprimer</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-              {isManager && <Pressable style={styles.deleteBtn} onPress={async () => { await deleteDocument(doc.id); loadData(); }}><MaterialIcons name="delete-outline" size={18} color={colors.error} /></Pressable>}
-            </View>
-          ))}
+            );
+          })}
         </View>
       )}
 
       <Modal visible={showModal} transparent animationType="fade">
-        <Pressable style={styles.modalOverlay} onPress={() => setShowModal(false)}>
-          <View style={styles.modal} onStartShouldSetResponder={() => true}>
-            <Text style={styles.modalTitle}>Nouveau document</Text>
-            <TextInput style={styles.input} placeholder="Titre" value={form.title} onChangeText={v => setForm({...form, title: v})} placeholderTextColor={colors.textLight} />
+        <View style={styles.modalOverlay}>
+          <View style={styles.modal}>
+            <View style={styles.modalHeader}><Text style={styles.modalTitle}>Nouveau document</Text><TouchableOpacity onPress={() => setShowModal(false)}><MaterialIcons name="close" size={24} color={colors.textLight} /></TouchableOpacity></View>
+            <TextInput style={styles.input} placeholder="Titre" value={form.title} onChangeText={v => setForm({ ...form, title: v })} placeholderTextColor={colors.textLight} data-testid="doc-title-input" />
             <Text style={styles.label}>Categorie</Text>
             <View style={styles.catRow}>
-              {CATEGORIES.map(c => (
-                <Pressable key={c} style={[styles.chip, form.category === c && styles.chipActive]} onPress={() => setForm({...form, category: c})}>
-                  <Text style={[styles.chipText, form.category === c && styles.chipTextActive]}>{c}</Text>
-                </Pressable>
-              ))}
+              {CATEGORIES.map(c => (<TouchableOpacity key={c.key} style={[styles.catChip, form.category === c.key && { backgroundColor: c.color, borderColor: c.color }]} onPress={() => setForm({ ...form, category: c.key })}><MaterialIcons name={c.icon as any} size={14} color={form.category === c.key ? '#FFF' : c.color} /><Text style={[styles.catChipText, form.category === c.key && { color: '#FFF', fontWeight: '600' }]}>{c.key}</Text></TouchableOpacity>))}
             </View>
-            <TextInput style={[styles.input, { height: 100, textAlignVertical: 'top' }]} placeholder="Contenu / Notes" value={form.content} onChangeText={v => setForm({...form, content: v})} multiline placeholderTextColor={colors.textLight} />
+            <TextInput style={[styles.input, { minHeight: 80 }]} placeholder="Contenu / Notes" value={form.content} onChangeText={v => setForm({ ...form, content: v })} multiline placeholderTextColor={colors.textLight} data-testid="doc-content-input" />
             {isManager && users.length > 0 && (
               <><Text style={styles.label}>Employe</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.md }}>
-                <Pressable style={[styles.chip, !form.target_user_id && styles.chipActive]} onPress={() => setForm({...form, target_user_id: ''})}><Text style={[styles.chipText, !form.target_user_id && styles.chipTextActive]}>Moi</Text></Pressable>
-                {users.map(u => (
-                  <Pressable key={u.id} style={[styles.chip, form.target_user_id === u.id && styles.chipActive]} onPress={() => setForm({...form, target_user_id: u.id})}>
-                    <Text style={[styles.chipText, form.target_user_id === u.id && styles.chipTextActive]}>{u.first_name} {u.last_name}</Text>
-                  </Pressable>
-                ))}
+                <TouchableOpacity style={[styles.chip, !form.target_user_id && styles.chipActive]} onPress={() => setForm({ ...form, target_user_id: '' })}><Text style={[styles.chipText, !form.target_user_id && styles.chipTextActive]}>Moi</Text></TouchableOpacity>
+                {users.map(u => (<TouchableOpacity key={u.id} style={[styles.chip, form.target_user_id === u.id && styles.chipActive]} onPress={() => setForm({ ...form, target_user_id: u.id })}><Text style={[styles.chipText, form.target_user_id === u.id && styles.chipTextActive]}>{u.first_name} {u.last_name}</Text></TouchableOpacity>))}
               </ScrollView></>
             )}
-            <View style={styles.actions}>
-              <Pressable style={styles.cancelBtn} onPress={() => setShowModal(false)}><Text style={styles.cancelText}>Annuler</Text></Pressable>
-              <Pressable style={styles.submitBtn} onPress={handleCreate}><Text style={styles.submitText}>Creer</Text></Pressable>
+            <View style={styles.modalActions}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}><Text style={styles.cancelBtnText}>Annuler</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.submitBtn} onPress={handleCreate} data-testid="submit-doc"><Text style={styles.submitBtnText}>Creer</Text></TouchableOpacity>
             </View>
           </View>
-        </Pressable>
+        </View>
       </Modal>
     </ScrollView>
   );
@@ -132,35 +139,49 @@ export default function DocumentsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   title: { fontSize: fontSize.xl, fontWeight: '700', color: colors.text },
   addBtn: { backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.sm },
   addBtnText: { color: '#FFF', fontSize: fontSize.sm, fontWeight: '600' },
-  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginRight: spacing.sm, marginBottom: 4 },
-  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: fontSize.sm, color: colors.textLight },
-  chipTextActive: { color: '#FFF', fontWeight: '600' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, borderRadius: borderRadius.md, borderWidth: 1, borderColor: colors.border, paddingHorizontal: spacing.md, marginBottom: spacing.md },
+  searchInput: { flex: 1, paddingVertical: 12, fontSize: fontSize.md, color: colors.text },
+  filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.lg },
+  filterChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  filterChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  filterChipText: { fontSize: fontSize.sm, color: colors.textLight, fontWeight: '500' },
+  filterChipTextActive: { color: '#FFF', fontWeight: '600' },
   empty: { alignItems: 'center', paddingVertical: 60, gap: spacing.sm },
   emptyText: { color: colors.textLight, fontSize: fontSize.md },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  card: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md, minWidth: 250, flex: 1, maxWidth: '32%', borderWidth: 1, borderColor: colors.border },
-  cardIcon: { marginBottom: spacing.sm },
+  card: { backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.lg, minWidth: 260, flex: 1, maxWidth: '32%', borderWidth: 1, borderColor: colors.border },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  catIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  catBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: borderRadius.full },
+  catBadgeText: { fontSize: fontSize.xs, fontWeight: '600' },
   cardTitle: { fontSize: fontSize.md, fontWeight: '700', color: colors.text, marginBottom: spacing.xs },
-  catBadge: { backgroundColor: colors.primaryLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, alignSelf: 'flex-start', marginBottom: spacing.sm },
-  catBadgeText: { fontSize: 11, fontWeight: '600', color: colors.primary },
   cardContent: { fontSize: fontSize.xs, color: colors.textLight, marginBottom: spacing.sm },
-  cardMeta: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: colors.borderLight, paddingTop: spacing.sm },
+  cardMeta: { flexDirection: 'row', justifyContent: 'space-between', gap: spacing.sm },
+  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   metaText: { fontSize: fontSize.xs, color: colors.textLight },
-  deleteBtn: { position: 'absolute', top: 10, right: 10 },
+  cardFooter: { paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.borderLight, marginTop: spacing.sm },
+  deleteBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  deleteBtnText: { fontSize: fontSize.sm, color: colors.error, fontWeight: '500' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
   modal: { backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.lg, width: '90%', maxWidth: 500 },
-  modalTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text, marginBottom: spacing.lg },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  modalTitle: { fontSize: fontSize.lg, fontWeight: '700', color: colors.text },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: borderRadius.sm, paddingHorizontal: spacing.md, paddingVertical: 12, fontSize: fontSize.md, color: colors.text, marginBottom: spacing.md, backgroundColor: colors.background },
   label: { fontSize: fontSize.sm, fontWeight: '600', color: colors.text, marginBottom: spacing.xs },
-  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.md },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md },
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  catChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: borderRadius.full, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },
+  catChipText: { fontSize: fontSize.sm, color: colors.textLight },
+  chip: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, marginRight: spacing.sm },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { fontSize: fontSize.sm, color: colors.textLight },
+  chipTextActive: { color: '#FFF', fontWeight: '600' },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: spacing.md, marginTop: spacing.md },
   cancelBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-  cancelText: { color: colors.textLight, fontSize: fontSize.md },
+  cancelBtnText: { color: colors.textLight, fontSize: fontSize.md },
   submitBtn: { backgroundColor: colors.primary, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.sm },
-  submitText: { color: '#FFF', fontSize: fontSize.md, fontWeight: '600' },
+  submitBtnText: { color: '#FFF', fontSize: fontSize.md, fontWeight: '600' },
 });
