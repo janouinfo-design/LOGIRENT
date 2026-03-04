@@ -2167,6 +2167,392 @@ async def get_directory(user=Depends(get_current_user)):
     
     return result
 
+# ===================== MESSAGING ENDPOINTS =====================
+
+@api_router.post("/messages/conversations")
+async def create_conversation(participants: List[str], name: Optional[str] = None, user=Depends(get_current_user)):
+    uid = str(user['_id'])
+    if uid not in participants:
+        participants.append(uid)
+    conv = {
+        'participants': participants,
+        'name': name or '',
+        'created_by': uid,
+        'created_at': datetime.utcnow(),
+        'last_message_at': datetime.utcnow()
+    }
+    result = await db.conversations.insert_one(conv)
+    return {'id': str(result.inserted_id), 'message': 'Conversation creee'}
+
+@api_router.get("/messages/conversations")
+async def get_conversations(user=Depends(get_current_user)):
+    uid = str(user['_id'])
+    convs = await db.conversations.find({'participants': uid}).sort('last_message_at', -1).to_list(100)
+    result = []
+    for c in convs:
+        parts = []
+        for pid in c.get('participants', []):
+            try:
+                u = await db.users.find_one({'_id': ObjectId(pid)})
+                if u:
+                    parts.append({'id': str(u['_id']), 'name': f"{u['first_name']} {u['last_name']}"})
+            except:
+                pass
+        last_msg = await db.messages.find_one({'conversation_id': str(c['_id'])}, sort=[('created_at', -1)])
+        result.append({
+            'id': str(c['_id']),
+            'name': c.get('name', ''),
+            'participants': parts,
+            'last_message': last_msg.get('content', '') if last_msg else '',
+            'last_message_at': c.get('last_message_at', c['created_at']).isoformat() if isinstance(c.get('last_message_at', c['created_at']), datetime) else str(c.get('last_message_at', '')),
+            'unread': await db.messages.count_documents({'conversation_id': str(c['_id']), 'read_by': {'$nin': [uid]}})
+        })
+    return result
+
+@api_router.post("/messages/send")
+async def send_message(conversation_id: str, content: str, user=Depends(get_current_user)):
+    uid = str(user['_id'])
+    msg = {
+        'conversation_id': conversation_id,
+        'sender_id': uid,
+        'content': content,
+        'read_by': [uid],
+        'created_at': datetime.utcnow()
+    }
+    result = await db.messages.insert_one(msg)
+    await db.conversations.update_one({'_id': ObjectId(conversation_id)}, {'$set': {'last_message_at': datetime.utcnow()}})
+    return {'id': str(result.inserted_id), 'message': 'Message envoye'}
+
+@api_router.get("/messages/{conversation_id}")
+async def get_messages(conversation_id: str, user=Depends(get_current_user)):
+    uid = str(user['_id'])
+    msgs = await db.messages.find({'conversation_id': conversation_id}).sort('created_at', 1).to_list(500)
+    await db.messages.update_many({'conversation_id': conversation_id, 'read_by': {'$nin': [uid]}}, {'$push': {'read_by': uid}})
+    result = []
+    for m in msgs:
+        sender = await db.users.find_one({'_id': ObjectId(m['sender_id'])})
+        result.append({
+            'id': str(m['_id']),
+            'sender_id': m['sender_id'],
+            'sender_name': f"{sender['first_name']} {sender['last_name']}" if sender else 'Inconnu',
+            'content': m['content'],
+            'is_mine': m['sender_id'] == uid,
+            'created_at': m['created_at'].isoformat() if isinstance(m['created_at'], datetime) else str(m['created_at'])
+        })
+    return result
+
+# ===================== HR DOCUMENTS ENDPOINTS =====================
+
+@api_router.post("/documents")
+async def create_document(
+    title: str, category: str, content: str = "", target_user_id: Optional[str] = None,
+    user=Depends(get_current_user)
+):
+    uid = str(user['_id'])
+    doc = {
+        'title': title,
+        'category': category,
+        'content': content,
+        'user_id': target_user_id or uid,
+        'created_by': uid,
+        'created_at': datetime.utcnow(),
+        'updated_at': datetime.utcnow()
+    }
+    result = await db.hr_documents.insert_one(doc)
+    return {'id': str(result.inserted_id), 'message': 'Document cree'}
+
+@api_router.get("/documents")
+async def get_documents(target_user_id: Optional[str] = None, category: Optional[str] = None, user=Depends(get_current_user)):
+    uid = str(user['_id'])
+    query = {}
+    if user['role'] in [UserRole.MANAGER, UserRole.ADMIN] and target_user_id:
+        query['user_id'] = target_user_id
+    elif user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        query['user_id'] = uid
+    if category:
+        query['category'] = category
+    docs = await db.hr_documents.find(query).sort('created_at', -1).to_list(500)
+    result = []
+    for d in docs:
+        owner = await db.users.find_one({'_id': ObjectId(d['user_id'])})
+        result.append({
+            'id': str(d['_id']),
+            'title': d['title'],
+            'category': d['category'],
+            'content': d.get('content', ''),
+            'user_id': d['user_id'],
+            'user_name': f"{owner['first_name']} {owner['last_name']}" if owner else 'Inconnu',
+            'created_at': d['created_at'].isoformat() if isinstance(d['created_at'], datetime) else str(d['created_at'])
+        })
+    return result
+
+@api_router.delete("/documents/{doc_id}")
+async def delete_document(doc_id: str, user=Depends(get_manager_user)):
+    await db.hr_documents.delete_one({'_id': ObjectId(doc_id)})
+    return {'message': 'Document supprime'}
+
+# ===================== SCHEDULES ENDPOINTS =====================
+
+@api_router.post("/schedules")
+async def create_schedule(
+    user_id: str, schedule_type: str = "fixed",
+    monday_start: str = "08:00", monday_end: str = "17:00",
+    tuesday_start: str = "08:00", tuesday_end: str = "17:00",
+    wednesday_start: str = "08:00", wednesday_end: str = "17:00",
+    thursday_start: str = "08:00", thursday_end: str = "17:00",
+    friday_start: str = "08:00", friday_end: str = "17:00",
+    saturday_start: str = "", saturday_end: str = "",
+    sunday_start: str = "", sunday_end: str = "",
+    flex_weekly_hours: float = 40.0,
+    user=Depends(get_manager_user)
+):
+    sched = {
+        'user_id': user_id,
+        'schedule_type': schedule_type,
+        'days': {
+            'monday': {'start': monday_start, 'end': monday_end},
+            'tuesday': {'start': tuesday_start, 'end': tuesday_end},
+            'wednesday': {'start': wednesday_start, 'end': wednesday_end},
+            'thursday': {'start': thursday_start, 'end': thursday_end},
+            'friday': {'start': friday_start, 'end': friday_end},
+            'saturday': {'start': saturday_start, 'end': saturday_end},
+            'sunday': {'start': sunday_start, 'end': sunday_end},
+        },
+        'flex_weekly_hours': flex_weekly_hours,
+        'created_at': datetime.utcnow(),
+        'updated_at': datetime.utcnow()
+    }
+    existing = await db.schedules.find_one({'user_id': user_id})
+    if existing:
+        await db.schedules.update_one({'_id': existing['_id']}, {'$set': sched})
+        return {'id': str(existing['_id']), 'message': 'Horaire mis a jour'}
+    result = await db.schedules.insert_one(sched)
+    return {'id': str(result.inserted_id), 'message': 'Horaire cree'}
+
+@api_router.get("/schedules")
+async def get_schedules(user_id: Optional[str] = None, user=Depends(get_current_user)):
+    query = {}
+    if user_id:
+        query['user_id'] = user_id
+    scheds = await db.schedules.find(query).to_list(500)
+    result = []
+    for s in scheds:
+        u = await db.users.find_one({'_id': ObjectId(s['user_id'])})
+        result.append({
+            'id': str(s['_id']),
+            'user_id': s['user_id'],
+            'user_name': f"{u['first_name']} {u['last_name']}" if u else 'Inconnu',
+            'schedule_type': s.get('schedule_type', 'fixed'),
+            'days': s.get('days', {}),
+            'flex_weekly_hours': s.get('flex_weekly_hours', 40.0),
+        })
+    return result
+
+# ===================== PAYROLL ENDPOINTS =====================
+
+@api_router.get("/payroll/variables")
+async def get_payroll_variables(month: int, year: int, user_id: Optional[str] = None, user=Depends(get_manager_user)):
+    query = {}
+    if user_id:
+        query['user_id'] = user_id
+    users_list = await db.users.find(query if user_id else {}).to_list(500)
+    
+    month_start = f"{year}-{month:02d}-01"
+    if month == 12:
+        month_end = f"{year + 1}-01-01"
+    else:
+        month_end = f"{year}-{month + 1:02d}-01"
+    
+    payroll = []
+    for u in users_list:
+        uid = str(u['_id'])
+        entries = await db.timeentries.find({'user_id': uid, 'date': {'$gte': month_start, '$lt': month_end}}).to_list(100)
+        
+        total_hours = 0
+        overtime = 0
+        night_hours = 0
+        break_total = 0
+        contract_hours = u.get('contract_hours', 40)
+        daily_target = contract_hours / 5
+        
+        for e in entries:
+            wh, bh = calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))
+            total_hours += wh
+            break_total += bh
+            overtime += max(0, wh - daily_target)
+            if e.get('clock_in') and isinstance(e['clock_in'], datetime):
+                if e['clock_in'].hour >= 22 or e['clock_in'].hour < 6:
+                    night_hours += wh
+        
+        leaves = await db.leaves.find({'user_id': uid, 'status': LeaveStatus.APPROVED, 'start_date': {'$gte': month_start}, 'end_date': {'$lt': month_end}}).to_list(50)
+        sick_days = sum(1 for lv in leaves if lv['type'] == LeaveType.SICK)
+        vacation_days = sum(1 for lv in leaves if lv['type'] == LeaveType.VACATION)
+        
+        expenses = await db.expenses.find({'user_id': uid, 'status': 'approved', 'date': {'$gte': month_start, '$lt': month_end}}).to_list(100)
+        expense_total = sum(e['amount'] for e in expenses)
+        
+        dept_name = None
+        if u.get('department_id'):
+            dept = await db.departments.find_one({'_id': ObjectId(u['department_id'])})
+            dept_name = dept['name'] if dept else None
+        
+        payroll.append({
+            'user_id': uid,
+            'name': f"{u['first_name']} {u['last_name']}",
+            'department': dept_name,
+            'contract_hours': contract_hours,
+            'total_hours': round(total_hours, 2),
+            'overtime_hours': round(overtime, 2),
+            'night_hours': round(night_hours, 2),
+            'break_hours': round(break_total, 2),
+            'sick_days': sick_days,
+            'vacation_days': vacation_days,
+            'expense_total': round(expense_total, 2),
+            'hourly_rate': u.get('hourly_rate', 0),
+            'gross_salary': round(total_hours * u.get('hourly_rate', 0), 2)
+        })
+    return payroll
+
+@api_router.get("/payroll/export/{format}")
+async def export_payroll(format: str, month: int, year: int, user=Depends(get_manager_user)):
+    payroll = await get_payroll_variables(month, year, user=user)
+    
+    if format == 'cresus':
+        output = BytesIO()
+        output.write("Numero;Nom;Heures;Supp;Nuit;Maladie;Vacances;Frais;Brut\n".encode('utf-8'))
+        for i, p in enumerate(payroll):
+            line = f"{i+1};{p['name']};{p['total_hours']};{p['overtime_hours']};{p['night_hours']};{p['sick_days']};{p['vacation_days']};{p['expense_total']};{p['gross_salary']}\n"
+            output.write(line.encode('utf-8'))
+        output.seek(0)
+        return StreamingResponse(output, media_type='text/csv', headers={'Content-Disposition': f'attachment; filename=cresus_paie_{month}_{year}.csv'})
+    
+    elif format == 'abacus':
+        output = BytesIO()
+        output.write('<?xml version="1.0" encoding="UTF-8"?>\n<AbaPayroll>\n'.encode('utf-8'))
+        for i, p in enumerate(payroll):
+            output.write(f'  <Employee id="{i+1}" name="{p["name"]}">\n'.encode('utf-8'))
+            output.write(f'    <TotalHours>{p["total_hours"]}</TotalHours>\n'.encode('utf-8'))
+            output.write(f'    <Overtime>{p["overtime_hours"]}</Overtime>\n'.encode('utf-8'))
+            output.write(f'    <NightHours>{p["night_hours"]}</NightHours>\n'.encode('utf-8'))
+            output.write(f'    <SickDays>{p["sick_days"]}</SickDays>\n'.encode('utf-8'))
+            output.write(f'    <VacationDays>{p["vacation_days"]}</VacationDays>\n'.encode('utf-8'))
+            output.write(f'    <Expenses>{p["expense_total"]}</Expenses>\n'.encode('utf-8'))
+            output.write(f'    <GrossSalary>{p["gross_salary"]}</GrossSalary>\n'.encode('utf-8'))
+            output.write(f'  </Employee>\n'.encode('utf-8'))
+        output.write('</AbaPayroll>\n'.encode('utf-8'))
+        output.seek(0)
+        return StreamingResponse(output, media_type='application/xml', headers={'Content-Disposition': f'attachment; filename=abacus_paie_{month}_{year}.xml'})
+    
+    elif format == 'winbiz':
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f"Paie {month}-{year}"
+        ws.append(['No', 'Nom', 'Dept', 'Heures contrat', 'Heures total', 'Supp', 'Nuit', 'Maladie (j)', 'Vacances (j)', 'Frais', 'Taux', 'Brut'])
+        for i, p in enumerate(payroll):
+            ws.append([i+1, p['name'], p['department'] or '', p['contract_hours'], p['total_hours'], p['overtime_hours'], p['night_hours'], p['sick_days'], p['vacation_days'], p['expense_total'], p['hourly_rate'], p['gross_salary']])
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+        return StreamingResponse(output, media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers={'Content-Disposition': f'attachment; filename=winbiz_paie_{month}_{year}.xlsx'})
+    
+    raise HTTPException(status_code=400, detail="Format non supporte. Utilisez: cresus, abacus, winbiz")
+
+# ===================== SUBSCRIPTION PLANS =====================
+
+@api_router.get("/subscriptions/plans")
+async def get_plans(user=Depends(get_current_user)):
+    return [
+        {'id': 'basic', 'name': 'Basic', 'price': 5, 'currency': 'CHF', 'per': 'employe/mois',
+         'features': ['Pointage', 'Absences', 'Rapports de base', 'Max 10 employes']},
+        {'id': 'pro', 'name': 'Professional', 'price': 12, 'currency': 'CHF', 'per': 'employe/mois',
+         'features': ['Tout Basic', 'GPS Geofencing', 'Planning', 'Notes de frais', 'Facturation', 'Export paie', 'Employes illimites']},
+        {'id': 'enterprise', 'name': 'Enterprise', 'price': 25, 'currency': 'CHF', 'per': 'employe/mois',
+         'features': ['Tout Professional', 'Multi-entreprise', 'API avancee', 'Support prioritaire', 'Audit complet', 'SSO / LDAP']}
+    ]
+
+@api_router.get("/subscriptions/current")
+async def get_current_subscription(user=Depends(get_current_user)):
+    sub = await db.subscriptions.find_one({'company_id': user.get('company_id', 'default')})
+    if not sub:
+        return {'plan': 'pro', 'status': 'active', 'employees': 8, 'next_billing': '2026-04-01'}
+    return {
+        'plan': sub.get('plan', 'basic'),
+        'status': sub.get('status', 'active'),
+        'employees': sub.get('employees', 0),
+        'next_billing': sub.get('next_billing', '')
+    }
+
+# ===================== ANALYTICS ENDPOINTS =====================
+
+@api_router.get("/analytics/dashboard")
+async def get_analytics_dashboard(months: int = 6, user=Depends(get_manager_user)):
+    now = datetime.utcnow()
+    
+    monthly_data = []
+    for i in range(months - 1, -1, -1):
+        m = now.month - i
+        y = now.year
+        while m <= 0:
+            m += 12
+            y -= 1
+        month_start = f"{y}-{m:02d}-01"
+        if m == 12:
+            month_end = f"{y + 1}-01-01"
+        else:
+            month_end = f"{y}-{m + 1:02d}-01"
+        
+        entries = await db.timeentries.find({'date': {'$gte': month_start, '$lt': month_end}}).to_list(5000)
+        total_h = 0
+        billable_h = 0
+        for e in entries:
+            wh, _ = calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))
+            total_h += wh
+            if e.get('billable', True):
+                billable_h += wh
+        
+        leaves = await db.leaves.find({'status': LeaveStatus.APPROVED, 'start_date': {'$gte': month_start, '$lt': month_end}}).to_list(500)
+        absence_days = len(leaves)
+        
+        total_users = await db.users.count_documents({})
+        absence_rate = round((absence_days / (total_users * 22)) * 100, 1) if total_users > 0 else 0
+        
+        months_names = ['Jan', 'Fev', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aou', 'Sep', 'Oct', 'Nov', 'Dec']
+        monthly_data.append({
+            'month': months_names[m - 1],
+            'year': y,
+            'total_hours': round(total_h, 1),
+            'billable_hours': round(billable_h, 1),
+            'absence_days': absence_days,
+            'absence_rate': absence_rate
+        })
+    
+    # Project hours distribution
+    projects = await db.projects.find({'is_active': True}).to_list(100)
+    project_hours = []
+    for p in projects:
+        pid = str(p['_id'])
+        entries = await db.timeentries.find({'project_id': pid}).to_list(5000)
+        ph = sum(calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))[0] for e in entries)
+        if ph > 0:
+            project_hours.append({'name': p['name'], 'hours': round(ph, 1)})
+    project_hours.sort(key=lambda x: x['hours'], reverse=True)
+    
+    # Work location distribution (current month)
+    curr_month_start = f"{now.year}-{now.month:02d}-01"
+    curr_entries = await db.timeentries.find({'date': {'$gte': curr_month_start}}).to_list(5000)
+    loc_dist = {'office': 0, 'home': 0, 'onsite': 0}
+    for e in curr_entries:
+        loc = e.get('work_location', 'office')
+        loc_dist[loc] = loc_dist.get(loc, 0) + 1
+    
+    return {
+        'monthly': monthly_data,
+        'project_hours': project_hours[:10],
+        'location_distribution': loc_dist,
+        'total_employees': await db.users.count_documents({}),
+        'active_projects': await db.projects.count_documents({'is_active': True})
+    }
+
 # ===================== ROOT ENDPOINT =====================
 
 @api_router.get("/")

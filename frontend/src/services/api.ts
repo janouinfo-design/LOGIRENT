@@ -138,4 +138,44 @@ export const stopTimer = () => api.post('/timer/stop');
 export const getCurrentTimer = () => api.get('/timer/current');
 export const getTimerHistory = () => api.get('/timer/history');
 
+// Messaging
+export const getConversations = () => api.get('/messages/conversations');
+export const createConversation = (participants: string[], name?: string) =>
+  api.post(`/messages/conversations?${new URLSearchParams(name ? { name } : {}).toString()}`, participants);
+export const getMessagesForConv = (convId: string) => api.get(`/messages/${convId}`);
+export const sendMessage = (conversationId: string, content: string) =>
+  api.post(`/messages/send?conversation_id=${conversationId}&content=${encodeURIComponent(content)}`);
+
+// HR Documents
+export const getDocuments = (params?: any) => api.get('/documents', { params });
+export const createDocument = (data: any) => {
+  const p = new URLSearchParams();
+  p.append('title', data.title);
+  p.append('category', data.category);
+  if (data.content) p.append('content', data.content);
+  if (data.target_user_id) p.append('target_user_id', data.target_user_id);
+  return api.post(`/documents?${p.toString()}`);
+};
+export const deleteDocument = (id: string) => api.delete(`/documents/${id}`);
+
+// Schedules
+export const getSchedules = (params?: any) => api.get('/schedules', { params });
+export const createSchedule = (data: any) => {
+  const p = new URLSearchParams();
+  Object.entries(data).forEach(([k, v]) => { if (v !== undefined && v !== null) p.append(k, String(v)); });
+  return api.post(`/schedules?${p.toString()}`);
+};
+
+// Payroll
+export const getPayrollVariables = (params: any) => api.get('/payroll/variables', { params });
+export const exportPayroll = (format: string, params: any) =>
+  api.get(`/payroll/export/${format}`, { params, responseType: 'blob' });
+
+// Subscriptions
+export const getPlans = () => api.get('/subscriptions/plans');
+export const getCurrentSubscription = () => api.get('/subscriptions/current');
+
+// Analytics
+export const getAnalyticsDashboard = (params?: any) => api.get('/analytics/dashboard', { params });
+
 export default api;
