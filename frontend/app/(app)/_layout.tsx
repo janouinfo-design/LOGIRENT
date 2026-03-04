@@ -5,12 +5,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import { Sidebar } from '../../src/components/Sidebar';
 import { colors, fontSize, spacing, borderRadius } from '../../src/theme/constants';
-import { getNotifications } from '../../src/services/api';
+import { getNotifications, getConversations } from '../../src/services/api';
 
 export default function AppLayout() {
   const { user, loading, logout } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -23,6 +24,10 @@ export default function AppLayout() {
       getNotifications().then(r => {
         const unread = (r.data || []).filter((n: any) => !n.read).length;
         setUnreadCount(unread);
+      }).catch(() => {});
+      getConversations().then(r => {
+        const unread = (r.data || []).reduce((sum: number, c: any) => sum + (c.unread_count || 0), 0);
+        setUnreadMessages(unread);
       }).catch(() => {});
     }
   }, [user]);
@@ -45,6 +50,20 @@ export default function AppLayout() {
         <View style={styles.topBar}>
           <View style={styles.topBarLeft} />
           <View style={styles.topBarRight}>
+            {/* Messagerie */}
+            <TouchableOpacity
+              style={styles.topBarIcon}
+              onPress={() => router.push('/(app)/messaging' as any)}
+              data-testid="topbar-messaging"
+            >
+              <MaterialIcons name="chat-bubble-outline" size={22} color={colors.text} />
+              {unreadMessages > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{unreadMessages > 9 ? '9+' : unreadMessages}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
             {/* Notifications */}
             <TouchableOpacity
               style={styles.topBarIcon}

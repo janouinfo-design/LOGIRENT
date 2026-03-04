@@ -20,7 +20,6 @@ const menuItems: MenuItem[] = [
   { label: 'Planning', path: '/(app)/planning', icon: 'calendar-today' },
   { label: 'Absences', path: '/(app)/leaves', icon: 'event-busy' },
   { label: 'Notes de frais', path: '/(app)/expenses', icon: 'receipt-long' },
-  { label: 'Messagerie', path: '/(app)/messaging', icon: 'chat' },
   { label: 'Annuaire', path: '/(app)/directory', icon: 'contacts' },
   { label: 'Dossier RH', path: '/(app)/documents', icon: 'folder-shared' },
   { label: 'Rapports', path: '/(app)/reports', icon: 'assessment' },
