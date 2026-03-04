@@ -98,6 +98,8 @@ export const getBalances = (params?: any) => api.get('/stats/balances', { params
 // Notifications
 export const getNotifications = (params?: any) => api.get('/notifications', { params });
 export const markNotificationRead = (id: string) => api.post(`/notifications/${id}/read`);
+export const updateNotification = (id: string, data: any) => api.put(`/notifications/${id}`, data);
+export const deleteNotification = (id: string) => api.delete(`/notifications/${id}`);
 export const markAllNotificationsRead = () => api.post('/notifications/read-all');
 export const getUnreadCount = () => api.get('/notifications/count');
 

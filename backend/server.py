@@ -1641,6 +1641,29 @@ async def mark_notification_read(notif_id: str, user=Depends(get_current_user)):
     )
     return {"message": "Notification marquée comme lue"}
 
+@api_router.put("/notifications/{notif_id}")
+async def update_notification(notif_id: str, data: dict, user=Depends(get_current_user)):
+    notif = await db.notifications.find_one({'_id': ObjectId(notif_id), 'user_id': str(user['_id'])})
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification non trouvee")
+    update_fields = {}
+    if 'title' in data:
+        update_fields['title'] = data['title']
+    if 'message' in data:
+        update_fields['message'] = data['message']
+    if 'type' in data:
+        update_fields['type'] = data['type']
+    if update_fields:
+        await db.notifications.update_one({'_id': ObjectId(notif_id)}, {'$set': update_fields})
+    return {"message": "Notification mise a jour"}
+
+@api_router.delete("/notifications/{notif_id}")
+async def delete_notification(notif_id: str, user=Depends(get_current_user)):
+    result = await db.notifications.delete_one({'_id': ObjectId(notif_id), 'user_id': str(user['_id'])})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Notification non trouvee")
+    return {"message": "Notification supprimee"}
+
 @api_router.post("/notifications/read-all")
 async def mark_all_notifications_read(user=Depends(get_current_user)):
     await db.notifications.update_many(
