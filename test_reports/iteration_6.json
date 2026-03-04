@@ -1,0 +1,73 @@
+{
+  "summary": "Completed testing of Absences (leaves) and Directory (Annuaire) page enhancements. Backend: 17/17 tests passed. Frontend: All features verified working.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Console warnings", "issues": ["'shadow*' style props are deprecated. Use 'boxShadow' - cosmetic only, no functional impact"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_leaves_directory.py",
+    "/app/test_reports/pytest/pytest_leaves_directory.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Directory page employee cards don't have data-testid attributes (minor - tests still work via text selectors)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_leaves_directory.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "admin": "admin@timesheet.ch / admin123",
+    "manager": "manager@test.ch / test123",
+    "employee": "employe@test.ch / test123"
+  },
+  "seed_data_creation": "Test leaves created and cleaned up via pytest. Existing test data from Marie Martin with various leave types (vacation, sick, accident, training, maternity, paternity).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Absences and Directory enhancements verified working. Absences page has search bar (filters by name, type, reason), status filter chips (Tous, En attente, Approuvees, Refusees), edit buttons on pending leaves that open pre-filled modal, delete buttons (trash icon). Directory page has search bar (filters by name, email, department), edit buttons on each employee card showing modal with name/phone/contract hours fields. Backend PUT /api/leaves/{id}, DELETE /api/leaves/{id}, PUT /api/users/{id} all working correctly.",
+  "features_verified": {
+    "backend": {
+      "GET_leaves": "PASS - Returns list of leaves with user_name, type, dates, status",
+      "POST_leaves": "PASS - Creates new leave with pending status",
+      "PUT_leaves": "PASS - Updates leave type, dates, reason",
+      "DELETE_leaves": "PASS - Removes leave from database",
+      "PUT_leaves_404": "PASS - Returns 404 for non-existent leave",
+      "DELETE_leaves_404": "PASS - Returns 404 for non-existent leave",
+      "leaves_CRUD_full_cycle": "PASS - Create, Read, Update, Delete verified",
+      "GET_directory": "PASS - Returns employee list with search-required fields",
+      "GET_users": "PASS - Returns user list (manager/admin only)",
+      "PUT_users": "PASS - Updates user phone and contract_hours",
+      "leaves_filter_pending": "PASS - Filters by status=pending",
+      "leaves_filter_approved": "PASS - Filters by status=approved",
+      "leaves_filter_rejected": "PASS - Filters by status=rejected",
+      "POST_leaves_approve": "PASS - Changes status to approved",
+      "POST_leaves_reject": "PASS - Changes status to rejected"
+    },
+    "frontend": {
+      "absences_page_search_bar": "PASS - Search bar visible with placeholder 'Rechercher par nom, type, raison...'",
+      "absences_search_filtering": "PASS - Search filters leaves by text content",
+      "absences_status_filter_chips": "PASS - Tous, En attente, Approuvees, Refusees chips visible and clickable",
+      "absences_edit_button": "PASS - 'Modifier' button visible on pending leaves (8 found)",
+      "absences_edit_modal_opens": "PASS - Modal opens with title 'Modifier l'absence'",
+      "absences_edit_modal_prefilled": "PASS - Type, dates, reason pre-filled from leave data",
+      "absences_delete_button": "PASS - Delete (trash) icon present on each leave card",
+      "absences_approve_reject_buttons": "PASS - 'Approuver' and 'Refuser' buttons visible for managers",
+      "directory_page_search_bar": "PASS - Search bar visible with placeholder 'Rechercher un employe...'",
+      "directory_search_filtering": "PASS - Search filters employees (searched 'Admin' showed only Admin user)",
+      "directory_edit_button": "PASS - 'Modifier' button visible on all 8 employee cards",
+      "directory_edit_modal_opens": "PASS - Modal opens with title 'Modifier l'employe'",
+      "directory_edit_modal_fields": "PASS - Prenom, Nom, Telephone, Heures contrat/semaine fields present",
+      "directory_summary_cards": "PASS - Shows Actifs, Absents, Total counts"
+    }
+  }
+}

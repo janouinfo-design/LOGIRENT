@@ -1435,6 +1435,31 @@ async def get_leaves(
     
     return result
 
+@api_router.put("/leaves/{leave_id}")
+async def update_leave(leave_id: str, data: LeaveCreate, user=Depends(get_current_user)):
+    leave = await db.leaves.find_one({'_id': ObjectId(leave_id)})
+    if not leave:
+        raise HTTPException(status_code=404, detail="Absence non trouvee")
+    if leave['user_id'] != str(user['_id']) and user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    if leave['status'] != 'pending' and user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=400, detail="Impossible de modifier une absence deja traitee")
+    update_dict = {'type': data.type, 'start_date': data.start_date, 'end_date': data.end_date, 'reason': data.reason or ''}
+    await db.leaves.update_one({'_id': ObjectId(leave_id)}, {'$set': update_dict})
+    await create_audit_log(str(user['_id']), "UPDATE", "leave", leave_id)
+    return {"message": "Absence mise a jour"}
+
+@api_router.delete("/leaves/{leave_id}")
+async def delete_leave(leave_id: str, user=Depends(get_current_user)):
+    leave = await db.leaves.find_one({'_id': ObjectId(leave_id)})
+    if not leave:
+        raise HTTPException(status_code=404, detail="Absence non trouvee")
+    if leave['user_id'] != str(user['_id']) and user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Acces refuse")
+    await db.leaves.delete_one({'_id': ObjectId(leave_id)})
+    await create_audit_log(str(user['_id']), "DELETE", "leave", leave_id)
+    return {"message": "Absence supprimee"}
+
 @api_router.post("/leaves/{leave_id}/approve")
 async def approve_leave(leave_id: str, user=Depends(get_manager_user)):
     await db.leaves.update_one(

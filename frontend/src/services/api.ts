@@ -84,6 +84,8 @@ export const createCompany = (data: any) => api.post('/companies', data);
 // Leaves
 export const getLeaves = (params?: any) => api.get('/leaves', { params });
 export const createLeave = (data: any) => api.post('/leaves', data);
+export const updateLeave = (id: string, data: any) => api.put(`/leaves/${id}`, data);
+export const deleteLeave = (id: string) => api.delete(`/leaves/${id}`);
 export const approveLeave = (id: string) => api.post(`/leaves/${id}/approve`);
 export const rejectLeave = (id: string) => api.post(`/leaves/${id}/reject`);
 
