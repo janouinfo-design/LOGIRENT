@@ -71,6 +71,14 @@ class LeaveType:
     SICK = "sick"
     ACCIDENT = "accident"
     TRAINING = "training"
+    MATERNITY = "maternity"
+    PATERNITY = "paternity"
+    SPECIAL = "special"
+
+class WorkLocation:
+    OFFICE = "office"
+    HOME = "home"
+    ONSITE = "onsite"
 
 class LeaveStatus:
     PENDING = "pending"
@@ -229,6 +237,7 @@ class TimesheetCreate(BaseModel):
     billable: bool = True
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+    work_location: Optional[str] = "office"  # office, home, onsite
 
 class TimesheetResponse(BaseModel):
     id: str
@@ -835,6 +844,7 @@ async def clock_in(data: TimesheetCreate, user=Depends(get_current_user)):
         'activity_id': data.activity_id,
         'comment': data.comment or "",
         'billable': data.billable,
+        'work_location': data.work_location or "office",
         'status': TimesheetStatus.PENDING
     }
     
@@ -1883,6 +1893,279 @@ async def generate_excel_report(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
+
+# ===================== EMPLOYEE BALANCES ENDPOINT =====================
+
+@api_router.get("/stats/balances")
+async def get_employee_balances(target_user_id: Optional[str] = None, user=Depends(get_current_user)):
+    uid = target_user_id if target_user_id and user['role'] in [UserRole.MANAGER, UserRole.ADMIN] else str(user['_id'])
+    target = await db.users.find_one({'_id': ObjectId(uid)})
+    if not target:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouve")
+    
+    now = datetime.utcnow()
+    year_start = f"{now.year}-01-01"
+    contract_hours = target.get('contract_hours', 42)
+    daily_hours = contract_hours / 5
+    
+    # All entries this year
+    entries = await db.timeentries.find({'user_id': uid, 'date': {'$gte': year_start}}).to_list(10000)
+    total_hours = 0
+    overtime = 0
+    for e in entries:
+        wh, _ = calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))
+        total_hours += wh
+        overtime += max(0, wh - daily_hours)
+    
+    # Vacation days: 25 per year (Swiss standard), minus approved vacation leaves
+    vacation_total = 25
+    approved_vacations = await db.leaves.find({'user_id': uid, 'type': LeaveType.VACATION, 'status': LeaveStatus.APPROVED}).to_list(100)
+    vacation_used = 0
+    for v in approved_vacations:
+        try:
+            sd = datetime.strptime(v['start_date'], '%Y-%m-%d')
+            ed = datetime.strptime(v['end_date'], '%Y-%m-%d')
+            days = 0
+            d = sd
+            while d <= ed:
+                if d.weekday() < 5:
+                    days += 1
+                d += timedelta(days=1)
+            vacation_used += days
+        except:
+            vacation_used += 1
+    
+    # Sick days this year
+    sick_leaves = await db.leaves.find({'user_id': uid, 'type': LeaveType.SICK, 'status': LeaveStatus.APPROVED}).to_list(100)
+    sick_days = 0
+    for s in sick_leaves:
+        try:
+            sd = datetime.strptime(s['start_date'], '%Y-%m-%d')
+            ed = datetime.strptime(s['end_date'], '%Y-%m-%d')
+            sick_days += (ed - sd).days + 1
+        except:
+            sick_days += 1
+    
+    # Month stats
+    month_start = f"{now.year}-{now.month:02d}-01"
+    month_entries = [e for e in entries if e.get('date', '') >= month_start]
+    month_hours = 0
+    for e in month_entries:
+        wh, _ = calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))
+        month_hours += wh
+    
+    # Telework days this month
+    telework_days = sum(1 for e in month_entries if e.get('work_location') == 'home')
+    office_days = sum(1 for e in month_entries if e.get('work_location', 'office') == 'office')
+    onsite_days = sum(1 for e in month_entries if e.get('work_location') == 'onsite')
+    
+    return {
+        'total_hours_year': round(total_hours, 1),
+        'overtime_hours': round(overtime, 1),
+        'contract_hours_week': contract_hours,
+        'vacation_total': vacation_total,
+        'vacation_used': vacation_used,
+        'vacation_remaining': vacation_total - vacation_used,
+        'sick_days': sick_days,
+        'month_hours': round(month_hours, 1),
+        'month_target': round(contract_hours * 4.33, 1),
+        'telework_days': telework_days,
+        'office_days': office_days,
+        'onsite_days': onsite_days
+    }
+
+# ===================== PLANNING ENDPOINTS =====================
+
+@api_router.get("/planning")
+async def get_planning(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    department_id: Optional[str] = None,
+    user=Depends(get_current_user)
+):
+    now = datetime.utcnow().date()
+    if not start_date:
+        start_date = (now - timedelta(days=now.weekday())).isoformat()
+    if not end_date:
+        end_date = (now + timedelta(days=6 - now.weekday())).isoformat()
+    
+    user_query = {}
+    if department_id:
+        user_query['department_id'] = department_id
+    
+    users = await db.users.find(user_query).to_list(1000)
+    
+    planning = []
+    for u in users:
+        uid = str(u['_id'])
+        entries = await db.timeentries.find({
+            'user_id': uid,
+            'date': {'$gte': start_date, '$lte': end_date}
+        }).to_list(100)
+        
+        leaves = await db.leaves.find({
+            'user_id': uid,
+            'status': LeaveStatus.APPROVED,
+            'start_date': {'$lte': end_date},
+            'end_date': {'$gte': start_date}
+        }).to_list(50)
+        
+        days = {}
+        for e in entries:
+            wh, _ = calculate_duration(e.get('clock_in'), e.get('clock_out'), e.get('break_start'), e.get('break_end'))
+            loc = e.get('work_location', 'office')
+            days[e['date']] = {'hours': round(wh, 1), 'location': loc, 'type': 'work', 'status': e.get('status', 'pending')}
+        
+        for lv in leaves:
+            try:
+                sd = datetime.strptime(lv['start_date'], '%Y-%m-%d').date()
+                ed = datetime.strptime(lv['end_date'], '%Y-%m-%d').date()
+                d = sd
+                while d <= ed:
+                    ds = d.isoformat()
+                    if ds not in days and ds >= start_date and ds <= end_date:
+                        days[ds] = {'hours': 0, 'location': '', 'type': lv['type'], 'status': 'approved'}
+                    d += timedelta(days=1)
+            except:
+                pass
+        
+        dept_name = None
+        if u.get('department_id'):
+            dept = await db.departments.find_one({'_id': ObjectId(u['department_id'])})
+            dept_name = dept['name'] if dept else None
+        
+        planning.append({
+            'user_id': uid,
+            'name': f"{u['first_name']} {u['last_name']}",
+            'role': u['role'],
+            'department': dept_name,
+            'days': days
+        })
+    
+    return planning
+
+# ===================== EXPENSE ENDPOINTS =====================
+
+@api_router.post("/expenses")
+async def create_expense(
+    amount: float,
+    category: str,
+    description: str = "",
+    date: Optional[str] = None,
+    project_id: Optional[str] = None,
+    user=Depends(get_current_user)
+):
+    expense_doc = {
+        'user_id': str(user['_id']),
+        'amount': amount,
+        'category': category,
+        'description': description,
+        'date': date or datetime.utcnow().date().isoformat(),
+        'project_id': project_id,
+        'status': 'pending',
+        'created_at': datetime.utcnow()
+    }
+    result = await db.expenses.insert_one(expense_doc)
+    
+    managers = await db.users.find({'role': {'$in': [UserRole.MANAGER, UserRole.ADMIN]}}).to_list(100)
+    for m in managers:
+        await create_notification(str(m['_id']), "Nouvelle note de frais", f"{user['first_name']} {user['last_name']}: {amount} CHF", "info")
+    
+    return {'id': str(result.inserted_id), 'message': 'Note de frais creee'}
+
+@api_router.get("/expenses")
+async def get_expenses(status: Optional[str] = None, user=Depends(get_current_user)):
+    query = {}
+    if user['role'] not in [UserRole.MANAGER, UserRole.ADMIN]:
+        query['user_id'] = str(user['_id'])
+    if status:
+        query['status'] = status
+    
+    expenses = await db.expenses.find(query).sort('created_at', -1).to_list(1000)
+    result = []
+    for exp in expenses:
+        user_doc = await db.users.find_one({'_id': ObjectId(exp['user_id'])})
+        user_name = f"{user_doc['first_name']} {user_doc['last_name']}" if user_doc else "Inconnu"
+        project_name = None
+        if exp.get('project_id'):
+            proj = await db.projects.find_one({'_id': ObjectId(exp['project_id'])})
+            project_name = proj['name'] if proj else None
+        result.append({
+            'id': str(exp['_id']),
+            'user_id': exp['user_id'],
+            'user_name': user_name,
+            'amount': exp['amount'],
+            'category': exp['category'],
+            'description': exp.get('description', ''),
+            'date': exp['date'],
+            'project_id': exp.get('project_id'),
+            'project_name': project_name,
+            'status': exp['status'],
+            'created_at': exp['created_at'].isoformat() if isinstance(exp['created_at'], datetime) else exp['created_at']
+        })
+    return result
+
+@api_router.post("/expenses/{expense_id}/approve")
+async def approve_expense(expense_id: str, user=Depends(get_manager_user)):
+    await db.expenses.update_one({'_id': ObjectId(expense_id)}, {'$set': {'status': 'approved'}})
+    exp = await db.expenses.find_one({'_id': ObjectId(expense_id)})
+    if exp:
+        await create_notification(exp['user_id'], "Note de frais approuvee", f"Votre note de frais de {exp['amount']} CHF a ete approuvee", "success")
+    return {"message": "Note de frais approuvee"}
+
+@api_router.post("/expenses/{expense_id}/reject")
+async def reject_expense(expense_id: str, user=Depends(get_manager_user)):
+    await db.expenses.update_one({'_id': ObjectId(expense_id)}, {'$set': {'status': 'rejected'}})
+    exp = await db.expenses.find_one({'_id': ObjectId(expense_id)})
+    if exp:
+        await create_notification(exp['user_id'], "Note de frais refusee", f"Votre note de frais de {exp['amount']} CHF a ete refusee", "error")
+    return {"message": "Note de frais refusee"}
+
+# ===================== EMPLOYEE DIRECTORY =====================
+
+@api_router.get("/directory")
+async def get_directory(user=Depends(get_current_user)):
+    users = await db.users.find().to_list(1000)
+    today = datetime.utcnow().date().isoformat()
+    
+    result = []
+    for u in users:
+        uid = str(u['_id'])
+        dept_name = None
+        if u.get('department_id'):
+            dept = await db.departments.find_one({'_id': ObjectId(u['department_id'])})
+            dept_name = dept['name'] if dept else None
+        
+        active_entry = await db.timeentries.find_one({'user_id': uid, 'date': today, 'clock_out': None})
+        is_active = active_entry is not None
+        work_location = active_entry.get('work_location', 'office') if active_entry else None
+        
+        on_leave = await db.leaves.find_one({
+            'user_id': uid,
+            'status': LeaveStatus.APPROVED,
+            'start_date': {'$lte': today},
+            'end_date': {'$gte': today}
+        })
+        
+        status = 'absent'
+        if on_leave:
+            status = on_leave['type']
+        elif is_active:
+            status = work_location or 'office'
+        
+        result.append({
+            'id': uid,
+            'first_name': u['first_name'],
+            'last_name': u['last_name'],
+            'email': u['email'],
+            'role': u['role'],
+            'phone': u.get('phone', ''),
+            'department': dept_name,
+            'status': status,
+            'work_location': work_location
+        })
+    
+    return result
 
 # ===================== ROOT ENDPOINT =====================
 

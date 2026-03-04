@@ -89,6 +89,7 @@ export const rejectLeave = (id: string) => api.post(`/leaves/${id}/reject`);
 export const getWeeklyStats = () => api.get('/stats/weekly');
 export const getMonthlyStats = (params?: any) => api.get('/stats/monthly', { params });
 export const getDashboardStats = () => api.get('/stats/dashboard');
+export const getBalances = (params?: any) => api.get('/stats/balances', { params });
 
 // Notifications
 export const getNotifications = (params?: any) => api.get('/notifications', { params });
@@ -110,5 +111,31 @@ export const updateInvoiceStatus = (id: string, status: string) =>
 
 // Audit Logs
 export const getAuditLogs = (params?: any) => api.get('/audit-logs', { params });
+
+// Planning
+export const getPlanning = (params?: any) => api.get('/planning', { params });
+
+// Expenses
+export const getExpenses = (params?: any) => api.get('/expenses', { params });
+export const createExpense = (data: any) => {
+  const params = new URLSearchParams();
+  params.append('amount', data.amount);
+  params.append('category', data.category);
+  if (data.description) params.append('description', data.description);
+  if (data.date) params.append('date', data.date);
+  if (data.project_id) params.append('project_id', data.project_id);
+  return api.post(`/expenses?${params.toString()}`);
+};
+export const approveExpense = (id: string) => api.post(`/expenses/${id}/approve`);
+export const rejectExpense = (id: string) => api.post(`/expenses/${id}/reject`);
+
+// Directory
+export const getDirectory = () => api.get('/directory');
+
+// Timer
+export const startTimer = (data: any) => api.post('/timer/start', data);
+export const stopTimer = () => api.post('/timer/stop');
+export const getCurrentTimer = () => api.get('/timer/current');
+export const getTimerHistory = () => api.get('/timer/history');
 
 export default api;
