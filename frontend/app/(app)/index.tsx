@@ -426,7 +426,7 @@ export default function Dashboard() {
           </Pressable>
 
           <Pressable
-            style={[styles.actionBtn, !isActive ? styles.btnOrangeDisabled : (isOnBreak ? styles.btnOrangeActive : styles.btnOrange)]}
+            style={[styles.actionBtn, !isActive ? styles.btnOrangeDisabled : (isOnBreak ? styles.btnGreenResume : styles.btnOrange)]}
             onPress={() => handleAction('break')}
             disabled={!isActive || actionLoading !== ''}
             data-testid="break-button"
@@ -856,6 +856,7 @@ const styles = StyleSheet.create({
     ...(Platform.OS === 'web' ? { cursor: 'pointer' } : {}),
   },
   btnGreen: { backgroundColor: '#059669' },
+  btnGreenResume: { backgroundColor: '#059669' },
   btnOrange: { backgroundColor: '#D97706' },
   btnOrangeActive: { backgroundColor: '#B45309' },
   btnRed: { backgroundColor: '#DC2626' },
