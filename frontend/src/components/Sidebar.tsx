@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -58,6 +58,7 @@ export const Sidebar = () => {
   const screenWidth = Dimensions.get('window').width;
   const [expanded, setExpanded] = useState(screenWidth > 900);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
 
   const canSee = (item: { roles?: string[] }) => {
     if (!item.roles) return true;
@@ -96,7 +97,7 @@ export const Sidebar = () => {
       </View>
 
       {/* Menu */}
-      <ScrollView style={styles.menuSection} showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} style={styles.menuSection} showsVerticalScrollIndicator={false}>
         {filteredMain.map((item) => {
           const active = isActive(item.path);
           return (
@@ -124,10 +125,15 @@ export const Sidebar = () => {
               ]}
               onPress={() => {
                 if (expanded) {
-                  setSettingsOpen(!settingsOpen);
+                  const newState = !settingsOpen;
+                  setSettingsOpen(newState);
+                  if (newState) {
+                    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+                  }
                 } else {
                   setExpanded(true);
                   setSettingsOpen(true);
+                  setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
                 }
               }}
               data-testid="sidebar-parametres"
