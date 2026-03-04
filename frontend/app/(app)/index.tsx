@@ -90,16 +90,20 @@ export default function Dashboard() {
 
   const loadData = useCallback(async () => {
     try {
-      const [currentRes, weekRes, projRes, balRes] = await Promise.all([
+      const [currentRes, weekRes, projRes] = await Promise.all([
         getCurrentEntry(),
         getWeeklyStats(),
         getProjects({ active_only: true }),
-        getBalances(),
       ]);
       setCurrent(currentRes.data);
       setWeekStats(weekRes.data);
       setProjects(projRes.data);
-      setBalances(balRes.data);
+
+      // Load balances separately to not block other data
+      try {
+        const balRes = await getBalances();
+        setBalances(balRes.data);
+      } catch (e) { console.log('Balances error:', e); }
 
       if (user?.role === 'manager' || user?.role === 'admin') {
         const [dashRes, entriesRes] = await Promise.all([
