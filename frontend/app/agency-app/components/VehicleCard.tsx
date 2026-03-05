@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Vehicle, getStatus, vst } from './vehicleTypes';
+import { Vehicle, getStatus, getPhotoUrl, vst } from './vehicleTypes';
 
 interface Props {
   item: Vehicle;
@@ -13,7 +13,7 @@ interface Props {
 
 export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPress }: Props) {
   const sc = getStatus(item.status);
-  const photo = item.photos?.[0];
+  const photo = item.photos?.[0] ? getPhotoUrl(item.photos[0]) : null;
   const docCount = item.documents?.filter(d => !d.is_deleted).length || 0;
   const hasPhotos = item.photos && item.photos.length > 0;
 

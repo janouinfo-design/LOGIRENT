@@ -130,17 +130,29 @@ async def upload_vehicle_photo(vehicle_id: str, file: UploadFile = File(...), us
     content = await file.read()
     content_type = file.content_type or 'image/jpeg'
 
-    # Store in object storage instead of base64 in DB
-    from utils.storage import put_object, generate_storage_path, get_public_url
+    # Store in object storage
     storage_path = generate_storage_path(vehicle_id, file.filename or "photo.jpg")
     put_object(storage_path, content, content_type)
-    photo_url = get_public_url(storage_path)
+
+    # Store the proxy URL (served via our backend)
+    photo_url = f"/api/vehicles/photo/{storage_path}"
 
     photos = vehicle.get('photos', [])
     photos.append(photo_url)
 
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": {"photos": photos}})
     return {"message": "Photo uploaded successfully", "photo": photo_url, "total_photos": len(photos)}
+
+
+@router.get("/vehicles/photo/{file_path:path}")
+async def serve_vehicle_photo(file_path: str):
+    """Proxy endpoint to serve photos from object storage"""
+    try:
+        file_data, content_type = get_object(file_path)
+        return Response(content=file_data, media_type=content_type)
+    except Exception as e:
+        logger.error(f"Failed to serve photo {file_path}: {e}")
+        raise HTTPException(status_code=404, detail="Photo not found")
 
 
 @router.post("/admin/vehicles/{vehicle_id}/photos/base64")

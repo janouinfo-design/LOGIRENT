@@ -41,6 +41,15 @@ export const TRANSMISSIONS = [{ v: 'automatic', l: 'Automatique' }, { v: 'manual
 export const FUELS = ['Essence', 'Diesel', 'Electrique', 'Hybride'];
 export const STATUSES = [{ v: 'available', l: 'Disponible' }, { v: 'rented', l: 'Loue' }, { v: 'maintenance', l: 'Maintenance' }];
 
+export const getPhotoUrl = (photo: string): string => {
+  if (photo.startsWith('http')) return photo;
+  if (photo.startsWith('/api/')) {
+    const baseUrl = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+    return `${baseUrl}${photo}`;
+  }
+  return photo;
+};
+
 export const getStatus = (s: string) => STATUS_CONFIG[s] || { icon: 'help-circle', label: s, bg: '#6B728020', text: '#6B7280', border: '#6B728050' };
 export const getDocIcon = (docType: string) => DOC_TYPES.find(d => d.v === docType)?.icon || 'document';
 export const formatFileSize = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1048576 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1048576).toFixed(1)} MB`;

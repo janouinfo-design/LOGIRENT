@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, Modal, TouchableOpacity, Image, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getPhotoUrl } from './vehicleTypes';
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
@@ -57,7 +58,7 @@ export default function PhotoGalleryModal({ visible, photos, title, initialIndex
             {photos.map((photo, idx) => (
               <View key={idx} style={{ width: SCREEN_W, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 }}>
                 <Image
-                  source={{ uri: photo }}
+                  source={{ uri: getPhotoUrl(photo) }}
                   style={{ width: SCREEN_W - 16, height: SCREEN_H * 0.6, borderRadius: 12 }}
                   resizeMode="contain"
                 />
@@ -87,7 +88,7 @@ export default function PhotoGalleryModal({ visible, photos, title, initialIndex
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32, paddingTop: 12, gap: 8, alignItems: 'center' }}>
             {photos.map((photo, idx) => (
               <TouchableOpacity key={idx} onPress={() => goTo(idx)} style={{ borderWidth: 2, borderColor: currentIndex === idx ? '#6C63FF' : 'transparent', borderRadius: 8, overflow: 'hidden' }} data-testid={`gallery-thumb-${idx}`}>
-                <Image source={{ uri: photo }} style={{ width: 60, height: 45, borderRadius: 6 }} resizeMode="cover" />
+                <Image source={{ uri: getPhotoUrl(photo) }} style={{ width: 60, height: 45, borderRadius: 6 }} resizeMode="cover" />
               </TouchableOpacity>
             ))}
           </ScrollView>

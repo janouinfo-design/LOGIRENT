@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Platform, Alert, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
-import { Vehicle, VehicleDocument, TYPES, TRANSMISSIONS, FUELS, STATUSES, DOC_TYPES, getStatus, getDocIcon, formatFileSize, getExpiryStatus, vst } from './vehicleTypes';
+import { Vehicle, VehicleDocument, TYPES, TRANSMISSIONS, FUELS, STATUSES, DOC_TYPES, getStatus, getDocIcon, formatFileSize, getExpiryStatus, getPhotoUrl, vst } from './vehicleTypes';
 
 interface Props {
   vehicle: Vehicle | null;
@@ -302,8 +302,8 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                 <View style={vst.photosGrid}>
                   {currentVehicle.photos.map((photo, idx) => (
                     <View key={idx} style={vst.photoThumb}>
-                      <TouchableOpacity onPress={() => setPreviewPhoto(photo)} activeOpacity={0.8}>
-                        <Image source={{ uri: photo }} style={vst.photoThumbImg} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => setPreviewPhoto(getPhotoUrl(photo))} activeOpacity={0.8}>
+                        <Image source={{ uri: getPhotoUrl(photo) }} style={vst.photoThumbImg} resizeMode="cover" />
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleDeletePhoto(idx)} style={vst.photoDeleteBtn} data-testid={`delete-photo-${idx}`}>
                         <Ionicons name="close-circle" size={22} color="#EF4444" />
