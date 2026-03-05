@@ -121,7 +121,33 @@ export default function AgencyReservations() {
   };
 
   const updateStatus = async (id: string, status: string) => {
-    try { await api.put(`/api/admin/reservations/${id}/status?status=${status}`); setActionModal(null); fetchReservations(); fetchSchedule(); }
+    try {
+      await api.put(`/api/admin/reservations/${id}/status?status=${status}`);
+      setActionModal(null);
+      fetchReservations();
+      fetchSchedule();
+
+      // Auto-generate contract when confirming a reservation
+      if (status === 'confirmed') {
+        try {
+          // Check if contract already exists
+          const contractResp = await api.get(`/api/contracts/by-reservation/${id}`);
+          if (contractResp.data) {
+            // Contract exists, navigate to it
+            router.push(`/contract/${contractResp.data.id}` as any);
+          } else {
+            // Generate new contract
+            const genResp = await api.post('/api/admin/contracts/generate', { reservation_id: id, language: 'fr' });
+            Platform.OS === 'web' ? window.alert('Contrat genere automatiquement !') : Alert.alert('Succes', 'Contrat genere !');
+            router.push(`/contract/${genResp.data.contract_id}` as any);
+          }
+        } catch (contractErr: any) {
+          // Contract generation failed, but reservation status is updated
+          const msg = contractErr.response?.data?.detail || 'Reservation confirmee, mais erreur lors de la generation du contrat';
+          Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Info', msg);
+        }
+      }
+    }
     catch (e: any) { const msg = e.response?.data?.detail || 'Erreur'; Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg); }
   };
   const updatePayment = async (id: string, status: string) => {
