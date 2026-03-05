@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Platform, Alert, Image } from 'react-native';
+import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Platform, Alert, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { Vehicle, VehicleDocument, TYPES, TRANSMISSIONS, FUELS, STATUSES, DOC_TYPES, getStatus, getDocIcon, formatFileSize, getExpiryStatus, vst } from './vehicleTypes';
@@ -169,7 +169,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
     <>
       <Modal visible={!!vehicle} animationType="slide" transparent>
         <View style={vst.modalOverlay}>
-          <View style={[vst.modalBox, { backgroundColor: C.card, maxHeight: '90%' }]}>
+          <View style={[vst.modalBox, { backgroundColor: C.card, maxHeight: Dimensions.get('window').height * 0.85, display: 'flex', flexDirection: 'column' }]}>
             <View style={vst.modalHeader}>
               <Text style={[vst.modalTitle, { color: C.text }]}>Modifier le vehicule</Text>
               <TouchableOpacity onPress={onClose} data-testid="close-edit-modal">
