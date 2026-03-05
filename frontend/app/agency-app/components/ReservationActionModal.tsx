@@ -56,15 +56,16 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                   setContractLoading(true);
                   try {
                     const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
-                    setActionModal(null); router.push(`/contract/${resp.data.id}` as any);
+                    if (resp.data) {
+                      setActionModal(null); router.push(`/contract/${resp.data.id}` as any);
+                    } else {
+                      // No contract exists, generate one
+                      const genResp = await api.post('/api/admin/contracts/generate', { reservation_id: actionModal.id, language: 'fr' });
+                      Platform.OS === 'web' ? window.alert('Contrat genere !') : Alert.alert('Succes', 'Contrat genere !');
+                      setActionModal(null); router.push(`/contract/${genResp.data.contract_id}` as any);
+                    }
                   } catch (err: any) {
-                    if (err.response?.status === 404) {
-                      try {
-                        const genResp = await api.post('/api/admin/contracts/generate', { reservation_id: actionModal.id, language: 'fr' });
-                        Platform.OS === 'web' ? window.alert('Contrat genere !') : Alert.alert('Succes', 'Contrat genere !');
-                        setActionModal(null); router.push(`/contract/${genResp.data.contract_id}` as any);
-                      } catch (genErr: any) { Platform.OS === 'web' ? window.alert(genErr.response?.data?.detail || 'Erreur') : Alert.alert('Erreur'); }
-                    } else { Platform.OS === 'web' ? window.alert('Erreur') : Alert.alert('Erreur'); }
+                    Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur');
                   } finally { setContractLoading(false); }
                 }} data-testid="contract-view-btn">
                 <Ionicons name="document-text" size={18} color={C.accent} />
@@ -74,9 +75,10 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                 onPress={async () => {
                   try {
                     const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
+                    if (!resp.data) { Platform.OS === 'web' ? window.alert('Generez d\'abord le contrat') : Alert.alert('Info', 'Generez d\'abord le contrat'); return; }
                     await api.put(`/api/contracts/${resp.data.id}/send`);
                     Platform.OS === 'web' ? window.alert('Contrat envoye!') : Alert.alert('Succes', 'Contrat envoye!');
-                  } catch (err: any) { Platform.OS === 'web' ? window.alert(err.response?.status === 404 ? 'Generez d\'abord le contrat' : 'Erreur') : Alert.alert('Erreur'); }
+                  } catch (err: any) { Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur'); }
                 }} data-testid="contract-send-btn">
                 <Ionicons name="send" size={18} color={C.success} />
                 <Text style={{ color: C.text, fontSize: 14 }}>Envoyer le contrat au client</Text>
@@ -85,13 +87,14 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                 onPress={async () => {
                   try {
                     const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
+                    if (!resp.data) { Platform.OS === 'web' ? window.alert('Generez d\'abord le contrat') : Alert.alert('Info', 'Generez d\'abord le contrat'); return; }
                     const pdfResp = await api.get(`/api/contracts/${resp.data.id}/pdf`, { responseType: 'blob' });
                     if (Platform.OS === 'web') {
                       const blob = new Blob([pdfResp.data], { type: 'application/pdf' });
                       const url = URL.createObjectURL(blob); const a = document.createElement('a');
                       a.href = url; a.download = `contrat_${resp.data.id.slice(0, 8)}.pdf`; a.click(); URL.revokeObjectURL(url);
                     }
-                  } catch (err: any) { Platform.OS === 'web' ? window.alert(err.response?.status === 404 ? 'Generez d\'abord le contrat' : 'Erreur') : Alert.alert('Erreur'); }
+                  } catch (err: any) { Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur'); }
                 }} data-testid="contract-pdf-btn">
                 <Ionicons name="download" size={18} color={C.accent} />
                 <Text style={{ color: C.text, fontSize: 14 }}>Telecharger le PDF</Text>

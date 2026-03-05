@@ -75,7 +75,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
       try {
         const api = (await import('../../src/api/axios')).default;
         const resp = await api.get(`/api/contracts/by-reservation/${item.id}`);
-        setContractId(resp.data.id);
+        if (resp.data) setContractId(resp.data.id);
       } catch {}
     };
     checkContract();

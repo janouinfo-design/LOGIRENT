@@ -581,7 +581,7 @@ async def get_contract(contract_id: str, user: dict = Depends(get_current_user))
 async def get_contract_by_reservation(reservation_id: str, user: dict = Depends(get_current_user)):
     contract = await db.contracts.find_one({"reservation_id": reservation_id}, {"_id": 0})
     if not contract:
-        raise HTTPException(status_code=404, detail="No contract for this reservation")
+        return None
     return contract
 
 
