@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useReservationStore, Reservation } from '../../src/store/reservationStore';
 import { useVehicleStore } from '../../src/store/vehicleStore';
-import { ClientNavBar } from '../../src/components/ClientNavBar';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths, isBefore, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Button from '../../src/components/Button';
@@ -404,8 +403,6 @@ export default function ReservationsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: C.bg }]}>
-      {/* Navigation Menu */}
-      <ClientNavBar />
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: C.bg }]}>

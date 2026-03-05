@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useNotificationStore, Notification } from '../../src/store/notificationStore';
-import { ClientNavBar } from '../../src/components/ClientNavBar';
 
 const ICON_MAP: Record<string, string> = {
   'checkmark-circle': 'checkmark-circle',
@@ -112,7 +111,6 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={s.container} edges={['top']}>
-      <ClientNavBar />
 
       <View style={s.header}>
         <View style={s.headerLeft}>

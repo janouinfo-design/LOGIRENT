@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore, Vehicle } from '../../src/store/vehicleStore';
 import VehicleCard from '../../src/components/VehicleCard';
-import { ClientNavBar } from '../../src/components/ClientNavBar';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 
@@ -63,8 +62,6 @@ export default function VehiclesScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: C.bg }]}>
-      {/* Navigation Menu */}
-      <ClientNavBar />
 
       {/* Header */}
       <View style={[styles.header, { backgroundColor: C.bg }]}>
