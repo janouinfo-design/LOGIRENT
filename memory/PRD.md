@@ -66,6 +66,9 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
   - `EditVehicleModal.tsx` (438 lines) — edit modal with photos/docs
   - `NewVehicleModal.tsx` (171 lines) — add vehicle modal
   - `vehicles.tsx` reduced to 116 lines (coordinator). 100% test pass after refactoring.
+- [2026-03-05] **Feature**: Photo Gallery Modal — clicking on a vehicle photo opens full-screen viewer with horizontal scroll, navigation arrows, thumbnail strip, and photo counter (X/Y)
+- [2026-03-05] **Bug fix**: Edit Vehicle Modal scroll fix — added maxHeight constraint (85% viewport) so Save/Cancel buttons are always reachable
+- [2026-03-05] **Feature**: Photo count badge on vehicle cards showing number of photos
 
 ## Prioritized Backlog
 ### P1: Push Notifications (re-implement with non-Expo approach)
