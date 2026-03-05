@@ -194,6 +194,9 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, user: dic
     # Preserve existing documents list if not provided
     if "documents" not in update_dict or update_dict.get("documents") is None:
         update_dict.pop("documents", None)
+    # Preserve existing photos list if not provided or empty default
+    if "photos" not in update_dict or not update_dict.get("photos"):
+        update_dict.pop("photos", None)
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": update_dict})
 
     updated = await db.vehicles.find_one({"id": vehicle_id})
