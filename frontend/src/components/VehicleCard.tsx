@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } 
 import { Ionicons } from '@expo/vector-icons';
 import { Vehicle } from '../store/vehicleStore';
 import { useI18n } from '../i18n';
+import { getPhotoUrl } from '../utils/photoUrl';
 
 interface Props {
   vehicle: Vehicle;
@@ -51,7 +52,7 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
       {/* Car Image */}
       <TouchableOpacity style={[styles.imageContainer, isMobile && styles.imageContainerMobile]} onPress={onPress} activeOpacity={0.9}>
         {hasPhoto ? (
-          <Image source={{ uri: vehicle.photos[0] }} style={styles.carImage} resizeMode="cover" />
+          <Image source={{ uri: getPhotoUrl(vehicle.photos[0]) }} style={styles.carImage} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
             <Ionicons name="car-sport" size={48} color={C.grayLight} />

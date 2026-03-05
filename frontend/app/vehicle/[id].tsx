@@ -9,6 +9,7 @@ import { useVehicleStore } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
+import { getPhotoUrl } from '../../src/utils/photoUrl';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
@@ -96,7 +97,7 @@ export default function VehicleDetailScreen() {
         {/* Image */}
         <View style={s.imgBox}>
           {v.photos.length > 0 ? (
-            <Image source={{ uri: v.photos[currentImageIndex] }} style={s.img} resizeMode="cover" />
+            <Image source={{ uri: getPhotoUrl(v.photos[currentImageIndex]) }} style={s.img} resizeMode="cover" />
           ) : (
             <View style={s.imgPlaceholder}><Ionicons name="car" size={56} color={C.gray} /></View>
           )}
