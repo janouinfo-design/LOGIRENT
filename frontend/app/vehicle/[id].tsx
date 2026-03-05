@@ -95,7 +95,7 @@ export default function VehicleDetailScreen() {
 
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Image Carousel */}
         <View style={s.imgBox}>
           {v.photos.length > 0 ? (

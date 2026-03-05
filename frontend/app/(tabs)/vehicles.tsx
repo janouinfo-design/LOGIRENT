@@ -114,6 +114,7 @@ export default function VehiclesScreen() {
       <ScrollView
         style={styles.scrollArea}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={{ paddingBottom: 80 }}
       >
         {vehicles.length === 0 ? (
           <View style={styles.emptyContainer}>

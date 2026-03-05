@@ -447,7 +447,7 @@ export default function ReservationsScreen() {
       )}
 
       {/* Content */}
-      <ScrollView style={styles.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+      <ScrollView style={styles.scroll} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} contentContainerStyle={{ paddingBottom: 80 }}>
         <View style={styles.content}>
           {viewMode === 'calendar' ? (
             <CalendarView reservations={reservations} vehicles={vehicles} />

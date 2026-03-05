@@ -162,7 +162,7 @@ export default function BookingScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Documents Warning */}
         {!hasDocuments && (
           <TouchableOpacity 

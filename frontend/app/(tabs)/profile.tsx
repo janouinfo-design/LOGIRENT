@@ -208,7 +208,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: C.bg }]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { backgroundColor: C.bg }]} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
       {/* Navigation Menu */}
       <ClientNavBar />
 
