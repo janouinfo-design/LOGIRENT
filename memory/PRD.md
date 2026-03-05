@@ -60,12 +60,18 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI GPT-5.2 (Revenue Forecast), Emergent Object Storage (Documents), Expo Push API (Notifications)
 
 - [2026-03-03] **Bug fix (P0)**: Fixed "Add Vehicle" modal in Agency Admin — form fields were invisible due to undefined styles (`st.fieldInput` → `st.input`, `st.modalActionBtn` → `st.actionBtn`) and non-existent theme property (`C.background` → `C.bg`). Also fixed backend 500 error on `POST /api/admin/vehicles` (Pydantic validation failing with None values for status/documents). Full vehicle CRUD now functional.
+- [2026-03-05] **Refactoring**: Decomposed `vehicles.tsx` (866 lines) into 4 clean components:
+  - `vehicleTypes.ts` (105 lines) — shared types, constants, styles
+  - `VehicleCard.tsx` (62 lines) — card component
+  - `EditVehicleModal.tsx` (438 lines) — edit modal with photos/docs
+  - `NewVehicleModal.tsx` (171 lines) — add vehicle modal
+  - `vehicles.tsx` reduced to 116 lines (coordinator). 100% test pass after refactoring.
 
 ## Prioritized Backlog
 ### P1: Push Notifications (re-implement with non-Expo approach)
 ### P2: Driver/Agent Application
 ### P3: App Store Deployment
-### Optional: book.tsx cleanup, move /agency-app/components/ outside app/ dir, vehicles.tsx refactoring (800+ lines → smaller components)
+### Optional: book.tsx cleanup, move /agency-app/components/ outside app/ dir
 
 ## Test Credentials
 - Super Admin: test@example.com / password123
