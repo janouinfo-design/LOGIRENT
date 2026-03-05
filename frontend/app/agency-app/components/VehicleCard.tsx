@@ -8,16 +8,18 @@ interface Props {
   cardW: number;
   colors: any;
   onEdit: (v: Vehicle) => void;
+  onPhotoPress: (v: Vehicle) => void;
 }
 
-export default function VehicleCard({ item, cardW, colors: C, onEdit }: Props) {
+export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPress }: Props) {
   const sc = getStatus(item.status);
   const photo = item.photos?.[0];
   const docCount = item.documents?.filter(d => !d.is_deleted).length || 0;
+  const hasPhotos = item.photos && item.photos.length > 0;
 
   return (
-    <TouchableOpacity onPress={() => onEdit(item)} style={[vst.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
-      <View style={vst.photoBox}>
+    <View style={[vst.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
+      <TouchableOpacity onPress={() => hasPhotos ? onPhotoPress(item) : onEdit(item)} activeOpacity={0.8} style={vst.photoBox}>
         {photo ? (
           <Image source={{ uri: photo }} style={vst.photo} resizeMode="cover" />
         ) : (
@@ -35,7 +37,13 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit }: Props) {
             <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{docCount}</Text>
           </View>
         )}
-      </View>
+        {hasPhotos && (
+          <View style={{ position: 'absolute', top: 4, left: 4, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <Ionicons name="images" size={10} color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>{item.photos!.length}</Text>
+          </View>
+        )}
+      </TouchableOpacity>
 
       <View style={vst.cardInfo}>
         <Text style={[vst.vehicleName, { color: C.text }]} numberOfLines={1}>{item.brand} {item.model}</Text>
@@ -57,6 +65,6 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit }: Props) {
           <Text style={vst.editBtnText}>Modifier</Text>
         </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }

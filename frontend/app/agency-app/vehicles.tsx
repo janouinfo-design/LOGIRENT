@@ -8,6 +8,7 @@ import { Vehicle, STATUSES, getStatus } from './components/vehicleTypes';
 import VehicleCard from './components/VehicleCard';
 import EditVehicleModal from './components/EditVehicleModal';
 import NewVehicleModal from './components/NewVehicleModal';
+import PhotoGalleryModal from './components/PhotoGalleryModal';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CARD_GAP = 10;
@@ -25,6 +26,7 @@ export default function AgencyVehicles() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [editVehicle, setEditVehicle] = useState<Vehicle | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [galleryVehicle, setGalleryVehicle] = useState<Vehicle | null>(null);
 
   const fetchVehicles = useCallback(async () => {
     try {
@@ -95,13 +97,19 @@ export default function AgencyVehicles() {
         columnWrapperStyle={{ gap: CARD_GAP, marginBottom: CARD_GAP }}
         ListEmptyComponent={<View style={st.empty}><Ionicons name="car-outline" size={40} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 14 }}>Aucun vehicule</Text></View>}
         renderItem={({ item }) => (
-          <VehicleCard item={item} cardW={cardW} colors={C} onEdit={setEditVehicle} />
+          <VehicleCard item={item} cardW={cardW} colors={C} onEdit={setEditVehicle} onPhotoPress={setGalleryVehicle} />
         )}
       />
 
       {/* Modals */}
       <EditVehicleModal vehicle={editVehicle} colors={C} onClose={() => setEditVehicle(null)} onSaved={fetchVehicles} />
       <NewVehicleModal visible={showAddModal} colors={C} onClose={() => setShowAddModal(false)} onCreated={fetchVehicles} />
+      <PhotoGalleryModal
+        visible={!!galleryVehicle}
+        photos={galleryVehicle?.photos || []}
+        title={galleryVehicle ? `${galleryVehicle.brand} ${galleryVehicle.model}` : ''}
+        onClose={() => setGalleryVehicle(null)}
+      />
     </View>
   );
 }
