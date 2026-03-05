@@ -104,7 +104,7 @@ function AppContent() {
   const showNav = !isLanding && !isAuth && !isAdminUser && isAuthenticated;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: T.navBg }} edges={['top']}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: T.navBg }} edges={['top', 'bottom']}>
       <View style={{ flex: 1, backgroundColor: T.bg }}>
         {showNav && null}
         <View style={{ flex: 1 }}>
