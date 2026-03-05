@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths, isBefore, startOfDay, format } from 'date-fns';
@@ -38,6 +38,8 @@ export default function VehicleDetailScreen() {
   const { selectedVehicle, fetchVehicle, isLoading } = useVehicleStore();
   const { isAuthenticated } = useAuthStore();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const imageScrollRef = useRef<ScrollView>(null);
+  const { width: screenWidth } = useWindowDimensions();
   const [calMonth, setCalMonth] = useState(new Date());
   const [bookedDates, setBookedDates] = useState<string[]>([]);
   const [loadingCal, setLoadingCal] = useState(false);
@@ -94,10 +96,23 @@ export default function VehicleDetailScreen() {
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Image */}
+        {/* Image Carousel */}
         <View style={s.imgBox}>
           {v.photos.length > 0 ? (
-            <Image source={{ uri: getPhotoUrl(v.photos[currentImageIndex]) }} style={s.img} resizeMode="cover" />
+            <ScrollView
+              ref={imageScrollRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / screenWidth);
+                if (idx >= 0 && idx < v.photos.length) setCurrentImageIndex(idx);
+              }}
+            >
+              {v.photos.map((photo, idx) => (
+                <Image key={idx} source={{ uri: getPhotoUrl(photo) }} style={[s.img, { width: screenWidth }]} resizeMode="cover" />
+              ))}
+            </ScrollView>
           ) : (
             <View style={s.imgPlaceholder}><Ionicons name="car" size={56} color={C.gray} /></View>
           )}
@@ -105,11 +120,35 @@ export default function VehicleDetailScreen() {
             <Ionicons name="arrow-back" size={22} color="#FFF" />
           </TouchableOpacity>
           {v.photos.length > 1 && (
-            <View style={s.dots}>
-              {v.photos.map((_, i) => (
-                <TouchableOpacity key={i} style={[s.dot, currentImageIndex === i && s.dotActive]} onPress={() => setCurrentImageIndex(i)} />
-              ))}
-            </View>
+            <>
+              {/* Photo counter */}
+              <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{currentImageIndex + 1} / {v.photos.length}</Text>
+              </View>
+              {/* Navigation arrows */}
+              {currentImageIndex > 0 && (
+                <TouchableOpacity
+                  style={{ position: 'absolute', left: 8, top: '40%', width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}
+                  onPress={() => { const idx = currentImageIndex - 1; setCurrentImageIndex(idx); imageScrollRef.current?.scrollTo({ x: idx * screenWidth, animated: true }); }}
+                >
+                  <Ionicons name="chevron-back" size={22} color="#fff" />
+                </TouchableOpacity>
+              )}
+              {currentImageIndex < v.photos.length - 1 && (
+                <TouchableOpacity
+                  style={{ position: 'absolute', right: 8, top: '40%', width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' }}
+                  onPress={() => { const idx = currentImageIndex + 1; setCurrentImageIndex(idx); imageScrollRef.current?.scrollTo({ x: idx * screenWidth, animated: true }); }}
+                >
+                  <Ionicons name="chevron-forward" size={22} color="#fff" />
+                </TouchableOpacity>
+              )}
+              {/* Dots */}
+              <View style={s.dots}>
+                {v.photos.map((_, i) => (
+                  <TouchableOpacity key={i} style={[s.dot, currentImageIndex === i && s.dotActive]} onPress={() => { setCurrentImageIndex(i); imageScrollRef.current?.scrollTo({ x: i * screenWidth, animated: true }); }} />
+                ))}
+              </View>
+            </>
           )}
         </View>
 
