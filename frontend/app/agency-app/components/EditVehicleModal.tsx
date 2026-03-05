@@ -169,7 +169,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
     <>
       <Modal visible={!!vehicle} animationType="slide" transparent>
         <View style={vst.modalOverlay}>
-          <View style={[vst.modalBox, { backgroundColor: C.card }]}>
+          <View style={[vst.modalBox, { backgroundColor: C.card, maxHeight: '90%' }]}>
             <View style={vst.modalHeader}>
               <Text style={[vst.modalTitle, { color: C.text }]}>Modifier le vehicule</Text>
               <TouchableOpacity onPress={onClose} data-testid="close-edit-modal">
