@@ -28,6 +28,21 @@ export default function AgencyVehicles() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [galleryVehicle, setGalleryVehicle] = useState<Vehicle | null>(null);
 
+  // Fetch full vehicle details (with all photos) before opening gallery or edit modal
+  const openGallery = async (v: Vehicle) => {
+    try {
+      const res = await api.get(`/api/vehicles/${v.id}`);
+      setGalleryVehicle(res.data);
+    } catch { setGalleryVehicle(v); }
+  };
+
+  const openEdit = async (v: Vehicle) => {
+    try {
+      const res = await api.get(`/api/vehicles/${v.id}`);
+      setEditVehicle(res.data);
+    } catch { setEditVehicle(v); }
+  };
+
   const fetchVehicles = useCallback(async () => {
     try {
       const params: any = {};
@@ -97,7 +112,7 @@ export default function AgencyVehicles() {
         columnWrapperStyle={{ gap: CARD_GAP, marginBottom: CARD_GAP }}
         ListEmptyComponent={<View style={st.empty}><Ionicons name="car-outline" size={40} color={C.textLight} /><Text style={{ color: C.textLight, fontSize: 14 }}>Aucun vehicule</Text></View>}
         renderItem={({ item }) => (
-          <VehicleCard item={item} cardW={cardW} colors={C} onEdit={setEditVehicle} onPhotoPress={setGalleryVehicle} />
+          <VehicleCard item={item} cardW={cardW} colors={C} onEdit={openEdit} onPhotoPress={openGallery} />
         )}
       />
 

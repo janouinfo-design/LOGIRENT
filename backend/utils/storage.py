@@ -50,6 +50,11 @@ def get_object(path: str) -> tuple:
     return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 
+def get_public_url(path: str) -> str:
+    key = init_storage()
+    return f"{STORAGE_URL}/objects/{path}?key={key}"
+
+
 def generate_storage_path(vehicle_id: str, filename: str) -> str:
     ext = filename.rsplit(".", 1)[-1] if "." in filename else "bin"
     return f"{APP_NAME}/vehicles/{vehicle_id}/{uuid.uuid4()}.{ext}"

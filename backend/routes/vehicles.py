@@ -53,7 +53,15 @@ async def get_vehicles(
         blocked_ids = set(r['vehicle_id'] for r in overlapping)
         vehicles = [v for v in vehicles if v['id'] not in blocked_ids]
 
-    return [Vehicle(**v) for v in vehicles]
+    result = []
+    for v in vehicles:
+        vehicle = Vehicle(**v)
+        # Only include first photo in list view to reduce payload
+        if vehicle.photos and len(vehicle.photos) > 1:
+            vehicle.photos = [vehicle.photos[0]]
+        result.append(vehicle)
+
+    return result
 
 
 @router.get("/vehicles/{vehicle_id}", response_model=Vehicle)
@@ -120,15 +128,19 @@ async def upload_vehicle_photo(vehicle_id: str, file: UploadFile = File(...), us
         raise HTTPException(status_code=404, detail="Vehicle not found")
 
     content = await file.read()
-    base64_image = base64.b64encode(content).decode('utf-8')
     content_type = file.content_type or 'image/jpeg'
-    data_uri = f"data:{content_type};base64,{base64_image}"
+
+    # Store in object storage instead of base64 in DB
+    from utils.storage import put_object, generate_storage_path, get_public_url
+    storage_path = generate_storage_path(vehicle_id, file.filename or "photo.jpg")
+    put_object(storage_path, content, content_type)
+    photo_url = get_public_url(storage_path)
 
     photos = vehicle.get('photos', [])
-    photos.append(data_uri)
+    photos.append(photo_url)
 
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": {"photos": photos}})
-    return {"message": "Photo uploaded successfully", "photo": data_uri, "total_photos": len(photos)}
+    return {"message": "Photo uploaded successfully", "photo": photo_url, "total_photos": len(photos)}
 
 
 @router.post("/admin/vehicles/{vehicle_id}/photos/base64")
