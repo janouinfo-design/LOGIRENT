@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from datetime import datetime
 import uuid
 import logging
@@ -136,6 +136,7 @@ async def migrate_agency_slugs():
 # Agency Admin Mobile App routes
 @router.post("/admin/quick-client")
 async def create_quick_client(data: QuickClientCreate, user: dict = Depends(get_agency_admin)):
+    import string, random
     agency_id = user.get('agency_id')
 
     if data.email:
@@ -144,13 +145,19 @@ async def create_quick_client(data: QuickClientCreate, user: dict = Depends(get_
             existing['_id'] = str(existing['_id'])
             return {"message": "Client existant trouvé", "client": existing, "is_new": False}
 
+    # Auto-generate password
+    chars = string.ascii_letters + string.digits
+    plain_password = ''.join(random.choices(chars, k=8))
+
     client = {
         "id": str(uuid.uuid4()),
         "email": data.email.lower() if data.email else f"tel_{data.phone or uuid.uuid4().hex[:8]}@logirent.local",
-        "password_hash": hash_password("LogiRent2024"),
+        "password_hash": hash_password(plain_password),
         "name": data.name,
         "phone": data.phone,
-        "address": None, "id_photo": None, "license_photo": None,
+        "address": data.address,
+        "id_photo": None, "id_photo_back": None,
+        "license_photo": None, "license_photo_back": None,
         "birth_place": data.birth_place,
         "date_of_birth": data.date_of_birth,
         "license_number": data.license_number,
@@ -163,7 +170,57 @@ async def create_quick_client(data: QuickClientCreate, user: dict = Depends(get_
     await db.users.insert_one(client)
     client.pop('password_hash', None)
     client.pop('_id', None)
-    return {"message": "Client créé", "client": client, "is_new": True}
+
+    # Send welcome email with credentials
+    if data.email and '@logirent.local' not in client['email']:
+        try:
+            from utils.email import send_welcome_email
+            agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+            agency_name = agency.get("name", "LogiRent") if agency else "LogiRent"
+            await send_welcome_email(
+                recipient=client['email'],
+                client_name=data.name,
+                password=plain_password,
+                agency_name=agency_name,
+            )
+            logger.info(f"Welcome email sent to {client['email']}")
+        except Exception as e:
+            logger.error(f"Failed to send welcome email: {e}")
+
+    return {"message": "Client créé", "client": client, "is_new": True, "generated_password": plain_password}
+
+
+@router.post("/admin/clients/{client_id}/documents")
+async def upload_client_documents(client_id: str, doc_type: str, file: UploadFile = File(...), user: dict = Depends(get_agency_admin)):
+    """Upload license/ID card photos. doc_type: license_front, license_back, id_front, id_back"""
+    from utils.storage import put_object
+
+    client = await db.users.find_one({"id": client_id})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client non trouvé")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 10MB)")
+
+    ext = file.filename.split(".")[-1].lower() if file.filename and "." in file.filename else "jpg"
+    path = f"logirent/clients/{client_id}/{doc_type}_{uuid.uuid4().hex[:8]}.{ext}"
+    ct = file.content_type or f"image/{ext}"
+    put_object(path, content, ct)
+
+    field_map = {
+        "license_front": "license_photo",
+        "license_back": "license_photo_back",
+        "id_front": "id_photo",
+        "id_back": "id_photo_back",
+    }
+    db_field = field_map.get(doc_type)
+    if not db_field:
+        raise HTTPException(status_code=400, detail=f"Type invalide: {doc_type}")
+
+    await db.users.update_one({"id": client_id}, {"$set": {db_field: path}})
+    return {"path": path, "doc_type": doc_type}
+
 
 
 @router.post("/admin/create-reservation-for-client")

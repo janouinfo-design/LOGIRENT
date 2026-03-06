@@ -76,7 +76,7 @@ export default function AgencyClients() {
         <TouchableOpacity style={[s.iconActionBtn, { backgroundColor: C.success + '30', borderWidth: 1, borderColor: C.success + '50' }]} onPress={() => setShowImportModal(true)} data-testid="import-clients-btn">
           <Ionicons name="cloud-upload" size={20} color={C.success} />
         </TouchableOpacity>
-        <TouchableOpacity style={[s.addBtn, { backgroundColor: C.primary }]} onPress={() => setShowNewModal(true)} data-testid="new-client-btn">
+        <TouchableOpacity style={[s.addBtn, { backgroundColor: C.primary }]} onPress={() => setShowNewModal(true)} testID="new-client-btn">
           <Ionicons name="person-add" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -125,7 +125,7 @@ export default function AgencyClients() {
 
       <EditClientModal visible={showEditModal} onClose={() => setShowEditModal(false)} client={editClient} C={C} onSaved={fetchClients} />
       <ImportClientModal visible={showImportModal} onClose={() => setShowImportModal(false)} C={C} onImported={fetchClients} />
-      <NewClientModal visible={showNewModal} onClose={() => setShowNewModal(false)} C={C} onCreated={fetchClients} />
+      <NewClientModal visible={showNewModal} onClose={() => setShowNewModal(false)} onCreated={fetchClients} />
     </View>
   );
 }

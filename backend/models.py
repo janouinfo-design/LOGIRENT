@@ -264,6 +264,7 @@ class QuickClientCreate(BaseModel):
     name: str
     phone: Optional[str] = None
     email: Optional[EmailStr] = None
+    address: Optional[str] = None
     birth_place: Optional[str] = None
     date_of_birth: Optional[str] = None
     license_number: Optional[str] = None

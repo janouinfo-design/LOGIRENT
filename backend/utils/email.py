@@ -198,3 +198,83 @@ def generate_status_change_email(user_name: str, vehicle_name: str, status: str,
   </div>
   <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">LogiRent - Location de véhicules</div>
 </div></body></html>'''
+
+
+async def send_welcome_email(recipient: str, client_name: str, password: str, agency_name: str):
+    """Send welcome email with credentials and QR code for mobile app"""
+    import qrcode
+    import io
+    import base64
+
+    # Generate QR code for the mobile app link
+    app_url = "https://logirent.ch"
+    qr = qrcode.QRCode(version=1, box_size=6, border=2)
+    qr.add_data(app_url)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    qr_img.save(buf, format='PNG')
+    qr_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+
+    subject = f"Bienvenue chez {agency_name} - Vos identifiants de connexion"
+
+    html = f'''<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#F1F5F9;">
+<div style="max-width:600px;margin:20px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+  <div style="background:linear-gradient(135deg,#1A1A2E,#6366F1);padding:32px;text-align:center;">
+    <h1 style="color:#fff;margin:0;font-size:24px;">{agency_name}</h1>
+    <p style="color:#C7D2FE;margin:8px 0 0;">Bienvenue sur notre plateforme de location</p>
+  </div>
+  <div style="padding:28px 32px;">
+    <p style="font-size:16px;color:#1E293B;">Bonjour <strong>{client_name}</strong>,</p>
+    <p style="color:#475569;line-height:1.6;">
+      Votre compte a été créé avec succès par <strong>{agency_name}</strong>.
+      Vous pouvez désormais vous connecter pour consulter nos véhicules disponibles et effectuer vos réservations.
+    </p>
+
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:20px;margin:20px 0;">
+      <h3 style="margin:0 0 12px;color:#1A1A2E;font-size:15px;">Vos identifiants de connexion</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr>
+          <td style="padding:8px 0;color:#64748B;font-size:13px;width:100px;">Email</td>
+          <td style="padding:8px 0;color:#1E293B;font-weight:700;font-size:14px;">{recipient}</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;color:#64748B;font-size:13px;">Mot de passe</td>
+          <td style="padding:8px 0;font-size:14px;">
+            <code style="background:#EEF2FF;padding:4px 10px;border-radius:6px;color:#4338CA;font-weight:700;font-size:15px;letter-spacing:1px;">
+              {password}
+            </code>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:12px 0 0;color:#EF4444;font-size:11px;">
+        Nous vous recommandons de changer votre mot de passe après votre première connexion.
+      </p>
+    </div>
+
+    <div style="text-align:center;margin:24px 0;">
+      <a href="{app_url}" style="display:inline-block;background:#6366F1;color:#fff;text-decoration:none;padding:14px 40px;border-radius:10px;font-weight:700;font-size:15px;">
+        Se connecter maintenant
+      </a>
+    </div>
+
+    <div style="background:#FAFAFA;border:1px solid #E5E7EB;border-radius:10px;padding:20px;text-align:center;margin:20px 0;">
+      <h3 style="margin:0 0 8px;color:#1A1A2E;font-size:14px;">Application mobile</h3>
+      <p style="color:#64748B;font-size:12px;margin:0 0 12px;">Scannez ce QR code pour accéder à l'application</p>
+      <img src="data:image/png;base64,{qr_b64}" alt="QR Code" style="width:150px;height:150px;" />
+      <p style="color:#6366F1;font-size:11px;margin:8px 0 0;">{app_url}</p>
+    </div>
+
+    <p style="color:#64748B;font-size:13px;margin-top:20px;">
+      Pour toute question, n'hésitez pas à nous contacter.
+    </p>
+    <p style="margin-top:16px;color:#1E293B;">
+      Cordialement,<br><strong>L'équipe {agency_name}</strong>
+    </p>
+  </div>
+  <div style="text-align:center;padding:16px;color:#94A3B8;font-size:11px;background:#F8FAFC;border-top:1px solid #E2E8F0;">
+    {agency_name} — Location de véhicules | <a href="{app_url}" style="color:#6366F1;">{app_url}</a>
+  </div>
+</div></body></html>'''
+
+    return await send_email(recipient, subject, html)
