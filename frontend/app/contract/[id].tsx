@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform, TextInput } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform, TextInput, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -225,6 +225,16 @@ export default function ContractView() {
           <Text style={[st.conditionsText, { color: C.textLight }]}>{t.conditions}</Text>
         </Section>
 
+        {/* Vehicle Inspection Diagram */}
+        <Section title={lang === 'fr' ? "État du véhicule" : "Vehicle Condition"} C={C}>
+          <Image
+            source={require('../../assets/images/inspection-fr.png')}
+            style={st.inspectionImage}
+            resizeMode="contain"
+            data-testid="inspection-diagram"
+          />
+        </Section>
+
         {/* Signature */}
         {isSigned && contract.signature_client && (
           <Section title="Signature" C={C}>
@@ -346,6 +356,7 @@ const st = StyleSheet.create({
   totalLabel: { fontSize: 14, fontWeight: '700' },
   totalValue: { fontSize: 18, fontWeight: '800' },
   conditionsText: { fontSize: 11, lineHeight: 16 },
+  inspectionImage: { width: '100%', height: 350, alignSelf: 'center' },
   sigBox: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, padding: 8, alignItems: 'center' },
   bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 10, padding: 16, paddingBottom: 28, borderTopWidth: 1 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },

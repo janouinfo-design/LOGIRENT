@@ -75,7 +75,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-05] **Feature**: Swipeable image carousel on vehicle detail page.
 - [2026-03-05] **Feature**: Auto-generate contract on reservation confirmation + redirect to contract page.
 - [2026-03-05] **Bug fix**: Vehicle photos disappearing on edit — fixed to preserve existing photos.
-- [2026-03-06] **Verified (P0)**: Contract editing fully functional — "Modifier le contrat" toggle enables edit mode with TextInput fields, "Sauvegarder" persists via PUT /api/admin/contracts/{id}/update-fields. Both /contract/[id] and /agency-app/complete-contract pages tested and working. 100% pass rate (backend + frontend).
+- [2026-03-06] **Feature**: Vehicle inspection diagram added to contract pages (both /contract/[id] and /complete-contract) and PDF generation. Image shows car parts (pare-chocs, portes, toit, coffre, ailières) for damage documentation.
 
 ## Prioritized Backlog
 ### P1: Push Notifications (re-implement with non-Expo approach)

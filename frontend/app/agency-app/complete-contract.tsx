@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Modal, Platform, Image } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -275,6 +275,17 @@ export default function CompleteContract() {
             </Text>
           </TouchableOpacity>
         )}
+
+        {/* Vehicle Inspection Diagram */}
+        <View style={[st.sectionCard, { backgroundColor: C.card, borderColor: C.border }]}>
+          <Text style={[st.sectionTitle, { color: C.text }]}>État du véhicule</Text>
+          <Image
+            source={require('../../assets/images/inspection-fr.png')}
+            style={{ width: '100%', height: 350, alignSelf: 'center' }}
+            resizeMode="contain"
+            data-testid="inspection-diagram-complete"
+          />
+        </View>
       </ScrollView>
 
       {/* Bottom: Sign button */}

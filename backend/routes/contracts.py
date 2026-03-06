@@ -344,6 +344,20 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     story.append(ft)
     story.append(Spacer(1, 4 * mm))
 
+    # ======================== VEHICLE INSPECTION DIAGRAM ========================
+    inspection_title = "État du véhicule" if is_fr else "Vehicle Condition"
+    story.append(Paragraph(f'<b>{inspection_title}</b>', styles['SHead']))
+    try:
+        import os
+        inspection_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'inspection-fr.png')
+        if os.path.exists(inspection_path):
+            img_width = 150 * mm
+            img_height = 120 * mm
+            story.append(RLImage(inspection_path, width=img_width, height=img_height))
+            story.append(Spacer(1, 3 * mm))
+    except Exception as e:
+        logger.warning(f"Failed to add inspection image to PDF: {e}")
+
     # ======================== SIGNATURE SECTION ========================
     city = d.get("agency_city", "Lausanne")
     sig_date = d.get("signature_date", "____________________")
