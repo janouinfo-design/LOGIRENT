@@ -29,6 +29,8 @@ export default function ContractTemplatePage() {
   const [website, setWebsite] = useState('');
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   const headers = useCallback(() => ({
     'Authorization': `Bearer ${token}`,
@@ -143,7 +145,7 @@ export default function ContractTemplatePage() {
     : null;
 
   return (
-    <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+    <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 200 }}>
       <Text style={[s.pageTitle, { color: C.text }]} data-testid="template-page-title">Modèle de contrat</Text>
       <Text style={[s.pageSubtitle, { color: C.textLight }]}>
         Personnalisez le contrat pour votre agence
@@ -283,6 +285,73 @@ export default function ContractTemplatePage() {
           </>
         )}
       </TouchableOpacity>
+
+      {/* PDF Preview */}
+      <View style={[s.section, { backgroundColor: C.card, borderColor: C.border, marginTop: 12 }]} data-testid="preview-section">
+        <View style={s.sectionHeader}>
+          <Ionicons name="eye-outline" size={18} color={C.accent} />
+          <Text style={[s.sectionTitle, { color: C.text }]}>Aperçu du contrat PDF</Text>
+        </View>
+        <Text style={[s.hint, { color: C.textLight }]}>
+          {hasChanges ? 'Sauvegardez d\'abord vos modifications, puis cliquez sur Aperçu' : 'Prévisualisation avec des données d\'exemple'}
+        </Text>
+        <TouchableOpacity
+          style={[s.previewBtn, { backgroundColor: '#6366F1', opacity: hasChanges ? 0.5 : 1 }]}
+          onPress={async () => {
+            if (hasChanges) {
+              Alert.alert('Attention', 'Sauvegardez d\'abord vos modifications avant de prévisualiser');
+              return;
+            }
+            setLoadingPreview(true);
+            try {
+              const res = await fetch(`${API}/api/admin/contract-template/preview-pdf`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+              });
+              if (res.ok) {
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                setPreviewUrl(url);
+              }
+            } catch (e) {
+              Alert.alert('Erreur', 'Impossible de générer l\'aperçu');
+            } finally {
+              setLoadingPreview(false);
+            }
+          }}
+          disabled={loadingPreview}
+          data-testid="preview-btn"
+        >
+          {loadingPreview ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Ionicons name="document-outline" size={18} color="#fff" />
+              <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>
+                {previewUrl ? 'Rafraîchir l\'aperçu' : 'Générer l\'aperçu'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {previewUrl && Platform.OS === 'web' && (
+          <View style={s.pdfFrame}>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8 }}
+              onPress={() => window.open(previewUrl, '_blank')}
+              data-testid="open-preview-tab"
+            >
+              <Ionicons name="open-outline" size={14} color="#6366F1" />
+              <Text style={{ color: '#6366F1', fontSize: 12, fontWeight: '700' }}>Ouvrir dans un nouvel onglet</Text>
+            </TouchableOpacity>
+            {/* @ts-ignore - iframe works on web */}
+            <iframe
+              src={previewUrl}
+              style={{ width: '100%', height: 800, border: '1px solid #E5E7EB', borderRadius: 8 }}
+              title="Aperçu du contrat"
+            />
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -313,4 +382,6 @@ const s = StyleSheet.create({
   uploadZone: { borderWidth: 2, borderStyle: 'dashed', borderRadius: 12, padding: 24, alignItems: 'center', justifyContent: 'center' },
   saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 14, borderRadius: 12, marginTop: 4 },
   saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  previewBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12, borderRadius: 10 },
+  pdfFrame: { marginTop: 12, borderRadius: 8, overflow: 'hidden', height: 800 },
 });

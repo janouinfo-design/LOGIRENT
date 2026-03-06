@@ -76,7 +76,7 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-05] **Feature**: Auto-generate contract on reservation confirmation + redirect to contract page.
 - [2026-03-05] **Bug fix**: Vehicle photos disappearing on edit — fixed to preserve existing photos.
 - [2026-03-06] **Feature**: Interactive vehicle inspection diagram on contract pages. Admins can click on 13 car zones to annotate damages. Damage data saved to contract_data.damages and included in PDF.
-- [2026-03-06] **Feature**: Contract template system — each agency can customize logo, legal text ({website}/{franchise} placeholders), default prices (8 fields), deductible, website. Template auto-applied when generating contracts. CRUD endpoints: GET/PUT /api/admin/contract-template, POST/DELETE /api/admin/contract-template/logo. Frontend page at /agency-app/contract-template with 'Modèle' tab.
+- [2026-03-06] **Feature**: Contract template system with live PDF preview — each agency customizes logo, legal text ({website}/{franchise} placeholders), default prices (8 fields), deductible, website. Includes embedded PDF preview (iframe) and "open in new tab" option. Template auto-applied on contract generation. Endpoints: GET/PUT /api/admin/contract-template, POST/DELETE .../logo, GET .../preview-pdf. Frontend: /agency-app/contract-template with 'Modèle' tab.
 
 ## Prioritized Backlog
 ### P1: Push Notifications (re-implement with non-Expo approach)

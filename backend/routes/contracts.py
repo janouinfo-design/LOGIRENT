@@ -8,7 +8,7 @@ import logging
 
 from database import db
 from models import ContractGenerate, ContractSign
-from deps import get_current_user, get_admin_user
+from deps import get_current_user, get_admin_user, get_agency_admin
 from utils.notifications import create_notification
 
 from reportlab.lib.pagesizes import A4
@@ -676,3 +676,66 @@ async def download_contract_pdf(contract_id: str, user: dict = Depends(get_curre
     pdf_bytes = generate_contract_pdf(contract.get("contract_data", {}), contract.get("signature_client"))
     return Response(content=pdf_bytes, media_type="application/pdf",
                     headers={"Content-Disposition": f"attachment; filename=contrat_{contract_id[:8]}.pdf"})
+
+
+@router.get("/admin/contract-template/preview-pdf")
+async def preview_template_pdf(user: dict = Depends(get_agency_admin)):
+    """Generate a sample PDF using the agency's contract template for preview"""
+    agency_id = user.get("agency_id")
+    template = await db.contract_templates.find_one({"agency_id": agency_id}, {"_id": 0})
+
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    agency_name = agency.get("name", "Mon Agence") if agency else "Mon Agence"
+
+    sample_data = {
+        "language": "fr",
+        "contract_number": "APERCU",
+        "agency_name": agency_name,
+        "agency_address": agency.get("address", "Rue de l'Exemple 10, 1000 Lausanne") if agency else "",
+        "agency_phone": agency.get("phone", "+41 21 000 00 00") if agency else "",
+        "agency_email": agency.get("email", "contact@agence.ch") if agency else "",
+        "agency_website": (template or {}).get("agency_website", agency.get("website", "") if agency else ""),
+        "agency_city": agency.get("city", "Lausanne") if agency else "Lausanne",
+        "client_name": "Dupont",
+        "client_firstname": "Jean",
+        "client_address": "Avenue de la Gare 5, 1003 Lausanne",
+        "client_phone": "+41 79 123 45 67",
+        "client_email": "jean.dupont@email.ch",
+        "client_nationality": "Suisse",
+        "client_dob": "15-03-1985",
+        "client_license": "CH-123456",
+        "client_license_issued": "01-01-2010",
+        "client_license_valid": "01-01-2030",
+        "vehicle_name": "Renault Clio",
+        "vehicle_plate": "VD 123456",
+        "vehicle_color": "Noir",
+        "vehicle_chassis": "VF1RFB00X12345678",
+        "start_date": "01/04/2026",
+        "start_time": "09:00",
+        "end_date": "05/04/2026",
+        "end_time": "18:00",
+        "km_start": "45000",
+        "km_return": "",
+        "total_price": 480.00,
+        "deposit": 500,
+    }
+
+    if template:
+        sample_data["deductible"] = template.get("deductible", "1000")
+        if template.get("legal_text"):
+            sample_data["custom_legal_text"] = template["legal_text"]
+        if template.get("logo_path"):
+            sample_data["logo_path"] = template["logo_path"]
+        dp = template.get("default_prices", {})
+        for pk, pv in dp.items():
+            if pv:
+                sample_data[pk] = pv
+    else:
+        sample_data["deductible"] = "1000"
+
+    if not sample_data.get("price_per_day"):
+        sample_data["price_per_day"] = "120"
+
+    pdf_bytes = generate_contract_pdf(sample_data)
+    return Response(content=pdf_bytes, media_type="application/pdf",
+                    headers={"Content-Disposition": "inline; filename=apercu_contrat.pdf"})
