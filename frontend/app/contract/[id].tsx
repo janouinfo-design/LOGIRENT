@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Modal, Platform, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -13,37 +13,7 @@ interface ContractData {
   language: string;
   signature_client: string | null;
   signature_date: string | null;
-  contract_data: {
-    agency_name: string;
-    contract_number: string;
-    client_name: string;
-    client_firstname: string;
-    client_email: string;
-    client_phone: string;
-    client_address: string;
-    client_nationality: string;
-    client_dob: string;
-    client_license: string;
-    client_license_issued: string;
-    client_license_valid: string;
-    vehicle_name: string;
-    vehicle_plate: string;
-    vehicle_color: string;
-    start_date: string;
-    start_time: string;
-    end_date: string;
-    end_time: string;
-    km_start: string;
-    km_return: string;
-    price_per_day: number;
-    total_price: number;
-    deposit: number;
-    deductible: string;
-    agency_address: string;
-    agency_phone: string;
-    agency_email: string;
-    language: string;
-  };
+  contract_data: Record<string, any>;
 }
 
 const T = {
@@ -59,6 +29,7 @@ const T = {
     prixJour: 'Prix/jour', total: 'Total TTC', depot: 'Depot (caution)',
     franchise: 'Franchise', signBtn: 'Signer le contrat', signed: 'Contrat signe',
     downloadPdf: 'Telecharger PDF', contractNo: 'N deg contrat',
+    save: 'Sauvegarder', editing: 'Mode edition', saved: 'Contrat sauvegarde !',
     conditions: "Le/la soussigne(e) s'engage a respecter les conditions generales. " +
       "Franchise minimale par sinistre. Tout dommage non couvert sera a la charge du locataire. " +
       "Le present document vaut reconnaissance de dette (art. 82 LP).",
@@ -75,6 +46,7 @@ const T = {
     prixJour: 'Price/day', total: 'Total incl. VAT', depot: 'Deposit',
     franchise: 'Deductible', signBtn: 'Sign contract', signed: 'Contract signed',
     downloadPdf: 'Download PDF', contractNo: 'Contract No.',
+    save: 'Save', editing: 'Editing mode', saved: 'Contract saved!',
     conditions: "The undersigned agrees to respect the general conditions. " +
       "Minimum deductible per claim. Any uncovered damage will be borne by the tenant. " +
       "This document constitutes a debt acknowledgment (art. 82 LP).",
@@ -89,27 +61,44 @@ export default function ContractView() {
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
 
   const fetchContract = useCallback(async () => {
     try {
       const resp = await api.get(`/api/contracts/${id}`);
       setContract(resp.data);
+      setEditData(resp.data?.contract_data || {});
     } catch {
-      Alert.alert('Erreur', 'Contrat introuvable');
+      Platform.OS === 'web' ? window.alert('Contrat introuvable') : Alert.alert('Erreur', 'Contrat introuvable');
     } finally { setLoading(false); }
   }, [id]);
 
   useEffect(() => { if (id) fetchContract(); }, [id, fetchContract]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await api.put(`/api/admin/contracts/${id}/update-fields`, editData);
+      await fetchContract();
+      setEditing(false);
+      Platform.OS === 'web' ? window.alert('Contrat sauvegarde !') : Alert.alert('Succes', 'Contrat sauvegarde !');
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Erreur lors de la sauvegarde';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    } finally { setSaving(false); }
+  };
 
   const handleSign = async (signatureBase64: string) => {
     try {
       setSigning(true);
       await api.put(`/api/contracts/${id}/sign`, { signature_data: signatureBase64 });
       setShowSignModal(false);
-      Alert.alert('Succes', 'Contrat signe !');
+      Platform.OS === 'web' ? window.alert('Contrat signe !') : Alert.alert('Succes', 'Contrat signe !');
       fetchContract();
     } catch (err: any) {
-      Alert.alert('Erreur', err.response?.data?.detail || 'Erreur');
+      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur');
     } finally { setSigning(false); }
   };
 
@@ -120,14 +109,15 @@ export default function ContractView() {
         const blob = new Blob([resp.data], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `contrat_${id?.slice(0, 8)}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = `contrat_${id?.slice(0, 8)}.pdf`; a.click(); URL.revokeObjectURL(url);
       }
     } catch {
-      Alert.alert('Erreur', 'Impossible de telecharger le PDF');
+      Platform.OS === 'web' ? window.alert('Impossible de telecharger le PDF') : Alert.alert('Erreur');
     }
+  };
+
+  const updateField = (key: string, value: string) => {
+    setEditData(prev => ({ ...prev, [key]: value }));
   };
 
   if (loading) return <View style={st.center}><ActivityIndicator size="large" color={C.accent} /></View>;
@@ -135,12 +125,12 @@ export default function ContractView() {
 
   const lang = (contract.language || 'fr') as 'fr' | 'en';
   const t = T[lang] || T.fr;
-  const d = contract.contract_data;
+  const d = editing ? editData : contract.contract_data;
   const isSigned = contract.status === 'signed';
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
         {/* Header */}
         <View style={st.header}>
           <TouchableOpacity onPress={() => router.back()} data-testid="contract-back-btn">
@@ -153,10 +143,24 @@ export default function ContractView() {
           <View style={[st.badge, { backgroundColor: isSigned ? '#10B98120' : '#F59E0B20' }]}>
             <Ionicons name={isSigned ? 'checkmark-circle' : 'time'} size={12} color={isSigned ? '#10B981' : '#F59E0B'} />
             <Text style={{ color: isSigned ? '#10B981' : '#F59E0B', fontSize: 10, fontWeight: '700' }}>
-              {isSigned ? (lang === 'fr' ? 'Signe' : 'Signed') : (lang === 'fr' ? 'En attente' : 'Pending')}
+              {isSigned ? 'Signe' : 'En attente'}
             </Text>
           </View>
         </View>
+
+        {/* Edit mode toggle */}
+        {!isSigned && (
+          <TouchableOpacity
+            onPress={() => setEditing(!editing)}
+            style={[st.editToggle, { backgroundColor: editing ? '#F59E0B20' : C.accent + '15', borderColor: editing ? '#F59E0B' : C.accent }]}
+            data-testid="contract-edit-toggle"
+          >
+            <Ionicons name={editing ? 'create' : 'create-outline'} size={16} color={editing ? '#F59E0B' : C.accent} />
+            <Text style={{ color: editing ? '#F59E0B' : C.accent, fontSize: 13, fontWeight: '700' }}>
+              {editing ? t.editing : 'Modifier le contrat'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Contract Number */}
         {d.contract_number && (
@@ -166,59 +170,64 @@ export default function ContractView() {
         )}
 
         {/* Vehicle Section */}
-        <SectionBox title="" C={C} accent>
-          <FieldGrid data={[
-            { label: t.vehicle, value: d.vehicle_name },
-            { label: t.plates, value: d.vehicle_plate },
-            { label: t.color, value: d.vehicle_color },
-          ]} C={C} />
-        </SectionBox>
+        <Section title={t.vehicle} C={C} accent>
+          <Field label={t.plates} field="vehicle_plate" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.color} field="vehicle_color" d={d} C={C} editing={editing} onChange={updateField} />
+        </Section>
 
         {/* Tenant Section */}
-        <SectionBox title={t.responsible} C={C}>
-          <FieldGrid data={[
-            { label: t.nom, value: d.client_name },
-            { label: t.prenom, value: d.client_firstname },
-            { label: t.adresse, value: d.client_address },
-            { label: t.tel, value: d.client_phone },
-            { label: t.email, value: d.client_email },
-            { label: t.nationalite, value: d.client_nationality },
-            { label: t.naissance, value: d.client_dob },
-            { label: t.permis, value: d.client_license },
-            { label: t.emission, value: d.client_license_issued },
-            { label: t.expiration, value: d.client_license_valid },
-          ]} C={C} />
-        </SectionBox>
+        <Section title={t.responsible} C={C}>
+          <Field label={t.nom} field="client_name" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.prenom} field="client_firstname" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.adresse} field="client_address" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.tel} field="client_phone" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.email} field="client_email" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.nationalite} field="client_nationality" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.naissance} field="client_dob" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.permis} field="client_license" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.emission} field="client_license_issued" d={d} C={C} editing={editing} onChange={updateField} />
+          <Field label={t.expiration} field="client_license_valid" d={d} C={C} editing={editing} onChange={updateField} />
+        </Section>
 
         {/* Dates & Km Section */}
-        <SectionBox title="" C={C}>
-          <View style={st.datesGrid}>
-            <DateBlock label={t.datePrise} date={d.start_date} time={d.start_time} C={C} />
-            <DateBlock label={t.dateRetour} date={d.end_date} time={d.end_time} C={C} />
+        <Section title="Dates & Km" C={C}>
+          <View style={st.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={[st.dateLabel, { color: C.textLight }]}>{t.datePrise}</Text>
+              <Text style={[st.dateValue, { color: C.text }]}>{d.start_date}</Text>
+              <Text style={[st.timeValue, { color: C.textLight }]}>{d.start_time}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[st.dateLabel, { color: C.textLight }]}>{t.dateRetour}</Text>
+              <Text style={[st.dateValue, { color: C.text }]}>{d.end_date}</Text>
+              <Text style={[st.timeValue, { color: C.textLight }]}>{d.end_time}</Text>
+            </View>
           </View>
-          <View style={[st.kmRow, { borderTopColor: C.border }]}>
-            <KmItem label={t.kmDepart} value={d.km_start} C={C} />
-            <KmItem label={t.kmRetour} value={d.km_return || "—"} C={C} />
-            <KmItem label={t.difference} value="—" C={C} />
+          <View style={[st.row, { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }]}>
+            <Field label={t.kmDepart} field="km_start" d={d} C={C} editing={editing} onChange={updateField} keyboard="numeric" />
+            <Field label={t.kmRetour} field="km_return" d={d} C={C} editing={editing} onChange={updateField} keyboard="numeric" />
           </View>
-        </SectionBox>
+        </Section>
 
         {/* Pricing Section */}
-        <SectionBox title="" C={C}>
-          <FieldRow label={t.prixJour} value={d.price_per_day ? `CHF ${Number(d.price_per_day).toFixed(2)}` : '—'} C={C} />
-          <FieldRow label={t.total} value={`CHF ${(d.total_price || 0).toFixed(2)}`} C={C} bold />
-          <FieldRow label={t.depot} value={`CHF ${(d.deposit || 0).toFixed(2)}`} C={C} />
-          <FieldRow label={t.franchise} value={`CHF ${d.deductible || '1000'}.-`} C={C} />
-        </SectionBox>
+        <Section title="Tarification" C={C}>
+          <Field label={t.prixJour} field="price_per_day" d={d} C={C} editing={editing} onChange={updateField} keyboard="numeric" prefix="CHF " />
+          <View style={[st.totalRow, { borderTopColor: C.border }]}>
+            <Text style={[st.totalLabel, { color: C.text }]}>{t.total}</Text>
+            <Text style={[st.totalValue, { color: C.accent }]}>CHF {Number(d.total_price || 0).toFixed(2)}</Text>
+          </View>
+          <Field label={t.depot} field="deposit" d={d} C={C} editing={editing} onChange={updateField} keyboard="numeric" prefix="CHF " />
+          <Field label={t.franchise} field="deductible" d={d} C={C} editing={editing} onChange={updateField} prefix="CHF " />
+        </Section>
 
         {/* Conditions */}
-        <SectionBox title="" C={C}>
+        <Section title="Conditions" C={C}>
           <Text style={[st.conditionsText, { color: C.textLight }]}>{t.conditions}</Text>
-        </SectionBox>
+        </Section>
 
         {/* Signature */}
         {isSigned && contract.signature_client && (
-          <SectionBox title="" C={C}>
+          <Section title="Signature" C={C}>
             <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 8 }}>
               {t.signed} - {contract.signature_date?.split('T')[0] || ''}
             </Text>
@@ -227,22 +236,35 @@ export default function ContractView() {
                 <img src={contract.signature_client} alt="Signature" style={{ maxWidth: 220, maxHeight: 90 }} />
               )}
             </View>
-          </SectionBox>
+          </Section>
         )}
       </ScrollView>
 
       {/* Bottom Actions */}
       <View style={[st.bottomBar, { backgroundColor: C.navBg, borderTopColor: C.border }]}>
-        {!isSigned && contract.status === 'sent' && (
-          <TouchableOpacity style={[st.actionBtn, { backgroundColor: C.accent }]} onPress={() => setShowSignModal(true)} data-testid="contract-sign-btn">
-            <Ionicons name="create" size={18} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t.signBtn}</Text>
+        {editing ? (
+          <TouchableOpacity style={[st.actionBtn, { backgroundColor: '#10B981' }]} onPress={handleSave} disabled={saving} data-testid="contract-save-btn">
+            {saving ? <ActivityIndicator size="small" color="#fff" /> : (
+              <>
+                <Ionicons name="checkmark-circle" size={18} color="#fff" />
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t.save}</Text>
+              </>
+            )}
           </TouchableOpacity>
+        ) : (
+          <>
+            {!isSigned && (
+              <TouchableOpacity style={[st.actionBtn, { backgroundColor: C.accent }]} onPress={() => setShowSignModal(true)} data-testid="contract-sign-btn">
+                <Ionicons name="create" size={18} color="#fff" />
+                <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t.signBtn}</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={[st.actionBtn, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]} onPress={handleDownloadPdf} data-testid="contract-download-btn">
+              <Ionicons name="download" size={18} color={C.accent} />
+              <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>{t.downloadPdf}</Text>
+            </TouchableOpacity>
+          </>
         )}
-        <TouchableOpacity style={[st.actionBtn, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]} onPress={handleDownloadPdf} data-testid="contract-download-btn">
-          <Ionicons name="download" size={18} color={C.accent} />
-          <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>{t.downloadPdf}</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Signature Modal */}
@@ -250,9 +272,7 @@ export default function ContractView() {
         <View style={st.modalOverlay}>
           <View style={[st.modalContent, { backgroundColor: C.card, borderColor: C.border }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ color: C.text, fontSize: 16, fontWeight: '700' }}>
-                {lang === 'fr' ? 'Votre signature' : 'Your signature'}
-              </Text>
+              <Text style={{ color: C.text, fontSize: 16, fontWeight: '700' }}>Votre signature</Text>
               <TouchableOpacity onPress={() => setShowSignModal(false)}>
                 <Ionicons name="close" size={24} color={C.textLight} />
               </TouchableOpacity>
@@ -267,7 +287,7 @@ export default function ContractView() {
 
 /* ── Sub-components ── */
 
-function SectionBox({ title, children, C, accent }: { title: string; children: React.ReactNode; C: any; accent?: boolean }) {
+function Section({ title, children, C, accent }: { title: string; children: React.ReactNode; C: any; accent?: boolean }) {
   return (
     <View style={[st.section, { backgroundColor: accent ? C.accent + '08' : C.card, borderColor: accent ? C.accent + '30' : C.border }]}>
       {title ? <Text style={[st.sectionTitle, { color: C.text }]}>{title}</Text> : null}
@@ -276,68 +296,59 @@ function SectionBox({ title, children, C, accent }: { title: string; children: R
   );
 }
 
-function FieldGrid({ data, C }: { data: { label: string; value: string }[]; C: any }) {
-  return (
-    <View style={st.fieldGrid}>
-      {data.map((item, i) => (
-        <View key={i} style={[st.fieldItem, { borderBottomColor: C.border + '50' }]}>
-          <Text style={[st.fieldLabel, { color: C.textLight }]}>{item.label}</Text>
-          <Text style={[st.fieldValue, { color: C.text }]}>{item.value || '—'}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
+function Field({ label, field, d, C, editing, onChange, keyboard, prefix }: {
+  label: string; field: string; d: Record<string, any>; C: any;
+  editing: boolean; onChange: (k: string, v: string) => void;
+  keyboard?: string; prefix?: string;
+}) {
+  const value = d[field] || '';
+  const displayValue = prefix && value && !editing ? `${prefix}${value}` : String(value || '—');
 
-function FieldRow({ label, value, C, bold }: { label: string; value: string; C: any; bold?: boolean }) {
   return (
-    <View style={[st.fRow, { borderBottomColor: C.border + '50' }]}>
-      <Text style={{ color: C.textLight, fontSize: 12 }}>{label}</Text>
-      <Text style={{ color: C.text, fontSize: 12, fontWeight: bold ? '800' : '600' }}>{value || '—'}</Text>
-    </View>
-  );
-}
-
-function DateBlock({ label, date, time, C }: { label: string; date: string; time: string; C: any }) {
-  return (
-    <View style={[st.dateBlock, { borderColor: C.border }]}>
-      <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 4 }}>{label}</Text>
-      <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{date || '—'}</Text>
-      <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>{time || '—'}</Text>
-    </View>
-  );
-}
-
-function KmItem({ label, value, C }: { label: string; value: string; C: any }) {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', paddingVertical: 8 }}>
-      <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>{label}</Text>
-      <Text style={{ color: C.text, fontSize: 14, fontWeight: '700', marginTop: 2 }}>{value || '—'}</Text>
+    <View style={st.fieldRow}>
+      <Text style={[st.fieldLabel, { color: C.textLight }]}>{label}</Text>
+      {editing ? (
+        <TextInput
+          style={[st.fieldInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]}
+          value={String(value || '')}
+          onChangeText={(v) => onChange(field, v)}
+          placeholder={label}
+          placeholderTextColor={C.textLight + '60'}
+          keyboardType={keyboard === 'numeric' ? 'numeric' : 'default'}
+          data-testid={`field-${field}`}
+        />
+      ) : (
+        <Text style={[st.fieldValue, { color: C.text }]}>{displayValue}</Text>
+      )}
     </View>
   );
 }
 
 const st = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  agencyName: { fontSize: 18, fontWeight: '800' },
-  contractTitle: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
-  contractNo: { fontSize: 11, textAlign: 'right', marginBottom: 10 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  section: { borderRadius: 10, padding: 14, marginBottom: 10, borderWidth: 1 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', marginBottom: 10 },
-  fieldGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  fieldItem: { width: '50%', paddingVertical: 5, paddingRight: 8, borderBottomWidth: 0.5 },
-  fieldLabel: { fontSize: 10, fontWeight: '600', marginBottom: 1 },
-  fieldValue: { fontSize: 12, fontWeight: '600' },
-  fRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7, borderBottomWidth: 0.5 },
-  datesGrid: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  dateBlock: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 10, alignItems: 'center' },
-  kmRow: { flexDirection: 'row', borderTopWidth: 1, paddingTop: 4 },
+  header: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 },
+  agencyName: { fontSize: 12, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1 },
+  contractTitle: { fontSize: 18, fontWeight: '800', marginTop: 2 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
+  contractNo: { fontSize: 12, textAlign: 'center', marginBottom: 12 },
+  editToggle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5, marginBottom: 12 },
+  section: { borderRadius: 12, borderWidth: 1, padding: 14, marginBottom: 12 },
+  sectionTitle: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
+  row: { flexDirection: 'row', gap: 12 },
+  fieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 6, minHeight: 36 },
+  fieldLabel: { fontSize: 12, fontWeight: '600', flex: 1 },
+  fieldValue: { fontSize: 13, fontWeight: '500', flex: 1.5, textAlign: 'right' },
+  fieldInput: { flex: 1.5, fontSize: 13, borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, textAlign: 'right' },
+  dateLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
+  dateValue: { fontSize: 15, fontWeight: '700' },
+  timeValue: { fontSize: 12, marginTop: 2 },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10, marginTop: 8, borderTopWidth: 1 },
+  totalLabel: { fontSize: 14, fontWeight: '700' },
+  totalValue: { fontSize: 18, fontWeight: '800' },
   conditionsText: { fontSize: 11, lineHeight: 16 },
-  sigBox: { backgroundColor: '#fff', borderRadius: 8, padding: 8, alignItems: 'center' },
-  bottomBar: { flexDirection: 'row', gap: 10, padding: 16, borderTopWidth: 1 },
+  sigBox: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, padding: 8, alignItems: 'center' },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 10, padding: 16, paddingBottom: 28, borderTopWidth: 1 },
   actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },
-  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
-  modalContent: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, borderWidth: 1, minHeight: 350 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  modalContent: { width: '100%', maxWidth: 480, borderRadius: 16, padding: 20, borderWidth: 1 },
 });

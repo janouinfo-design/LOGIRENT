@@ -7,7 +7,7 @@ import requests
 import os
 import base64
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://vehicle-fleet-dev.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-management-hub-9.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "client1@test.com"

@@ -1,0 +1,77 @@
+{
+  "summary": "Contract editing feature verification - P0 task complete. Backend PUT /api/admin/contracts/{id}/update-fields works correctly. Frontend /contract/[id] page has 'Modifier le contrat' toggle that switches to edit mode with TextInput fields. Save persists data and reload shows updated values. Complete-contract page at /agency-app/complete-contract has always-editable form fields.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_contract_update_fields.py",
+    "/app/test_reports/pytest/pytest_contract_edit_iter45.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Contract edit toggle (data-testid='contract-edit-toggle') is implemented but not rendered as HTML attribute in React Native Web - works via CSS cursor:pointer detection",
+    "17 editable fields in contract view: vehicle_plate, vehicle_color, client_name, client_firstname, client_address, client_phone, client_email, client_nationality, client_dob, client_license, client_license_issued, client_license_valid, km_start, km_return, price_per_day, deposit, deductible",
+    "Signed contracts correctly return 400 when attempting edit (backend validation works)",
+    "Both /contract/[id] and /agency-app/complete-contract pages use same PUT endpoint for updates"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% - All contract CRUD operations working",
+    "frontend": "100% - Contract view/edit/save flow verified"
+  },
+  "test_credentials": {
+    "agency_admin": {"email": "admin-geneva@logirent.ch", "password": "LogiRent2024"},
+    "super_admin": {"email": "test@example.com", "password": "password123"}
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Contract editing feature fully tested. Test contract ID 0728a2a2-5372-4dac-812a-e5c668f2548e (Contract N°20) used for verification. Data was reverted to original values after testing. Both edit pages work: /contract/[id] requires clicking 'Modifier le contrat' toggle, /agency-app/complete-contract?contract_id={id} has always-editable form. Login required for contract access.",
+  "features_tested": {
+    "backend_PUT_update_fields": {
+      "status": "PASS",
+      "details": "PUT /api/admin/contracts/{id}/update-fields accepts editable fields, persists to DB, returns updated contract"
+    },
+    "backend_GET_contract": {
+      "status": "PASS",
+      "details": "GET /api/contracts/{id} returns contract with contract_data containing all fields"
+    },
+    "backend_signed_contract_protection": {
+      "status": "PASS",
+      "details": "Signed contracts return 400 'Cannot edit a signed contract' when attempting update"
+    },
+    "frontend_contract_view_modifier_button": {
+      "status": "PASS",
+      "details": "'Modifier le contrat' button visible at top of /contract/[id] page for draft contracts"
+    },
+    "frontend_edit_mode_toggle": {
+      "status": "PASS",
+      "details": "Clicking toggle shows 'Mode edition' badge (yellow/orange) and switches to TextInput fields"
+    },
+    "frontend_sauvegarder_button": {
+      "status": "PASS",
+      "details": "'Sauvegarder' button appears at bottom in edit mode (green button)"
+    },
+    "frontend_data_persistence": {
+      "status": "PASS",
+      "details": "Edited values persist after save and page reload - verified vehicle_plate changed from 'GE 6E750' to 'TEST-VD-999'"
+    },
+    "frontend_complete_contract_page": {
+      "status": "PASS",
+      "details": "/agency-app/complete-contract?contract_id={id} shows always-editable form with 'Faire signer le client' button"
+    }
+  },
+  "screenshots_taken": [
+    ".screenshots/contract_page_initial.png - Contract in view mode",
+    ".screenshots/contract_edit_mode.png - Contract with edit toggle active",
+    ".screenshots/after_save.png - After clicking Sauvegarder",
+    ".screenshots/after_reload.png - Page reload showing persisted values",
+    ".screenshots/complete_contract_page.png - Always-editable complete-contract page"
+  ]
+}
