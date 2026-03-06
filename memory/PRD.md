@@ -70,11 +70,25 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-05] **Bug fix**: Edit Vehicle Modal scroll fix — added maxHeight constraint (85% viewport) so Save/Cancel buttons are always reachable
 - [2026-03-05] **Feature**: Photo count badge on vehicle cards showing number of photos
 
+- [2026-03-05] **Performance (P0)**: Migrated vehicle photos from MongoDB Base64 to MinIO Object Storage. API payload reduced from 2.6MB to 15KB. Backend proxy endpoint GET /api/vehicles/photo/{path} for secure image serving.
+- [2026-03-05] **Feature**: Client mobile bottom tab bar (native Expo Router tabs replacing custom nav).
+- [2026-03-05] **Feature**: Swipeable image carousel on vehicle detail page.
+- [2026-03-05] **Feature**: Auto-generate contract on reservation confirmation + redirect to contract page.
+- [2026-03-05] **Bug fix**: Vehicle photos disappearing on edit — fixed to preserve existing photos.
+- [2026-03-06] **Verified (P0)**: Contract editing fully functional — "Modifier le contrat" toggle enables edit mode with TextInput fields, "Sauvegarder" persists via PUT /api/admin/contracts/{id}/update-fields. Both /contract/[id] and /agency-app/complete-contract pages tested and working. 100% pass rate (backend + frontend).
+
 ## Prioritized Backlog
 ### P1: Push Notifications (re-implement with non-Expo approach)
+### P2: Resend domain verification (user action required for logitrak.ch)
 ### P2: Driver/Agent Application
 ### P3: App Store Deployment
 ### Optional: book.tsx cleanup, move /agency-app/components/ outside app/ dir
+
+## Key Technical Notes
+- Vehicle photos served via backend proxy: GET /api/vehicles/photo/{path} (use getPhotoUrl helper from src/utils/url.ts)
+- Contract editing: Two pages — /contract/[id] (toggle edit) and /agency-app/complete-contract (always editable)
+- Expo Go cache aggressive: restart frontend + clear device cache after UI changes
+- Object Storage (MinIO) for vehicle photos and documents
 
 ## Test Credentials
 - Super Admin: test@example.com / password123
