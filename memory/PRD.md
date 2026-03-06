@@ -75,7 +75,8 @@ Complete car rental solution "LogiRent": Client App, Admin Back-office (Super Ad
 - [2026-03-05] **Feature**: Swipeable image carousel on vehicle detail page.
 - [2026-03-05] **Feature**: Auto-generate contract on reservation confirmation + redirect to contract page.
 - [2026-03-05] **Bug fix**: Vehicle photos disappearing on edit — fixed to preserve existing photos.
-- [2026-03-06] **Feature**: Interactive vehicle inspection diagram on contract pages. Admins can click on 13 car zones (pare-chocs, portes, toit, coffre, etc.) to annotate damages with descriptions. Damage data saved to contract_data.damages, displayed in red on zone grid, listed below diagram, and included in PDF as a damage table.
+- [2026-03-06] **Feature**: Interactive vehicle inspection diagram on contract pages. Admins can click on 13 car zones to annotate damages. Damage data saved to contract_data.damages and included in PDF.
+- [2026-03-06] **PDF Overhaul**: Complete rewrite of PDF generation — single page, all fields (chassis, dates with hours, 8 price columns, Km depart/retour/difference), new legal text ("Déclaration du locataire" with LCR, franchise, art. 82 LP), inspection diagram + damage table, signature, footer.
 
 ## Prioritized Backlog
 ### P1: Push Notifications (re-implement with non-Expo approach)

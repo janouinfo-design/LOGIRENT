@@ -67,21 +67,20 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     is_fr = lang == "fr"
 
     buffer = io.BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=12 * mm, bottomMargin=12 * mm,
-                            leftMargin=MARGIN, rightMargin=MARGIN)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=10 * mm, bottomMargin=8 * mm,
+                            leftMargin=12 * mm, rightMargin=12 * mm)
+
+    CW = PAGE_W - 24 * mm  # content width with 12mm margins
 
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle('Title1', fontSize=18, fontName='Helvetica-Bold', alignment=TA_CENTER,
-                              spaceAfter=2 * mm, textColor=DARK))
-    styles.add(ParagraphStyle('Title2', fontSize=14, fontName='Helvetica-Bold', alignment=TA_CENTER,
-                              spaceAfter=4 * mm, textColor=DARK, borderWidth=1))
-    styles.add(ParagraphStyle('SHead', fontSize=11, fontName='Helvetica-Bold', spaceBefore=4 * mm,
-                              spaceAfter=2 * mm, textColor=DARK))
-    styles.add(ParagraphStyle('Body', fontSize=9, fontName='Helvetica', spaceAfter=1.5 * mm, leading=13,
+    styles.add(ParagraphStyle('Title1', fontSize=16, fontName='Helvetica-Bold', alignment=TA_CENTER,
+                              spaceAfter=1 * mm, textColor=DARK))
+    styles.add(ParagraphStyle('SHead', fontSize=9, fontName='Helvetica-Bold', spaceBefore=2 * mm,
+                              spaceAfter=1 * mm, textColor=DARK))
+    styles.add(ParagraphStyle('Body', fontSize=7, fontName='Helvetica', spaceAfter=1 * mm, leading=9,
                               alignment=TA_JUSTIFY))
-    styles.add(ParagraphStyle('Small', fontSize=8, fontName='Helvetica', spaceAfter=1 * mm, leading=11,
-                              textColor=GREY))
-    styles.add(ParagraphStyle('Footer', fontSize=8, fontName='Helvetica', alignment=TA_CENTER,
+    styles.add(ParagraphStyle('Small', fontSize=6.5, fontName='Helvetica', leading=8, textColor=GREY))
+    styles.add(ParagraphStyle('Footer', fontSize=7, fontName='Helvetica', alignment=TA_CENTER,
                               textColor=LIGHT_GREY))
 
     agency_name = d.get("agency_name", "LogiRent")
@@ -91,150 +90,127 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
 
     # ======================== HEADER ========================
     header_data = [
-        [_cell(agency_name, bold=True, size=20, color='#1A1A2E'),
-         _cell("CONTRAT DE LOCATION" if is_fr else "RENTAL CONTRACT", bold=True, size=14, color='#1A1A2E', align='CENTER'),
-         _cell(f"{'N° du contrat' if is_fr else 'Contract No.'} : {contract_number}", bold=True, size=9, color='#4B5563')]
+        [_cell(agency_name, bold=True, size=16, color='#1A1A2E'),
+         _cell("CONTRAT DE LOCATION" if is_fr else "RENTAL CONTRACT", bold=True, size=12, color='#1A1A2E', align='CENTER'),
+         _cell(f"N° {contract_number}", bold=True, size=8, color='#4B5563')]
     ]
-    header = Table(header_data, colWidths=[50 * mm, 70 * mm, 50 * mm])
+    header = Table(header_data, colWidths=[45 * mm, CW - 90 * mm, 45 * mm])
     header.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (0, 0), 'LEFT'),
         ('ALIGN', (1, 0), (1, 0), 'CENTER'),
         ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
         ('LINEBELOW', (0, 0), (-1, 0), 1.5, DARK),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
     ]))
     story.append(header)
-    story.append(Spacer(1, 4 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     # ======================== VEHICLE SECTION ========================
-    lbl_vehicle = "Vehicule" if is_fr else "Vehicle"
-    lbl_plates = "Plaques" if is_fr else "Plates"
-    lbl_color = "Couleur" if is_fr else "Color"
-
     vehicle_data = [
-        [_label(lbl_vehicle), _value(d.get("vehicle_name", "")),
-         _label(lbl_plates), _value(d.get("vehicle_plate", "")),
-         _label(lbl_color), _value(d.get("vehicle_color", ""))],
+        [_label("Vehicule"), _value(d.get("vehicle_name", "")),
+         _label("Plaques"), _value(d.get("vehicle_plate", "")),
+         _label("Couleur"), _value(d.get("vehicle_color", "")),
+         _label("Chassis"), _value(d.get("vehicle_chassis", ""))],
     ]
-    vt = Table(vehicle_data, colWidths=[18 * mm, 40 * mm, 18 * mm, 32 * mm, 18 * mm, 40 * mm])
+    vt = Table(vehicle_data, colWidths=[16*mm, 32*mm, 14*mm, 24*mm, 14*mm, 22*mm, 14*mm, CW-136*mm])
     vt.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
-        ('BOX', (0, 0), (-1, -1), 1, DARK),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('BOX', (0, 0), (-1, -1), 0.75, DARK),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
     ]))
     story.append(vt)
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     # ======================== TENANT SECTION ========================
-    lbl = {
-        "responsible": "Responsable de la location" if is_fr else "Rental responsible",
-        "nom": "Nom" if is_fr else "Last name",
-        "prenom": "Prenom" if is_fr else "First name",
-        "adresse": "Adresse" if is_fr else "Address",
-        "tel": "Tel" if is_fr else "Phone",
-        "email": "Email",
-        "nationalite": "Nationalite" if is_fr else "Nationality",
-        "naissance": "Lieu et Annee de Naissance" if is_fr else "Place and Year of Birth",
-        "permis": "Permis No." if is_fr else "License No.",
-        "emission": "Date d'emission" if is_fr else "Issue date",
-        "expiration": "Date d'expiration" if is_fr else "Expiry date",
-        "autre_conducteur": "Autre conducteur" if is_fr else "Other driver",
-    }
+    story.append(_cell("Responsable de la location" if is_fr else "Rental responsible", bold=True, size=8))
 
-    story.append(Paragraph(f'<b>{lbl["responsible"]}</b>', styles['SHead']))
-
-    c1 = 30 * mm
-    c2 = 55 * mm
-    c3 = 30 * mm
-    c4 = 55 * mm
+    half = CW / 2
+    c1, c2 = 24 * mm, half - 24 * mm
 
     tenant_rows = [
-        [_label(lbl["nom"]), _value(d.get("client_name", "")),
-         _label(lbl["prenom"]), _value(d.get("client_firstname", ""))],
-        [_label(lbl["adresse"]), _value(d.get("client_address", "")),
-         _label(lbl["tel"]), _value(d.get("client_phone", ""))],
-        [_label(lbl["email"]), _value(d.get("client_email", "")),
-         _label(lbl["nationalite"]), _value(d.get("client_nationality", ""))],
+        [_label("Nom"), _value(d.get("client_name", "")),
+         _label("Prenom"), _value(d.get("client_firstname", ""))],
+        [_label("Adresse"), _value(d.get("client_address", "")),
+         _label("Tel"), _value(d.get("client_phone", ""))],
+        [_label("Email"), _value(d.get("client_email", "")),
+         _label("Nationalite"), _value(d.get("client_nationality", ""))],
+        [_label("Date naissance"), _value(d.get("client_dob", "")),
+         _label("Permis No."), _value(d.get("client_license", ""))],
+        [_label("Date emission"), _value(d.get("client_license_issued", "")),
+         _label("Date expiration"), _value(d.get("client_license_valid", ""))],
     ]
-    tt = _section_table(tenant_rows, [c1, c2, c3, c4])
+    tt = Table(tenant_rows, colWidths=[c1, c2, c1, c2])
+    tt.setStyle(TableStyle([
+        ('FONTSIZE', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
+        ('LINEBELOW', (0, 0), (-1, -1), 0.4, BORDER),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
     story.append(tt)
-    story.append(Spacer(1, 1.5 * mm))
-
-    # License info
-    license_rows = [
-        [_label(lbl["naissance"]), _value(d.get("client_dob", "")),
-         _label(lbl["permis"]), _value(d.get("client_license", ""))],
-        [_label(lbl["emission"]), _value(d.get("client_license_issued", "")),
-         _label(lbl["expiration"]), _value(d.get("client_license_valid", ""))],
-    ]
-    lt = _section_table(license_rows, [c1, c2, c3, c4])
-    story.append(lt)
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     # ======================== RENTAL DATES & MILEAGE ========================
-    lbl_prise = "Date de Prise" if is_fr else "Pickup Date"
-    lbl_retour = "Date de Retour" if is_fr else "Return Date"
-    lbl_heure = "Heure" if is_fr else "Time"
-    lbl_retour_def = "Retour Definitif" if is_fr else "Actual Return"
-    lbl_km_dep = "Km Depart" if is_fr else "Start Km"
-    lbl_km_ret = "Km Retour" if is_fr else "Return Km"
-    lbl_diff = "Difference" if is_fr else "Difference"
-
     start_date = d.get("start_date", "")
     end_date = d.get("end_date", "")
     start_time = d.get("start_time", "")
     end_time = d.get("end_time", "")
 
-    # Parse date and time if combined
     if start_date and " " in str(start_date):
         parts = str(start_date).split(" ", 1)
-        start_date = parts[0]
-        start_time = start_time or parts[1] if len(parts) > 1 else ""
+        start_date, start_time = parts[0], start_time or (parts[1] if len(parts) > 1 else "")
     if end_date and " " in str(end_date):
         parts = str(end_date).split(" ", 1)
-        end_date = parts[0]
-        end_time = end_time or parts[1] if len(parts) > 1 else ""
+        end_date, end_time = parts[0], end_time or (parts[1] if len(parts) > 1 else "")
 
-    dates_data = [
-        [_label(lbl_prise), _value(start_date), _label(lbl_heure), _value(start_time),
-         _label(lbl_km_dep), _value(d.get("km_start", ""))],
-        [_label(lbl_retour), _value(end_date), _label(lbl_heure), _value(end_time),
-         _label(lbl_km_ret), _value(d.get("km_return", ""))],
-        [_label(lbl_retour_def), _value(""), _label(lbl_heure), _value(""),
-         _label(lbl_diff), _value("")],
+    dates_header = [
+        _label("Date de Prise"), _label("Heure"), _label("Date de Retour"), _label("Heure"),
+        _label("Retour Definitif"), _label("Heure"),
     ]
-    dt = Table(dates_data, colWidths=[28 * mm, 30 * mm, 14 * mm, 20 * mm, 28 * mm, 46 * mm])
+    dates_values = [
+        _value(start_date), _value(start_time), _value(end_date), _value(end_time),
+        _value(""), _value(""),
+    ]
+    dt = Table([dates_header, dates_values],
+               colWidths=[CW/6]*6)
     dt.setStyle(TableStyle([
-        ('BOX', (0, 0), (-1, -1), 1, DARK),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('BOX', (0, 0), (-1, -1), 0.75, DARK),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
         ('LEFTPADDING', (0, 0), (-1, -1), 3),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
     ]))
     story.append(dt)
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 1 * mm))
+
+    # Km row
+    km_data = [[
+        _label("Km Depart"), _value(d.get("km_start", "")),
+        _label("Km Retour"), _value(d.get("km_return", "")),
+        _label("Difference"), _value(""),
+    ]]
+    kt = Table(km_data, colWidths=[CW/6]*6)
+    kt.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.75, DARK),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+    ]))
+    story.append(kt)
+    story.append(Spacer(1, 2 * mm))
 
     # ======================== PRICING TABLE ========================
-    lbl_prix = "Prix" if is_fr else "Price"
     price_headers = [
-        "Par Jour" if is_fr else "Per Day",
-        "Week-end\n(Ven-Lun)" if is_fr else "Weekend\n(Fri-Mon)",
-        "Week-end\n(Sam-Lun)" if is_fr else "Weekend\n(Sat-Mon)",
-        "A L'heure" if is_fr else "Per Hour",
-        "Par Semaine" if is_fr else "Per Week",
-        "Par Mois\n2000 Km" if is_fr else "Per Month\n2000 Km",
-        "Par Mois\n3000 Km" if is_fr else "Per Month\n3000 Km",
-        "Km Suppls" if is_fr else "Extra Km",
+        "Par Jour", "Week-end\n(Ven-Lun)", "Week-end\n(Sam-Lun)", "A L'heure",
+        "Par Semaine", "Par Mois\n2000 Km", "Par Mois\n3000 Km", "Km Suppls",
     ]
-
     price_per_day = d.get("price_per_day", "")
     if price_per_day:
         try:
@@ -242,74 +218,50 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
         except (ValueError, TypeError):
             price_per_day = str(price_per_day)
 
+    header_row = [_cell("Prix", bold=True, size=7)] + [_cell(h, bold=True, size=6, color='#4B5563', align='CENTER') for h in price_headers]
     price_row = [
-        _cell(lbl_prix, bold=True, size=8),
-        _value(price_per_day),
-        _value(d.get("price_weekend_fri", "")),
-        _value(d.get("price_weekend_sat", "")),
-        _value(d.get("price_hour", "")),
-        _value(d.get("price_week", "")),
-        _value(d.get("price_month_2000", "")),
-        _value(d.get("price_month_3000", "")),
-        _value(d.get("price_extra_km", "")),
+        _cell("", size=7),
+        _value(price_per_day), _value(d.get("price_weekend_fri", "")),
+        _value(d.get("price_weekend_sat", "")), _value(d.get("price_hour", "")),
+        _value(d.get("price_week", "")), _value(d.get("price_month_2000", "")),
+        _value(d.get("price_month_3000", "")), _value(d.get("price_extra_km", "")),
     ]
-
-    header_row = [_cell("", size=7)] + [_cell(h, bold=True, size=7, color='#4B5563', align='CENTER') for h in price_headers]
-
-    pt = Table([header_row, price_row],
-               colWidths=[16 * mm] + [21.25 * mm] * 8)
+    pcw = (CW - 14*mm) / 8
+    pt = Table([header_row, price_row], colWidths=[14*mm] + [pcw]*8)
     pt.setStyle(TableStyle([
-        ('BOX', (0, 0), (-1, -1), 1, DARK),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 3),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-        ('LEFTPADDING', (0, 0), (-1, -1), 2),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('BOX', (0, 0), (-1, -1), 0.75, DARK),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 2), ('RIGHTPADDING', (0, 0), (-1, -1), 2),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
         ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
     ]))
     story.append(pt)
-    story.append(Spacer(1, 4 * mm))
+    story.append(Spacer(1, 2 * mm))
 
-    # ======================== LEGAL CONDITIONS ========================
+    # ======================== LEGAL TEXT (new user-provided) ========================
     agency_website = d.get("agency_website", "www.abicar.ch")
     deductible = d.get('deductible', '1000')
-    if is_fr:
-        legal_text = (
-            f"Le/la soussign\u00e9(e) d\u00e9clare avoir pris connaissance et accepter sans r\u00e9serve les conditions "
-            f"g\u00e9n\u00e9rales disponibles sur le site <b>{agency_website}</b>, lesquelles font partie "
-            f"int\u00e9grante du pr\u00e9sent contrat, conform\u00e9ment au Code des obligations (CO), "
-            "notamment aux art. 1 ss CO (formation du contrat)."
-            "<br/><br/>"
-            "Les dommages relevant de la garantie Casco collision sont couverts par l'assurance du loueur, "
-            f"sous r\u00e9serve d'une franchise contractuelle de <b>CHF {deductible}.\u2013</b> par sinistre, "
-            "laquelle demeure int\u00e9gralement \u00e0 la charge du locataire responsable, "
-            "conform\u00e9ment au principe de responsabilit\u00e9 contractuelle (art. 97 CO)."
-            "<br/><br/>"
-            "Le pr\u00e9sent document vaut reconnaissance de dette au sens de l'art. 82 CO et peut "
-            "\u00eatre produit \u00e0 titre de titre de mainlev\u00e9e provisoire conform\u00e9ment \u00e0 l'art. 82 "
-            "de la Loi f\u00e9d\u00e9rale sur la poursuite pour dettes et la faillite (LP)."
-        )
-    else:
-        legal_text = (
-            f"The undersigned declares having read and accepted without reservation the general conditions "
-            f"available on the website <b>{agency_website}</b>, which form an integral part of this contract, "
-            "in accordance with the Swiss Code of Obligations (CO), in particular art. 1 ff. CO (contract formation)."
-            "<br/><br/>"
-            "Damages covered under the Collision insurance are insured by the lessor, subject to a contractual "
-            f"deductible of <b>CHF {deductible}.\u2013</b> per claim, which remains entirely the responsibility "
-            "of the liable tenant, in accordance with the principle of contractual liability (art. 97 CO)."
-            "<br/><br/>"
-            "This document constitutes an acknowledgment of debt within the meaning of art. 82 CO and may be "
-            "used as a provisional enforcement title in accordance with art. 82 of the Federal Act on Debt "
-            "Enforcement and Bankruptcy (LP)."
-        )
+    legal_text = (
+        f"<b>Déclaration du locataire</b><br/><br/>"
+        f"Le/la soussigné(e) déclare avoir pris connaissance et accepter les conditions générales de location "
+        f"disponibles sur le site <b>{agency_website}</b>, lesquelles font partie intégrante du présent document."
+        f"<br/><br/>"
+        f"Le locataire s'engage à utiliser le véhicule avec diligence et à respecter strictement les dispositions "
+        f"de la Loi fédérale sur la circulation routière (LCR) ainsi que toutes les prescriptions légales applicables."
+        f"<br/><br/>"
+        f"Les dommages couverts par l'assurance Casco collision du loueur sont soumis à une franchise de "
+        f"<b>CHF {deductible}.–</b> par sinistre, laquelle demeure entièrement à la charge du locataire ou du "
+        f"conducteur responsable."
+        f"<br/><br/>"
+        f"Le locataire reconnaît être responsable de tout dommage, amende ou frais résultant de l'utilisation "
+        f"du véhicule. Le présent document vaut reconnaissance de dette au sens de l'art. 82 LP."
+    )
     story.append(Paragraph(legal_text, styles['Body']))
-    story.append(Spacer(1, 3 * mm))
+    story.append(Spacer(1, 2 * mm))
 
     # ======================== FINANCIAL SECTION ========================
-    # Convert to float safely (may be string from update-fields)
     try:
         deposit = float(d.get("deposit", 0) or 0)
     except (ValueError, TypeError):
@@ -320,45 +272,33 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
         total_price = 0
     total_paid = d.get("total_paid", "")
 
-    lbl_depot = "Depot (caution)" if is_fr else "Deposit (caution)"
-    lbl_rendu = "Rendu" if is_fr else "Returned"
-    lbl_prix_ttc = "PRIX INCLUS TVA" if is_fr else "PRICE INCLUDING VAT"
-    lbl_total_paye = "Total paye client" if is_fr else "Total paid by client"
-
     fin_data = [
-        [_label(lbl_depot), _value(f"CHF {deposit:.2f}" if deposit else ""),
-         _label(lbl_prix_ttc), _value(f"CHF {total_price:.2f}" if total_price else "")],
-        [_label(lbl_rendu), _value(""),
-         _label(lbl_total_paye), _value(total_paid if total_paid else "")],
+        [_label("Depot (caution)"), _value(f"CHF {deposit:.0f}" if deposit else ""),
+         _label("PRIX INCLUS TVA"), _value(f"CHF {total_price:.2f}" if total_price else "")],
+        [_label("Rendu"), _value(""),
+         _label("Total paye client"), _value(total_paid if total_paid else "")],
     ]
-    ft = Table(fin_data, colWidths=[35 * mm, 50 * mm, 40 * mm, 45 * mm])
+    ft = Table(fin_data, colWidths=[30*mm, CW/2 - 30*mm, 32*mm, CW/2 - 32*mm])
     ft.setStyle(TableStyle([
-        ('BOX', (0, 0), (-1, -1), 1, DARK),
-        ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ('LEFTPADDING', (0, 0), (-1, -1), 4),
+        ('BOX', (0, 0), (-1, -1), 0.75, DARK),
+        ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('LEFTPADDING', (0, 0), (-1, -1), 3),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_BG),
     ]))
     story.append(ft)
-    story.append(Spacer(1, 4 * mm))
+    story.append(Spacer(1, 2 * mm))
 
-    # ======================== VEHICLE INSPECTION DIAGRAM ========================
-    inspection_title = "État du véhicule" if is_fr else "Vehicle Condition"
-    story.append(Paragraph(f'<b>{inspection_title}</b>', styles['SHead']))
+    # ======================== VEHICLE INSPECTION ========================
     try:
         import os
         inspection_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'inspection-fr.png')
         if os.path.exists(inspection_path):
-            img_width = 150 * mm
-            img_height = 120 * mm
-            story.append(RLImage(inspection_path, width=img_width, height=img_height))
-            story.append(Spacer(1, 3 * mm))
+            story.append(RLImage(inspection_path, width=85 * mm, height=65 * mm, hAlign='CENTER'))
     except Exception as e:
-        logger.warning(f"Failed to add inspection image to PDF: {e}")
+        logger.warning(f"Inspection image error: {e}")
 
-    # Damage annotations table
+    # Damage annotations
     damages = d.get("damages", {})
     if isinstance(damages, str):
         try:
@@ -368,93 +308,78 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
             damages = {}
     if damages:
         ZONE_LABELS = {
-            "pare_chocs_avant": "Pare-chocs avant",
-            "ailiere_gauche_avant": "Ailière gauche avant",
-            "toit": "Toit",
-            "ailiere_droit_avant": "Ailière droit avant",
-            "porte_avant_gauche": "Porte avant gauche",
-            "roof": "Toit central",
-            "porte_avant_droite": "Porte avant droite",
-            "porte_arriere_gauche": "Porte arrière gauche",
-            "coffre": "Coffre",
-            "porte_arriere_droite": "Porte arrière droite",
-            "ailiere_gauche_arriere": "Ailière gauche arrière",
-            "pare_chocs_arriere": "Pare-chocs arrière",
-            "ailier_droit_arriere": "Ailier droit arrière",
+            "pare_chocs_avant": "Pare-chocs avant", "ailiere_gauche_avant": "Ailière G. avant",
+            "toit": "Toit", "ailiere_droit_avant": "Ailière D. avant",
+            "porte_avant_gauche": "Porte avant G.", "roof": "Toit central",
+            "porte_avant_droite": "Porte avant D.", "porte_arriere_gauche": "Porte arrière G.",
+            "coffre": "Coffre", "porte_arriere_droite": "Porte arrière D.",
+            "ailiere_gauche_arriere": "Ailière G. arrière", "pare_chocs_arriere": "Pare-chocs arrière",
+            "ailier_droit_arriere": "Ailier D. arrière",
         }
-        dmg_title = "Dommages constatés" if is_fr else "Damages Found"
-        story.append(Paragraph(f'<b>{dmg_title}</b>', styles['SHead']))
-        dmg_header = [
-            _cell("Zone" if is_fr else "Zone", bold=True, size=8),
-            _cell("Description" if is_fr else "Description", bold=True, size=8),
-        ]
-        dmg_rows = [dmg_header]
+        dmg_rows = [[_cell("Zone", bold=True, size=7), _cell("Dommage", bold=True, size=7)]]
         for zone_key, desc in damages.items():
             if desc and str(desc).strip():
                 label = ZONE_LABELS.get(zone_key, zone_key.replace("_", " ").title())
-                dmg_rows.append([_cell(label, bold=True, size=8), _cell(str(desc), size=8)])
+                dmg_rows.append([_cell(label, bold=True, size=7), _cell(str(desc), size=7)])
         if len(dmg_rows) > 1:
-            dmg_table = Table(dmg_rows, colWidths=[55 * mm, 115 * mm])
+            dmg_table = Table(dmg_rows, colWidths=[40*mm, CW - 40*mm])
             dmg_table.setStyle(TableStyle([
-                ('BOX', (0, 0), (-1, -1), 1, DARK),
-                ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER),
-                ('TOPPADDING', (0, 0), (-1, -1), 3),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
-                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('BOX', (0, 0), (-1, -1), 0.75, DARK),
+                ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+                ('TOPPADDING', (0, 0), (-1, -1), 1.5), ('BOTTOMPADDING', (0, 0), (-1, -1), 1.5),
+                ('LEFTPADDING', (0, 0), (-1, -1), 3),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('BACKGROUND', (0, 0), (-1, 0), HexColor('#FEE2E2')),
             ]))
             story.append(dmg_table)
-            story.append(Spacer(1, 3 * mm))
 
-    # ======================== SIGNATURE SECTION ========================
+    story.append(Spacer(1, 2 * mm))
+
+    # ======================== SIGNATURE ========================
     city = d.get("agency_city", "Lausanne")
     sig_date = d.get("signature_date", "____________________")
-    lbl_lieu_date = f"{city}, {'le' if is_fr else 'on'} {sig_date}"
 
-    story.append(Paragraph(lbl_lieu_date, styles['Body']))
-    story.append(Spacer(1, 3 * mm))
+    sig_data = [
+        [_cell(f"{city}, le {sig_date}", size=8), _cell("Signature :", bold=True, size=8)]
+    ]
 
-    lbl_sig = "Signature" if is_fr else "Signature"
     signature_added = False
     if signature_base64:
         try:
             sig_bytes = base64.b64decode(
                 signature_base64.split(',')[-1] if ',' in signature_base64 else signature_base64)
             if len(sig_bytes) > 100:
-                sig_buffer = io.BytesIO(sig_bytes)
-                # Validate image can be opened before adding to story
                 from PIL import Image as PILImage
-                test_img = PILImage.open(io.BytesIO(sig_bytes))
-                test_img.verify()  # Verify it's a valid image
-                # Re-create buffer for RLImage (verify() closes file)
+                PILImage.open(io.BytesIO(sig_bytes)).verify()
                 sig_buffer = io.BytesIO(sig_bytes)
-                sig_label_style = ParagraphStyle('siglbl', fontSize=9, fontName='Helvetica-Bold', textColor=GREY)
-                story.append(Paragraph(f"{lbl_sig} :", sig_label_style))
-                story.append(RLImage(sig_buffer, width=55 * mm, height=22 * mm))
+                sig_data.append([_cell(""), RLImage(sig_buffer, width=45*mm, height=18*mm)])
                 signature_added = True
         except Exception as e:
-            logger.warning(f"Failed to add signature image to PDF: {e}")
-    
-    if not signature_added:
-        story.append(Paragraph(f"{lbl_sig} : ____________________________", styles['Body']))
+            logger.warning(f"Signature error: {e}")
 
-    story.append(Spacer(1, 6 * mm))
+    if not signature_added:
+        sig_data.append([_cell(""), _cell("____________________________", size=8)])
+
+    st = Table(sig_data, colWidths=[CW/2, CW/2])
+    st.setStyle(TableStyle([
+        ('TOPPADDING', (0, 0), (-1, -1), 2), ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+        ('ALIGN', (1, 0), (1, -1), 'CENTER'),
+    ]))
+    story.append(st)
 
     # ======================== FOOTER ========================
     agency_address = d.get("agency_address", "")
     agency_phone = d.get("agency_phone", "")
     agency_email = d.get("agency_email", "")
-    agency_website = d.get("agency_website", "")
+    agency_website_footer = d.get("agency_website", "")
 
-    footer_parts = [p for p in [agency_address, agency_phone, agency_email, agency_website] if p]
+    footer_parts = [p for p in [agency_address, agency_phone, agency_email, agency_website_footer] if p]
     if footer_parts:
-        footer_line = "  |  ".join(footer_parts)
-        story.append(Spacer(1, 2 * mm))
+        story.append(Spacer(1, 1 * mm))
         story.append(Paragraph(
-            f'<font face="Helvetica" size="7" color="#9CA3AF">{"-" * 80}</font>',
+            f'<font face="Helvetica" size="6" color="#9CA3AF">{"  |  ".join(footer_parts)}</font>',
             styles['Footer']))
-        story.append(Paragraph(footer_line, styles['Footer']))
 
     doc.build(story)
     return buffer.getvalue()

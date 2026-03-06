@@ -31,9 +31,11 @@ const T = {
     franchise: 'Franchise', signBtn: 'Signer le contrat', signed: 'Contrat signe',
     downloadPdf: 'Telecharger PDF', contractNo: 'N deg contrat',
     save: 'Sauvegarder', editing: 'Mode edition', saved: 'Contrat sauvegarde !',
-    conditions: "Le/la soussigne(e) s'engage a respecter les conditions generales. " +
-      "Franchise minimale par sinistre. Tout dommage non couvert sera a la charge du locataire. " +
-      "Le present document vaut reconnaissance de dette (art. 82 LP).",
+    conditions: "Déclaration du locataire\n\n" +
+      "Le/la soussigné(e) déclare avoir pris connaissance et accepter les conditions générales de location disponibles sur le site www.abicar.ch, lesquelles font partie intégrante du présent document.\n\n" +
+      "Le locataire s'engage à utiliser le véhicule avec diligence et à respecter strictement les dispositions de la Loi fédérale sur la circulation routière (LCR) ainsi que toutes les prescriptions légales applicables.\n\n" +
+      "Les dommages couverts par l'assurance Casco collision du loueur sont soumis à une franchise de CHF 1'000.– par sinistre, laquelle demeure entièrement à la charge du locataire ou du conducteur responsable.\n\n" +
+      "Le locataire reconnaît être responsable de tout dommage, amende ou frais résultant de l'utilisation du véhicule. Le présent document vaut reconnaissance de dette au sens de l'art. 82 LP.",
   },
   en: {
     title: 'RENTAL CONTRACT',
