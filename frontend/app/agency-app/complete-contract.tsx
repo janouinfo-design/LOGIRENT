@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
 import SignatureCanvas from '../../src/components/SignatureCanvas';
+import VehicleInspection from '../../src/components/VehicleInspection';
 
 interface ContractData {
   id: string;
@@ -279,11 +280,23 @@ export default function CompleteContract() {
         {/* Vehicle Inspection Diagram */}
         <View style={[st.sectionCard, { backgroundColor: C.card, borderColor: C.border }]}>
           <Text style={[st.sectionTitle, { color: C.text }]}>État du véhicule</Text>
-          <Image
-            source={require('../../assets/images/inspection-fr.png')}
-            style={{ width: '100%', height: 350, alignSelf: 'center' }}
-            resizeMode="contain"
-            data-testid="inspection-diagram-complete"
+          <VehicleInspection
+            damages={(() => {
+              const dmg = editedFields.damages || contract?.contract_data?.damages || {};
+              return typeof dmg === 'string' ? JSON.parse(dmg) : dmg;
+            })()}
+            onUpdateDamage={(key, value) => {
+              const current = editedFields.damages || contract?.contract_data?.damages || {};
+              const parsed = typeof current === 'string' ? JSON.parse(current) : { ...current };
+              if (value) {
+                parsed[key] = value;
+              } else {
+                delete parsed[key];
+              }
+              setField('damages', JSON.stringify(parsed));
+            }}
+            editable={!signed}
+            colors={C}
           />
         </View>
       </ScrollView>

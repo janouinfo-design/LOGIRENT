@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
 import SignatureCanvas from '../../src/components/SignatureCanvas';
+import VehicleInspection from '../../src/components/VehicleInspection';
 
 interface ContractData {
   id: string;
@@ -227,11 +228,20 @@ export default function ContractView() {
 
         {/* Vehicle Inspection Diagram */}
         <Section title={lang === 'fr' ? "État du véhicule" : "Vehicle Condition"} C={C}>
-          <Image
-            source={require('../../assets/images/inspection-fr.png')}
-            style={st.inspectionImage}
-            resizeMode="contain"
-            data-testid="inspection-diagram"
+          <VehicleInspection
+            damages={d.damages || {}}
+            onUpdateDamage={(key, value) => {
+              const currentDamages = { ...(editData.damages || d.damages || {}) };
+              if (value) {
+                currentDamages[key] = value;
+              } else {
+                delete currentDamages[key];
+              }
+              setEditData(prev => ({ ...prev, damages: currentDamages }));
+              if (!editing) setEditing(true);
+            }}
+            editable={!isSigned}
+            colors={C}
           />
         </Section>
 

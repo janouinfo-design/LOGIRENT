@@ -358,6 +358,55 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     except Exception as e:
         logger.warning(f"Failed to add inspection image to PDF: {e}")
 
+    # Damage annotations table
+    damages = d.get("damages", {})
+    if isinstance(damages, str):
+        try:
+            import json
+            damages = json.loads(damages)
+        except Exception:
+            damages = {}
+    if damages:
+        ZONE_LABELS = {
+            "pare_chocs_avant": "Pare-chocs avant",
+            "ailiere_gauche_avant": "Ailière gauche avant",
+            "toit": "Toit",
+            "ailiere_droit_avant": "Ailière droit avant",
+            "porte_avant_gauche": "Porte avant gauche",
+            "roof": "Toit central",
+            "porte_avant_droite": "Porte avant droite",
+            "porte_arriere_gauche": "Porte arrière gauche",
+            "coffre": "Coffre",
+            "porte_arriere_droite": "Porte arrière droite",
+            "ailiere_gauche_arriere": "Ailière gauche arrière",
+            "pare_chocs_arriere": "Pare-chocs arrière",
+            "ailier_droit_arriere": "Ailier droit arrière",
+        }
+        dmg_title = "Dommages constatés" if is_fr else "Damages Found"
+        story.append(Paragraph(f'<b>{dmg_title}</b>', styles['SHead']))
+        dmg_header = [
+            _cell("Zone" if is_fr else "Zone", bold=True, size=8),
+            _cell("Description" if is_fr else "Description", bold=True, size=8),
+        ]
+        dmg_rows = [dmg_header]
+        for zone_key, desc in damages.items():
+            if desc and str(desc).strip():
+                label = ZONE_LABELS.get(zone_key, zone_key.replace("_", " ").title())
+                dmg_rows.append([_cell(label, bold=True, size=8), _cell(str(desc), size=8)])
+        if len(dmg_rows) > 1:
+            dmg_table = Table(dmg_rows, colWidths=[55 * mm, 115 * mm])
+            dmg_table.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, -1), 1, DARK),
+                ('INNERGRID', (0, 0), (-1, -1), 0.5, BORDER),
+                ('TOPPADDING', (0, 0), (-1, -1), 3),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+                ('LEFTPADDING', (0, 0), (-1, -1), 4),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BACKGROUND', (0, 0), (-1, 0), HexColor('#FEE2E2')),
+            ]))
+            story.append(dmg_table)
+            story.append(Spacer(1, 3 * mm))
+
     # ======================== SIGNATURE SECTION ========================
     city = d.get("agency_city", "Lausanne")
     sig_date = d.get("signature_date", "____________________")
@@ -558,10 +607,17 @@ async def update_contract_fields(contract_id: str, fields: dict, user: dict = De
         "deposit", "deductible",
         "price_per_day", "price_weekend_fri", "price_weekend_sat",
         "price_hour", "price_week", "price_month_2000", "price_month_3000", "price_extra_km",
+        "damages",
     }
     updates = {}
     for k, v in fields.items():
         if k in EDITABLE:
+            if k == "damages" and isinstance(v, str):
+                try:
+                    import json
+                    v = json.loads(v)
+                except Exception:
+                    pass
             updates[f"contract_data.{k}"] = v
 
     if updates:
