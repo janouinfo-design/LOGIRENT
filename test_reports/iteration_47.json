@@ -1,0 +1,100 @@
+{
+  "summary": "Contract Template Feature - Backend 100% PASS (17/17 tests), Frontend UI 100% Verified. All 4 backend endpoints working: GET/PUT /api/admin/contract-template, POST/DELETE /api/admin/contract-template/logo. Frontend page at /agency-app/contract-template renders all sections correctly. Template values are correctly applied during PDF generation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_contract_template.py",
+    "/app/test_reports/pytest/pytest_contract_template.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "data-testid attributes on contract-template.tsx components may not render as HTML attributes in React Native Web - this is expected behavior, use alternative selectors for Playwright tests",
+    "Template values properly cascade to contract_data during contract generation in contracts.py lines 507-525"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_contract_template.py"
+  ],
+  "success_rate": {
+    "backend": "100% (17/17 tests passed)",
+    "frontend": "100% - All UI elements verified present"
+  },
+  "test_credentials": {
+    "agency_admin": {
+      "email": "admin-geneva@logirent.ch",
+      "password": "LogiRent2024"
+    }
+  },
+  "seed_data_creation": "",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Contract template feature fully tested. Backend pytest file created at /app/backend/tests/test_contract_template.py with 17 comprehensive tests covering all CRUD operations and edge cases. Frontend verified via Playwright - all UI sections render correctly (logo upload, agency info, 8 price fields, legal text, save button). 'Modèle' tab visible in agency-app navigation. Template values (deductible, agency_website, custom_legal_text, logo_path, default_prices) correctly applied during contract PDF generation.",
+  "features_tested": {
+    "backend_get_template": {
+      "status": "PASS",
+      "details": "GET /api/admin/contract-template returns template data with all required fields (legal_text, deductible, agency_website, default_prices, agency_id, logo_path)"
+    },
+    "backend_get_template_default": {
+      "status": "PASS",
+      "details": "Returns default template values when no custom template exists"
+    },
+    "backend_put_template": {
+      "status": "PASS",
+      "details": "PUT /api/admin/contract-template updates legal_text, deductible, agency_website, default_prices fields"
+    },
+    "backend_put_template_persistence": {
+      "status": "PASS",
+      "details": "Updates persist correctly - verified via subsequent GET"
+    },
+    "backend_upload_logo": {
+      "status": "PASS",
+      "details": "POST /api/admin/contract-template/logo uploads logo and returns logo_path"
+    },
+    "backend_delete_logo": {
+      "status": "PASS",
+      "details": "DELETE /api/admin/contract-template/logo removes logo and sets logo_path to null"
+    },
+    "backend_auth_required": {
+      "status": "PASS",
+      "details": "Endpoints require authentication - return 401/403 without token"
+    },
+    "frontend_page_loads": {
+      "status": "PASS",
+      "details": "/agency-app/contract-template page loads with title 'Modèle de contrat'"
+    },
+    "frontend_logo_section": {
+      "status": "PASS",
+      "details": "Logo upload zone visible with 'Cliquez pour télécharger un logo' text"
+    },
+    "frontend_agency_info": {
+      "status": "PASS",
+      "details": "'Site web' and 'Franchise (CHF)' inputs visible"
+    },
+    "frontend_price_grid": {
+      "status": "PASS",
+      "details": "All 8 price fields visible (Par Jour, Week-end Ven-Lun, Week-end Sam-Lun, A L'heure, Par Semaine, Par Mois 2000 Km, Par Mois 3000 Km, Km Supplémentaire)"
+    },
+    "frontend_legal_text": {
+      "status": "PASS",
+      "details": "Legal text textarea visible with placeholder text showing {website} and {franchise} placeholders"
+    },
+    "frontend_save_button": {
+      "status": "PASS",
+      "details": "Save button 'Sauvegarder le modèle' visible"
+    },
+    "frontend_navigation_tab": {
+      "status": "PASS",
+      "details": "'Modèle' tab visible in agency-app bottom navigation bar"
+    },
+    "pdf_generation_uses_template": {
+      "status": "PASS",
+      "details": "Contract generation applies template values: custom_legal_text, deductible, agency_website, logo_path, default_prices"
+    }
+  }
+}

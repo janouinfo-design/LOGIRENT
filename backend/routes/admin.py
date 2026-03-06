@@ -911,3 +911,97 @@ async def toggle_agency_active(agency_id: str, user: dict = Depends(get_admin_us
     
     status_text = "activé" if new_status else "désactivé"
     return {"message": f"Agence {status_text}", "is_active": new_status}
+
+
+
+# ======================== CONTRACT TEMPLATE ========================
+
+@router.get("/admin/contract-template")
+async def get_contract_template(user: dict = Depends(get_agency_admin)):
+    agency_id = user.get("agency_id")
+    template = await db.contract_templates.find_one({"agency_id": agency_id}, {"_id": 0})
+    if not template:
+        # Return default template
+        return {
+            "agency_id": agency_id,
+            "legal_text": (
+                "Le/la soussigné(e) déclare avoir pris connaissance et accepter les conditions générales "
+                "de location disponibles sur le site {website}, lesquelles font partie intégrante du présent document.\n\n"
+                "Le locataire s'engage à utiliser le véhicule avec diligence et à respecter strictement les dispositions "
+                "de la Loi fédérale sur la circulation routière (LCR) ainsi que toutes les prescriptions légales applicables.\n\n"
+                "Les dommages couverts par l'assurance Casco collision du loueur sont soumis à une franchise de "
+                "CHF {franchise}.– par sinistre, laquelle demeure entièrement à la charge du locataire ou du "
+                "conducteur responsable.\n\n"
+                "Le locataire reconnaît être responsable de tout dommage, amende ou frais résultant de l'utilisation "
+                "du véhicule. Le présent document vaut reconnaissance de dette au sens de l'art. 82 LP."
+            ),
+            "default_prices": {},
+            "deductible": "1000",
+            "agency_website": "",
+            "logo_path": None,
+        }
+    return template
+
+
+@router.put("/admin/contract-template")
+async def update_contract_template(data: dict, user: dict = Depends(get_agency_admin)):
+    agency_id = user.get("agency_id")
+
+    allowed = {"legal_text", "default_prices", "deductible", "agency_website"}
+    update = {k: v for k, v in data.items() if k in allowed}
+    update["updated_at"] = datetime.utcnow().isoformat()
+
+    existing = await db.contract_templates.find_one({"agency_id": agency_id})
+    if existing:
+        await db.contract_templates.update_one(
+            {"agency_id": agency_id}, {"$set": update}
+        )
+    else:
+        update["agency_id"] = agency_id
+        update["id"] = str(uuid.uuid4())
+        update["logo_path"] = None
+        update["created_at"] = datetime.utcnow().isoformat()
+        await db.contract_templates.insert_one(update)
+
+    template = await db.contract_templates.find_one({"agency_id": agency_id}, {"_id": 0})
+    return template
+
+
+@router.post("/admin/contract-template/logo")
+async def upload_template_logo(file: UploadFile = File(...), user: dict = Depends(get_agency_admin)):
+    from utils.storage import put_object
+    agency_id = user.get("agency_id")
+
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Logo trop volumineux (max 5MB)")
+
+    ext = file.filename.split(".")[-1].lower() if file.filename and "." in file.filename else "png"
+    path = f"logirent/logos/{agency_id}/{uuid.uuid4()}.{ext}"
+    ct = file.content_type or f"image/{ext}"
+    put_object(path, content, ct)
+
+    await db.contract_templates.update_one(
+        {"agency_id": agency_id},
+        {"$set": {"logo_path": path, "updated_at": datetime.utcnow().isoformat()}},
+        upsert=True,
+    )
+    # Also set agency_id and id if upserting
+    existing = await db.contract_templates.find_one({"agency_id": agency_id})
+    if existing and not existing.get("id"):
+        await db.contract_templates.update_one(
+            {"agency_id": agency_id},
+            {"$set": {"id": str(uuid.uuid4()), "created_at": datetime.utcnow().isoformat()}}
+        )
+
+    return {"logo_path": path}
+
+
+@router.delete("/admin/contract-template/logo")
+async def delete_template_logo(user: dict = Depends(get_agency_admin)):
+    agency_id = user.get("agency_id")
+    await db.contract_templates.update_one(
+        {"agency_id": agency_id},
+        {"$set": {"logo_path": None, "updated_at": datetime.utcnow().isoformat()}}
+    )
+    return {"message": "Logo supprimé"}

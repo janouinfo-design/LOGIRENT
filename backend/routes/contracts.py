@@ -88,9 +88,22 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
 
     story = []
 
-    # ======================== HEADER ========================
+    # ======================== HEADER (with optional logo) ========================
+    logo_path_val = d.get("logo_path")
+    logo_cell = _cell(agency_name, bold=True, size=16, color='#1A1A2E')
+    if logo_path_val:
+        try:
+            import os as _os
+            from utils.storage import get_object
+            logo_bytes, _ = get_object(logo_path_val)
+            if logo_bytes and len(logo_bytes) > 100:
+                logo_buf = io.BytesIO(logo_bytes)
+                logo_cell = RLImage(logo_buf, width=30*mm, height=12*mm)
+        except Exception as e:
+            logger.warning(f"Logo load error: {e}")
+
     header_data = [
-        [_cell(agency_name, bold=True, size=16, color='#1A1A2E'),
+        [logo_cell,
          _cell("CONTRAT DE LOCATION" if is_fr else "RENTAL CONTRACT", bold=True, size=12, color='#1A1A2E', align='CENTER'),
          _cell(f"N° {contract_number}", bold=True, size=8, color='#4B5563')]
     ]
@@ -240,24 +253,30 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     story.append(pt)
     story.append(Spacer(1, 2 * mm))
 
-    # ======================== LEGAL TEXT (new user-provided) ========================
+    # ======================== LEGAL TEXT ========================
     agency_website = d.get("agency_website", "www.abicar.ch")
     deductible = d.get('deductible', '1000')
-    legal_text = (
-        f"<b>Déclaration du locataire</b><br/><br/>"
-        f"Le/la soussigné(e) déclare avoir pris connaissance et accepter les conditions générales de location "
-        f"disponibles sur le site <b>{agency_website}</b>, lesquelles font partie intégrante du présent document."
-        f"<br/><br/>"
-        f"Le locataire s'engage à utiliser le véhicule avec diligence et à respecter strictement les dispositions "
-        f"de la Loi fédérale sur la circulation routière (LCR) ainsi que toutes les prescriptions légales applicables."
-        f"<br/><br/>"
-        f"Les dommages couverts par l'assurance Casco collision du loueur sont soumis à une franchise de "
-        f"<b>CHF {deductible}.–</b> par sinistre, laquelle demeure entièrement à la charge du locataire ou du "
-        f"conducteur responsable."
-        f"<br/><br/>"
-        f"Le locataire reconnaît être responsable de tout dommage, amende ou frais résultant de l'utilisation "
-        f"du véhicule. Le présent document vaut reconnaissance de dette au sens de l'art. 82 LP."
-    )
+    custom_legal = d.get("custom_legal_text")
+    if custom_legal:
+        # Replace placeholders in custom text
+        rendered = custom_legal.replace("{website}", agency_website).replace("{franchise}", str(deductible))
+        legal_text = f"<b>Déclaration du locataire</b><br/><br/>" + rendered.replace("\n\n", "<br/><br/>").replace("\n", "<br/>")
+    else:
+        legal_text = (
+            f"<b>Déclaration du locataire</b><br/><br/>"
+            f"Le/la soussigné(e) déclare avoir pris connaissance et accepter les conditions générales de location "
+            f"disponibles sur le site <b>{agency_website}</b>, lesquelles font partie intégrante du présent document."
+            f"<br/><br/>"
+            f"Le locataire s'engage à utiliser le véhicule avec diligence et à respecter strictement les dispositions "
+            f"de la Loi fédérale sur la circulation routière (LCR) ainsi que toutes les prescriptions légales applicables."
+            f"<br/><br/>"
+            f"Les dommages couverts par l'assurance Casco collision du loueur sont soumis à une franchise de "
+            f"<b>CHF {deductible}.–</b> par sinistre, laquelle demeure entièrement à la charge du locataire ou du "
+            f"conducteur responsable."
+            f"<br/><br/>"
+            f"Le locataire reconnaît être responsable de tout dommage, amende ou frais résultant de l'utilisation "
+            f"du véhicule. Le présent document vaut reconnaissance de dette au sens de l'art. 82 LP."
+        )
     story.append(Paragraph(legal_text, styles['Body']))
     story.append(Spacer(1, 2 * mm))
 
@@ -483,6 +502,27 @@ async def generate_contract(data: ContractGenerate, user: dict = Depends(get_adm
         "deposit": reservation.get("deposit", 0),
         "deductible": "1000",
     }
+
+    # Apply agency contract template defaults
+    agency_id = reservation.get("agency_id")
+    if agency_id:
+        template = await db.contract_templates.find_one({"agency_id": agency_id}, {"_id": 0})
+        if template:
+            if template.get("deductible"):
+                contract_data["deductible"] = template["deductible"]
+            if template.get("agency_website"):
+                contract_data["agency_website"] = template["agency_website"]
+            if template.get("legal_text"):
+                contract_data["custom_legal_text"] = template["legal_text"]
+            if template.get("logo_path"):
+                contract_data["logo_path"] = template["logo_path"]
+            dp = template.get("default_prices", {})
+            if dp:
+                for pk in ["price_per_day", "price_weekend_fri", "price_weekend_sat",
+                           "price_hour", "price_week", "price_month_2000",
+                           "price_month_3000", "price_extra_km"]:
+                    if dp.get(pk) and not contract_data.get(pk):
+                        contract_data[pk] = dp[pk]
 
     existing = await db.contracts.find_one({"reservation_id": data.reservation_id}, {"_id": 0})
     if existing:

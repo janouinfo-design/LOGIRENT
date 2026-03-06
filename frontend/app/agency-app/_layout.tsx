@@ -49,6 +49,7 @@ export default function AgencyAppLayout() {
     { key: 'statistics', label: 'Stats', icon: 'stats-chart', iconO: 'stats-chart-outline' },
     { key: 'tracking', label: 'GPS', icon: 'navigate', iconO: 'navigate-outline' },
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
+    { key: 'contract-template', label: 'Modèle', icon: 'document-text', iconO: 'document-text-outline' },
     { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
   ];
 
@@ -115,6 +116,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="statistics" options={{ title: 'Stats' }} />
           <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
+          <Tabs.Screen name="contract-template" options={{ title: 'Modèle' }} />
           <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
         </Tabs>
       </View>
