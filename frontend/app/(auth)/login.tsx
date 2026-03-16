@@ -51,7 +51,16 @@ export default function LoginScreen() {
     setLoginError('');
     try {
       await login(email, password);
-      router.replace('/(tabs)');
+      // Redirect based on role
+      const { user } = useAuthStore.getState();
+      const role = user?.role || 'client';
+      if (role === 'super_admin') {
+        router.replace('/super-admin');
+      } else if (role === 'admin') {
+        router.replace('/agency-app');
+      } else {
+        router.replace('/(tabs)');
+      }
     } catch (error: any) {
       const errorMessage = error.message || 'Identifiants incorrects';
       setLoginError(errorMessage);

@@ -17,13 +17,20 @@ const COLORS = {
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.replace('/(tabs)');
+    if (!isLoading && isAuthenticated && user) {
+      const role = user.role || 'client';
+      if (role === 'super_admin') {
+        router.replace('/super-admin');
+      } else if (role === 'admin') {
+        router.replace('/agency-app');
+      } else {
+        router.replace('/(tabs)');
+      }
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, user]);
 
   return (
     <View style={styles.container}>

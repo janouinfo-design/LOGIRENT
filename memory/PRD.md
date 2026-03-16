@@ -14,9 +14,10 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Authentication & Roles
+### Authentication & Roles (FIXED March 16, 2026)
 - Super Admin, Agency Admin, Client roles
 - JWT-based auth with bcrypt password hashing
+- **Role-based redirection after login**: super_admin → /super-admin, admin → /agency-app, client → /(tabs)
 - Password reset via email (Resend)
 - Admin impersonation
 
@@ -53,46 +54,29 @@ Build a complete car rental solution named "LogiRent" with:
 - Client import from Excel/CSV/ZIP
 - Client rating system
 
-### Notifications
-- In-app notifications
-- Email notifications (Resend)
-- Reservation reminders (cron job)
-- Overdue alerts
-
 ### Multi-Tenant
 - Agency creation with slug-based routing
 - Per-agency contract templates
 - Agency admin isolation
 - Agency activate/deactivate (Super Admin)
 
-## VPS Deployment Guide
-- Script created: `/app/scripts/seed_superadmin.py`
-- Guide created: `/app/scripts/GUIDE_DEPLOIEMENT_VPS.md`
-- User's MongoDB Atlas: configured
+## VPS Deployment
+- Script: `/app/scripts/seed_superadmin.py`
+- Guide: `/app/scripts/GUIDE_DEPLOIEMENT_VPS.md`
+- User's MongoDB Atlas: mongodb+srv://...@cluster0.isugn1l.mongodb.net
 
 ## 3rd Party Integrations
-- **Stripe** - Payments
-- **Resend** - Email notifications
-- **Navixy** - GPS tracking
-- **OpenAI (emergentintegrations)** - AI revenue forecast
-- **MinIO (emergentintegrations)** - Object storage
-- **ReportLab** - PDF generation
-- **QRCode** - Welcome email QR codes
+- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI via emergentintegrations, MinIO, ReportLab, QRCode
 
 ## Test Credentials
 - Super Admin: test@example.com / password123
 - Agency Admin: admin-geneva@logirent.ch / LogiRent2024
 - Client: client1@test.com / test1234
 
-## Verification Status (March 16, 2026)
-- Backend: 100% (17/17 tests passed)
-- Frontend: 100% (4/4 flows verified)
-- Test report: /app/test_reports/iteration_49.json
-
 ## Pending Issues
-1. **Resend Domain Verification (P2)** - User needs to verify logirent.ch with Resend for emails to work in production
+1. Resend Domain Verification (P2) - User needs to verify logirent.ch
 
 ## Upcoming Tasks
-1. **Push Notifications (P1)** - Native push notifications for mobile app
-2. **Driver/Agent Application (P2)** - Separate mobile app for drivers
-3. **App Store Deployment (P3)** - Submit apps to App Store and Play Store
+1. Push Notifications (P1)
+2. Driver/Agent Application (P2)
+3. App Store Deployment (P3)
