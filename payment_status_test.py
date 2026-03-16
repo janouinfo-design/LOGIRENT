@@ -10,7 +10,7 @@ from typing import Optional
 
 class PaymentStatusTester:
     def __init__(self):
-        self.base_url = "https://fleet-management-hub-9.preview.emergentagent.com"
+        self.base_url = "https://fleet-inspect-14.preview.emergentagent.com"
         self.api_url = f"{self.base_url}/api"
         self.access_token: Optional[str] = None
         

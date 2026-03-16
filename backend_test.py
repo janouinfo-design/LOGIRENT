@@ -1216,7 +1216,7 @@ class RentDriveAPITester:
 def main():
     """Main test execution"""
     # Use the backend URL from frontend .env
-    backend_url = "https://fleet-management-hub-9.preview.emergentagent.com"
+    backend_url = "https://fleet-inspect-14.preview.emergentagent.com"
     
     tester = RentDriveAPITester(backend_url)
     results = tester.run_all_tests()
