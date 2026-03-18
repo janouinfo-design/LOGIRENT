@@ -1,52 +1,67 @@
 #!/usr/bin/env python3
 """
-LogiRent - Seed complet avec données réalistes pour 1 mois
+LogiRent - Seed complet avec donnees realistes pour 1 mois
 ============================================================
-Insère agences, clients détaillés, véhicules avec photos, et 30+ réservations
-sur 1 mois complet pour une démonstration crédible.
+Charge TOUJOURS depuis backend/.env (pas de fallback dangereux).
 
 Usage:
     python3 seed_demo.py
 """
 
-import uuid, os, sys
+import uuid, sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-# ==================== CONFIG ====================
-# Try to read from backend .env, fallback to Atlas
-MONGO_URL = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
-DB_NAME = os.environ.get("DB_NAME", "test_database")
+# Charger l'environnement depuis backend/.env
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from env_loader import load_env, require_keys
+
 DEFAULT_PASSWORD = "LogiRent2024!"
-# ================================================
+
 
 def uid():
     return str(uuid.uuid4())
+
 
 def main():
     try:
         import pymongo
         import bcrypt
     except ImportError:
-        print("pip install pymongo bcrypt dnspython")
-        return
+        print("[ERREUR] Dependances manquantes.")
+        print("  pip install pymongo bcrypt dnspython")
+        return 1
+
+    # --- Charger la configuration ---
+    try:
+        env = load_env()
+        require_keys(env, "MONGO_URL", "DB_NAME")
+    except (FileNotFoundError, ValueError) as e:
+        print(f"[ERREUR] {e}")
+        return 1
+
+    mongo_url = env["MONGO_URL"]
+    db_name = env["DB_NAME"]
+
+    print(f"  Base cible: {mongo_url}/{db_name}")
 
     def hp(pw):
         return bcrypt.hashpw(pw.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
-    client = pymongo.MongoClient(MONGO_URL)
-    db = client[DB_NAME]
+    client = pymongo.MongoClient(mongo_url, serverSelectionTimeoutMS=5000)
+    db = client[db_name]
     try:
         client.admin.command("ping")
+        print("  [OK] Connexion reussie")
     except Exception as e:
-        print(f"ERREUR connexion: {e}")
-        return
+        print(f"  [ERREUR] Connexion: {e}")
+        return 1
 
     now = datetime.utcnow()
     counts = {"agencies": 0, "users": 0, "vehicles": 0, "reservations": 0}
 
     # ==================== AGENCES ====================
-    print("--- AGENCES ---")
+    print("\n--- AGENCES ---")
     agencies = [
         {"name": "LogiRent Geneve", "slug": "logirent-geneve", "address": "Rue du Rhone 42, 1204 Geneve", "phone": "+41 22 300 00 01", "email": "geneve@logirent.ch"},
         {"name": "LogiRent Lausanne", "slug": "logirent-lausanne", "address": "Avenue de la Gare 10, 1003 Lausanne", "phone": "+41 21 300 00 02", "email": "lausanne@logirent.ch"},
@@ -160,8 +175,6 @@ def main():
 
     # ==================== RESERVATIONS (30+ sur 1 mois) ====================
     print("\n--- RESERVATIONS ---")
-    client_emails = [u["email"] for u in users if u["role"] == "client"]
-    plates = [v["plate"] for v in vehicles]
 
     def mk(email, plate, agency, d_off, dur, status, pay_s, pay_m):
         s = now + timedelta(days=d_off)
@@ -183,7 +196,6 @@ def main():
         }
 
     reservations = [
-        # === Completed (past) ===
         ("jean.dupont@gmail.com",     "GE 100 001", gva, -28, 4, "completed", "paid", "card"),
         ("sophie.martin@outlook.com", "GE 200 002", gva, -25, 3, "completed", "paid", "cash"),
         ("thomas.weber@bluewin.ch",   "GE 300 003", gva, -22, 5, "completed", "paid", "card"),
@@ -193,27 +205,22 @@ def main():
         ("luca.ferrari@gmail.com",    "VD 900 009", lsn, -21, 4, "completed", "paid", "card"),
         ("david.blanc@sunrise.ch",    "GE 500 005", gva, -15, 5, "completed", "paid", "cash"),
         ("nina.keller@proton.me",     "GE 600 006", gva, -17, 2, "completed", "paid", "card"),
-        # === Active (now) ===
         ("sophie.martin@outlook.com", "GE 200 002", gva, -3, 7,  "active", "paid", "card"),
         ("thomas.weber@bluewin.ch",   "GE 100 001", gva, -1, 5,  "active", "paid", "cash"),
         ("pierre.muller@yahoo.fr",    "VD 800 008", lsn, -2, 6,  "active", "paid", "card"),
         ("luca.ferrari@gmail.com",    "VD 130 012", lsn, -1, 4,  "active", "paid", "card"),
-        # === Confirmed (upcoming) ===
         ("jean.dupont@gmail.com",     "GE 300 003", gva, 2, 3,  "confirmed", "paid", "card"),
         ("anna.schmidt@gmail.com",    "GE 500 005", gva, 3, 4,  "confirmed", "paid", "cash"),
         ("nina.keller@proton.me",     "GE 400 004", gva, 4, 2,  "confirmed", "paid", "card"),
         ("marie.roux@hotmail.com",    "VD 700 007", lsn, 2, 5,  "confirmed", "paid", "card"),
         ("david.blanc@sunrise.ch",    "GE 600 006", gva, 5, 3,  "confirmed", "paid", "card"),
-        # === Pending ===
         ("sophie.martin@outlook.com", "GE 100 001", gva, 8, 4,  "pending", "unpaid", "card"),
         ("thomas.weber@bluewin.ch",   "GE 300 003", gva, 10, 5, "pending", "unpaid", "card"),
         ("luca.ferrari@gmail.com",    "VD 900 009", lsn, 7, 3,  "pending", "unpaid", "cash"),
         ("pierre.muller@yahoo.fr",    "VD 110 010", lsn, 9, 6,  "pending", "unpaid", "card"),
         ("jean.dupont@gmail.com",     "GE 500 005", gva, 12, 3, "pending", "unpaid", "card"),
-        # === Cancelled ===
         ("anna.schmidt@gmail.com",    "GE 200 002", gva, -10, 3, "cancelled", "refunded", "card"),
         ("marie.roux@hotmail.com",    "VD 700 007", lsn, -8, 2,  "cancelled", "refunded", "card"),
-        # === More future to fill calendar ===
         ("david.blanc@sunrise.ch",    "GE 100 001", gva, 15, 4, "confirmed", "paid", "card"),
         ("nina.keller@proton.me",     "GE 300 003", gva, 14, 3, "confirmed", "paid", "cash"),
         ("sophie.martin@outlook.com", "GE 400 004", gva, 18, 2, "pending", "unpaid", "card"),
@@ -227,7 +234,6 @@ def main():
     if existing_count >= 25:
         print(f"  [OK] {existing_count} reservations existantes, on passe.")
     else:
-        # Clear old and insert fresh
         if existing_count > 0:
             db.reservations.delete_many({})
             print(f"  [x] Anciennes reservations supprimees")
@@ -265,6 +271,8 @@ def main():
     print(f"{'='*50}")
     print(f"  Mot de passe: {DEFAULT_PASSWORD}")
     print(f"{'='*50}")
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main() or 0)

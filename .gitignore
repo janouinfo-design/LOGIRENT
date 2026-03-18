@@ -89,3 +89,7 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+# Migration credentials (ne jamais commiter)
+scripts/migration.env
+scripts/backups/
