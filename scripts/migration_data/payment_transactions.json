@@ -1,0 +1,435 @@
+[
+  {
+    "id": "e6477f77-795c-46ba-830c-f2141d69ec72",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "2ad5d020-942c-4836-bc2a-978014077272",
+    "session_id": "cs_test_a18l2ANyFju7S4MzVB8REyiWXnmupWbv79wH09avYu9lHc8ASjnsOlE4CA",
+    "amount": 390.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "2ad5d020-942c-4836-bc2a-978014077272",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T09:00:02.775000",
+    "updated_at": "2026-02-24T09:00:02.775000"
+  },
+  {
+    "id": "c948f075-0d27-4a84-b240-bc180334f809",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "8acdb15e-c4ff-4d46-9724-338641e2c25c",
+    "session_id": "cs_test_a1IcOFVLrdJartOBeSrohsEEKYT7GW46LkujDFgBLcLFapsuRQyHiOkPZF",
+    "amount": 390.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "8acdb15e-c4ff-4d46-9724-338641e2c25c",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T10:34:32.318000",
+    "updated_at": "2026-02-24T10:34:32.318000"
+  },
+  {
+    "id": "b693aa15-8500-4413-a4f9-81cf4c3914be",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "0cf6726c-5df8-470b-ba53-6786f1b480b3",
+    "session_id": "cs_test_a12Zwd0Fe5NaKgEGJJXrdx7z7gYWizHRm2QTZx64nwATvDWQczOTDWx4dV",
+    "amount": 600.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "0cf6726c-5df8-470b-ba53-6786f1b480b3",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T10:39:30.190000",
+    "updated_at": "2026-02-24T10:39:30.190000"
+  },
+  {
+    "id": "4373f605-8778-4485-bc03-25e234f4a9c8",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "a11296f9-4af9-4645-9319-8c6434cdcede",
+    "session_id": "cs_test_a1HroH4TgXpSnMfRauF6LDL2ItWUeJgmdFEcebvSdEZvW4oZ8iHZvyHwhb",
+    "amount": 340.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "a11296f9-4af9-4645-9319-8c6434cdcede",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T11:11:09.611000",
+    "updated_at": "2026-02-24T11:11:09.611000"
+  },
+  {
+    "id": "e7eca79a-311d-476f-b280-bd0a360bfa68",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+    "session_id": "cs_test_a1goP7zqm1dAzfsU7jrX5IDj8uK1OvNIUE0pTIQvgHPX6WkbMxwa4Du9Fo",
+    "amount": 195.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T11:29:12.235000",
+    "updated_at": "2026-02-24T11:29:12.235000"
+  },
+  {
+    "id": "0edc13f1-bf11-426f-a27c-f3577b144a3f",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "7327cd05-a060-41ec-90da-7c8d514e99c9",
+    "session_id": "cs_test_a1b7hltJhkEcsOcV3bJZDYXH6QxYSI5mxI7J4EYYxCBpBJgrGHLgd4EamE",
+    "amount": 90.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+      "reservation_id": "7327cd05-a060-41ec-90da-7c8d514e99c9",
+      "user_email": "info@logitrak.ch"
+    },
+    "created_at": "2026-02-24T11:33:30.911000",
+    "updated_at": "2026-02-24T15:02:02.820000"
+  },
+  {
+    "id": "961147c3-18fa-45c2-be07-6583129bfacb",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+    "session_id": "cs_test_a15KuyIgG6FGTSH6n43mFypTXd4og6SVSQrkznCxTGcMark6bUYBFttFKD",
+    "amount": 195.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T14:00:07.073000",
+    "updated_at": "2026-02-24T14:00:07.073000"
+  },
+  {
+    "id": "06fbd0e1-a6a0-4313-b024-1d2032fed2ca",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+    "session_id": "cs_test_a1fCU3SjQsRSsuGXec6dTrzslMeMWSG5ITmmYaivUsSP6NH12f9eOYsm4C",
+    "amount": 195.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T14:00:43.878000",
+    "updated_at": "2026-02-24T14:00:43.878000"
+  },
+  {
+    "id": "fa0c31ac-79aa-41dd-98a0-febb3da91a62",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+    "session_id": "cs_test_a1KxJmn2sbxx4O2cJNtO5ygZJfOn1GR7qzzeG4LMgG99GUredSjHlPL2qP",
+    "amount": 195.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "b4d920ec-364d-4fef-9eea-a5a8e7b0a042",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-24T14:12:18.765000",
+    "updated_at": "2026-02-24T14:12:18.765000"
+  },
+  {
+    "id": "55470937-8f2f-4e9c-8430-9232c6253a8f",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "c8c93c89-6bee-440f-8d83-23db443a034a",
+    "session_id": "cash_c8c93c89-6bee-440f-8d83-23db443a034a",
+    "amount": 300.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-02-24T14:37:45.962000",
+    "updated_at": "2026-02-24T14:37:45.962000"
+  },
+  {
+    "id": "321f84d4-4f8c-476a-9eb4-cac42c3d5915",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "4b55b598-7803-43aa-be47-3bc99d740734",
+    "session_id": "cash_4b55b598-7803-43aa-be47-3bc99d740734",
+    "amount": 225.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "card",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-02-24T14:37:45.962000",
+    "updated_at": "2026-02-24T17:01:48.964000"
+  },
+  {
+    "id": "1cd0bf85-d33a-4e84-b788-d34b8a10a69e",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "f832a193-b6b7-4182-809d-954ce2c3c938",
+    "session_id": "cash_f832a193-b6b7-4182-809d-954ce2c3c938",
+    "amount": 195.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-02-24T15:02:25.170000",
+    "updated_at": "2026-02-24T15:02:25.170000"
+  },
+  {
+    "id": "57d4c0d3-9dec-4343-9b6c-016413161239",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "91cac193-a84e-44dd-9a6e-44da434db1e4",
+    "session_id": "cash_91cac193-a84e-44dd-9a6e-44da434db1e4",
+    "amount": 600.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-02-25T07:48:06.319000",
+    "updated_at": "2026-02-25T07:48:06.319000"
+  },
+  {
+    "id": "58c7d711-1e5c-4225-84f7-08a35cfb3fa8",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "8be992e8-9f29-41e3-9a34-b2b2e14d07d3",
+    "session_id": "cs_test_a16U9cWtv4GU4FFuHFEq8wRClrYiT05fAjcRo8KHPBGCqiZn6xoEelV1kW",
+    "amount": 130.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "8be992e8-9f29-41e3-9a34-b2b2e14d07d3",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-25T08:54:11.313000",
+    "updated_at": "2026-02-25T08:54:11.313000"
+  },
+  {
+    "id": "b288e9f8-c6d6-40a8-a590-c653a27a855f",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "65cc48ea-0ce2-49b8-b0e0-f09f288fd7a0",
+    "session_id": "cs_test_a1G2felJXJwd0xETrRIvz4umTEELeVtybLvCwvfm6gn7sCWizs2GcP2wL8",
+    "amount": 130.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "65cc48ea-0ce2-49b8-b0e0-f09f288fd7a0",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-25T10:16:10.269000",
+    "updated_at": "2026-02-25T10:16:10.269000"
+  },
+  {
+    "id": "5506221c-9b34-496b-afb6-80a33c0c6718",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "aae2d79a-6f81-4784-9d37-86e7bfe28a31",
+    "session_id": "cs_test_a121xcRa1Xf7mPsPp1z5PrWUmNau5AZM45BjubEScJ6qrNSKM2QqGKzqP7",
+    "amount": 170.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "aae2d79a-6f81-4784-9d37-86e7bfe28a31",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-25T10:16:20.939000",
+    "updated_at": "2026-02-25T10:16:20.939000"
+  },
+  {
+    "id": "0d9a42f1-afc9-42ef-9686-1fe058f509fe",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "0c6c927d-2c87-4e79-a350-8fa0faf45f37",
+    "session_id": "cash_0c6c927d-2c87-4e79-a350-8fa0faf45f37",
+    "amount": 130.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "card",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-02-25T10:59:38.704000",
+    "updated_at": "2026-02-25T10:59:38.704000"
+  },
+  {
+    "id": "636d92ea-4bb0-4f9f-9321-39153c28139e",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "120214fa-843f-41eb-b543-ac72cde2f5ee",
+    "session_id": "cs_test_a1QU6j0DELuSt3ynRb4WjQx4CwbPLwpPdX7zoHh9kEQnL0uW68auFyItcM",
+    "amount": 85.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+      "reservation_id": "120214fa-843f-41eb-b543-ac72cde2f5ee",
+      "user_email": "info@logitrak.ch"
+    },
+    "created_at": "2026-02-25T11:20:16.678000",
+    "updated_at": "2026-02-25T11:20:16.678000"
+  },
+  {
+    "id": "7000194a-6247-4cce-8843-5a8b7b7f0bf1",
+    "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+    "reservation_id": "0b1f72f7-b388-4c6e-9e01-b47cc58078ab",
+    "session_id": "cs_test_a1m8sntK5yCQossMBvrpSW8lhhilmQ7cojyrXAgmkE1TJxvx4HlNmGe7vw",
+    "amount": 130.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "b5a5d170-1c84-47ca-b547-2fb2b8dd60df",
+      "reservation_id": "0b1f72f7-b388-4c6e-9e01-b47cc58078ab",
+      "user_email": "test@example.com"
+    },
+    "created_at": "2026-02-25T11:42:08.961000",
+    "updated_at": "2026-02-25T11:42:08.961000"
+  },
+  {
+    "id": "22870f77-30f0-4d9a-86ca-9a37ce263108",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "77857ee5-157c-4315-a24b-0c5058d6577c",
+    "session_id": "cs_test_a1O9U3K6uQOdZ2OmsMhjmxNeHgflHkwExJeJhydEaOwQawUZ2fuj9hTJw7",
+    "amount": 65.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+      "reservation_id": "77857ee5-157c-4315-a24b-0c5058d6577c",
+      "user_email": "info@logitrak.ch"
+    },
+    "created_at": "2026-02-25T15:19:11.038000",
+    "updated_at": "2026-02-25T15:19:11.038000"
+  },
+  {
+    "id": "04ecc87a-8861-44f5-8ca3-3dc4eedb3c14",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "164a4107-9578-44cd-8a00-d4bf7683d903",
+    "session_id": "cs_test_a1rCtI0MbbG2J0Go3MrCbuCvh2IEMM1V3Bpit2kk9NPHr2gq5EweSYcXci",
+    "amount": 400.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+      "reservation_id": "164a4107-9578-44cd-8a00-d4bf7683d903",
+      "user_email": "info@logitrak.ch"
+    },
+    "created_at": "2026-02-25T15:45:50.606000",
+    "updated_at": "2026-02-25T15:45:50.606000"
+  },
+  {
+    "id": "b4cea0f0-e920-40c2-938a-29987d9108fa",
+    "user_id": "801c3d70-4220-495c-a0f8-b70146ef24f0",
+    "reservation_id": "889e73f1-8576-4c5f-a310-30d38488a3fe",
+    "session_id": "cash_889e73f1-8576-4c5f-a310-30d38488a3fe",
+    "amount": 260.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-02-27T09:41:20.580000",
+    "updated_at": "2026-02-27T09:41:20.580000"
+  },
+  {
+    "id": "fb892b27-b3dc-46dd-9ebe-89bbeb5bfc64",
+    "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+    "reservation_id": "ad80d589-f955-4092-a71c-0f9829f4918d",
+    "session_id": "cs_test_a16KYvc88Eb3DqluR5Edkk7lJXRvKMviHzQsgT5TWHntGqTuxaWn5iPL5L",
+    "amount": 400.0,
+    "currency": "chf",
+    "status": "initiated",
+    "payment_status": "pending",
+    "metadata": {
+      "user_id": "1ad56a73-52a7-40f0-a906-494d88110e2d",
+      "reservation_id": "ad80d589-f955-4092-a71c-0f9829f4918d",
+      "user_email": "info@logitrak.ch"
+    },
+    "created_at": "2026-03-02T08:26:57.463000",
+    "updated_at": "2026-03-02T08:26:57.463000"
+  },
+  {
+    "id": "8277bfae-7f8b-4f92-afc2-97ed422df7e7",
+    "user_id": "16a87668-5883-412f-8a26-9237afb8c305",
+    "reservation_id": "ac97709b-1a96-4fef-83a6-e308029a033b",
+    "session_id": "cash_ac97709b-1a96-4fef-83a6-e308029a033b",
+    "amount": 390.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-03-02T11:06:04.982000",
+    "updated_at": "2026-03-02T11:06:04.982000"
+  },
+  {
+    "id": "32681953-e3f2-4bd3-82f1-207e7fe07db1",
+    "user_id": "801c3d70-4220-495c-a0f8-b70146ef24f0",
+    "reservation_id": "f9659c09-ce0e-463f-ae67-28ab9d438f01",
+    "session_id": "cash_f9659c09-ce0e-463f-ae67-28ab9d438f01",
+    "amount": 85.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-03-05T16:02:48.458000",
+    "updated_at": "2026-03-05T16:02:48.458000"
+  },
+  {
+    "id": "a69018a8-d1c9-420a-9fa6-153ed5e922b8",
+    "user_id": "801c3d70-4220-495c-a0f8-b70146ef24f0",
+    "reservation_id": "0ab4132d-7401-4bae-b92c-24d76c153109",
+    "session_id": "cash_0ab4132d-7401-4bae-b92c-24d76c153109",
+    "amount": 85.0,
+    "currency": "chf",
+    "status": "paid",
+    "payment_status": "paid",
+    "metadata": {
+      "payment_method": "cash",
+      "admin_confirmed": true
+    },
+    "created_at": "2026-03-05T16:29:35.790000",
+    "updated_at": "2026-03-05T16:29:35.790000"
+  }
+]

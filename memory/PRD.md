@@ -9,67 +9,49 @@ Build a complete car rental solution named "LogiRent" with:
 ## Core Architecture
 - **Frontend**: React Native (Expo) - Web + Mobile
 - **Backend**: FastAPI (Python)
-- **Database**: MongoDB (local dev) / MongoDB Atlas (production)
+- **Database**: MongoDB Atlas (logirent) - cluster0.isugn1l.mongodb.net
 - **Storage**: MinIO Object Storage (via emergentintegrations)
 
-## What's Been Implemented
+## Migration Status (March 18, 2026)
+- **312 documents migrated** from dev → MongoDB Atlas
+- **333 data corrections** applied (null safety, type normalization)
+- **100% relations verified** (all references valid)
+- **3 orphan records cleaned** (test data remnants)
+- Backup system in place with 7-day rotation
 
-### Authentication & Roles
-- Super Admin, Agency Admin, Client roles
-- JWT-based auth with bcrypt password hashing
-- Role-based redirection: super_admin → /super-admin, admin → /agency-app, client → /(tabs)
-- Password reset via email (Resend)
+## Database: logirent (MongoDB Atlas)
 
-### Frontend Refactoring (March 18, 2026)
-- Moved components out of Expo Router route folders (app/agency-app/components/ → src/components/agency/)
-- Fixed all imports in vehicles.tsx, reservations.tsx, clients.tsx
-- Branding: RentDrive → LogiRent (French)
-- No more Expo Router warnings for non-route components
+| Collection | Docs | Description |
+|---|---|---|
+| agencies | 15 | Rental agencies |
+| users | 93 | All users (admin + client) |
+| vehicles | 35 | Vehicle fleet |
+| reservations | 58 | Bookings |
+| contracts | 22 | Signed PDF contracts |
+| contract_templates | 6 | Per-agency templates |
+| notifications | 71 | In-app alerts |
+| payment_transactions | 26 | Stripe sessions |
+| push_tokens | 3 | Push notification tokens |
+| password_resets | 2 | Reset requests |
 
-### Demo Data Seed
-- Script: /app/scripts/seed_demo.py
-- 2 agencies (Geneva, Lausanne), 12 users, 12 vehicles with photos, 32+ reservations over 1 month
-- Realistic Swiss data (names, addresses, plates, phone numbers)
-- Multiple statuses: completed, active, confirmed, pending, cancelled
+## Scripts
 
-### Vehicle Management
-- CRUD with photos, options, documents
-- 12 vehicles: berline, citadine, SUV, utilitaire, van, electrique
-- Vehicle status: available/rented/maintenance
+| Script | Purpose |
+|---|---|
+| scripts/migrate.py | Full migration (export/normalize/import/verify) |
+| scripts/backup.py | Backup/restore/reset |
+| scripts/seed_demo.py | Insert realistic demo data |
+| scripts/cron_backup.sh | Daily automated backup |
+| scripts/GUIDE_MIGRATION.md | Complete documentation |
+| scripts/GUIDE_DEPLOIEMENT_VPS.md | VPS deployment guide |
 
-### Reservation System
-- Gantt chart view with color-coded statuses
-- Card list view with action buttons
-- Calendar integration
-- Payment via Stripe and cash
-
-### Contract System
-- Interactive vehicle inspection diagram
-- Single-page PDF generation (ReportLab)
-- Per-agency contract templates
-- Live PDF preview
-
-### VPS Deployment
-- Seed script: /app/scripts/seed_superadmin.py
-- Full seed: /app/scripts/seed_demo.py (also works on VPS with Atlas)
-- Guide: /app/scripts/GUIDE_DEPLOIEMENT_VPS.md
-
-## 3rd Party Integrations
-- Stripe, Resend, Navixy, OpenAI (emergentintegrations), MinIO, ReportLab, QRCode
-
-## Test Credentials (Dev)
+## Test Credentials
 - Super Admin: test@example.com / password123
 - Agency Admin: admin-geneva@logirent.ch / LogiRent2024
 - Client: client1@test.com / test1234
 
-## Test Credentials (Seed)
-- All accounts: LogiRent2024!
-- Super Admin: superadmin@logirent.ch
-- Admin Geneva: admin-geneva@logirent.ch
-- Clients: jean.dupont@gmail.com, sophie.martin@outlook.com, etc.
-
 ## Pending Issues
-1. Resend Domain Verification (P2) - User needs to verify logirent.ch
+1. Resend Domain Verification (P2) - logirent.ch
 
 ## Upcoming Tasks
 1. Push Notifications (P1)

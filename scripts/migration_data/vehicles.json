@@ -1,0 +1,1265 @@
+[
+  {
+    "id": "bea1d477-fc15-4554-8810-900e334849a8",
+    "brand": "BMW",
+    "model": "Series 3",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 120.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1598248649596-3fae8846c122?w=800"
+    ],
+    "description": "Elegant BMW Series 3 with premium features. Perfect for business trips and comfortable journeys.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Baby Seat",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Additional Driver",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "maintenance",
+    "location": "Geneva",
+    "created_at": "2026-02-24T08:48:58.907000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "8ad6bf1b-b0b4-4e5d-be97-63f20418fd54",
+    "brand": "Mercedes",
+    "model": "C-Class",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 150.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1583573736485-4add9bc7ac0a?w=800"
+    ],
+    "description": "Luxurious Mercedes C-Class with leather interior and advanced technology.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Baby Seat",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Premium Insurance",
+        "price_per_day": 25.0
+      }
+    ],
+    "status": "maintenance",
+    "location": "Zurich",
+    "created_at": "2026-02-24T08:48:58.907000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e",
+    "brand": "BMW",
+    "model": "Series 3",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 120.0,
+    "photos": [
+      "/api/vehicles/photo/logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/3dec13c3-9b49-4bcd-b283-fe3390c71d67.png",
+      "/api/vehicles/photo/logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/e305973d-ac39-4b66-a174-49cd9a3ac3f9.png"
+    ],
+    "description": "Compact and fuel-efficient Volkswagen Golf. Ideal for city driving.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T08:48:58.907000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "documents": [
+      {
+        "id": "899b8e79-cd56-4b42-9c33-b7c22ce45838",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/c7194857-beed-4129-b1b1-6ca9718bf872.pdf",
+        "original_filename": "test_doc.pdf",
+        "content_type": "application/pdf",
+        "size": 22,
+        "doc_type": "carte_grise",
+        "doc_type_label": "Carte Grise",
+        "uploaded_at": "2026-03-02T14:45:32.138825+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "0fdb26ee-e7b3-4ca6-960e-72556835adac",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/e3eb16c1-05bf-41f9-8b3c-3a4130de35dc.jpg",
+        "original_filename": "carte_grise_test.jpg",
+        "content_type": "image/jpeg",
+        "size": 171,
+        "doc_type": "carte_grise",
+        "doc_type_label": "Carte Grise",
+        "uploaded_at": "2026-03-02T14:53:29.635384+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "b1ab5144-3d7b-43cc-97d3-97df0a2d1f0d",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/1faf304c-d10d-4e27-ad5c-d0a0745b6275.pdf",
+        "original_filename": "assurance_test.pdf",
+        "content_type": "application/pdf",
+        "size": 316,
+        "doc_type": "assurance",
+        "doc_type_label": "Assurance",
+        "uploaded_at": "2026-03-02T14:53:29.951640+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "356d816c-3aab-4814-9cbc-7ced606e76e5",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/cf274187-60fb-4701-9409-90bc7a825854.pdf",
+        "original_filename": "controle_technique.pdf",
+        "content_type": "application/pdf",
+        "size": 316,
+        "doc_type": "controle_technique",
+        "doc_type_label": "Controle Technique",
+        "uploaded_at": "2026-03-02T14:53:30.259712+00:00",
+        "is_deleted": false
+      },
+      {
+        "id": "6a5e6ecc-c4fc-46de-89aa-e7154258cc38",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/7505338c-fdad-4dc3-9438-f7cf577e810c.jpg",
+        "original_filename": "photo.jpg",
+        "content_type": "image/jpeg",
+        "size": 171,
+        "doc_type": "photo",
+        "doc_type_label": "Photo",
+        "uploaded_at": "2026-03-02T14:53:30.602279+00:00",
+        "is_deleted": false
+      },
+      {
+        "id": "3700e112-d1b4-469b-9508-08d346826379",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/48a8f1b8-5691-4855-960a-57916b881a74.txt",
+        "original_filename": "other_doc.txt",
+        "content_type": "text/plain",
+        "size": 21,
+        "doc_type": "autre",
+        "doc_type_label": "Autre",
+        "uploaded_at": "2026-03-02T14:53:30.837625+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "573f8355-7ec8-4bdc-9d7a-1d3f0a0f17a5",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/987d3ed7-e215-4b3b-88e3-ad89f618b6af.jpg",
+        "original_filename": "download_test.jpg",
+        "content_type": "image/jpeg",
+        "size": 171,
+        "doc_type": "carte_grise",
+        "doc_type_label": "Carte Grise",
+        "uploaded_at": "2026-03-02T14:53:31.915356+00:00",
+        "is_deleted": false
+      },
+      {
+        "id": "cccf6b16-9165-4d1c-90f9-28672a756306",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/291604fa-664b-49c2-b575-0cee99ed1d35.jpg",
+        "original_filename": "to_delete.jpg",
+        "content_type": "image/jpeg",
+        "size": 171,
+        "doc_type": "autre",
+        "doc_type_label": "Autre",
+        "uploaded_at": "2026-03-02T14:53:33.332671+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "f72b5771-30e6-4f44-89b5-5f260c98041c",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/06e33611-fb35-426a-88d6-92a074ac847a.pdf",
+        "original_filename": "assurance.pdf",
+        "content_type": "application/pdf",
+        "size": 15,
+        "doc_type": "assurance",
+        "doc_type_label": "Assurance",
+        "expiry_date": "2026-03-17",
+        "uploaded_at": "2026-03-02T15:16:47.430162+00:00",
+        "is_deleted": false
+      },
+      {
+        "id": "d5e2abd9-9bb7-4fe1-8e7e-2d661b782f2b",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/9f4d30f7-ed47-476c-9bdb-734814a7c859.pdf",
+        "original_filename": "test_expiry_doc.pdf",
+        "content_type": "application/pdf",
+        "size": 39,
+        "doc_type": "assurance",
+        "doc_type_label": "Assurance",
+        "expiry_date": "2026-04-15",
+        "uploaded_at": "2026-03-02T15:19:01.869077+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "accae000-c81a-4aa6-8db0-f95cbc40c81a",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/dd1a2dda-ef33-415d-981e-723aca157e57.pdf",
+        "original_filename": "test_no_expiry.pdf",
+        "content_type": "application/pdf",
+        "size": 32,
+        "doc_type": "autre",
+        "doc_type_label": "Autre",
+        "expiry_date": null,
+        "uploaded_at": "2026-03-02T15:19:02.963196+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "ab3dc08d-f4f5-4e82-ba90-b6f9de623831",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/5a8c558c-3811-4efe-b942-dede0d934834.pdf",
+        "original_filename": "test_expiry_doc.pdf",
+        "content_type": "application/pdf",
+        "size": 39,
+        "doc_type": "assurance",
+        "doc_type_label": "Assurance",
+        "expiry_date": "2026-04-15",
+        "uploaded_at": "2026-03-02T15:32:57.430880+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "97b6a122-b058-47e3-b204-0fb277325396",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/26553161-2cd2-4882-95c7-a421cafd9771.pdf",
+        "original_filename": "test_no_expiry.pdf",
+        "content_type": "application/pdf",
+        "size": 32,
+        "doc_type": "autre",
+        "doc_type_label": "Autre",
+        "expiry_date": null,
+        "uploaded_at": "2026-03-02T15:32:58.351580+00:00",
+        "is_deleted": true
+      },
+      {
+        "id": "49a8715c-9acc-4689-88fc-f7df482717b3",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/b8b47bff-2e15-4348-ab8c-b665d8897f6a.png",
+        "original_filename": "bmw 3-1.png",
+        "content_type": "image/png",
+        "size": 1004836,
+        "doc_type": "photo",
+        "doc_type_label": "Photo",
+        "expiry_date": null,
+        "uploaded_at": "2026-03-03T14:53:15.748088+00:00",
+        "is_deleted": false
+      },
+      {
+        "id": "60280c50-c948-4114-be7d-301e83459e7e",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/bdbc9cd0-6cf8-47d0-9a32-d0743dad90d9.png",
+        "original_filename": "bmw2.png",
+        "content_type": "image/png",
+        "size": 1001512,
+        "doc_type": "photo",
+        "doc_type_label": "Photo",
+        "expiry_date": null,
+        "uploaded_at": "2026-03-03T14:53:31.340290+00:00",
+        "is_deleted": false
+      },
+      {
+        "id": "13db784f-e2c9-49b5-b1a8-79ad9c3eccec",
+        "storage_path": "logirent/vehicles/4bd9f2fa-5265-4a1f-b31c-02acfb0fe92e/54d53139-286b-4e8c-8898-18ae22f456a7.png",
+        "original_filename": "bmw3.png",
+        "content_type": "image/png",
+        "size": 1051746,
+        "doc_type": "photo",
+        "doc_type_label": "Photo",
+        "expiry_date": null,
+        "uploaded_at": "2026-03-03T14:53:39.520835+00:00",
+        "is_deleted": false
+      }
+    ],
+    "chassis_number": "VF1A008DF48C17043",
+    "color": "Bleu Metallise",
+    "plate_number": "GE 6E750"
+  },
+  {
+    "id": "7019f76b-1db3-4be8-b400-fc716825a5e8",
+    "brand": "Audi",
+    "model": "Q5",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 180.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800"
+    ],
+    "description": "Spacious Audi Q5 SUV with quattro all-wheel drive. Perfect for mountain trips.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Baby Seat",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Ski Rack",
+        "price_per_day": 20.0
+      },
+      {
+        "name": "Winter Tires",
+        "price_per_day": 15.0
+      }
+    ],
+    "status": "maintenance",
+    "location": "Lausanne",
+    "created_at": "2026-02-24T08:48:58.907000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "4b5e2554-c0cd-4af4-9559-daa07a5298df",
+    "brand": "Renault",
+    "model": "Kangoo",
+    "year": 2023,
+    "type": "utilitaire",
+    "price_per_day": 85.0,
+    "photos": [
+      "/api/vehicles/photo/logirent/vehicles/4b5e2554-c0cd-4af4-9559-daa07a5298df/6caf29f0-127c-4f41-88d0-60cd631501a1.png",
+      "/api/vehicles/photo/logirent/vehicles/4b5e2554-c0cd-4af4-9559-daa07a5298df/4497c476-8ebf-4aaf-a87c-8d15af9b3037.png"
+    ],
+    "description": "Practical Renault Kangoo utility vehicle. Great for moving or transport needs.",
+    "seats": 2,
+    "transmission": "manual",
+    "fuel_type": "diesel",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T08:48:58.907000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "07de6776-64ef-4703-8f34-be06a24462f0",
+    "brand": "Tesla",
+    "model": "Model 3",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 200.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800"
+    ],
+    "description": "All-electric Tesla Model 3 with autopilot. Zero emissions and cutting-edge technology.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "electric",
+    "options": [
+      {
+        "name": "Full Self-Driving",
+        "price_per_day": 30.0
+      },
+      {
+        "name": "Baby Seat",
+        "price_per_day": 15.0
+      }
+    ],
+    "status": "available",
+    "location": "Zurich",
+    "created_at": "2026-02-24T08:48:58.907000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "6e54a928-d02f-4e81-a96e-77b0d90bfa2c",
+    "brand": "Porsche",
+    "model": "Cayenne",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 350.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800"
+    ],
+    "description": "Luxury Porsche Cayenne SUV with premium interior and powerful performance.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Premium Insurance",
+        "price_per_day": 50.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T10:15:52.731000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "095a3abd-34b0-4d7c-85f9-10bcefefe154",
+    "brand": "Fiat",
+    "model": "500",
+    "year": 2023,
+    "type": "citadine",
+    "price_per_day": 45.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800"
+    ],
+    "description": "Compact and stylish Fiat 500, perfect for city exploration.",
+    "seats": 4,
+    "transmission": "manual",
+    "fuel_type": "essence",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "created_at": "2026-02-24T10:15:52.745000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "24fdd97f-12b7-41e8-953e-247df640aa29",
+    "brand": "Range Rover",
+    "model": "Sport",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 280.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800"
+    ],
+    "description": "Luxurious Range Rover Sport with off-road capability and executive comfort.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Ski Rack",
+        "price_per_day": 25.0
+      },
+      {
+        "name": "Baby Seat",
+        "price_per_day": 15.0
+      }
+    ],
+    "status": "available",
+    "location": "Zurich",
+    "created_at": "2026-02-24T10:15:52.758000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "1bb5181e-143a-44f2-8851-2713f76192dd",
+    "brand": "Mercedes",
+    "model": "Sprinter",
+    "year": 2023,
+    "type": "utilitaire",
+    "price_per_day": 120.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1570829460005-c840387bb1ca?w=800"
+    ],
+    "description": "Spacious Mercedes Sprinter van for moving or group transport.",
+    "seats": 3,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Loading Ramp",
+        "price_per_day": 15.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T10:15:52.772000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "fcfc97e8-5574-4957-af69-f1a2b8f0efe5",
+    "brand": "Test",
+    "model": "Vehicle",
+    "year": 2024,
+    "type": "citadine",
+    "price_per_day": 50.0,
+    "photos": [],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "maintenance",
+    "location": "Geneva",
+    "created_at": "2026-02-24T10:57:08.372000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "235f1821-8545-4572-9ece-b88f0c331788",
+    "brand": "AdminTest",
+    "model": "Model1",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 100.0,
+    "photos": [
+      "/api/vehicles/photo/logirent/vehicles/235f1821-8545-4572-9ece-b88f0c331788/9945fdaa-7448-4722-b128-1be27ce1230f.jpeg"
+    ],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T11:03:36.084000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "cffed4b6-5c79-4dcf-b3d6-7495cf30532f",
+    "brand": "FrontendTest",
+    "model": "TestModel",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 150.0,
+    "photos": [
+      "/api/vehicles/photo/logirent/vehicles/cffed4b6-5c79-4dcf-b3d6-7495cf30532f/0c1a3c12-134a-4b0c-82bd-8f8894ac4883.jpeg"
+    ],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T11:04:03.027000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "527ca37b-de70-4a45-b94f-c302d8af492b",
+    "brand": "Test",
+    "model": "Vehicle",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 100.0,
+    "photos": [],
+    "description": "Test vehicle",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneva",
+    "created_at": "2026-02-24T15:09:22.464000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "e81b245c-51d9-46a3-9641-3c340ac09b96",
+    "brand": "Audi ",
+    "model": "A3 étron ",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 120.0,
+    "photos": [],
+    "description": "Audi  A3 étron  disponible à la location.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siège Bébé",
+        "price_per_day": 15.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "created_at": "2026-02-24T15:11:50.520000",
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "color": "",
+    "plate_number": "",
+    "chassis_number": "",
+    "documents": []
+  },
+  {
+    "id": "ce16e5f5-c4ff-4cb5-ba9d-606f266bae97",
+    "brand": "TestBrand",
+    "model": "TestModel",
+    "year": 2024,
+    "type": "sedan",
+    "price_per_day": 100.0,
+    "photos": [],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "plate_number": "TEST-123",
+    "chassis_number": null,
+    "color": "Black",
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-03T16:40:10.213000"
+  },
+  {
+    "id": "74411740-d611-4b00-bc7c-e14e065dfc72",
+    "brand": "FrontendTest",
+    "model": "TestModel",
+    "year": 2026,
+    "type": "sedan",
+    "price_per_day": 150.0,
+    "photos": [],
+    "description": "",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "plate_number": null,
+    "chassis_number": null,
+    "color": null,
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-03T16:41:36.501000"
+  },
+  {
+    "id": "2bfe8848-5f04-4723-b6a5-a443a3619d42",
+    "brand": "TEST_Brand_a37b5320",
+    "model": "Model_a37b5320",
+    "year": 2024,
+    "type": "sedan",
+    "price_per_day": 100.0,
+    "photos": [],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "plate_number": null,
+    "chassis_number": null,
+    "color": null,
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-03T16:42:22.454000"
+  },
+  {
+    "id": "25f0504d-57b5-41b4-88eb-38e684f3fc42",
+    "brand": "TEST_AllFields_fa536450",
+    "model": "Model_fa536450",
+    "year": 2024,
+    "type": "suv",
+    "price_per_day": 150.0,
+    "photos": [],
+    "description": "Test vehicle with all fields",
+    "seats": 7,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [],
+    "status": "available",
+    "location": "Zurich",
+    "plate_number": "GE-TEST-fa536450",
+    "chassis_number": null,
+    "color": "Silver",
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-03T16:42:22.588000"
+  },
+  {
+    "id": "848db01d-9b51-4f7c-b10f-dbe7ff76e847",
+    "brand": "TEST_Update_dbe030b2",
+    "model": "Updated",
+    "year": 2024,
+    "type": "sedan",
+    "price_per_day": 120.0,
+    "photos": [],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "maintenance",
+    "location": "Geneva",
+    "plate_number": null,
+    "chassis_number": null,
+    "color": null,
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-03T16:42:23.515000"
+  },
+  {
+    "id": "334e5380-279e-413e-81cd-0fc8047997ee",
+    "brand": "TEST_Brand_1064fe71",
+    "model": "Model_1064fe71",
+    "year": 2024,
+    "type": "sedan",
+    "price_per_day": 100.0,
+    "photos": [],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "available",
+    "location": "Geneva",
+    "plate_number": null,
+    "chassis_number": null,
+    "color": null,
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-05T13:16:03.410000"
+  },
+  {
+    "id": "3b647fad-ec62-41ec-9ae1-a663c4a724ab",
+    "brand": "TEST_AllFields_d52f56c5",
+    "model": "Model_d52f56c5",
+    "year": 2024,
+    "type": "suv",
+    "price_per_day": 150.0,
+    "photos": [],
+    "description": "Test vehicle with all fields",
+    "seats": 7,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [],
+    "status": "available",
+    "location": "Zurich",
+    "plate_number": "GE-TEST-d52f56c5",
+    "chassis_number": null,
+    "color": "Silver",
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-05T13:16:03.568000"
+  },
+  {
+    "id": "ea459ee3-c412-449e-b436-857ca1358870",
+    "brand": "TEST_Update_6a63f045",
+    "model": "Updated",
+    "year": 2024,
+    "type": "sedan",
+    "price_per_day": 120.0,
+    "photos": [],
+    "description": null,
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [],
+    "status": "maintenance",
+    "location": "Geneva",
+    "plate_number": null,
+    "chassis_number": null,
+    "color": null,
+    "documents": [],
+    "agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "created_at": "2026-03-05T13:16:04.701000"
+  },
+  {
+    "id": "eda03b87-5849-4471-bd77-16b918bc2da6",
+    "brand": "BMW",
+    "model": "Serie 3 320d",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 120.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80"
+    ],
+    "description": "BMW Serie 3 320d, finition M Sport, GPS, camera de recul, sieges chauffants.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneve",
+    "plate_number": "GE 100 001",
+    "chassis_number": "WBA3A5C50FK123001",
+    "color": "Noir Saphir",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "29c4b24b-9cb4-40f7-8c4b-d5aed2c92a4c",
+    "brand": "Mercedes-Benz",
+    "model": "Classe C 200",
+    "year": 2023,
+    "type": "berline",
+    "price_per_day": 150.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&q=80"
+    ],
+    "description": "Mercedes Classe C 200, interieur cuir beige, toit ouvrant panoramique.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "rented",
+    "location": "Geneve",
+    "plate_number": "GE 200 002",
+    "chassis_number": "WDD2050041R234002",
+    "color": "Blanc Polaire",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "fd0ee88f-ef72-431a-8bde-6ac122a0a459",
+    "brand": "Tesla",
+    "model": "Model 3 Long Range",
+    "year": 2024,
+    "type": "berline",
+    "price_per_day": 200.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80"
+    ],
+    "description": "Tesla Model 3 LR, autopilot, 580km d'autonomie, supercharge gratuit 1 an.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "electric",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneve",
+    "plate_number": "GE 300 003",
+    "chassis_number": "5YJ3E1EA7KF345003",
+    "color": "Rouge Multi-couches",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "a1ff261f-ae2f-4bfb-a8fd-c5bec4cd3168",
+    "brand": "Volkswagen",
+    "model": "Golf 8 Life",
+    "year": 2023,
+    "type": "citadine",
+    "price_per_day": 65.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80"
+    ],
+    "description": "VW Golf 8, compacte et econome, Apple CarPlay, aide au stationnement.",
+    "seats": 5,
+    "transmission": "manual",
+    "fuel_type": "essence",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneve",
+    "plate_number": "GE 400 004",
+    "chassis_number": "WVWZZZAUZME567004",
+    "color": "Bleu Atlantic",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "40f709c0-a55e-4971-a968-48c5f586c534",
+    "brand": "Audi",
+    "model": "Q5 45 TFSI",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 180.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80"
+    ],
+    "description": "Audi Q5 Quattro hybride, Virtual Cockpit, bang & olufsen, attelage.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneve",
+    "plate_number": "GE 500 005",
+    "chassis_number": "WAUZZZFY5MA456005",
+    "color": "Gris Daytona",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "b3f6c35b-89db-40a0-9f69-60a0162fb4bc",
+    "brand": "Renault",
+    "model": "Kangoo Van",
+    "year": 2023,
+    "type": "utilitaire",
+    "price_per_day": 75.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80"
+    ],
+    "description": "Renault Kangoo utilitaire, 3.3m3, porte laterale coulissante, GPS.",
+    "seats": 2,
+    "transmission": "manual",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Geneve",
+    "plate_number": "GE 600 006",
+    "chassis_number": "VF1FK0AH0HY678006",
+    "color": "Blanc Glacier",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "fd354ff5-2aa6-421d-86f0-94016b1b1669",
+    "brand": "Toyota",
+    "model": "Yaris Hybrid",
+    "year": 2024,
+    "type": "citadine",
+    "price_per_day": 55.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1549317661-bd32c8ce0afa?w=800&q=80"
+    ],
+    "description": "Toyota Yaris hybride, 3.8L/100km, camera 360, ecran tactile 10 pouces.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "plate_number": "VD 700 007",
+    "chassis_number": "JTDKN3DU5A0890007",
+    "color": "Vert Kaki",
+    "documents": [],
+    "agency_id": "8678c286-2421-4423-ad05-69f03ef2414f",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "f9bf0ac4-a096-4d6e-a643-4a27bf40cf6a",
+    "brand": "Porsche",
+    "model": "Cayenne E-Hybrid",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 350.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&q=80"
+    ],
+    "description": "Porsche Cayenne E-Hybrid 470ch, cuir, BOSE, toit panoramique.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "plate_number": "VD 800 008",
+    "chassis_number": "WP1AB29P19LA789008",
+    "color": "Noir Intense",
+    "documents": [],
+    "agency_id": "8678c286-2421-4423-ad05-69f03ef2414f",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "8dbc9162-41a6-401e-b172-f853c530e829",
+    "brand": "Fiat",
+    "model": "500 Electrique",
+    "year": 2024,
+    "type": "citadine",
+    "price_per_day": 50.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&q=80"
+    ],
+    "description": "Fiat 500e, 320km autonomie, parfaite pour la ville, design retro chic.",
+    "seats": 4,
+    "transmission": "automatic",
+    "fuel_type": "electric",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "plate_number": "VD 900 009",
+    "chassis_number": "ZFAEF00A0F1234009",
+    "color": "Rose Pastel",
+    "documents": [],
+    "agency_id": "8678c286-2421-4423-ad05-69f03ef2414f",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "d81ef473-3f03-44c6-ade4-4a712365d123",
+    "brand": "Mercedes-Benz",
+    "model": "Vito Tourer",
+    "year": 2023,
+    "type": "van",
+    "price_per_day": 160.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1570829460005-c840387bb1ca?w=800&q=80"
+    ],
+    "description": "Mercedes Vito 9 places, ideal familles ou groupes, climatisation arriere, GPS.",
+    "seats": 9,
+    "transmission": "automatic",
+    "fuel_type": "diesel",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "plate_number": "VD 110 010",
+    "chassis_number": "WDF44760313456010",
+    "color": "Gris Tenorite",
+    "documents": [],
+    "agency_id": "8678c286-2421-4423-ad05-69f03ef2414f",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "f14cb9c8-adac-4870-b541-4607133d9726",
+    "brand": "Range Rover",
+    "model": "Evoque P250",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 220.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1519245659620-e859806a8d7b?w=800&q=80"
+    ],
+    "description": "Range Rover Evoque, cuir Windsor, Meridian audio, toit panoramique.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "essence",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "maintenance",
+    "location": "Geneve",
+    "plate_number": "GE 120 011",
+    "chassis_number": "SALVA2BN8LH123011",
+    "color": "Bleu Byron",
+    "documents": [],
+    "agency_id": "d7993c32-ca6a-4d02-a3dd-8572edd9e7bd",
+    "created_at": "2025-12-18T12:46:51.091000"
+  },
+  {
+    "id": "b8ae7655-cfe8-4359-96f5-d2f1c1474f24",
+    "brand": "Peugeot",
+    "model": "3008 GT",
+    "year": 2024,
+    "type": "SUV",
+    "price_per_day": 110.0,
+    "photos": [
+      "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&q=80"
+    ],
+    "description": "Peugeot 3008 GT hybrid 225ch, i-Cockpit, Night Vision, grip control.",
+    "seats": 5,
+    "transmission": "automatic",
+    "fuel_type": "hybrid",
+    "options": [
+      {
+        "name": "GPS",
+        "price_per_day": 10.0
+      },
+      {
+        "name": "Siege bebe",
+        "price_per_day": 15.0
+      },
+      {
+        "name": "Conducteur additionnel",
+        "price_per_day": 20.0
+      }
+    ],
+    "status": "available",
+    "location": "Lausanne",
+    "plate_number": "VD 130 012",
+    "chassis_number": "VF3MCYHZRMS456012",
+    "color": "Vert Olivine",
+    "documents": [],
+    "agency_id": "8678c286-2421-4423-ad05-69f03ef2414f",
+    "created_at": "2025-12-18T12:46:51.091000"
+  }
+]
