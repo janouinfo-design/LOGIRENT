@@ -45,15 +45,15 @@ export default function WelcomeScreen() {
           <View style={styles.logoContainer}>
             <Ionicons name="car-sport" size={48} color="#FFFFFF" />
           </View>
-          <Text style={styles.appName}>RentDrive</Text>
-          <Text style={styles.tagline}>Premium Car Rental</Text>
+          <Text style={styles.appName}>LogiRent</Text>
+          <Text style={styles.tagline}>Location de véhicules premium</Text>
         </View>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>Your Journey Starts Here</Text>
+        <Text style={styles.title}>Votre trajet commence ici</Text>
         <Text style={styles.subtitle}>
-          Discover premium vehicles for every adventure. From city drives to mountain getaways.
+          Découvrez des véhicules premium pour chaque aventure. De la ville à la montagne.
         </Text>
 
         <View style={styles.features}>
@@ -61,30 +61,30 @@ export default function WelcomeScreen() {
             <View style={styles.featureIcon}>
               <Ionicons name="shield-checkmark" size={24} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureText}>Insured Vehicles</Text>
+            <Text style={styles.featureText}>Véhicules assurés</Text>
           </View>
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
               <Ionicons name="card" size={24} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureText}>Secure Payment</Text>
+            <Text style={styles.featureText}>Paiement sécurisé</Text>
           </View>
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
               <Ionicons name="location" size={24} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureText}>Multiple Locations</Text>
+            <Text style={styles.featureText}>Plusieurs agences</Text>
           </View>
         </View>
 
         <View style={styles.buttons}>
           <Button
-            title="Get Started"
+            title="Commencer"
             onPress={() => router.push('/(auth)/register')}
             size="large"
           />
           <Button
-            title="I already have an account"
+            title="J'ai déjà un compte"
             onPress={() => router.push('/(auth)/login')}
             variant="ghost"
             size="large"
