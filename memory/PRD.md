@@ -14,64 +14,59 @@ Build a complete car rental solution named "LogiRent" with:
 
 ## What's Been Implemented
 
-### Authentication & Roles (FIXED March 16, 2026)
+### Authentication & Roles
 - Super Admin, Agency Admin, Client roles
 - JWT-based auth with bcrypt password hashing
-- **Role-based redirection after login**: super_admin → /super-admin, admin → /agency-app, client → /(tabs)
+- Role-based redirection: super_admin → /super-admin, admin → /agency-app, client → /(tabs)
 - Password reset via email (Resend)
-- Admin impersonation
+
+### Frontend Refactoring (March 18, 2026)
+- Moved components out of Expo Router route folders (app/agency-app/components/ → src/components/agency/)
+- Fixed all imports in vehicles.tsx, reservations.tsx, clients.tsx
+- Branding: RentDrive → LogiRent (French)
+- No more Expo Router warnings for non-route components
+
+### Demo Data Seed
+- Script: /app/scripts/seed_demo.py
+- 2 agencies (Geneva, Lausanne), 12 users, 12 vehicles with photos, 32+ reservations over 1 month
+- Realistic Swiss data (names, addresses, plates, phone numbers)
+- Multiple statuses: completed, active, confirmed, pending, cancelled
 
 ### Vehicle Management
-- CRUD for vehicles with photos, options, documents
-- Vehicle status management (available/rented/maintenance)
-- GPS tracking integration (Navixy)
+- CRUD with photos, options, documents
+- 12 vehicles: berline, citadine, SUV, utilitaire, van, electrique
+- Vehicle status: available/rented/maintenance
 
 ### Reservation System
-- Client-facing booking with date selection
-- Admin reservation management with calendar view
-- Payment via Stripe (card) and cash
-- Status workflow: pending → confirmed → active → completed
-- Overdue detection with notifications
+- Gantt chart view with color-coded statuses
+- Card list view with action buttons
+- Calendar integration
+- Payment via Stripe and cash
 
 ### Contract System
-- Interactive vehicle inspection diagram (damage marking)
-- Single-page PDF contract generation (ReportLab)
-- Contract template system per agency (logo, legal text, rates)
-- Live PDF preview for templates
-- Digital signature support
-
-### Admin Dashboard
-- Statistics: vehicles, users, reservations, revenue
-- Advanced analytics with AI revenue forecast (OpenAI GPT-5.2)
-- Calendar view with drag support
-- Overdue reservations tracking
-- Top clients & agency comparison (Super Admin)
-
-### Client Management
-- Quick client creation with auto-generated password
-- Document upload (license, ID card - front/back)
-- Welcome email with QR code
-- Client import from Excel/CSV/ZIP
-- Client rating system
-
-### Multi-Tenant
-- Agency creation with slug-based routing
+- Interactive vehicle inspection diagram
+- Single-page PDF generation (ReportLab)
 - Per-agency contract templates
-- Agency admin isolation
-- Agency activate/deactivate (Super Admin)
+- Live PDF preview
 
-## VPS Deployment
-- Script: `/app/scripts/seed_superadmin.py`
-- Guide: `/app/scripts/GUIDE_DEPLOIEMENT_VPS.md`
-- User's MongoDB Atlas: mongodb+srv://...@cluster0.isugn1l.mongodb.net
+### VPS Deployment
+- Seed script: /app/scripts/seed_superadmin.py
+- Full seed: /app/scripts/seed_demo.py (also works on VPS with Atlas)
+- Guide: /app/scripts/GUIDE_DEPLOIEMENT_VPS.md
 
 ## 3rd Party Integrations
-- Stripe (Payments), Resend (Email), Navixy (GPS), OpenAI via emergentintegrations, MinIO, ReportLab, QRCode
+- Stripe, Resend, Navixy, OpenAI (emergentintegrations), MinIO, ReportLab, QRCode
 
-## Test Credentials
+## Test Credentials (Dev)
 - Super Admin: test@example.com / password123
 - Agency Admin: admin-geneva@logirent.ch / LogiRent2024
 - Client: client1@test.com / test1234
+
+## Test Credentials (Seed)
+- All accounts: LogiRent2024!
+- Super Admin: superadmin@logirent.ch
+- Admin Geneva: admin-geneva@logirent.ch
+- Clients: jean.dupont@gmail.com, sophie.martin@outlook.com, etc.
 
 ## Pending Issues
 1. Resend Domain Verification (P2) - User needs to verify logirent.ch

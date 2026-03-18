@@ -3,9 +3,9 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, Act
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
-import { EditClientModal } from './components/EditClientModal';
-import { NewClientModal } from './components/NewClientModal';
-import { ImportClientModal } from './components/ImportClientModal';
+import { EditClientModal } from '../../src/components/agency/EditClientModal';
+import { NewClientModal } from '../../src/components/agency/NewClientModal';
+import { ImportClientModal } from '../../src/components/agency/ImportClientModal';
 
 const SCREEN_W = Dimensions.get('window').width;
 

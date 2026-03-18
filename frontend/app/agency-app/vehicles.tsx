@@ -4,11 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
-import { Vehicle, STATUSES, getStatus } from './components/vehicleTypes';
-import VehicleCard from './components/VehicleCard';
-import EditVehicleModal from './components/EditVehicleModal';
-import NewVehicleModal from './components/NewVehicleModal';
-import PhotoGalleryModal from './components/PhotoGalleryModal';
+import { Vehicle, STATUSES, getStatus } from '../../src/components/agency/vehicleTypes';
+import VehicleCard from '../../src/components/agency/VehicleCard';
+import EditVehicleModal from '../../src/components/agency/EditVehicleModal';
+import NewVehicleModal from '../../src/components/agency/NewVehicleModal';
+import PhotoGalleryModal from '../../src/components/agency/PhotoGalleryModal';
 
 const SCREEN_W = Dimensions.get('window').width;
 const CARD_GAP = 10;

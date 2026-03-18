@@ -6,9 +6,9 @@ import api from '../../src/api/axios';
 import { format, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
-import { GanttChart } from './components/GanttChart';
-import { ReservationCard } from './components/ReservationCard';
-import { ReservationActionModal } from './components/ReservationActionModal';
+import { GanttChart } from '../../src/components/agency/GanttChart';
+import { ReservationCard } from '../../src/components/agency/ReservationCard';
+import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
