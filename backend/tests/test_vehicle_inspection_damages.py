@@ -7,7 +7,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://fleet-inspect-14.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://deploy-local-db.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin-geneva@logirent.ch"

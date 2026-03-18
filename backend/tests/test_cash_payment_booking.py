@@ -13,7 +13,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-inspect-14.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://deploy-local-db.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"
@@ -242,7 +242,7 @@ class TestStripeCheckoutFlow:
         # Now try to initiate checkout
         checkout_payload = {
             "reservation_id": reservation_id,
-            "origin_url": "https://fleet-inspect-14.preview.emergentagent.com",
+            "origin_url": "https://deploy-local-db.preview.emergentagent.com",
             "payment_method_type": "card"
         }
         
