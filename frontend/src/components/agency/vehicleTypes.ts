@@ -67,8 +67,8 @@ export const vst = StyleSheet.create({
   // Card styles
   card: { borderRadius: 10, borderWidth: 1, overflow: 'hidden' },
   photoBox: { position: 'relative' },
-  photo: { width: '100%', height: 90, borderTopLeftRadius: 10, borderTopRightRadius: 10 },
-  photoPlaceholder: { width: '100%', height: 90, justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 10, borderTopRightRadius: 10 },
+  photo: { width: '100%', height: 160, borderTopLeftRadius: 10, borderTopRightRadius: 10 },
+  photoPlaceholder: { width: '100%', height: 160, justifyContent: 'center', alignItems: 'center', borderTopLeftRadius: 10, borderTopRightRadius: 10 },
   statusOverlay: { position: 'absolute', bottom: 4, left: 4, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
   docCountBadge: { position: 'absolute', top: 4, right: 4, flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8 },
   cardInfo: { padding: 8 },

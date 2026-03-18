@@ -11,9 +11,9 @@ import NewVehicleModal from '../../src/components/agency/NewVehicleModal';
 import PhotoGalleryModal from '../../src/components/agency/PhotoGalleryModal';
 
 const SCREEN_W = Dimensions.get('window').width;
-const CARD_GAP = 10;
+const CARD_GAP = 12;
 const PADDING = 16;
-const NUM_COLS = 3;
+const NUM_COLS = 2;
 const cardW = (SCREEN_W - PADDING * 2 - CARD_GAP * (NUM_COLS - 1)) / NUM_COLS;
 
 export default function AgencyVehicles() {
@@ -106,7 +106,7 @@ export default function AgencyVehicles() {
       </View>
 
       {/* Vehicle Grid */}
-      <FlatList data={filtered} keyExtractor={(item) => item.id} numColumns={3}
+      <FlatList data={filtered} keyExtractor={(item) => item.id} numColumns={2}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: PADDING, paddingTop: 8, paddingBottom: 32 }}
         columnWrapperStyle={{ gap: CARD_GAP, marginBottom: CARD_GAP }}
