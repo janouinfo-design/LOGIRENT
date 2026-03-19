@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Image, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { formatDateInput } from '../../../src/utils/dateMask';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 const RATINGS = [
   { value: 'vip', label: 'VIP', icon: 'star' as const, color: '#8B5CF6' },
@@ -19,6 +21,8 @@ interface Client {
   total_spent?: number; total_reservations?: number;
   birth_place?: string; date_of_birth?: string; license_number?: string;
   license_issue_date?: string; license_expiry_date?: string; nationality?: string;
+  id_photo?: string; id_photo_back?: string; license_photo?: string; license_photo_back?: string;
+  id_verification?: any; license_verification?: any;
 }
 
 interface Props {
@@ -45,6 +49,11 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   const [editLicenseExpiry, setEditLicenseExpiry] = useState('');
   const [editNationality, setEditNationality] = useState('');
   const [fullClient, setFullClient] = useState<Client | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const idFrontRef = useRef<HTMLInputElement | null>(null);
+  const idBackRef = useRef<HTMLInputElement | null>(null);
+  const licenseFrontRef = useRef<HTMLInputElement | null>(null);
+  const licenseBackRef = useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
     if (visible && client) {
@@ -77,6 +86,30 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       }).catch(console.error).finally(() => setLoadingDetail(false));
     }
   }, [visible, client?.id]);
+
+  const handleDocUpload = async (e: any, type: 'id' | 'id_back' | 'license' | 'license_back') => {
+    if (!client) return;
+    const file = e.target?.files?.[0];
+    if (!file) return;
+    const accepted = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!accepted.includes(file.type)) { window.alert('Format non accepté. JPG, PNG ou WebP.'); e.target.value = ''; return; }
+    if (file.size > 10 * 1024 * 1024) { window.alert('Fichier trop volumineux (max 10 MB).'); e.target.value = ''; return; }
+    setUploadingDoc(type);
+    try {
+      const reader = new FileReader();
+      const dataUri: string = await new Promise((res, rej) => { reader.onload = () => res(reader.result as string); reader.onerror = () => rej(new Error('Read error')); reader.readAsDataURL(file); });
+      const endpointMap: Record<string, string> = { id: 'upload-id-b64', id_back: 'upload-id-back-b64', license: 'upload-license-b64', license_back: 'upload-license-back-b64' };
+      const resp = await api.post(`/api/admin/client/${client.id}/document`, { image_data: dataUri, doc_type: type });
+      const v = resp.data.verification || {};
+      const msg = v.is_valid === false ? `Document rejeté: ${v.reason || 'Invalide'}` : `Document uploadé (${v.confidence || 0}% confiance)${v.reason ? '\n' + v.reason : ''}`;
+      window.alert(msg);
+      if (fullClient) {
+        const field = type === 'id' ? 'id_photo' : type === 'id_back' ? 'id_photo_back' : type === 'license' ? 'license_photo' : 'license_photo_back';
+        setFullClient({ ...fullClient, [field]: dataUri });
+      }
+    } catch (err: any) { window.alert(err?.response?.data?.detail || err.message || 'Erreur upload'); }
+    finally { setUploadingDoc(null); e.target.value = ''; }
+  };
 
   const saveEdit = async () => {
     if (!client) return;
@@ -181,6 +214,91 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <Text style={[st.label, { color: C.textLight }]}>Date d'expiration *</Text>
                   <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={(v) => setEditLicenseExpiry(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-license-expiry" />
                 </View>
+              </View>
+
+              {/* Document Upload Section */}
+              <View style={{ marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <Ionicons name="document-attach" size={16} color={C.accent} />
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Documents (Photos)</Text>
+                </View>
+                {Platform.OS === 'web' && (
+                  <>
+                    <input ref={(el: any) => { idFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id')} />
+                    <input ref={(el: any) => { idBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id_back')} />
+                    <input ref={(el: any) => { licenseFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license')} />
+                    <input ref={(el: any) => { licenseBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license_back')} />
+                  </>
+                )}
+
+                <Text style={[st.label, { color: C.textLight }]}>Piece d'Identite</Text>
+                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Recto</Text>
+                    {fullClient?.id_photo ? (
+                      <Image source={{ uri: fullClient.id_photo }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="card-outline" size={24} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.id_photo ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => idFrontRef.current?.click()} data-testid="admin-upload-id-front">
+                      {uploadingDoc === 'id' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: fullClient?.id_photo ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.id_photo ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Verso</Text>
+                    {fullClient?.id_photo_back ? (
+                      <Image source={{ uri: fullClient.id_photo_back }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="card-outline" size={24} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.id_photo_back ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => idBackRef.current?.click()} data-testid="admin-upload-id-back">
+                      {uploadingDoc === 'id_back' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: fullClient?.id_photo_back ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.id_photo_back ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                <Text style={[st.label, { color: C.textLight }]}>Permis de Conduire</Text>
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Recto</Text>
+                    {fullClient?.license_photo ? (
+                      <Image source={{ uri: fullClient.license_photo }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="id-card-outline" size={24} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.license_photo ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => licenseFrontRef.current?.click()} data-testid="admin-upload-license-front">
+                      {uploadingDoc === 'license' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: fullClient?.license_photo ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.license_photo ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                  <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Verso</Text>
+                    {fullClient?.license_photo_back ? (
+                      <Image source={{ uri: fullClient.license_photo_back }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="id-card-outline" size={24} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.license_photo_back ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => licenseBackRef.current?.click()} data-testid="admin-upload-license-back">
+                      {uploadingDoc === 'license_back' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: fullClient?.license_photo_back ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.license_photo_back ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 8 }}>Formats acceptés: JPG, PNG, WebP (max 10 MB). Vérification IA automatique.</Text>
               </View>
 
               <Text style={[st.label, { color: C.textLight, marginTop: 12 }]}>Classement</Text>

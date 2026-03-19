@@ -10,8 +10,10 @@ import os
 
 from database import db
 from models import AdminStats, AdminUserUpdate, Base64UserPhoto, PaymentTransaction
+from pydantic import BaseModel as PydanticBaseModel
 from deps import get_admin_user, get_agency_admin, hash_password
 from utils.notifications import create_notification
+from utils.helpers import verify_document_with_ai
 from utils.email import (
     send_email, send_reservation_confirmation,
     generate_status_change_email
@@ -358,6 +360,47 @@ async def update_user_admin(user_id: str, update_data: AdminUserUpdate, user: di
     updated_user = await db.users.find_one({"id": user_id}, {"password_hash": 0})
     updated_user['_id'] = str(updated_user['_id'])
     return {"message": "User updated successfully", "user": updated_user}
+
+
+class AdminDocUpload(PydanticBaseModel):
+    image_data: str
+    doc_type: str  # id, id_back, license, license_back
+
+
+@router.post("/admin/client/{client_id}/document")
+async def admin_upload_client_document(client_id: str, body: AdminDocUpload, user: dict = Depends(get_admin_user)):
+    target = await db.users.find_one({"id": client_id})
+    if not target:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    doc_type_map = {"id": "id", "id_back": "id", "license": "license", "license_back": "license"}
+    ai_type = doc_type_map.get(body.doc_type, "id")
+    verification = await verify_document_with_ai(body.image_data, ai_type)
+
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
+        return {"message": "Document rejeté", "verification": verification, "rejected": True}
+
+    field_map = {"id": "id_photo", "id_back": "id_photo_back", "license": "license_photo", "license_back": "license_photo_back"}
+    field = field_map.get(body.doc_type, "id_photo")
+    verif_field = "id_verification" if "id" in body.doc_type else "license_verification"
+
+    update = {"$set": {field: body.image_data}}
+    if body.doc_type in ("id", "license"):
+        update["$set"][verif_field] = {
+            "is_valid": verification.get("is_valid", True),
+            "confidence": verification.get("confidence", 0),
+            "reason": verification.get("reason", ""),
+            "face": verification.get("face", "recto"),
+            "is_blurry": verification.get("is_blurry", False),
+            "is_expired": verification.get("is_expired", False),
+            "quality_score": verification.get("quality_score", 0),
+            "warnings": verification.get("warnings", []),
+            "rejection_reasons": verification.get("rejection_reasons", []),
+            "verified_at": datetime.utcnow().isoformat(),
+        }
+
+    await db.users.update_one({"id": client_id}, update)
+    return {"message": "Document uploadé", "verification": verification}
 
 
 @router.put("/admin/users/{user_id}/rating")

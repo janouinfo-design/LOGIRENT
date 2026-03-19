@@ -13,7 +13,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-vps-deploy.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://car-rental-live.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "test@example.com"
@@ -242,7 +242,7 @@ class TestStripeCheckoutFlow:
         # Now try to initiate checkout
         checkout_payload = {
             "reservation_id": reservation_id,
-            "origin_url": "https://logirent-vps-deploy.preview.emergentagent.com",
+            "origin_url": "https://car-rental-live.preview.emergentagent.com",
             "payment_method_type": "card"
         }
         

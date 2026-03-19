@@ -11,7 +11,7 @@ import fitz  # PyMuPDF
 
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-vps-deploy.preview.emergentagent.com').rstrip('/')
+    BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://car-rental-live.preview.emergentagent.com').rstrip('/')
 
 
 class TestABICARContractGeneration:

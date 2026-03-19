@@ -38,7 +38,7 @@
   "test_credentials": {
     "email": "admin-geneva@logirent.ch",
     "password": "LogiRent2024",
-    "login_url": "https://logirent-vps-deploy.preview.emergentagent.com/admin-login"
+    "login_url": "https://car-rental-live.preview.emergentagent.com/admin-login"
   },
   "seed_data_creation": "None - used existing data",
   "retest_needed": false,

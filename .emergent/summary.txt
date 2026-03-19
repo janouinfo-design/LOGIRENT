@@ -122,7 +122,7 @@ expo: started) to be visible, or clearing the browser cache.
   [0;34m[2] Configuration .env[0m
   [0;32m[OK][0m backend/.env present
   [0;32m[OK][0m frontend/.env present
-       EXPO_PUBLIC_BACKEND_URL=https://logirent-vps-deploy.preview.emergentagent.com
+       EXPO_PUBLIC_BACKEND_URL=https://car-rental-live.preview.emergentagent.com
 
   [0;34m[3] Services actifs[0m
   [0;32m[OK][0m MongoDB local actif
@@ -181,7 +181,7 @@ expo: started) to be visible, or clearing the browser cache.
   [0;34m[2] Configuration .env[0m
   [0;32m[OK][0m backend/.env present
   [0;32m[OK][0m frontend/.env present
-       EXPO_PUBLIC_BACKEND_URL=https://logirent-vps-deploy.preview.emergentagent.com
+       EXPO_PUBLIC_BACKEND_URL=https://car-rental-live.preview.emergentagent.com
 
   [0;34m[3] Services actifs[0m
   [0;32m[OK][0m MongoDB local actif
