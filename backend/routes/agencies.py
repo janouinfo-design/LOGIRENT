@@ -415,16 +415,22 @@ async def get_available_vehicles_for_dates(start_date: datetime, end_date: datet
     if not is_super and agency_id:
         vf["agency_id"] = agency_id
 
-    vehicles = await db.vehicles.find(vf, {"_id": 0}).to_list(200)
+    vehicles = await db.vehicles.find(vf).to_list(200)
 
     available = []
     for v in vehicles:
+        vid = v.get('id') or str(v.get('_id', ''))
+        if not vid:
+            continue
+        v.pop('_id', None)
         overlap = await db.reservations.find_one({
-            "vehicle_id": v['id'],
+            "vehicle_id": vid,
             "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
             "$or": [{"start_date": {"$lt": end_date}, "end_date": {"$gt": start_date}}]
         })
         if not overlap:
+            if 'id' not in v:
+                v['id'] = vid
             available.append(v)
 
     return {"vehicles": available}
@@ -446,28 +452,37 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
     if not is_super and agency_id:
         vf["agency_id"] = agency_id
 
-    vehicles = await db.vehicles.find(vf, {"_id": 0}).to_list(200)
+    vehicles = await db.vehicles.find(vf).to_list(200)
 
     result = []
     for v in vehicles:
+        vid = v.get('id') or str(v.get('_id', ''))
+        if not vid:
+            continue
+        if 'id' not in v:
+            v['id'] = vid
+            await db.vehicles.update_one({"_id": v['_id']}, {"$set": {"id": vid}})
+        v.pop('_id', None)
+
         reservations = await db.reservations.find({
-            "vehicle_id": v['id'],
+            "vehicle_id": vid,
             "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
             "$or": [{"start_date": {"$lt": ed}, "end_date": {"$gt": sd}}]
         }, {"_id": 0, "id": 1, "user_name": 1, "start_date": 1, "end_date": 1, "status": 1}).to_list(100)
 
         slots = []
         for r in reservations:
+            rid = r.get('id', '')
             slots.append({
-                "id": r['id'],
+                "id": rid,
                 "user_name": r.get('user_name', ''),
                 "start": r['start_date'].isoformat() if isinstance(r['start_date'], dt) else str(r['start_date']),
                 "end": r['end_date'].isoformat() if isinstance(r['end_date'], dt) else str(r['end_date']),
-                "status": r['status']
+                "status": r.get('status', '')
             })
 
         result.append({
-            "id": v['id'], "brand": v.get('brand', ''), "model": v.get('model', ''),
+            "id": vid, "brand": v.get('brand', ''), "model": v.get('model', ''),
             "price_per_day": v.get('price_per_day', 0), "type": v.get('type', ''),
             "seats": v.get('seats', 0), "transmission": v.get('transmission', ''),
             "fuel_type": v.get('fuel_type', ''), "options": v.get('options', []),
