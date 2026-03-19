@@ -60,6 +60,10 @@ interface User {
   license_issue_date?: string;
   license_expiry_date?: string;
   nationality?: string;
+  id_photo_back?: string;
+  license_photo_back?: string;
+  id_verification?: any;
+  license_verification?: any;
   client_rating?: string;
   admin_notes?: string;
   role?: string;
@@ -80,8 +84,10 @@ interface AuthState {
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  uploadLicense: (imageUriOrFile: string | File) => Promise<void>;
-  uploadIdCard: (imageUriOrFile: string | File) => Promise<void>;
+  uploadLicense: (imageUriOrFile: string | File) => Promise<any>;
+  uploadLicenseBack: (imageUriOrFile: string | File) => Promise<any>;
+  uploadIdCard: (imageUriOrFile: string | File) => Promise<any>;
+  uploadIdCardBack: (imageUriOrFile: string | File) => Promise<any>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -260,6 +266,48 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error: any) {
       const msg = error.response?.data?.detail || error.message || 'Upload failed';
       throw new Error(msg);
+    }
+  },
+
+  uploadIdCardBack: async (imageUriOrFile: string | File) => {
+    try {
+      let imageData: string;
+      if (typeof imageUriOrFile === 'object' && imageUriOrFile instanceof File) {
+        imageData = await compressToBase64(imageUriOrFile);
+      } else if (typeof imageUriOrFile === 'string' && imageUriOrFile.startsWith('data:')) {
+        imageData = imageUriOrFile;
+      } else {
+        const resp = await fetch(imageUriOrFile);
+        const blob = await resp.blob();
+        imageData = await compressToBase64(blob);
+      }
+      const response = await axios.post(`${API_URL}/api/auth/upload-id-back-b64`, { image_data: imageData });
+      const { user } = get();
+      if (user) set({ user: { ...user, id_photo_back: response.data.id_photo_back } });
+      return response.data.verification;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || error.message || 'Upload failed');
+    }
+  },
+
+  uploadLicenseBack: async (imageUriOrFile: string | File) => {
+    try {
+      let imageData: string;
+      if (typeof imageUriOrFile === 'object' && imageUriOrFile instanceof File) {
+        imageData = await compressToBase64(imageUriOrFile);
+      } else if (typeof imageUriOrFile === 'string' && imageUriOrFile.startsWith('data:')) {
+        imageData = imageUriOrFile;
+      } else {
+        const resp = await fetch(imageUriOrFile);
+        const blob = await resp.blob();
+        imageData = await compressToBase64(blob);
+      }
+      const response = await axios.post(`${API_URL}/api/auth/upload-license-back-b64`, { image_data: imageData });
+      const { user } = get();
+      if (user) set({ user: { ...user, license_photo_back: response.data.license_photo_back } });
+      return response.data.verification;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.detail || error.message || 'Upload failed');
     }
   },
 }));

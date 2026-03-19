@@ -556,3 +556,5 @@ const calStyles = StyleSheet.create({
   eventDays: { fontSize: 11 },
   eventPrice: { fontSize: 15, fontWeight: '700' },
 });
+
+export default ReservationsScreen;

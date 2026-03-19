@@ -26,7 +26,7 @@ const _C = {
 export default function ProfileScreen() {
   const { colors: C } = useThemeStore();
   const router = useRouter();
-  const { user, logout, updateProfile, uploadLicense, uploadIdCard, isAuthenticated, isLoading } = useAuthStore();
+  const { user, logout, updateProfile, uploadLicense, uploadIdCard, uploadLicenseBack, uploadIdCardBack, isAuthenticated, isLoading } = useAuthStore();
   const [name, setName] = useState(user?.name || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [address, setAddress] = useState(user?.address || '');
@@ -40,9 +40,14 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [uploadingLicense, setUploadingLicense] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
-  const [uploadModal, setUploadModal] = useState<null | 'id' | 'license'>(null);
+  const [uploadingIdBack, setUploadingIdBack] = useState(false);
+  const [uploadingLicenseBack, setUploadingLicenseBack] = useState(false);
+  const [uploadModal, setUploadModal] = useState<null | 'id' | 'license' | 'id_back' | 'license_back'>(null);
+  const [lastVerification, setLastVerification] = useState<any>(null);
   const idInputRef = useRef<HTMLInputElement | null>(null);
   const licenseInputRef = useRef<HTMLInputElement | null>(null);
+  const idBackInputRef = useRef<HTMLInputElement | null>(null);
+  const licenseBackInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) router.replace('/(auth)/login');
@@ -112,18 +117,61 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleWebFileChange = async (e: any, type: 'id' | 'license') => {
+  const getUploadFn = (type: string) => {
+    switch(type) {
+      case 'id': return uploadIdCard;
+      case 'id_back': return uploadIdCardBack;
+      case 'license': return uploadLicense;
+      case 'license_back': return uploadLicenseBack;
+      default: return uploadIdCard;
+    }
+  };
+
+  const getUploadSetter = (type: string) => {
+    switch(type) {
+      case 'id': return setUploadingId;
+      case 'id_back': return setUploadingIdBack;
+      case 'license': return setUploadingLicense;
+      case 'license_back': return setUploadingLicenseBack;
+      default: return setUploadingId;
+    }
+  };
+
+  const showVerificationResult = (v: any) => {
+    if (!v) return;
+    setLastVerification(v);
+    const statusIcon = v.is_valid ? 'Document valide' : 'Document rejeté';
+    let msg = `${statusIcon}\nConfiance: ${v.confidence}%`;
+    if (v.reason) msg += `\n${v.reason}`;
+    if (v.is_blurry) msg += '\nImage floue detectée';
+    if (v.is_expired) msg += '\nDocument expiré!';
+    if (v.is_wrong_document) msg += '\nMauvais type de document';
+    if (v.warnings?.length) msg += `\n${v.warnings.join('\n')}`;
+    if (v.rejection_reasons?.length) msg += `\nRaisons: ${v.rejection_reasons.join(', ')}`;
+    if (Platform.OS === 'web') window.alert(msg);
+    else Alert.alert('Vérification IA', msg);
+  };
+
+  const handleWebFileChange = async (e: any, type: 'id' | 'license' | 'id_back' | 'license_back') => {
     const file = e.target?.files?.[0];
     if (!file) return;
-    const setter = type === 'id' ? setUploadingId : setUploadingLicense;
-    const uploader = type === 'id' ? uploadIdCard : uploadLicense;
+    const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic'];
+    if (!acceptedTypes.includes(file.type)) {
+      window.alert('Format non accepté. Veuillez utiliser JPG, PNG ou WebP.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      window.alert('Fichier trop volumineux (max 10 MB).');
+      e.target.value = '';
+      return;
+    }
+    const setter = getUploadSetter(type);
+    const uploader = getUploadFn(type);
     setter(true);
     try {
       const verification = await uploader(file);
-      const v = verification || {};
-      const validIcon = v.is_valid ? 'Document valide' : 'Document rejeté';
-      const msg = v.reason ? `${validIcon}\nConfiance: ${v.confidence}%\n${v.reason}` : 'Document téléchargé';
-      window.alert(msg);
+      showVerificationResult(verification);
     } catch (err: any) {
       window.alert(err.message || 'Erreur lors du téléchargement');
     } finally {
@@ -132,16 +180,13 @@ export default function ProfileScreen() {
     }
   };
 
-  const uploadFromUri = async (dataUri: string, type: 'id' | 'license') => {
-    const setter = type === 'id' ? setUploadingId : setUploadingLicense;
-    const uploader = type === 'id' ? uploadIdCard : uploadLicense;
+  const uploadFromUri = async (dataUri: string, type: 'id' | 'license' | 'id_back' | 'license_back') => {
+    const setter = getUploadSetter(type);
+    const uploader = getUploadFn(type);
     setter(true);
     try {
       const verification = await uploader(dataUri);
-      const v = verification || {};
-      const validIcon = v.is_valid ? 'Document valide' : 'Document rejeté';
-      const msg = v.reason ? `${validIcon}\nConfiance: ${v.confidence}%\n${v.reason}` : 'Document téléchargé';
-      Alert.alert('Vérification IA', msg);
+      showVerificationResult(verification);
     } catch (e: any) {
       Alert.alert('Erreur', e.message);
     } finally {
@@ -149,7 +194,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const takePhoto = async (type: 'id' | 'license') => {
+  const takePhoto = async (type: 'id' | 'license' | 'id_back' | 'license_back') => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la caméra.'); return; }
     try {
@@ -163,7 +208,7 @@ export default function ProfileScreen() {
     }
   };
 
-  const pickFromGallery = async (type: 'id' | 'license') => {
+  const pickFromGallery = async (type: 'id' | 'license' | 'id_back' | 'license_back') => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Permission requise', 'Veuillez autoriser l\'accès à la galerie.'); return; }
     try {
@@ -177,13 +222,12 @@ export default function ProfileScreen() {
     }
   };
 
-  const pickAndUpload = async (type: 'id' | 'license') => {
+  const pickAndUpload = async (type: 'id' | 'license' | 'id_back' | 'license_back') => {
     if (Platform.OS === 'web') {
-      const ref = type === 'id' ? idInputRef : licenseInputRef;
-      ref.current?.click();
+      const refs: any = { id: idInputRef, license: licenseInputRef, id_back: idBackInputRef, license_back: licenseBackInputRef };
+      refs[type]?.current?.click();
       return;
     }
-    // Native: show in-app modal instead of Alert.alert
     setUploadModal(type);
   };
 
@@ -319,78 +363,111 @@ export default function ProfileScreen() {
           {/* Hidden file inputs for web */}
           {Platform.OS === 'web' && (
             <>
-              <input
-                ref={(el: any) => { idInputRef.current = el; }}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={(e: any) => handleWebFileChange(e, 'id')}
-              />
-              <input
-                ref={(el: any) => { licenseInputRef.current = el; }}
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={(e: any) => handleWebFileChange(e, 'license')}
-              />
+              <input ref={(el: any) => { idInputRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleWebFileChange(e, 'id')} data-testid="input-id-front" />
+              <input ref={(el: any) => { idBackInputRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleWebFileChange(e, 'id_back')} data-testid="input-id-back" />
+              <input ref={(el: any) => { licenseInputRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleWebFileChange(e, 'license')} data-testid="input-license-front" />
+              <input ref={(el: any) => { licenseBackInputRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleWebFileChange(e, 'license_back')} data-testid="input-license-back" />
             </>
           )}
           {(!user.id_photo || !user.license_photo) && (
             <View style={styles.alert}>
               <Ionicons name="warning" size={20} color="#F59E0B" />
-              <Text style={styles.alertText}>Veuillez télécharger votre pièce d'identité et votre permis de conduire pour effectuer une réservation.</Text>
+              <Text style={styles.alertText}>Documents requis pour effectuer une réservation. Formats acceptés: JPG, PNG, WebP (max 10 MB).</Text>
             </View>
           )}
-          <View style={styles.docsGrid}>
-            {/* ID Card */}
-            <View style={styles.docCard}>
-              <View style={styles.docHeader}>
-                <Ionicons name="card" size={20} color={C.purple} />
-                <Text style={styles.docTitle}>Pièce d'Identité</Text>
-                {user.id_photo && (
-                  <View style={styles.badge}><Ionicons name="checkmark-circle" size={14} color={C.success} /><Text style={styles.badgeText}>OK</Text></View>
-                )}
-              </View>
-              {user.id_photo ? (
-                <Image source={{ uri: user.id_photo }} style={styles.docImage} resizeMode="cover" />
-              ) : (
-                <View style={styles.noDoc}><Ionicons name="card-outline" size={36} color={C.gray} /><Text style={styles.noDocText}>Non téléchargée</Text></View>
-              )}
-              <TouchableOpacity
-                style={[styles.docBtn, { backgroundColor: user.id_photo ? '#EDE9FE' : '#7C3AED' }]}
-                onPress={() => pickAndUpload('id')}
-                data-testid="upload-id-btn"
-              >
-                {uploadingId ? <ActivityIndicator size="small" color={user.id_photo ? '#7C3AED' : '#FFF'} /> : (
-                  <Text style={[styles.docBtnText, { color: user.id_photo ? '#7C3AED' : '#FFF' }]}>{user.id_photo ? 'Modifier' : 'Télécharger'}</Text>
-                )}
-              </TouchableOpacity>
-            </View>
 
-            {/* License */}
-            <View style={styles.docCard}>
-              <View style={styles.docHeader}>
-                <Ionicons name="car" size={20} color={C.purple} />
-                <Text style={styles.docTitle}>Permis de Conduire</Text>
-                {user.license_photo && (
-                  <View style={styles.badge}><Ionicons name="checkmark-circle" size={14} color={C.success} /><Text style={styles.badgeText}>OK</Text></View>
-                )}
-              </View>
-              {user.license_photo ? (
-                <Image source={{ uri: user.license_photo }} style={styles.docImage} resizeMode="cover" />
-              ) : (
-                <View style={styles.noDoc}><Ionicons name="id-card-outline" size={36} color={C.gray} /><Text style={styles.noDocText}>Non téléchargé</Text></View>
+          {/* ID Card */}
+          <View style={[styles.docFullCard, { backgroundColor: C.card, borderColor: C.border }]}>
+            <View style={styles.docHeader}>
+              <Ionicons name="card" size={20} color="#7C3AED" />
+              <Text style={[styles.docTitle, { color: C.text }]}>Pièce d'Identité</Text>
+              {user.id_photo && user.id_photo_back && (
+                <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="checkmark-circle" size={14} color="#10B981" /><Text style={[styles.badgeText, { color: '#10B981' }]}>Complet</Text></View>
               )}
-              <TouchableOpacity
-                style={[styles.docBtn, { backgroundColor: user.license_photo ? '#EDE9FE' : '#7C3AED' }]}
-                onPress={() => pickAndUpload('license')}
-                data-testid="upload-license-btn"
-              >
-                {uploadingLicense ? <ActivityIndicator size="small" color={user.license_photo ? '#7C3AED' : '#FFF'} /> : (
-                  <Text style={[styles.docBtnText, { color: user.license_photo ? '#7C3AED' : '#FFF' }]}>{user.license_photo ? 'Modifier' : 'Télécharger'}</Text>
-                )}
-              </TouchableOpacity>
             </View>
+            <View style={styles.docRow}>
+              <View style={styles.docSide}>
+                <Text style={[styles.docSideLabel, { color: C.textLight }]}>Recto</Text>
+                {user.id_photo ? (
+                  <Image source={{ uri: user.id_photo }} style={styles.docImageSmall} resizeMode="cover" />
+                ) : (
+                  <View style={styles.noDocSmall}><Ionicons name="card-outline" size={28} color="#9CA3AF" /></View>
+                )}
+                <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.id_photo ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('id')} data-testid="upload-id-front-btn">
+                  {uploadingId ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                    <Text style={{ color: user.id_photo ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.id_photo ? 'Modifier' : 'Ajouter'}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.docSide}>
+                <Text style={[styles.docSideLabel, { color: C.textLight }]}>Verso</Text>
+                {user.id_photo_back ? (
+                  <Image source={{ uri: user.id_photo_back }} style={styles.docImageSmall} resizeMode="cover" />
+                ) : (
+                  <View style={styles.noDocSmall}><Ionicons name="card-outline" size={28} color="#9CA3AF" /></View>
+                )}
+                <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.id_photo_back ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('id_back')} data-testid="upload-id-back-btn">
+                  {uploadingIdBack ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                    <Text style={{ color: user.id_photo_back ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.id_photo_back ? 'Modifier' : 'Ajouter'}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+            {user.id_verification && (
+              <View style={[styles.verificationBox, { backgroundColor: user.id_verification.is_valid ? '#D1FAE5' : '#FEE2E2' }]}>
+                <Ionicons name={user.id_verification.is_valid ? "checkmark-circle" : "close-circle"} size={16} color={user.id_verification.is_valid ? "#10B981" : "#EF4444"} />
+                <Text style={{ color: user.id_verification.is_valid ? '#065F46' : '#991B1B', fontSize: 12, flex: 1 }}>
+                  {user.id_verification.reason} ({user.id_verification.confidence}%)
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* License */}
+          <View style={[styles.docFullCard, { backgroundColor: C.card, borderColor: C.border, marginTop: 12 }]}>
+            <View style={styles.docHeader}>
+              <Ionicons name="car" size={20} color="#7C3AED" />
+              <Text style={[styles.docTitle, { color: C.text }]}>Permis de Conduire</Text>
+              {user.license_photo && user.license_photo_back && (
+                <View style={[styles.badge, { backgroundColor: '#D1FAE5' }]}><Ionicons name="checkmark-circle" size={14} color="#10B981" /><Text style={[styles.badgeText, { color: '#10B981' }]}>Complet</Text></View>
+              )}
+            </View>
+            <View style={styles.docRow}>
+              <View style={styles.docSide}>
+                <Text style={[styles.docSideLabel, { color: C.textLight }]}>Recto</Text>
+                {user.license_photo ? (
+                  <Image source={{ uri: user.license_photo }} style={styles.docImageSmall} resizeMode="cover" />
+                ) : (
+                  <View style={styles.noDocSmall}><Ionicons name="id-card-outline" size={28} color="#9CA3AF" /></View>
+                )}
+                <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.license_photo ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('license')} data-testid="upload-license-front-btn">
+                  {uploadingLicense ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                    <Text style={{ color: user.license_photo ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.license_photo ? 'Modifier' : 'Ajouter'}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+              <View style={styles.docSide}>
+                <Text style={[styles.docSideLabel, { color: C.textLight }]}>Verso</Text>
+                {user.license_photo_back ? (
+                  <Image source={{ uri: user.license_photo_back }} style={styles.docImageSmall} resizeMode="cover" />
+                ) : (
+                  <View style={styles.noDocSmall}><Ionicons name="id-card-outline" size={28} color="#9CA3AF" /></View>
+                )}
+                <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.license_photo_back ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('license_back')} data-testid="upload-license-back-btn">
+                  {uploadingLicenseBack ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                    <Text style={{ color: user.license_photo_back ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.license_photo_back ? 'Modifier' : 'Ajouter'}</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+            {user.license_verification && (
+              <View style={[styles.verificationBox, { backgroundColor: user.license_verification.is_valid ? '#D1FAE5' : '#FEE2E2' }]}>
+                <Ionicons name={user.license_verification.is_valid ? "checkmark-circle" : "close-circle"} size={16} color={user.license_verification.is_valid ? "#10B981" : "#EF4444"} />
+                <Text style={{ color: user.license_verification.is_valid ? '#065F46' : '#991B1B', fontSize: 12, flex: 1 }}>
+                  {user.license_verification.reason} ({user.license_verification.confidence}%)
+                </Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -424,7 +501,7 @@ export default function ProfileScreen() {
         <View style={uploadModalStyles.overlay}>
           <View style={uploadModalStyles.card}>
             <Text style={uploadModalStyles.title}>
-              {uploadModal === 'id' ? 'Pièce d\'identité' : 'Permis de conduire'}
+              {uploadModal === 'id' ? 'Pièce d\'identité (Recto)' : uploadModal === 'id_back' ? 'Pièce d\'identité (Verso)' : uploadModal === 'license' ? 'Permis de conduire (Recto)' : 'Permis de conduire (Verso)'}
             </Text>
             <Text style={uploadModalStyles.subtitle}>Comment souhaitez-vous ajouter votre document ?</Text>
             <TouchableOpacity style={uploadModalStyles.btn} onPress={() => handleUploadChoice('camera')}>
@@ -473,10 +550,18 @@ const styles = StyleSheet.create({
   alertText: { flex: 1, fontSize: 13, color: '#92400E', lineHeight: 18 },
   docsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   docCard: { borderRadius: 14, padding: 16, borderWidth: 1, width: 340, maxWidth: '100%', flexGrow: 1 },
+  docFullCard: { borderRadius: 14, padding: 16, borderWidth: 1 },
   docHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 },
   docTitle: { flex: 1, fontSize: 14, fontWeight: '600' },
-  badge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16,185,129,0.1)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, gap: 4 },
+  badge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, gap: 4 },
   badgeText: { fontSize: 11, fontWeight: '600' },
+  docRow: { flexDirection: 'row', gap: 12 },
+  docSide: { flex: 1, alignItems: 'center' },
+  docSideLabel: { fontSize: 12, fontWeight: '600', marginBottom: 8 },
+  docImageSmall: { width: '100%', height: 100, borderRadius: 10 },
+  noDocSmall: { width: '100%', height: 100, borderRadius: 10, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' },
+  docBtnSmall: { marginTop: 8, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center' },
+  verificationBox: { flexDirection: 'row', alignItems: 'center', padding: 10, borderRadius: 8, marginTop: 12, gap: 8 },
   docImage: { width: '100%', height: 140, borderRadius: 10 },
   noDoc: { alignItems: 'center', paddingVertical: 24, borderRadius: 10 },
   noDocText: { fontSize: 13, marginTop: 6 },

@@ -61,7 +61,11 @@ class UserProfile(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     id_photo: Optional[str] = None
+    id_photo_back: Optional[str] = None
     license_photo: Optional[str] = None
+    license_photo_back: Optional[str] = None
+    id_verification: Optional[dict] = None
+    license_verification: Optional[dict] = None
     profile_photo: Optional[str] = None
     client_rating: Optional[str] = None
     admin_notes: Optional[str] = None

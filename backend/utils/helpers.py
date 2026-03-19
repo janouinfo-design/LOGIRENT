@@ -35,21 +35,24 @@ async def verify_document_with_ai(image_base64: str, doc_type: str) -> dict:
         chat = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"doc-verify-{uuid.uuid4()}",
-            system_message="Tu es un expert en vérification de documents d'identité. Tu dois analyser les images soumises et déterminer si elles représentent de vrais documents officiels. Réponds UNIQUEMENT en JSON valide."
+            system_message="Tu es un expert en vérification de documents d'identité. Analyse les images soumises avec rigueur. Réponds UNIQUEMENT en JSON valide, sans markdown ni backticks."
         ).with_model("openai", "gpt-5.2")
 
         image_content = ImageContent(image_base64=raw_b64)
 
         prompt = f"""Analyse cette image et détermine si c'est un(e) {doc_name} valide.
 
-Critères de vérification:
-1. L'image montre-t-elle un document officiel (pas une photo d'écran, pas un dessin) ?
-2. Le document est-il lisible (pas trop flou, pas coupé) ?
-3. Le document ressemble-t-il à un vrai {doc_name} (format, éléments de sécurité visibles) ?
-4. L'image n'est-elle pas une photo d'un autre objet (voiture, animal, paysage, etc.) ?
+Critères de vérification STRICTS:
+1. DOCUMENT OFFICIEL: L'image montre-t-elle un vrai document officiel? (pas une capture d'écran, pas un dessin, pas un document imprimé à la maison)
+2. TYPE CORRECT: Le document correspond-il bien à un(e) {doc_name}? Si c'est un autre type de document, rejeter.
+3. LISIBILITÉ: Le document est-il lisible? Vérifier: image floue, trop sombre, coupée, surexposée, trop petite.
+4. QUALITÉ IMAGE: L'image est-elle de qualité suffisante? Rejeter si: image vide, entièrement noire/blanche, très basse résolution.
+5. CONTENU PERTINENT: L'image ne montre-t-elle pas un objet sans rapport (voiture, animal, paysage, selfie, etc.)?
+6. DATE D'EXPIRATION: Si une date d'expiration est visible et lisible, vérifier si le document est expiré (date actuelle: {datetime.utcnow().strftime('%Y-%m-%d')}).
+7. FACE DU DOCUMENT: Identifier s'il s'agit du recto ou du verso du document.
 
-Réponds UNIQUEMENT avec ce JSON (sans markdown, sans backticks):
-{{"is_valid": true/false, "confidence": 0-100, "reason": "explication courte en français", "document_type_detected": "type détecté", "name_detected": "nom si lisible ou null", "warnings": ["liste d'avertissements si applicable"]}}"""
+Réponds UNIQUEMENT avec ce JSON:
+{{"is_valid": true/false, "confidence": 0-100, "reason": "explication courte en français", "document_type_detected": "type détecté", "face": "recto/verso/inconnu", "name_detected": "nom si lisible ou null", "expiry_date": "date si visible ou null", "is_expired": false, "is_blurry": false, "is_wrong_document": false, "quality_score": 0-100, "warnings": ["liste d'avertissements"], "rejection_reasons": ["raisons de rejet si invalide"]}}"""
 
         user_message = UserMessage(text=prompt, file_contents=[image_content])
         response = await chat.send_message(user_message)

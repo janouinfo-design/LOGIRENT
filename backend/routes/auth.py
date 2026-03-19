@@ -190,8 +190,8 @@ async def upload_license(file: UploadFile = File(...), user: dict = Depends(get_
 async def upload_license_b64(body: Base64Upload, user: dict = Depends(get_current_user)):
     verification = await verify_document_with_ai(body.image_data, "license")
 
-    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 70:
-        raise HTTPException(status_code=400, detail=f"Document rejeté: {verification.get('reason', 'Document invalide')}")
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
+        return {"message": "Document rejeté", "verification": verification, "rejected": True}
 
     await db.users.update_one(
         {"id": user['id']},
@@ -201,6 +201,12 @@ async def upload_license_b64(body: Base64Upload, user: dict = Depends(get_curren
                 "is_valid": verification.get("is_valid", True),
                 "confidence": verification.get("confidence", 0),
                 "reason": verification.get("reason", ""),
+                "face": verification.get("face", "recto"),
+                "is_blurry": verification.get("is_blurry", False),
+                "is_expired": verification.get("is_expired", False),
+                "quality_score": verification.get("quality_score", 0),
+                "warnings": verification.get("warnings", []),
+                "rejection_reasons": verification.get("rejection_reasons", []),
                 "verified_at": datetime.utcnow().isoformat(),
             }
         }}
@@ -208,12 +214,26 @@ async def upload_license_b64(body: Base64Upload, user: dict = Depends(get_curren
     return {"message": "License uploaded successfully", "license_photo": body.image_data, "verification": verification}
 
 
+@router.post("/auth/upload-license-back-b64")
+async def upload_license_back_b64(body: Base64Upload, user: dict = Depends(get_current_user)):
+    verification = await verify_document_with_ai(body.image_data, "license")
+
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
+        return {"message": "Document rejeté", "verification": verification, "rejected": True}
+
+    await db.users.update_one(
+        {"id": user['id']},
+        {"$set": {"license_photo_back": body.image_data}}
+    )
+    return {"message": "License back uploaded", "license_photo_back": body.image_data, "verification": verification}
+
+
 @router.post("/auth/upload-id-b64")
 async def upload_id_b64(body: Base64Upload, user: dict = Depends(get_current_user)):
     verification = await verify_document_with_ai(body.image_data, "id")
 
-    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 70:
-        raise HTTPException(status_code=400, detail=f"Document rejeté: {verification.get('reason', 'Document invalide')}")
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
+        return {"message": "Document rejeté", "verification": verification, "rejected": True}
 
     await db.users.update_one(
         {"id": user['id']},
@@ -223,11 +243,31 @@ async def upload_id_b64(body: Base64Upload, user: dict = Depends(get_current_use
                 "is_valid": verification.get("is_valid", True),
                 "confidence": verification.get("confidence", 0),
                 "reason": verification.get("reason", ""),
+                "face": verification.get("face", "recto"),
+                "is_blurry": verification.get("is_blurry", False),
+                "is_expired": verification.get("is_expired", False),
+                "quality_score": verification.get("quality_score", 0),
+                "warnings": verification.get("warnings", []),
+                "rejection_reasons": verification.get("rejection_reasons", []),
                 "verified_at": datetime.utcnow().isoformat(),
             }
         }}
     )
     return {"message": "ID uploaded successfully", "id_photo": body.image_data, "verification": verification}
+
+
+@router.post("/auth/upload-id-back-b64")
+async def upload_id_back_b64(body: Base64Upload, user: dict = Depends(get_current_user)):
+    verification = await verify_document_with_ai(body.image_data, "id")
+
+    if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
+        return {"message": "Document rejeté", "verification": verification, "rejected": True}
+
+    await db.users.update_one(
+        {"id": user['id']},
+        {"$set": {"id_photo_back": body.image_data}}
+    )
+    return {"message": "ID back uploaded", "id_photo_back": body.image_data, "verification": verification}
 
 
 @router.post("/auth/upload-id")
