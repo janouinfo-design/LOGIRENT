@@ -5,6 +5,8 @@ import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
 const PRICE_FIELDS = [
   { key: 'price_per_day', label: 'Par Jour (CHF)' },
   { key: 'price_weekend_fri', label: 'Week-end Ven-Lun' },
@@ -116,7 +118,7 @@ export default function ContractTemplatePage() {
   }
 
   const logoUrl = template?.logo_path
-    ? `${API}/api/vehicles/photo/${template.logo_path}`
+    ? `${API_URL}/api/vehicles/photo/${template.logo_path}`
     : null;
 
   return (
