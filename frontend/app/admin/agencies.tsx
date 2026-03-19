@@ -100,7 +100,7 @@ export default function AgenciesPage() {
     if (!form.name.trim()) { setError('Le nom est requis'); return; }
     try {
       if (editAgency) {
-        await axios.put(`${API_URL}/api/agencies/${editAgency.id}`, { name: form.name, address: form.address, phone: form.phone, email: form.email });
+        await axios.put(`${API_URL}/api/agencies/${editAgency.id}`, { name: form.name, address: form.address, phone: form.phone, email: form.email, navixy_api_url: form.navixy_api_url, navixy_hash: form.navixy_hash });
         setShowModal(false);
         setEditAgency(null);
         setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '', navixy_api_url: '', navixy_hash: '' });
