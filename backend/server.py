@@ -32,12 +32,13 @@ app.add_middleware(
     allow_origins=[
         "https://www.logirent.ch",
         "https://logirent.ch",
+        "https://app.logirent.ch",
         os.environ.get("APP_URL", ""),
         "http://localhost:3000",
         "http://localhost:8081",
         "http://localhost:19006",
     ],
-    allow_origin_regex=r"https://.*\.preview\.emergentagent\.com",
+    allow_origin_regex=r"https://.*\.(logirent\.ch|preview\.emergentagent\.com)",
     allow_methods=["*"],
     allow_headers=["*"],
 )
