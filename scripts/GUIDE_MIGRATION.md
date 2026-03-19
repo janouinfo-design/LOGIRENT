@@ -4,7 +4,7 @@
 ## MIGRATION EFFECTUEE
 
 ### Résumé
-- **Source**: MongoDB local (test_database) - Emergent Preview
+- **Source**: MongoDB local (logirent) - Emergent Preview
 - **Cible**: MongoDB Atlas (logirent) - cluster0.isugn1l.mongodb.net
 - **Documents migrés**: 312
 - **Relations vérifiées**: 100% valides

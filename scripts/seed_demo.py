@@ -63,7 +63,7 @@ def main():
     # ==================== AGENCES ====================
     print("\n--- AGENCES ---")
     agencies = [
-        {"name": "LogiRent Geneve", "slug": "logirent-geneve", "address": "Rue du Rhone 42, 1204 Geneve", "phone": "+41 22 300 00 01", "email": "geneve@logirent.ch"},
+        {"name": "LogiRent Geneva", "slug": "logirent-geneva", "address": "Rue du Rhone 42, 1204 Geneve", "phone": "+41 22 300 00 01", "email": "geneve@logirent.ch"},
         {"name": "LogiRent Lausanne", "slug": "logirent-lausanne", "address": "Avenue de la Gare 10, 1003 Lausanne", "phone": "+41 21 300 00 02", "email": "lausanne@logirent.ch"},
     ]
     agency_ids = {}
@@ -79,14 +79,14 @@ def main():
             counts["agencies"] += 1
             print(f"  [+] {a['name']}")
 
-    gva = agency_ids["logirent-geneve"]
+    gva = agency_ids["logirent-geneva"]
     lsn = agency_ids["logirent-lausanne"]
 
     # ==================== UTILISATEURS ====================
     print("\n--- UTILISATEURS ---")
     pw = hp(DEFAULT_PASSWORD)
     users = [
-        {"email": "superadmin@logirent.ch", "name": "Omar Bensalem", "role": "super_admin", "agency_id": None, "phone": "+41 79 100 00 00", "address": "Rue de Berne 15, 1201 Geneve", "nationality": "Suisse", "date_of_birth": "1985-03-15", "license_number": "CH-GE-2020-45678"},
+        {"email": "superadmin@logirent.ch", "name": "Omar El-Nouwairi", "role": "super_admin", "agency_id": None, "phone": "+41 79 100 00 00", "address": "Rue de Berne 15, 1201 Geneve", "nationality": "Suisse", "date_of_birth": "1985-03-15", "license_number": "CH-GE-2020-45678"},
         {"email": "admin-geneva@logirent.ch", "name": "Marc Favre", "role": "admin", "agency_id": gva, "phone": "+41 79 200 00 01", "address": "Rue de Carouge 88, 1205 Geneve", "nationality": "Suisse", "date_of_birth": "1980-07-22", "license_number": "CH-GE-2018-12345"},
         {"email": "admin-lausanne@logirent.ch", "name": "Claire Dubois", "role": "admin", "agency_id": lsn, "phone": "+41 79 200 00 02", "address": "Avenue d'Ouchy 4, 1006 Lausanne", "nationality": "Suisse", "date_of_birth": "1988-11-05", "license_number": "CH-VD-2019-67890"},
         {"email": "jean.dupont@gmail.com", "name": "Jean Dupont", "role": "client", "agency_id": gva, "phone": "+41 78 111 22 33", "address": "Chemin des Tulipes 12, 1208 Geneve", "nationality": "Suisse", "date_of_birth": "1992-01-18", "license_number": "CH-GE-2015-11111"},
@@ -246,7 +246,7 @@ def main():
 
     # ==================== CONTRACT TEMPLATES ====================
     print("\n--- TEMPLATES CONTRAT ---")
-    for slug, aid in [("logirent-geneve", gva), ("logirent-lausanne", lsn)]:
+    for slug, aid in [("logirent-geneva", gva), ("logirent-lausanne", lsn)]:
         if not db.contract_templates.find_one({"agency_id": aid}):
             db.contract_templates.insert_one({
                 "id": uid(), "agency_id": aid,

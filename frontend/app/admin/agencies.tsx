@@ -350,7 +350,7 @@ export default function AgenciesPage() {
                 </View>
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>URL API Navixy</Text>
-                  <TextInput style={styles.fieldInput} value={form.navixy_api_url} onChangeText={(t) => setForm({ ...form, navixy_api_url: t })} placeholder="https://login.logitrak.fr/api-v2" placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-url" />
+                  <TextInput style={styles.fieldInput} value={form.navixy_api_url} onChangeText={(t) => setForm({ ...form, navixy_api_url: t })} placeholder="https://api.navixy.com/v2" placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-url" />
                 </View>
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>Clé API (Hash) Navixy</Text>
