@@ -28,16 +28,21 @@ async def list_agencies(user: dict = Depends(get_agency_admin)):
     else:
         agencies = await db.agencies.find({"id": user.get('agency_id')}, {"_id": 0}).to_list(1)
 
+    result = []
     for agency in agencies:
-        agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency['id']})
-        agency['reservation_count'] = await db.reservations.count_documents({"agency_id": agency['id']})
-        agency['admin_count'] = await db.users.count_documents({"agency_id": agency['id'], "role": {"$in": ["admin", "super_admin"]}})
-        admin_user = await db.users.find_one({"agency_id": agency['id'], "role": "admin"}, {"email": 1, "name": 1, "id": 1, "_id": 0})
+        aid = agency.get('id')
+        if not aid:
+            continue
+        agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": aid})
+        agency['reservation_count'] = await db.reservations.count_documents({"agency_id": aid})
+        agency['admin_count'] = await db.users.count_documents({"agency_id": aid, "role": {"$in": ["admin", "super_admin"]}})
+        admin_user = await db.users.find_one({"agency_id": aid, "role": "admin"}, {"email": 1, "name": 1, "id": 1, "_id": 0})
         agency['admin_email'] = admin_user['email'] if admin_user else None
         agency['admin_name'] = admin_user.get('name') if admin_user else None
         agency['admin_id'] = admin_user.get('id') if admin_user else None
         agency.pop('admin_password_plain', None)
-    return agencies
+        result.append(agency)
+    return result
 
 
 @router.post("/agencies")
