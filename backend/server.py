@@ -25,6 +25,23 @@ from utils.notifications import create_notification
 # Create the main app
 app = FastAPI(title="LogiRent API", version="1.0.0")
 
+# CORS middleware - must be added BEFORE routes
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=[
+        "https://www.logirent.ch",
+        "https://logirent.ch",
+        os.environ.get("APP_URL", ""),
+        "http://localhost:3000",
+        "http://localhost:8081",
+        "http://localhost:19006",
+    ],
+    allow_origin_regex=r"https://.*\.preview\.emergentagent\.com",
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create router with /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -177,15 +194,6 @@ async def seed_data():
 
 # Include the api router in the app
 app.include_router(api_router)
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 async def _check_reminders_task():
