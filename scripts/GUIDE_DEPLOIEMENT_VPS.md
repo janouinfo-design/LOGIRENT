@@ -5,7 +5,6 @@
 - VPS avec Ubuntu 20.04+ (ou Debian)
 - Node.js 18+ et npm/yarn
 - Python 3.10+
-- MongoDB Atlas (votre cluster est deja configure)
 - Un nom de domaine pointe vers votre VPS (ex: app.logirent.ch)
 
 ---
@@ -13,23 +12,22 @@
 ## Etape 1 : Installer les dependances systeme
 
 ```bash
-# Mettre a jour le systeme
 sudo apt update && sudo apt upgrade -y
 
-# Installer Node.js 18+
+# Node.js 18+
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# Installer Python 3.10+ et pip
+# Python 3.10+ et pip
 sudo apt install -y python3 python3-pip python3-venv
 
-# Installer PM2 (gestionnaire de processus)
+# PM2 (gestionnaire de processus)
 sudo npm install -g pm2
 
-# Installer Nginx (reverse proxy)
+# Nginx (reverse proxy)
 sudo apt install -y nginx
 
-# Installer certbot pour SSL (Let's Encrypt)
+# Certbot pour SSL
 sudo apt install -y certbot python3-certbot-nginx
 ```
 
@@ -38,9 +36,10 @@ sudo apt install -y certbot python3-certbot-nginx
 ## Etape 2 : Cloner le projet
 
 ```bash
-cd /home/votre-utilisateur
-git clone <votre-repo-url> logirent
-cd logirent
+cd /home/$USER/apps
+git clone <votre-repo-url> LOGIRENT
+cd LOGIRENT
+chmod +x scripts/*.sh
 ```
 
 ---
@@ -58,46 +57,63 @@ pip install -r requirements.txt
 
 ### 3.2 Configurer le fichier .env du backend
 
-Creez le fichier `/home/votre-utilisateur/logirent/backend/.env` :
+Creez `backend/.env` :
 
 ```env
-MONGO_URL=mongodb+srv://janouinfo_db_user:Omar2007@cluster0.isugn1l.mongodb.net/?appName=Cluster0
+MONGO_URL=mongodb://localhost:27017
 DB_NAME=logirent
-JWT_SECRET=CHANGEZ-CECI-PAR-UNE-CLE-SECRETE-ALEATOIRE
+JWT_SECRET=CHANGEZ-CECI-par-une-cle-aleatoire-de-32-caracteres-minimum
 STRIPE_API_KEY=votre_cle_stripe
 RESEND_API_KEY=votre_cle_resend
 SENDER_EMAIL=contact@logirent.ch
 NAVIXY_API_URL=https://login.logitrak.fr/api-v2
 NAVIXY_HASH=votre_hash_navixy
-EMERGENT_LLM_KEY=votre_cle_emergent
 ```
 
-**IMPORTANT** : Changez `DB_NAME` en `logirent` (ou le nom que vous voulez pour la production).
+**IMPORTANT** :
+- Generez un JWT_SECRET aleatoire : `python3 -c "import secrets;print(secrets.token_hex(32))"`
+- Ne copiez JAMAIS un JWT_SECRET depuis un autre projet
 
-### 3.3 Creer le Super Admin dans la base de donnees
+### 3.3 Installer MongoDB local
 
 ```bash
-# Installez les dependances du script
-pip install pymongo bcrypt dnspython
-
-# Executez le script de seed
-python3 ../scripts/seed_superadmin.py
+sudo ./scripts/01_install_mongodb.sh
 ```
 
-Cela creera votre premier compte Super Admin :
-- **Email** : admin@logirent.ch
-- **Mot de passe** : LogiRent2024!
-
-### 3.4 Lancer le backend
+### 3.4 Migrer les donnees depuis Atlas (si applicable)
 
 ```bash
-# Tester que ca fonctionne
-uvicorn server:app --host 0.0.0.0 --port 8001
-
-# Si ca marche, arreter (Ctrl+C) et utiliser PM2
-pm2 start "uvicorn server:app --host 0.0.0.0 --port 8001" --name logirent-backend
-pm2 save
+cp scripts/migration.env.example scripts/migration.env
+nano scripts/migration.env   # Remplissez votre ATLAS_URL
+./scripts/02_migrate_data.sh
+./scripts/03_update_env.sh
 ```
+
+### 3.5 OU Seeder les donnees de demo
+
+```bash
+cd scripts
+source ../backend/venv/bin/activate
+python3 seed_demo.py
+```
+
+### 3.6 Demarrer le backend
+
+```bash
+# TOUJOURS utiliser backend.sh pour gerer le backend
+./scripts/backend.sh start
+```
+
+Commandes disponibles :
+```bash
+./scripts/backend.sh start     # Demarre (tue l'ancien si existant)
+./scripts/backend.sh stop      # Arrete
+./scripts/backend.sh restart   # Redemarre proprement
+./scripts/backend.sh status    # Affiche l'etat
+./scripts/backend.sh logs      # Logs en temps reel
+```
+
+**NE LANCEZ JAMAIS `uvicorn` directement.** Utilisez toujours `backend.sh`.
 
 ---
 
@@ -106,13 +122,11 @@ pm2 save
 ### 4.1 Installer les dependances
 
 ```bash
-cd ../frontend
+cd frontend
 yarn install
 ```
 
 ### 4.2 Configurer le fichier .env du frontend
-
-Creez le fichier `/home/votre-utilisateur/logirent/frontend/.env` :
 
 ```env
 EXPO_PUBLIC_BACKEND_URL=https://app.logirent.ch
@@ -121,31 +135,23 @@ EXPO_PUBLIC_BACKEND_URL=https://app.logirent.ch
 ### 4.3 Build pour le Web
 
 ```bash
-npx expo export:web
-# Ou selon votre version d'Expo :
 npx expo export --platform web
 ```
 
-Les fichiers seront generes dans le dossier `dist/` ou `web-build/`.
+Les fichiers seront generes dans `dist/`.
 
-### 4.4 Servir le frontend avec Nginx ou PM2
+### 4.4 Deployer les fichiers statiques
 
-**Option A : Fichiers statiques via Nginx** (recommande pour le web) :
 ```bash
+sudo mkdir -p /var/www/logirent
 sudo cp -r dist/* /var/www/logirent/
-```
-
-**Option B : Avec PM2** (si vous utilisez un serveur de dev) :
-```bash
-pm2 start "npx expo start --web --port 3000" --name logirent-frontend
-pm2 save
 ```
 
 ---
 
 ## Etape 5 : Configurer Nginx (Reverse Proxy)
 
-Creez le fichier `/etc/nginx/sites-available/logirent` :
+Creez `/etc/nginx/sites-available/logirent` :
 
 ```nginx
 server {
@@ -174,7 +180,7 @@ server {
 }
 ```
 
-Activez le site :
+Activez :
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/logirent /etc/nginx/sites-enabled/
@@ -184,59 +190,103 @@ sudo systemctl reload nginx
 
 ---
 
-## Etape 6 : Configurer SSL (HTTPS)
+## Etape 6 : SSL (HTTPS)
 
 ```bash
 sudo certbot --nginx -d app.logirent.ch
 ```
-
-Certbot modifiera automatiquement votre configuration Nginx pour HTTPS.
 
 ---
 
 ## Etape 7 : Demarrage automatique
 
 ```bash
-# Sauvegarder la config PM2
 pm2 save
-
-# Configurer PM2 pour demarrer au boot
 pm2 startup
 # Suivez les instructions affichees
 ```
 
 ---
 
+## Etape 8 : Backups automatiques
+
+```bash
+crontab -e
+# Ajouter:
+0 2 * * * /home/$USER/apps/LOGIRENT/scripts/cron_backup.sh
+```
+
+---
+
 ## Verification
 
-1. Ouvrez `https://app.logirent.ch` dans votre navigateur
-2. Connectez-vous avec : `admin@logirent.ch` / `LogiRent2024!`
-3. Creez votre premiere agence depuis le panneau Super Admin
+```bash
+# Verifier tout d'un coup
+./scripts/04_verify.sh
+
+# Ou manuellement
+./scripts/backend.sh status
+curl http://localhost:8001/api/vehicles
+```
+
+Ouvrez `https://app.logirent.ch` et connectez-vous :
+- **Super Admin** : superadmin@logirent.ch / LogiRent2024!
+- **Admin agence** : admin-geneva@logirent.ch / LogiRent2024!
 
 ---
 
 ## Commandes utiles
 
 ```bash
-# Voir les logs du backend
-pm2 logs logirent-backend
+# GESTION BACKEND (TOUJOURS via backend.sh)
+./scripts/backend.sh start
+./scripts/backend.sh stop
+./scripts/backend.sh restart
+./scripts/backend.sh status
+./scripts/backend.sh logs
 
-# Redemarrer le backend
-pm2 restart logirent-backend
+# BACKUPS
+python3 scripts/backup.py status
+python3 scripts/backup.py backup
+python3 scripts/backup.py restore
 
-# Voir le statut des services
-pm2 status
-
-# Voir les logs Nginx
+# NGINX
 sudo tail -f /var/log/nginx/error.log
+sudo systemctl reload nginx
+
+# MONGODB
+mongosh logirent --eval 'db.stats()'
 ```
+
+---
+
+## RESOLUTION : Erreur "port 8001 already in use"
+
+Si vous obtenez `[Errno 98] address already in use` :
+
+```bash
+# Methode 1 : Utiliser backend.sh (recommande)
+./scripts/backend.sh restart
+
+# Methode 2 : Tuer manuellement tout ce qui occupe le port
+lsof -ti :8001 | xargs kill -9
+./scripts/backend.sh start
+
+# Methode 3 : Nettoyage complet
+pm2 delete all
+lsof -ti :8001 | xargs kill -9 2>/dev/null
+./scripts/backend.sh start
+```
+
+**Cause habituelle** : Lancer `uvicorn` manuellement puis oublier de l'arreter avant de demarrer PM2.
 
 ---
 
 ## Checklist de securite
 
-- [ ] Changer le JWT_SECRET par une cle aleatoire (32+ caracteres)
-- [ ] Changer le mot de passe du Super Admin apres la premiere connexion
-- [ ] Configurer le firewall (UFW) : `sudo ufw allow 80,443/tcp`
-- [ ] Verifier le domaine avec Resend pour les emails
-- [ ] Sauvegardes automatiques de MongoDB Atlas
+- [ ] JWT_SECRET genere aleatoirement (32+ caracteres)
+- [ ] Changer le mot de passe Super Admin apres premiere connexion
+- [ ] Firewall : `sudo ufw allow 80,443/tcp`
+- [ ] Verifier le domaine Resend pour les emails
+- [ ] Backups automatiques configures (crontab)
+- [ ] Ne JAMAIS lancer `uvicorn` directement, toujours `backend.sh`

@@ -90,7 +90,7 @@ if [ "$HTTP_CODE" = "200" ]; then
     ok "GET /api/vehicles repond (HTTP $HTTP_CODE)"
 else
     fail "Backend ne repond pas (HTTP $HTTP_CODE)"
-    echo "       Redemarrez: pm2 restart logirent-backend"
+    echo "       Redemarrez: ./scripts/backend.sh restart"
 fi
 
 # 5. Login admin

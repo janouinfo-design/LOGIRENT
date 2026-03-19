@@ -82,10 +82,15 @@ cp "$LATEST_BACKUP" "$ENV_FILE"
 echo -e "  ${GREEN}[OK]${NC} .env restaure"
 
 # Redemarrer backend
-if command -v pm2 &>/dev/null; then
-    pm2 restart logirent-backend 2>/dev/null && echo -e "  ${GREEN}[OK]${NC} Backend redemarre" || echo -e "  ${YELLOW}[ATTENTION]${NC} PM2 restart echoue, redemarrez manuellement"
+ROLLBACK_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+if [ -x "$ROLLBACK_SCRIPT_DIR/backend.sh" ]; then
+    "$ROLLBACK_SCRIPT_DIR/backend.sh" restart
 else
-    echo -e "  ${YELLOW}[INFO]${NC} PM2 non disponible. Redemarrez le backend manuellement."
+    if command -v pm2 &>/dev/null; then
+        pm2 restart logirent-backend 2>/dev/null && echo -e "  ${GREEN}[OK]${NC} Backend redemarre" || echo -e "  ${YELLOW}[ATTENTION]${NC} Redemarrez manuellement: ./scripts/backend.sh restart"
+    else
+        echo -e "  ${YELLOW}[INFO]${NC} Redemarrez le backend: ./scripts/backend.sh restart"
+    fi
 fi
 
 echo ""

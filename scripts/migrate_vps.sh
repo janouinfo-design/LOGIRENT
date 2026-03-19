@@ -72,7 +72,9 @@ if [ "${1}" = "rollback" ]; then
     cp "$LATEST_BACKUP" "$ENV_FILE"
     ok "Fichier .env restauré"
 
-    if command -v pm2 &>/dev/null; then
+    if [ -x "$SCRIPTS_DIR/backend.sh" ]; then
+        "$SCRIPTS_DIR/backend.sh" restart && ok "Backend redémarré" || warn "Redémarrez avec: ./scripts/backend.sh restart"
+    elif command -v pm2 &>/dev/null; then
         pm2 restart logirent-backend 2>/dev/null && ok "Backend redémarré" || warn "Redémarrez manuellement"
     fi
 
@@ -342,7 +344,9 @@ done
 echo ""
 echo -e "${BLUE}── ÉTAPE 6 : Redémarrage backend ──${NC}"
 
-if command -v pm2 &>/dev/null; then
+if [ -x "$SCRIPTS_DIR/backend.sh" ]; then
+    "$SCRIPTS_DIR/backend.sh" restart && ok "Backend redémarré" || warn "Erreur, lancez: ./scripts/backend.sh restart"
+elif command -v pm2 &>/dev/null; then
     pm2 restart logirent-backend 2>/dev/null && ok "Backend redémarré via PM2" || warn "PM2 restart échoué, essayez manuellement"
     sleep 3
 else
