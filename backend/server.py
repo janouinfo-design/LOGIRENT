@@ -2,6 +2,8 @@ from fastapi import FastAPI, APIRouter
 from starlette.middleware.cors import CORSMiddleware
 import asyncio
 import logging
+import subprocess
+import os
 from datetime import datetime
 import uuid
 
@@ -43,6 +45,36 @@ api_router.include_router(admin_router)
 api_router.include_router(agencies_router)
 api_router.include_router(navixy_router)
 api_router.include_router(contracts_router)
+
+
+# ==================== VERSION ENDPOINT ====================
+
+@api_router.get("/version")
+async def get_version():
+    """Retourne la version deployee pour verification de coherence."""
+    git_hash = "unknown"
+    git_date = "unknown"
+    try:
+        git_hash = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL, timeout=3
+        ).decode().strip()
+        git_date = subprocess.check_output(
+            ["git", "log", "-1", "--format=%ci"],
+            stderr=subprocess.DEVNULL, timeout=3
+        ).decode().strip()
+    except Exception:
+        pass
+
+    return {
+        "app": "LogiRent",
+        "api_version": "1.0.0",
+        "git_commit": git_hash,
+        "git_date": git_date,
+        "environment": os.environ.get("LOGIRENT_ENV", "production"),
+        "db_name": os.environ.get("DB_NAME", "?"),
+        "server_time": datetime.utcnow().isoformat(),
+    }
 
 
 # ==================== SEED DATA ====================

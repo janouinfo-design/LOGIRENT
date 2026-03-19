@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../../../src/api/axios';
 import { useAuthStore } from '../../../src/store/authStore';
 import { useThemeStore } from '../../../src/store/themeStore';
-
-const API = process.env.EXPO_PUBLIC_API_URL || process.env.REACT_APP_BACKEND_URL || '';
 
 interface Props {
   visible: boolean;
@@ -63,10 +62,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
     }
     setSaving(true);
     try {
-      const res = await fetch(`${API}/api/admin/quick-client`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const res = await api.post('/api/admin/quick-client', {
           name: name.trim(),
           phone: phone.trim() || null,
           email: email.trim() || null,
@@ -76,18 +72,13 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
           license_number: license.trim() || null,
           license_issue_date: licenseIssued.trim() || null,
           license_expiry_date: licenseExpiry.trim() || null,
-        }),
       });
-      const data = await res.json();
-      if (res.ok) {
-        setCreatedClient(data.client);
-        setGeneratedPassword(data.generated_password || '');
-        setStep('documents');
-      } else {
-        Alert.alert('Erreur', data.detail || 'Erreur lors de la création');
-      }
-    } catch (e) {
-      Alert.alert('Erreur', 'Impossible de créer le client');
+      const data = res.data;
+      setCreatedClient(data.client);
+      setGeneratedPassword(data.generated_password || '');
+      setStep('documents');
+    } catch (e: any) {
+      Alert.alert('Erreur', e?.response?.data?.detail || 'Impossible de créer le client');
     } finally {
       setSaving(false);
     }
@@ -112,11 +103,12 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
       try {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetch(
-          `${API}/api/admin/clients/${createdClient.id}/documents?doc_type=${docType}`,
-          { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData }
+        const res = await api.post(
+          `/api/admin/clients/${createdClient.id}/documents?doc_type=${docType}`,
+          formData,
+          { headers: { 'Content-Type': 'multipart/form-data' } }
         );
-        if (!res.ok) {
+        if (res.status < 200 || res.status >= 300) {
           Alert.alert('Erreur', "Échec de l'upload");
           setDocPreviews(p => { const n = {...p}; delete n[docType]; return n; });
         }

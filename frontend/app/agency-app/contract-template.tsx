@@ -1,10 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Image, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
-
-const API = process.env.EXPO_PUBLIC_API_URL || process.env.REACT_APP_BACKEND_URL || '';
 
 const PRICE_FIELDS = [
   { key: 'price_per_day', label: 'Par Jour (CHF)' },
@@ -32,50 +31,36 @@ export default function ContractTemplatePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
-  const headers = useCallback(() => ({
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  }), [token]);
-
   const fetchTemplate = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/admin/contract-template`, { headers: headers() });
-      if (res.ok) {
-        const data = await res.json();
-        setTemplate(data);
-        setLegalText(data.legal_text || '');
-        setDeductible(data.deductible || '1000');
-        setWebsite(data.agency_website || '');
-        setPrices(data.default_prices || {});
-      }
+      const res = await api.get('/api/admin/contract-template');
+      const data = res.data;
+      setTemplate(data);
+      setLegalText(data.legal_text || '');
+      setDeductible(data.deductible || '1000');
+      setWebsite(data.agency_website || '');
+      setPrices(data.default_prices || {});
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [headers]);
+  }, []);
 
   useEffect(() => { fetchTemplate(); }, [fetchTemplate]);
 
   const save = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`${API}/api/admin/contract-template`, {
-        method: 'PUT',
-        headers: headers(),
-        body: JSON.stringify({
-          legal_text: legalText,
-          deductible,
-          agency_website: website,
-          default_prices: prices,
-        }),
+      const res = await api.put('/api/admin/contract-template', {
+        legal_text: legalText,
+        deductible,
+        agency_website: website,
+        default_prices: prices,
       });
-      if (res.ok) {
-        const data = await res.json();
-        setTemplate(data);
-        setHasChanges(false);
-        Alert.alert('Succès', 'Modèle de contrat sauvegardé');
-      }
+      setTemplate(res.data);
+      setHasChanges(false);
+      Alert.alert('Succès', 'Modèle de contrat sauvegardé');
     } catch (e) {
       Alert.alert('Erreur', 'Impossible de sauvegarder');
     } finally {
@@ -95,16 +80,11 @@ export default function ContractTemplatePage() {
         try {
           const formData = new FormData();
           formData.append('file', file);
-          const res = await fetch(`${API}/api/admin/contract-template/logo`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` },
-            body: formData,
+          const res = await api.post('/api/admin/contract-template/logo', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           });
-          if (res.ok) {
-            const data = await res.json();
-            setTemplate((t: any) => ({ ...t, logo_path: data.logo_path }));
-            Alert.alert('Succès', 'Logo téléchargé');
-          }
+          setTemplate((t: any) => ({ ...t, logo_path: res.data.logo_path }));
+          Alert.alert('Succès', 'Logo téléchargé');
         } catch (err) {
           Alert.alert('Erreur', 'Upload échoué');
         } finally {
@@ -117,13 +97,8 @@ export default function ContractTemplatePage() {
 
   const deleteLogo = async () => {
     try {
-      const res = await fetch(`${API}/api/admin/contract-template/logo`, {
-        method: 'DELETE',
-        headers: headers(),
-      });
-      if (res.ok) {
-        setTemplate((t: any) => ({ ...t, logo_path: null }));
-      }
+      await api.delete('/api/admin/contract-template/logo');
+      setTemplate((t: any) => ({ ...t, logo_path: null }));
     } catch (e) {}
   };
 
@@ -304,14 +279,11 @@ export default function ContractTemplatePage() {
             }
             setLoadingPreview(true);
             try {
-              const res = await fetch(`${API}/api/admin/contract-template/preview-pdf`, {
-                headers: { 'Authorization': `Bearer ${token}` },
+              const res = await api.get('/api/admin/contract-template/preview-pdf', {
+                responseType: 'blob',
               });
-              if (res.ok) {
-                const blob = await res.blob();
-                const url = URL.createObjectURL(blob);
-                setPreviewUrl(url);
-              }
+              const url = URL.createObjectURL(res.data);
+              setPreviewUrl(url);
             } catch (e) {
               Alert.alert('Erreur', 'Impossible de générer l\'aperçu');
             } finally {

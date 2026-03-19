@@ -12,54 +12,51 @@ Build a complete car rental solution named "LogiRent" with:
 - **Database**: MongoDB (local on VPS or Atlas)
 - **Storage**: MinIO Object Storage (via emergentintegrations)
 
-## Critical Fixes Applied
+## Critical Fixes Applied (March 19, 2026)
 
-### 1. Project Isolation (March 19, 2026)
-Complete decontamination of LogiRent from LogiTime/LogiTrak/RentDrive:
-- .env: JWT_SECRET and SENDER_EMAIL cleaned
-- database.py: Fallbacks cleaned
-- DB: 44 contaminated accounts removed, test_database dropped
-- Frontend: Placeholders cleaned
-- Super Admin name: "Omar El-Nouwairi"
+### 1. Project Isolation (LogiRent vs LogiTime)
+- Cleaned all contamination from LogiTrak/RentDrive in .env, database.py, DB data
+- 44 contaminated accounts removed, test_database dropped
 
-### 2. Port 8001 Conflict Resolution (March 19, 2026)
-- **Root cause**: Multiple launch methods (manual uvicorn + PM2) competing for port 8001
-- **Fix**: Created `scripts/backend.sh` — unified backend manager that kills any existing process before starting
-- **Updated**: All scripts and guides now reference `backend.sh` instead of direct `pm2 restart`
-- **Also fixed**: JWT_SECRET was too short (27 bytes < 32 minimum) → extended to 46 bytes
-- **Guide rewritten**: `GUIDE_DEPLOIEMENT_VPS.md` now explicitly forbids manual `uvicorn` launches
+### 2. Port 8001 Conflict
+- Created `scripts/backend.sh` — unified backend manager
+- All scripts and guides updated to use it
 
-## Migration Toolkit (Secure, Modular)
+### 3. Environment Consistency (Local vs VPS vs Production)
+Root cause found and fixed:
+- `NewClientModal.tsx` and `contract-template.tsx` used wrong env var (`EXPO_PUBLIC_API_URL || REACT_APP_BACKEND_URL`) instead of `EXPO_PUBLIC_BACKEND_URL`
+- Both files migrated to use centralized `api` from `axios.ts`
+- `email.py` hardcoded URL `https://logirent.ch` → now reads `APP_URL` from env
+- Added `GET /api/version` endpoint for deployment verification
+- Created `scripts/check_deploy.sh` — verifies git sync, env, services, data
+- Created `scripts/WORKFLOW_DEPLOIEMENT.md` — step-by-step GitHub → VPS guide
+
+### Files Modified:
+- `frontend/src/components/agency/NewClientModal.tsx` — migrated from fetch+wrong env to axios
+- `frontend/app/agency-app/contract-template.tsx` — migrated from fetch+wrong env to axios
+- `backend/server.py` — added /api/version endpoint
+- `backend/utils/email.py` — app_url configurable via env
+
+### New Files:
+- `scripts/check_deploy.sh` — deployment verification
+- `scripts/WORKFLOW_DEPLOIEMENT.md` — deployment workflow
+
+## Migration Toolkit
 
 | Script | Purpose |
 |---|---|
-| `backend.sh` | **UNIFIED backend manager** (start/stop/restart/status/logs) |
-| `env_loader.py` | Shared module: loads backend/.env and migration.env |
-| `migration.env.example` | Template for Atlas credentials |
+| `backend.sh` | Unified backend manager (start/stop/restart/status/logs) |
+| `check_deploy.sh` | Deployment coherence verification |
+| `env_loader.py` | Shared .env loader |
 | `01_install_mongodb.sh` | Installs MongoDB 7.0 (sudo) |
-| `02_migrate_data.sh` | Runs migrate_to_local.py |
+| `02_migrate_data.sh` | Runs migration |
 | `migrate_to_local.py` | Core migration Atlas -> local |
 | `03_update_env.sh` | Updates .env with confirmation |
-| `04_verify.sh` | 6 verification checks |
+| `04_verify.sh` | Post-migration checks |
 | `rollback.sh` | Restores .env backup |
 | `backup.py` | Backup/restore/reset/status |
 | `seed_demo.py` | Demo data seeder |
 | `cron_backup.sh` | Daily cron backup |
-
-## Database: logirent (143 documents)
-
-| Collection | Docs |
-|---|---|
-| agencies | 4 |
-| users | 21 (2 super_admin + 6 admin + 13 client) |
-| vehicles | 13 |
-| reservations | 32 |
-| contracts | 22 |
-| contract_templates | 7 |
-| notifications | 13 |
-| payment_transactions | 26 |
-| push_tokens | 3 |
-| password_resets | 2 |
 
 ## Test Credentials
 - Super Admin: superadmin@logirent.ch / LogiRent2024!

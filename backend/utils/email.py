@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import resend
 from datetime import datetime
 from database import RESEND_API_KEY, SENDER_EMAIL
@@ -207,7 +208,7 @@ async def send_welcome_email(recipient: str, client_name: str, password: str, ag
     import base64
 
     # Generate QR code for the mobile app link
-    app_url = "https://logirent.ch"
+    app_url = os.environ.get('APP_URL', 'https://logirent.ch')
     qr = qrcode.QRCode(version=1, box_size=6, border=2)
     qr.add_data(app_url)
     qr.make(fit=True)
