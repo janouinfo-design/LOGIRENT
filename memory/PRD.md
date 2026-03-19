@@ -1,71 +1,97 @@
 # LogiRent - Product Requirements Document
 
 ## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with:
-- Client Mobile/Web App
-- Admin Web Back-office (Super Admin & Agency Admin)
-- Future: Driver/Agent App
+Build a complete car rental solution named "LogiRent" with multi-agency support, reservation management, vehicle tracking, and payment processing. The user's primary goal was to migrate the application to their own VPS while fixing critical issues.
 
-## Core Architecture
+## Tech Stack
 - **Frontend**: React Native (Expo) - Web + Mobile
 - **Backend**: FastAPI (Python)
-- **Database**: MongoDB (local on VPS or Atlas)
-- **Storage**: MinIO Object Storage (via emergentintegrations)
+- **Database**: MongoDB (migrating from Atlas to self-hosted)
+- **Integrations**: Stripe (payments), Resend (emails), Navixy (GPS tracking), OpenAI (via emergentintegrations)
 
-## Critical Fixes Applied (March 19, 2026)
+## User Roles
+- **Super Admin**: Global dashboard, manage all agencies
+- **Agency Admin**: Manage own agency vehicles, reservations, clients
+- **Client**: Browse vehicles, make reservations, manage profile
 
-### 1. Project Isolation (LogiRent vs LogiTime)
-- Cleaned all contamination from LogiTrak/RentDrive in .env, database.py, DB data
-- 44 contaminated accounts removed, test_database dropped
+## What's Been Implemented
 
-### 2. Port 8001 Conflict
-- Created `scripts/backend.sh` — unified backend manager
-- All scripts and guides updated to use it
+### Core Features (Complete)
+- Multi-agency vehicle rental platform
+- Role-based access (super_admin, admin, client)
+- Vehicle management with availability calendar
+- Reservation system with payment (Stripe + cash)
+- GPS tracking via Navixy integration
+- Contract generation
+- Email notifications via Resend
+- QR code for agency public pages
 
-### 3. Environment Consistency (Local vs VPS vs Production)
-Root cause found and fixed:
-- `NewClientModal.tsx` and `contract-template.tsx` used wrong env var (`EXPO_PUBLIC_API_URL || REACT_APP_BACKEND_URL`) instead of `EXPO_PUBLIC_BACKEND_URL`
-- Both files migrated to use centralized `api` from `axios.ts`
-- `email.py` hardcoded URL `https://logirent.ch` → now reads `APP_URL` from env
-- Added `GET /api/version` endpoint for deployment verification
-- Created `scripts/check_deploy.sh` — verifies git sync, env, services, data
-- Created `scripts/WORKFLOW_DEPLOIEMENT.md` — step-by-step GitHub → VPS guide
+### VPS Migration & Stability Fixes (March 2026)
+- Migration scripts refactored (secure, modular: 01-04 steps)
+- LogiRent/LogiTime project isolation
+- Backend port conflict resolution (pm2 management)
+- Environment consistency (standardized env vars)
+- Frontend routing protection (withAuth HOC)
+- JWT secret security fix
+- Version tracking endpoint (`/api/version`)
 
-### Files Modified:
-- `frontend/src/components/agency/NewClientModal.tsx` — migrated from fetch+wrong env to axios
-- `frontend/app/agency-app/contract-template.tsx` — migrated from fetch+wrong env to axios
-- `backend/server.py` — added /api/version endpoint
-- `backend/utils/email.py` — app_url configurable via env
+### Bug Fixes - Session March 19, 2026
+- **Frontend URL fix**: Added `|| ''` fallback to `EXPO_PUBLIC_BACKEND_URL` in 15 files, enabling relative URLs on VPS (no more `undefined/api/...`)
+- **CORS fix**: Moved middleware before routes, added explicit origins (`logirent.ch`, `app.logirent.ch`, `*.logirent.ch` regex)
+- **Agencies KeyError fix**: Changed `agency['id']` to `agency.get('id')` throughout `agencies.py`, added auto-repair for agencies missing `id` field
+- **Navixy form fix**: PUT request now includes `navixy_api_url` and `navixy_hash` fields
+- **VPS data cleanup**: Created `scripts/fix_vps_data.py` to clean duplicate/test agencies, re-link orphan admins
+- **Admin-agency linkage**: Fixed `admin-geneva@logirent.ch` missing `agency_id`
 
-### New Files:
-- `scripts/check_deploy.sh` — deployment verification
-- `scripts/WORKFLOW_DEPLOIEMENT.md` — deployment workflow
+## Architecture
+```
+/app
+├── backend/
+│   ├── server.py          # FastAPI app + CORS config
+│   ├── routes/
+│   │   ├── agencies.py    # Agency CRUD + admin login
+│   │   ├── admin.py       # Admin dashboard endpoints
+│   │   ├── auth.py        # Authentication
+│   │   ├── reservations.py # Client reservations
+│   │   └── vehicles.py    # Vehicle management
+│   └── models.py          # Pydantic models
+├── frontend/
+│   ├── src/
+│   │   ├── api/axios.ts   # Configured axios instance
+│   │   ├── store/         # Zustand stores
+│   │   └── components/    # Shared components
+│   └── app/               # Expo Router pages
+│       ├── agency-app/    # Agency admin interface
+│       ├── admin/         # Super admin interface
+│       └── (tabs)/        # Client interface
+└── scripts/
+    ├── fix_vps_data.py    # VPS database cleanup
+    ├── backend.sh         # PM2 process management
+    └── WORKFLOW_DEPLOIEMENT.md
+```
 
-## Migration Toolkit
+## Key Credentials
+- Super Admin: `superadmin@logirent.ch` / `LogiRent2024!`
+- Agency Admin: `admin-geneva@logirent.ch` / `LogiRent2024!`
+- Client: `jean.dupont@gmail.com` / `LogiRent2024!`
 
-| Script | Purpose |
-|---|---|
-| `backend.sh` | Unified backend manager (start/stop/restart/status/logs) |
-| `check_deploy.sh` | Deployment coherence verification |
-| `env_loader.py` | Shared .env loader |
-| `01_install_mongodb.sh` | Installs MongoDB 7.0 (sudo) |
-| `02_migrate_data.sh` | Runs migration |
-| `migrate_to_local.py` | Core migration Atlas -> local |
-| `03_update_env.sh` | Updates .env with confirmation |
-| `04_verify.sh` | Post-migration checks |
-| `rollback.sh` | Restores .env backup |
-| `backup.py` | Backup/restore/reset/status |
-| `seed_demo.py` | Demo data seeder |
-| `cron_backup.sh` | Daily cron backup |
+## VPS Deployment
+- Domain: `logirent.ch` / `www.logirent.ch` / `app.logirent.ch`
+- Server: Ubuntu VPS at `ov-4ae980`
+- Project path: `/home/ubuntu/apps/LOGIRENT`
+- Frontend served by Nginx from `/var/www/logirent/`
+- Backend managed by PM2 on port 8001
 
-## Test Credentials
-- Super Admin: superadmin@logirent.ch / LogiRent2024!
-- Agency Admin: admin-geneva@logirent.ch / LogiRent2024!
-- Client: jean.dupont@gmail.com / LogiRent2024!
+## Backlog
 
-## Upcoming Tasks
-1. Execute VPS migration (P0)
-2. Push Notifications (P1)
-3. Driver/Agent Application (P2)
-4. App Store Deployment (P3)
-5. Resend Domain Verification (P2)
+### P1 - Upcoming
+- Push Notifications: Re-implement native push for mobile app
+- Resend domain verification (user action required)
+
+### P2 - Future
+- Driver/Agent mobile application
+- App Store / Play Store deployment
+
+### P3 - Nice to Have
+- Advanced analytics dashboard
+- Multi-language support improvements
