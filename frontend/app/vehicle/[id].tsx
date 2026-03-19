@@ -11,7 +11,7 @@ import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 import { getPhotoUrl } from '../../src/utils/photoUrl';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 const _C = {
   purple: '#7C3AED',

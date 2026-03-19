@@ -7,7 +7,7 @@ import VehicleCard from '../../src/components/VehicleCard';
 import { Vehicle } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 const C = {
   purple: '#7C3AED',

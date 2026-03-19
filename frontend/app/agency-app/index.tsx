@@ -9,7 +9,7 @@ import { useThemeStore } from '../../src/store/themeStore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 export default function AgencyAppHome() {
   const router = useRouter();

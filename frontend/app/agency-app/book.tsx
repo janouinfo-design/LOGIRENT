@@ -7,7 +7,7 @@ import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSa
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 interface Client { id: string; name: string; email: string; phone?: string; }
 interface VehicleSlot { id: string; user_name: string; start: string; end: string; status: string; }

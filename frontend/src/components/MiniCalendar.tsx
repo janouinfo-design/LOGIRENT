@@ -5,7 +5,7 @@ import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth,
 import { fr } from 'date-fns/locale';
 import axios from 'axios';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 const C = {
   purple: '#7C3AED',

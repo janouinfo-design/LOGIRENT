@@ -10,7 +10,7 @@ import { GanttChart } from '../../src/components/agency/GanttChart';
 import { ReservationCard } from '../../src/components/agency/ReservationCard';
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 interface Reservation {
   id: string; user_name: string; user_email: string; vehicle_name: string;
