@@ -119,7 +119,7 @@ async def get_agency_by_slug(slug: str):
     agency = await db.agencies.find_one({"slug": slug}, {"_id": 0})
     if not agency:
         raise HTTPException(status_code=404, detail="Agence non trouvée")
-    agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency['id']})
+    agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": agency.get('id')})
     return agency
 
 
@@ -130,10 +130,10 @@ async def migrate_agency_slugs():
     for agency in agencies:
         if not agency.get('slug'):
             slug = generate_slug(agency['name'])
-            existing = await db.agencies.find_one({"slug": slug, "id": {"$ne": agency['id']}})
+            existing = await db.agencies.find_one({"slug": slug, "id": {"$ne": agency.get('id')}})
             if existing:
                 slug = f"{slug}-{str(uuid.uuid4())[:4]}"
-            await db.agencies.update_one({"id": agency['id']}, {"$set": {"slug": slug}})
+            await db.agencies.update_one({"id": agency.get('id')}, {"$set": {"slug": slug}})
             updated += 1
     return {"message": f"Updated {updated} agencies with slugs"}
 
@@ -493,7 +493,7 @@ async def admin_login(credentials: AdminLogin):
 async def setup_init():
     existing_agency = await db.agencies.find_one({})
     if existing_agency:
-        return {"message": "Plateforme déjà initialisée", "agency_id": existing_agency['id']}
+        return {"message": "Plateforme déjà initialisée", "agency_id": existing_agency.get('id')}
 
     agency = Agency(name="LogiRent Geneva", address="Geneva, Switzerland", phone="+41 22 000 0000", email="admin@logirent.ch")
     await db.agencies.insert_one(agency.dict())
