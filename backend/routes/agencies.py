@@ -24,15 +24,20 @@ router = APIRouter()
 async def list_agencies(user: dict = Depends(get_agency_admin)):
     is_super = user.get('role') == 'super_admin'
     if is_super:
-        agencies = await db.agencies.find({}, {"_id": 0}).to_list(100)
+        agencies = await db.agencies.find({}).to_list(100)
     else:
-        agencies = await db.agencies.find({"id": user.get('agency_id')}, {"_id": 0}).to_list(1)
+        agencies = await db.agencies.find({"$or": [{"id": user.get('agency_id')}, {"_id": user.get('agency_id')}]}).to_list(1)
 
     result = []
     for agency in agencies:
-        aid = agency.get('id')
+        aid = agency.get('id') or str(agency.get('_id', ''))
         if not aid:
             continue
+        # Ensure 'id' field exists
+        if 'id' not in agency:
+            agency['id'] = aid
+            await db.agencies.update_one({"_id": agency['_id']}, {"$set": {"id": aid}})
+        agency.pop('_id', None)
         agency['vehicle_count'] = await db.vehicles.count_documents({"agency_id": aid})
         agency['reservation_count'] = await db.reservations.count_documents({"agency_id": aid})
         agency['admin_count'] = await db.users.count_documents({"agency_id": aid, "role": {"$in": ["admin", "super_admin"]}})
