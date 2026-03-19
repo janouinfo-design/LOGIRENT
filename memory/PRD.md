@@ -20,7 +20,7 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 - Multi-agency vehicle rental platform
 - Role-based access (super_admin, admin, client)
 - Vehicle management with availability calendar
-- Reservation system with payment (Stripe + cash)
+- Reservation system with payment (Stripe + cash + TWINT)
 - GPS tracking via Navixy integration
 - Contract generation
 - Email notifications via Resend
@@ -36,12 +36,17 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 - Version tracking endpoint (`/api/version`)
 
 ### Bug Fixes - Session March 19, 2026
-- **Frontend URL fix**: Added `|| ''` fallback to `EXPO_PUBLIC_BACKEND_URL` in 15 files, enabling relative URLs on VPS (no more `undefined/api/...`)
-- **CORS fix**: Moved middleware before routes, added explicit origins (`logirent.ch`, `app.logirent.ch`, `*.logirent.ch` regex)
-- **Agencies KeyError fix**: Changed `agency['id']` to `agency.get('id')` throughout `agencies.py`, added auto-repair for agencies missing `id` field
-- **Navixy form fix**: PUT request now includes `navixy_api_url` and `navixy_hash` fields
-- **VPS data cleanup**: Created `scripts/fix_vps_data.py` to clean duplicate/test agencies, re-link orphan admins
-- **Admin-agency linkage**: Fixed `admin-geneva@logirent.ch` missing `agency_id`
+- **Frontend URL fix**: Added `|| ''` fallback to `EXPO_PUBLIC_BACKEND_URL`
+- **CORS fix**: Moved middleware before routes, added explicit origins
+- **Agencies KeyError fix**: Changed `agency['id']` to `agency.get('id')` throughout
+- **VPS data cleanup**: Created `scripts/fix_vps_data.py`
+- **Admin-agency linkage**: Fixed missing `agency_id`
+
+### Bug Fixes - Session March 19, 2026 (Fork)
+- **Notifications page blank (FIXED)**: Fixed React hooks violation in `notifications.tsx` - hooks (useRouter, useNotificationStore, useState) were called AFTER a conditional return, violating React's Rules of Hooks. Moved all hooks before conditional returns.
+- **Admin Planning View**: Backend code already robust with `vehicle.get('id')` and auto-repair logic. Verified endpoint returns all vehicles with their reservations correctly.
+- **Document Upload in Client Profile**: Already implemented with recto/verso for both ID and license. Backend endpoints for AI-verified upload are in place.
+- **Calendar Booking**: Already implemented - selecting a date with no reservations shows "Réserver un véhicule" button navigating to vehicles list.
 
 ## Architecture
 ```
@@ -49,9 +54,10 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 ├── backend/
 │   ├── server.py          # FastAPI app + CORS config
 │   ├── routes/
-│   │   ├── agencies.py    # Agency CRUD + admin login
+│   │   ├── agencies.py    # Agency CRUD + vehicle schedule
 │   │   ├── admin.py       # Admin dashboard endpoints
-│   │   ├── auth.py        # Authentication
+│   │   ├── auth.py        # Authentication + doc upload
+│   │   ├── notifications.py # Notification CRUD
 │   │   ├── reservations.py # Client reservations
 │   │   └── vehicles.py    # Vehicle management
 │   └── models.py          # Pydantic models
@@ -82,11 +88,16 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 - Frontend served by Nginx from `/var/www/logirent/`
 - Backend managed by PM2 on port 8001
 
+### Deployment Commands (for user)
+**Backend:** `cd /home/ubuntu/apps/LOGIRENT && git pull origin main && bash scripts/backend.sh restart`
+**Frontend:** `cd /home/ubuntu/apps/LOGIRENT/frontend && npx expo export --platform web && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/`
+
 ## Backlog
 
 ### P1 - Upcoming
 - Push Notifications: Re-implement native push for mobile app
-- Resend domain verification (user action required)
+- Resend domain verification (user action required - DNS records)
+- Health Dashboard: Super-admin panel for data inconsistency detection
 
 ### P2 - Future
 - Driver/Agent mobile application
