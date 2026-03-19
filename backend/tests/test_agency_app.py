@@ -12,7 +12,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://deploy-local-db.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-vps-deploy.preview.emergentagent.com')
 
 # Test credentials
 AGENCY_ADMIN = {"email": "admin@test.com", "password": "admin123"}

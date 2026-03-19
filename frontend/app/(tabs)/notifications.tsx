@@ -1,9 +1,10 @@
 import React, { useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { useNotificationStore, Notification } from '../../src/store/notificationStore';
+import { useAuthStore } from '../../src/store/authStore';
 
 const ICON_MAP: Record<string, string> = {
   'checkmark-circle': 'checkmark-circle',
@@ -82,6 +83,13 @@ function NotificationItem({ item, onPress, onDelete }: { item: Notification; onP
 }
 
 export default function NotificationsScreen() {
+  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+
+  // Auth guard - redirect if not logged in
+  if (!authLoading && !isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
   const router = useRouter();
   const {
     notifications, unreadCount, isLoading,

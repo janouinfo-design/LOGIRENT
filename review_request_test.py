@@ -17,7 +17,7 @@ def test_review_request_scenarios():
     """Test the specific scenarios from the review request"""
     
     # Backend URL
-    base_url = "https://deploy-local-db.preview.emergentagent.com"
+    base_url = "https://logirent-vps-deploy.preview.emergentagent.com"
     api_url = f"{base_url}/api"
     
     print("🔍 Testing Review Request Scenarios")

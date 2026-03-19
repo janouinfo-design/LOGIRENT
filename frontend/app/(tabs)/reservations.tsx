@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert, Platform, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useReservationStore, Reservation } from '../../src/store/reservationStore';
 import { useVehicleStore } from '../../src/store/vehicleStore';
+import { withAuth } from '../../src/components/withAuth';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths, isBefore, startOfDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Button from '../../src/components/Button';
@@ -357,7 +358,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
   );
 }
 
-export default function ReservationsScreen() {
+function ReservationsScreen() {
   const { colors: C } = useThemeStore();
   const router = useRouter();
   const { reservations, fetchReservations, cancelReservation, isLoading } = useReservationStore();

@@ -44,7 +44,7 @@ export default function AdminLayout() {
     <SafeAreaView style={[styles.container, { backgroundColor: C.bg }]}>
       <View style={[styles.topBar, { backgroundColor: C.navBg, borderBottomColor: C.border }]}>
         <View style={styles.topBarLeft}>
-          <TouchableOpacity onPress={() => router.push('/(tabs)')} data-testid="admin-go-home">
+          <TouchableOpacity onPress={() => router.push('/agency-app' as any)} data-testid="admin-go-home">
             <Ionicons name="arrow-back" size={22} color={C.accent} />
           </TouchableOpacity>
           <View style={styles.brandGroup}>
