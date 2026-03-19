@@ -84,12 +84,6 @@ function NotificationItem({ item, onPress, onDelete }: { item: Notification; onP
 
 export default function NotificationsScreen() {
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
-
-  // Auth guard - redirect if not logged in
-  if (!authLoading && !isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
   const router = useRouter();
   const {
     notifications, unreadCount, isLoading,
@@ -98,10 +92,13 @@ export default function NotificationsScreen() {
   } = useNotificationStore();
   const [refreshing, setRefreshing] = React.useState(false);
 
+  // All hooks must be called before any conditional returns
   useEffect(() => {
-    fetchNotifications();
-    fetchUnreadCount();
-  }, []);
+    if (isAuthenticated) {
+      fetchNotifications();
+      fetchUnreadCount();
+    }
+  }, [isAuthenticated]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -109,6 +106,11 @@ export default function NotificationsScreen() {
     await fetchUnreadCount();
     setRefreshing(false);
   }, []);
+
+  // Auth guard - redirect if not logged in (after all hooks)
+  if (!authLoading && !isAuthenticated) {
+    return <Redirect href="/(auth)/login" />;
+  }
 
   const handleNotifPress = (item: Notification) => {
     if (!item.read) markAsRead(item.id);
