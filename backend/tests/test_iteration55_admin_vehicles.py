@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = "https://car-rental-live.preview.emergentagent.com"
+BASE_URL = "https://wonderful-franklin-2.preview.emergentagent.com"
 
 class TestVehiclesAPI:
     """Test vehicles API returns correct data for admin vehicles page"""
