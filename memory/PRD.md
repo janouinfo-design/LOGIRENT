@@ -1,46 +1,57 @@
 # LogiRent - Product Requirements Document
 
-## Original Problem Statement
-Complete car rental solution "LogiRent" with multi-agency support, deployed on user's VPS (logirent.ch).
+## Product Overview
+Car rental management solution (React Native/Expo frontend, FastAPI backend, MongoDB).
 
-## Tech Stack
-- Frontend: React Native (Expo), Backend: FastAPI, Database: MongoDB
-- Integrations: Stripe, Resend, Navixy, OpenAI (doc validation)
+## Core Features (Implemented)
+- Multi-agency management with super admin
+- Vehicle fleet management with categories
+- Client registration with document upload (ID + license, recto/verso)
+- AI document verification (via OpenAI)
+- Multi-step booking wizard (4 steps)
+- Contract generation (PDF) and e-signature
+- **Post-signature workflow: auto status update + PDF email to client**
+- **Client "Mes Reservations" dashboard with contract view/download**
+- **Admin "Reservations du jour" cards with quick status actions**
+- **Document verification check before confirming reservation**
+- Admin reservation management (Planning Gantt + List view)
+- Configurable booking options (GPS, child seat, etc.)
+- Stripe payment integration
+- Email notifications via Resend
+- GPS tracking via Navixy
+- Object storage for documents/photos
 
-## What's Been Implemented
+## Architecture
+- Frontend: React Native + Expo Router + TypeScript
+- Backend: FastAPI + Motor (async MongoDB)
+- Database: MongoDB
+- Integrations: Stripe, Resend, Navixy, OpenAI (emergentintegrations)
 
-### Session March 20, 2026 - All Changes
-1. **Client vehicles page**: Compact layout, categories LEFT + search RIGHT, 3-column responsive grid
-2. **Admin reservations fix**: Vehicle-schedule query handles datetime+string dates via $or, end-of-day boundary, limit 500. Returns 13 reservations for March (was 2)
-3. **Sort by start_date**: Both admin and client reservations sorted by start_date DESC
-4. **Admin vehicles 3-column grid**: Large images, price header, feature badges
-5. **Homepage redesign**: Compact header, 2-column layout (vehicles left, search right)
-6. **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation + auto-contract
-7. **Admin-configurable booking options per agency**: GPS, Siège enfant, Conducteur supplémentaire
-8. **Planning fix**: Shows ALL vehicles + completed reservations
-9. **Vehicle detail page removed**, login redirects to reservations
-10. **Notifications fix**: React hooks ordering
+## Key Endpoints
+- `GET /api/admin/reservations/today` - Today's reservations with enriched data
+- `GET /api/client/reservations` - Client reservations with vehicle/contract info
+- `GET /api/admin/reservations/{id}/check-documents` - Document verification
+- `PUT /api/contracts/{id}/sign` - Sign contract + auto-confirm + email PDF
+- `PUT /api/contracts/{id}/send` - Send contract with PDF attachment
 
 ## Key Files
-- `/app/frontend/app/(tabs)/vehicles.tsx` - Client vehicles (compact, 3-col)
-- `/app/frontend/app/agency-app/vehicles.tsx` - Admin vehicles (3-col grid)
-- `/app/frontend/app/booking/[id].tsx` - 4-step wizard
-- `/app/frontend/app/(tabs)/index.tsx` - Redesigned homepage
-- `/app/backend/routes/agencies.py` - Vehicle schedule (date fix)
-- `/app/backend/routes/admin.py` - Reservations sort + booking options
-- `/app/backend/routes/contracts.py` - Auto-generate contract
+- `/app/backend/routes/contracts.py` - Contract CRUD, signing workflow, PDF generation
+- `/app/backend/routes/admin.py` - Admin endpoints, today reservations, doc check
+- `/app/backend/routes/reservations.py` - Client reservations endpoint
+- `/app/backend/utils/email.py` - Email with PDF attachment support
+- `/app/frontend/app/agency-app/index.tsx` - Admin dashboard with today's cards
+- `/app/frontend/src/components/agency/TodayReservationCard.tsx` - Today's reservation card
+- `/app/frontend/src/components/agency/ReservationCard.tsx` - Reservation card with quick actions
+- `/app/frontend/src/components/agency/ReservationActionModal.tsx` - Actions modal with doc check
+- `/app/frontend/app/(tabs)/profile.tsx` - Client profile with "Mes Reservations"
 
-## Credentials
-- Super Admin: `superadmin@logirent.ch` / `LogiRent2024!`
-- Agency Admin: `admin-geneva@logirent.ch` / `LogiRent2024!`
-- Client: `jean.dupont@gmail.com` / `LogiRent2024!`
+## Upcoming Tasks (P1)
+- Phase 3: Operational notifications, vehicle checklist, e-signature check-out/in
+- Configurable option pricing from admin panel
+- Push notifications
 
-## VPS Deployment
-```bash
-cd /home/ubuntu/apps/LOGIRENT && git pull origin main && bash scripts/backend.sh restart
-cd /home/ubuntu/apps/LOGIRENT/frontend && npx expo export --platform web && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/
-```
-
-## Backlog
-### P1: Push Notifications, Resend domain verification, Health Dashboard
-### P2: Driver/Agent mobile app, App Store deployment, Analytics
+## Backlog (P2-P3)
+- Revenue statistics per option
+- Health dashboard (super-admin)
+- Driver/Agent mobile app
+- App Store deployment
