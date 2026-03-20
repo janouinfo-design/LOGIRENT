@@ -739,3 +739,102 @@ async def preview_template_pdf(user: dict = Depends(get_agency_admin)):
     pdf_bytes = generate_contract_pdf(sample_data)
     return Response(content=pdf_bytes, media_type="application/pdf",
                     headers={"Content-Disposition": "inline; filename=apercu_contrat.pdf"})
+
+
+@router.post("/contracts/auto-generate/{reservation_id}")
+async def auto_generate_contract(reservation_id: str, user: dict = Depends(get_current_user)):
+    """Auto-generate a contract for a client's reservation"""
+    reservation = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+    if user.get('role') == 'client' and reservation.get('user_id') != user.get('id'):
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Check if contract already exists
+    existing = await db.contracts.find_one({"reservation_id": reservation_id}, {"_id": 0, "id": 1})
+    if existing:
+        return {"contract_id": existing["id"], "message": "Contrat déjà généré"}
+
+    client_doc = await db.users.find_one({"id": reservation["user_id"]}, {"_id": 0})
+    vehicle = await db.vehicles.find_one({"id": reservation["vehicle_id"]}, {"_id": 0})
+    agency = await db.agencies.find_one({"id": reservation.get("agency_id")}, {"_id": 0})
+
+    if not client_doc or not vehicle:
+        raise HTTPException(status_code=404, detail="Client or vehicle not found")
+
+    start_date = reservation.get("start_date", "")
+    end_date = reservation.get("end_date", "")
+    start_date_str = end_date_str = start_time_str = end_time_str = ""
+
+    for dt_val, is_start in [(start_date, True), (end_date, False)]:
+        d_str = t_str = ""
+        if isinstance(dt_val, datetime):
+            d_str = dt_val.strftime("%d/%m/%Y")
+            t_str = dt_val.strftime("%H:%M")
+        elif isinstance(dt_val, str):
+            try:
+                parsed = datetime.fromisoformat(dt_val.replace('Z', '+00:00'))
+                d_str = parsed.strftime("%d/%m/%Y")
+                t_str = parsed.strftime("%H:%M")
+            except Exception:
+                d_str = str(dt_val)
+        if is_start:
+            start_date_str, start_time_str = d_str, t_str
+        else:
+            end_date_str, end_time_str = d_str, t_str
+
+    contract_count = await db.contracts.count_documents({})
+    contract_data = {
+        "language": "fr",
+        "contract_number": str(contract_count + 1),
+        "agency_name": agency.get("name", "LogiRent") if agency else "LogiRent",
+        "agency_address": agency.get("address", "") if agency else "",
+        "agency_phone": agency.get("phone", "") if agency else "",
+        "agency_email": agency.get("email", "") if agency else "",
+        "client_name": client_doc.get("name", ""),
+        "client_phone": client_doc.get("phone", ""),
+        "client_email": client_doc.get("email", ""),
+        "client_address": client_doc.get("address", ""),
+        "vehicle_name": f"{vehicle.get('brand', '')} {vehicle.get('model', '')}",
+        "vehicle_plate": vehicle.get("plate_number", "") or vehicle.get("plate", ""),
+        "vehicle_color": vehicle.get("color", ""),
+        "start_date": start_date_str,
+        "start_time": start_time_str,
+        "end_date": end_date_str,
+        "end_time": end_time_str,
+        "price_per_day": vehicle.get("price_per_day", ""),
+        "total_price": reservation.get("total_price", 0),
+        "deductible": "1000",
+    }
+
+    # Apply agency template
+    agency_id = reservation.get("agency_id")
+    if agency_id:
+        template = await db.contract_templates.find_one({"agency_id": agency_id}, {"_id": 0})
+        if template:
+            if template.get("deductible"):
+                contract_data["deductible"] = template["deductible"]
+            if template.get("agency_website"):
+                contract_data["agency_website"] = template["agency_website"]
+            if template.get("legal_text"):
+                contract_data["custom_legal_text"] = template["legal_text"]
+            if template.get("logo_path"):
+                contract_data["logo_path"] = template["logo_path"]
+
+    contract_id = str(uuid.uuid4())
+    contract = {
+        "id": contract_id,
+        "reservation_id": reservation_id,
+        "agency_id": reservation.get("agency_id"),
+        "user_id": reservation["user_id"],
+        "vehicle_id": reservation["vehicle_id"],
+        "language": "fr",
+        "status": "draft",
+        "contract_data": contract_data,
+        "signature_client": None,
+        "signature_date": None,
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat(),
+    }
+    await db.contracts.insert_one(contract)
+    return {"contract_id": contract_id, "message": "Contrat généré automatiquement"}
