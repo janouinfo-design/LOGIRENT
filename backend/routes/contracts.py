@@ -10,6 +10,7 @@ from database import db
 from models import ContractGenerate, ContractSign
 from deps import get_current_user, get_admin_user, get_agency_admin
 from utils.notifications import create_notification
+from utils.email import send_email, generate_contract_signed_email
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import mm
@@ -636,6 +637,49 @@ async def send_contract(contract_id: str, user: dict = Depends(get_admin_user)):
                if contract.get("language", "fr") == "fr"
                else "A rental contract is ready for your signature.")
         await create_notification(contract["user_id"], "contract", msg, contract_id)
+
+        # Send email with PDF attached
+        if client_doc.get("email"):
+            try:
+                pdf_bytes = generate_contract_pdf(
+                    contract.get("contract_data", {}),
+                    contract.get("signature_client")
+                )
+                contract_data = contract.get("contract_data", {})
+                contract_number = contract_data.get("contract_number", contract_id[:8])
+                vehicle_name = contract_data.get("vehicle_name", "Vehicule")
+
+                reservation = None
+                if contract.get("reservation_id"):
+                    reservation = await db.reservations.find_one({"id": contract["reservation_id"]}, {"_id": 0})
+
+                agency = await db.agencies.find_one({"id": contract.get("agency_id")}, {"_id": 0})
+                agency_name = agency.get("name", "LogiRent") if agency else "LogiRent"
+
+                email_html = generate_contract_signed_email(
+                    client_name=client_doc.get("name", "Client"),
+                    vehicle_name=vehicle_name,
+                    contract_number=contract_number,
+                    reservation=reservation or {},
+                    agency_name=agency_name,
+                )
+
+                pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+                attachments = [{
+                    "filename": f"contrat_{contract_number}.pdf",
+                    "content": pdf_b64,
+                    "type": "application/pdf",
+                }]
+
+                await send_email(
+                    recipient=client_doc["email"],
+                    subject=f"Contrat de location - {vehicle_name} (N. {contract_number})",
+                    html_content=email_html,
+                    attachments=attachments,
+                )
+            except Exception as e:
+                logger.error(f"Error sending contract email: {e}")
+
     return {"message": "Contrat envoye au client"}
 
 
@@ -660,7 +704,73 @@ async def sign_contract(contract_id: str, data: ContractSign, user: dict = Depen
             "contract_data.signature_date": now.strftime("%d/%m/%Y"),
         }}
     )
-    return {"message": "Contrat signe avec succes"}
+
+    # --- Post-signature workflow ---
+    reservation_id = contract.get("reservation_id")
+    email_sent = False
+
+    # 1. Update reservation status to "confirmed"
+    if reservation_id:
+        await db.reservations.update_one(
+            {"id": reservation_id},
+            {"$set": {"status": "confirmed", "updated_at": now}}
+        )
+
+    # 2. Generate PDF and send email with attachment
+    try:
+        updated_contract = await db.contracts.find_one({"id": contract_id}, {"_id": 0})
+        pdf_bytes = generate_contract_pdf(
+            updated_contract.get("contract_data", {}),
+            updated_contract.get("signature_client")
+        )
+
+        client_doc = await db.users.find_one({"id": contract.get("user_id")}, {"_id": 0})
+        reservation = await db.reservations.find_one({"id": reservation_id}, {"_id": 0}) if reservation_id else None
+        agency = await db.agencies.find_one({"id": contract.get("agency_id")}, {"_id": 0})
+
+        if client_doc and client_doc.get("email"):
+            agency_name = agency.get("name", "LogiRent") if agency else "LogiRent"
+            contract_data = updated_contract.get("contract_data", {})
+            vehicle_name = contract_data.get("vehicle_name", "Vehicule")
+            contract_number = contract_data.get("contract_number", contract_id[:8])
+
+            email_html = generate_contract_signed_email(
+                client_name=client_doc.get("name", "Client"),
+                vehicle_name=vehicle_name,
+                contract_number=contract_number,
+                reservation=reservation or {},
+                agency_name=agency_name,
+            )
+
+            pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
+            attachments = [{
+                "filename": f"contrat_{contract_number}.pdf",
+                "content": pdf_b64,
+                "type": "application/pdf",
+            }]
+
+            await send_email(
+                recipient=client_doc["email"],
+                subject=f"Contrat signe - {vehicle_name} (N. {contract_number})",
+                html_content=email_html,
+                attachments=attachments,
+            )
+            email_sent = True
+
+            # Create notification
+            await create_notification(
+                client_doc["id"], "contract_signed",
+                f"Votre contrat N. {contract_number} pour {vehicle_name} a ete signe. Reservation confirmee.",
+                contract_id,
+            )
+    except Exception as e:
+        logger.error(f"Post-signature workflow error: {e}")
+
+    return {
+        "message": "Contrat signe avec succes",
+        "reservation_status": "confirmed",
+        "email_sent": email_sent,
+    }
 
 
 @router.get("/contracts/{contract_id}/pdf")

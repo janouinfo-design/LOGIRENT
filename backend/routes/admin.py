@@ -1085,3 +1085,77 @@ async def update_booking_options(data: BookingOptionsUpdate, user: dict = Depend
         {"$set": {"booking_options": options, "updated_at": datetime.utcnow().isoformat()}}
     )
     return {"options": options, "message": "Options de réservation mises à jour"}
+
+
+@router.get("/admin/reservations/today")
+async def get_today_reservations(user: dict = Depends(get_admin_user)):
+    """Get reservations starting today or active today, sorted by start_date"""
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+
+    now = datetime.utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+
+    base_filter = {} if is_super else {"agency_id": agency_id}
+    query = {
+        **base_filter,
+        "$or": [
+            {"start_date": {"$gte": today_start, "$lte": today_end}},
+            {"end_date": {"$gte": today_start, "$lte": today_end}},
+            {"start_date": {"$lte": today_start}, "end_date": {"$gte": today_end}},
+        ]
+    }
+
+    reservations = await db.reservations.find(query).sort("start_date", 1).to_list(50)
+
+    user_ids = list(set(r.get('user_id') for r in reservations if r.get('user_id')))
+    vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
+    users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "phone": 1}).to_list(len(user_ids)) if user_ids else []
+    vehicles_list = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(vehicle_ids)) if vehicle_ids else []
+    users_map = {u['id']: u for u in users_list}
+    vehicles_map = {v['id']: v for v in vehicles_list}
+
+    for res in reservations:
+        res['_id'] = str(res['_id'])
+        u = users_map.get(res.get('user_id'))
+        v = vehicles_map.get(res.get('vehicle_id'))
+        res['user_name'] = u['name'] if u else 'Inconnu'
+        res['user_email'] = u.get('email', '') if u else ''
+        res['user_phone'] = u.get('phone', '') if u else ''
+        res['vehicle_name'] = f"{v['brand']} {v['model']}" if v else 'Inconnu'
+
+    return {"reservations": reservations, "total": len(reservations)}
+
+
+@router.get("/admin/reservations/{reservation_id}/check-documents")
+async def check_client_documents(reservation_id: str, user: dict = Depends(get_admin_user)):
+    """Check if the client for this reservation has all required documents uploaded"""
+    reservation = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    client = await db.users.find_one({"id": reservation.get("user_id")}, {"_id": 0, "password_hash": 0})
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+
+    missing_docs = []
+    if not client.get("id_photo"):
+        missing_docs.append("Carte d'identite (recto)")
+    if not client.get("id_photo_back"):
+        missing_docs.append("Carte d'identite (verso)")
+    if not client.get("license_photo"):
+        missing_docs.append("Permis de conduire (recto)")
+    if not client.get("license_photo_back"):
+        missing_docs.append("Permis de conduire (verso)")
+
+    return {
+        "client_id": client.get("id"),
+        "client_name": client.get("name", ""),
+        "documents_complete": len(missing_docs) == 0,
+        "missing_documents": missing_docs,
+        "has_id": bool(client.get("id_photo")),
+        "has_id_back": bool(client.get("id_photo_back")),
+        "has_license": bool(client.get("license_photo")),
+        "has_license_back": bool(client.get("license_photo_back")),
+    }

@@ -9,7 +9,10 @@ resend.api_key = RESEND_API_KEY
 logger = logging.getLogger(__name__)
 
 
-async def send_email(recipient: str, subject: str, html_content: str):
+async def send_email(recipient: str, subject: str, html_content: str, attachments: list = None):
+    """Send email via Resend. Optionally attach files.
+    attachments: list of dicts with keys: filename, content (base64 string), type (mime type)
+    """
     if not RESEND_API_KEY or RESEND_API_KEY == 're_placeholder':
         logger.info(f"Email would be sent to {recipient}: {subject}")
         return None
@@ -20,6 +23,9 @@ async def send_email(recipient: str, subject: str, html_content: str):
         "subject": subject,
         "html": html_content
     }
+
+    if attachments:
+        params["attachments"] = attachments
 
     try:
         email = await asyncio.to_thread(resend.Emails.send, params)
@@ -279,3 +285,54 @@ async def send_welcome_email(recipient: str, client_name: str, password: str, ag
 </div></body></html>'''
 
     return await send_email(recipient, subject, html)
+
+
+
+def generate_contract_signed_email(client_name: str, vehicle_name: str, contract_number: str, reservation: dict, agency_name: str = "LogiRent") -> str:
+    start_date = reservation.get('start_date', '')
+    end_date = reservation.get('end_date', '')
+    if isinstance(start_date, datetime):
+        start_date = start_date.strftime('%d/%m/%Y')
+    elif isinstance(start_date, str):
+        try:
+            start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00')).strftime('%d/%m/%Y')
+        except Exception:
+            pass
+    if isinstance(end_date, datetime):
+        end_date = end_date.strftime('%d/%m/%Y')
+    elif isinstance(end_date, str):
+        try:
+            end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00')).strftime('%d/%m/%Y')
+        except Exception:
+            pass
+
+    return f'''<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="font-family:Arial,sans-serif;line-height:1.6;color:#1E293B;margin:0;padding:0;background-color:#F8FAFC;">
+<div style="max-width:600px;margin:0 auto;padding:20px;">
+  <div style="background-color:#1A1A2E;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
+    <h1 style="color:#FFFFFF;margin:0;font-size:24px;">{agency_name}</h1>
+    <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;">Contrat de location signe</p>
+  </div>
+  <div style="background-color:#FFFFFF;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">
+      <h2 style="color:#10B981;margin:0;font-size:20px;">Contrat Signe avec Succes</h2>
+    </div>
+    <p>Bonjour <strong>{client_name}</strong>,</p>
+    <p>Votre contrat de location <strong>N&deg; {contract_number}</strong> pour le vehicule <strong>{vehicle_name}</strong> a ete signe avec succes.</p>
+    <p>Vous trouverez le contrat signe en piece jointe de cet email au format PDF.</p>
+    <div style="background-color:#F8FAFC;padding:16px;border-radius:8px;margin:20px 0;">
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#64748B;">Vehicule:</td><td style="padding:6px 0;font-weight:bold;">{vehicle_name}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Du:</td><td style="padding:6px 0;font-weight:bold;">{start_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Au:</td><td style="padding:6px 0;font-weight:bold;">{end_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Montant:</td><td style="padding:6px 0;font-weight:bold;">CHF {reservation.get("total_price", 0):.2f}</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center;padding:12px;background-color:#EEF2FF;border-radius:8px;margin:16px 0;">
+      <p style="margin:0;color:#4338CA;font-size:13px;">Le PDF du contrat est joint a cet email</p>
+    </div>
+    <p style="color:#64748B;font-size:13px;">Pour toute question, contactez-nous a {SENDER_EMAIL}.</p>
+    <p style="margin-top:24px;">Cordialement,<br><strong>L'equipe {agency_name}</strong></p>
+  </div>
+  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">{agency_name} - Location de vehicules</div>
+</div></body></html>'''

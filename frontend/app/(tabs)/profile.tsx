@@ -8,6 +8,9 @@ import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 import { formatDateInput } from '../../src/utils/dateMask';
+import api from '../../src/api/axios';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const _C = {
   purple: '#7C3AED',
@@ -44,6 +47,8 @@ export default function ProfileScreen() {
   const [uploadingLicenseBack, setUploadingLicenseBack] = useState(false);
   const [uploadModal, setUploadModal] = useState<null | 'id' | 'license' | 'id_back' | 'license_back'>(null);
   const [lastVerification, setLastVerification] = useState<any>(null);
+  const [clientReservations, setClientReservations] = useState<any[]>([]);
+  const [loadingReservations, setLoadingReservations] = useState(false);
   const idInputRef = useRef<HTMLInputElement | null>(null);
   const licenseInputRef = useRef<HTMLInputElement | null>(null);
   const idBackInputRef = useRef<HTMLInputElement | null>(null);
@@ -52,6 +57,63 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (!isAuthenticated && !isLoading) router.replace('/(auth)/login');
   }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      fetchClientReservations();
+    }
+  }, [isAuthenticated, user]);
+
+  const fetchClientReservations = async () => {
+    setLoadingReservations(true);
+    try {
+      const resp = await api.get('/api/client/reservations');
+      setClientReservations(resp.data.reservations || []);
+    } catch (err) {
+      console.error('Failed to fetch reservations:', err);
+    } finally {
+      setLoadingReservations(false);
+    }
+  };
+
+  const downloadContractPdf = async (contractId: string) => {
+    try {
+      const pdfResp = await api.get(`/api/contracts/${contractId}/pdf`, { responseType: 'blob' });
+      if (Platform.OS === 'web') {
+        const blob = new Blob([pdfResp.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contrat_${contractId.slice(0, 8)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err: any) {
+      Platform.OS === 'web' ? window.alert('Erreur telechargement PDF') : Alert.alert('Erreur');
+    }
+  };
+
+  const viewContract = async (contractId: string) => {
+    try {
+      const pdfResp = await api.get(`/api/contracts/${contractId}/pdf`, { responseType: 'blob' });
+      if (Platform.OS === 'web') {
+        const blob = new Blob([pdfResp.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+      }
+    } catch (err: any) {
+      Platform.OS === 'web' ? window.alert('Erreur visualisation contrat') : Alert.alert('Erreur');
+    }
+  };
+
+  const resStatusColor = (s: string) => {
+    const map: Record<string, string> = { pending: '#FBBF24', pending_cash: '#A855F7', confirmed: '#10B981', active: '#3B82F6', completed: '#6B7280', cancelled: '#EF4444' };
+    return map[s] || '#6B7280';
+  };
+  const resStatusLabel = (s: string) => {
+    const map: Record<string, string> = { pending: 'En attente', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee', signed: 'Signe' };
+    return map[s] || s;
+  };
 
   useEffect(() => {
     if (user) {
@@ -359,6 +421,62 @@ export default function ProfileScreen() {
 
         {/* Documents */}
         <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: C.text }]}>Mes Reservations</Text>
+          {loadingReservations ? (
+            <ActivityIndicator size="small" color={C.accent} style={{ marginVertical: 20 }} />
+          ) : clientReservations.length === 0 ? (
+            <View style={[styles.infoCard, { backgroundColor: C.card, borderColor: C.border, alignItems: 'center', padding: 20 }]}>
+              <Ionicons name="calendar-outline" size={28} color={C.textLight} />
+              <Text style={{ color: C.textLight, fontSize: 13, marginTop: 8 }}>Aucune reservation</Text>
+            </View>
+          ) : (
+            clientReservations.slice(0, 10).map((r: any) => {
+              const sc = resStatusColor(r.status);
+              const formatDt = (d: string) => {
+                try { return format(new Date(d), 'dd MMM yyyy', { locale: fr }); } catch { return d; }
+              };
+              return (
+                <View key={r.id} style={[styles.resCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: sc }]} data-testid={`my-res-${r.id}`}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', flex: 1 }} numberOfLines={1}>{r.vehicle_name}</Text>
+                    <View style={{ backgroundColor: sc + '20', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                      <Text style={{ color: sc, fontSize: 11, fontWeight: '700' }}>{resStatusLabel(r.contract_status === 'signed' ? 'signed' : r.status)}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 4 }}>
+                    {formatDt(r.start_date)} - {formatDt(r.end_date)}
+                  </Text>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Text style={{ color: C.accent, fontSize: 15, fontWeight: '800' }}>CHF {r.total_price?.toFixed(2)}</Text>
+                    {r.contract_id && (
+                      <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TouchableOpacity
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.accent + '15', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
+                          onPress={() => viewContract(r.contract_id)}
+                          data-testid={`view-contract-${r.id}`}
+                        >
+                          <Ionicons name="eye-outline" size={14} color={C.accent} />
+                          <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Voir contrat</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B98115', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
+                          onPress={() => downloadContractPdf(r.contract_id)}
+                          data-testid={`download-pdf-${r.id}`}
+                        >
+                          <Ionicons name="download-outline" size={14} color="#10B981" />
+                          <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '600' }}>PDF</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              );
+            })
+          )}
+        </View>
+
+        {/* Documents */}
+        <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: C.text }]}>Documents Obligatoires</Text>
           {/* Hidden file inputs for web */}
           {Platform.OS === 'web' && (
@@ -577,6 +695,7 @@ const styles = StyleSheet.create({
   menuText: { fontSize: 14 },
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, padding: 14, borderRadius: 14, gap: 8, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
   logoutText: { fontSize: 14, fontWeight: '600' },
+  resCard: { borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderLeftWidth: 4 },
 });
 
 const uploadModalStyles = StyleSheet.create({

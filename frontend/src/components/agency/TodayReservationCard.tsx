@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const STATUS_MAP: Record<string, { label: string; short: string; color: string }> = {
-  pending: { label: 'En attente', short: 'Atten', color: '#FBBF24' },
-  pending_cash: { label: 'Especes', short: 'Espec', color: '#A855F7' },
-  confirmed: { label: 'Confirmee', short: 'Confi', color: '#10B981' },
-  active: { label: 'Active', short: 'Activ', color: '#3B82F6' },
-  completed: { label: 'Terminee', short: 'Termi', color: '#6B7280' },
-  cancelled: { label: 'Annulee', short: 'Annul', color: '#EF4444' },
+const STATUS_MAP: Record<string, { label: string; color: string }> = {
+  pending: { label: 'En attente', color: '#FBBF24' },
+  pending_cash: { label: 'Especes', color: '#A855F7' },
+  confirmed: { label: 'Confirmee', color: '#10B981' },
+  active: { label: 'Active', color: '#3B82F6' },
+  completed: { label: 'Terminee', color: '#6B7280' },
+  cancelled: { label: 'Annulee', color: '#EF4444' },
 };
 
 const PAYMENT_MAP: Record<string, { label: string; color: string }> = {
@@ -20,7 +20,7 @@ const PAYMENT_MAP: Record<string, { label: string; color: string }> = {
   refunded: { label: 'Rembourse', color: '#6B7280' },
 };
 
-interface ReservationItem {
+interface TodayReservation {
   id: string;
   user_name: string;
   vehicle_name: string;
@@ -32,15 +32,15 @@ interface ReservationItem {
 }
 
 interface Props {
-  item: ReservationItem;
+  item: TodayReservation;
   C: any;
-  statusColor: (s: string) => string;
-  updateStatus: (id: string, status: string) => void;
-  onActionPress: (item: ReservationItem) => void;
+  onStatusChange: (id: string, status: string) => void;
+  onActionPress: (item: TodayReservation) => void;
+  onViewContract: (id: string) => void;
 }
 
-export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPress }: Props) => {
-  const s = STATUS_MAP[item.status] || { label: item.status, short: item.status?.slice(0, 5), color: '#6B7280' };
+export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, onViewContract }: Props) => {
+  const s = STATUS_MAP[item.status] || { label: item.status, color: '#6B7280' };
   const p = PAYMENT_MAP[item.payment_status] || { label: item.payment_status || 'N/A', color: '#6B7280' };
 
   const formatDate = (d: string) => {
@@ -49,8 +49,8 @@ export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPr
   };
 
   return (
-    <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: s.color }]} data-testid={`res-card-${item.id}`}>
-      {/* Header: Client name + Status badge */}
+    <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: s.color }]} data-testid={`today-res-${item.id}`}>
+      {/* Header: Name + Status badge */}
       <View style={st.header}>
         <Text style={[st.name, { color: C.text }]} numberOfLines={1}>{item.user_name}</Text>
         <View style={[st.badge, { backgroundColor: s.color + '20' }]}>
@@ -76,40 +76,43 @@ export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPr
 
       {/* Quick status buttons */}
       <View style={st.statusRow}>
-        {[
-          { key: 'confirmed', label: 'Confi' },
-          { key: 'active', label: 'Activ' },
-          { key: 'completed', label: 'Termi' },
-          { key: 'cancelled', label: 'Annul' },
-        ].map(({ key, label }) => {
-          const active = item.status === key;
-          const sc = STATUS_MAP[key]?.color || '#6B7280';
+        {['confirmed', 'active', 'completed', 'cancelled'].map(status => {
+          const active = item.status === status;
+          const sc = STATUS_MAP[status]?.color || '#6B7280';
           return (
             <TouchableOpacity
-              key={key}
-              onPress={() => updateStatus(item.id, key)}
+              key={status}
+              onPress={() => onStatusChange(item.id, status)}
               style={[st.statusBtn, { borderColor: active ? sc : C.border, backgroundColor: active ? sc + '20' : 'transparent' }]}
-              data-testid={`status-btn-${item.id}-${key}`}
+              data-testid={`today-status-${item.id}-${status}`}
             >
-              <Text style={{ color: active ? sc : C.textLight, fontSize: 11, fontWeight: '700' }}>{label}</Text>
+              <Text style={{ color: active ? sc : C.textLight, fontSize: 11, fontWeight: '700' }}>
+                {(STATUS_MAP[status]?.label || status).slice(0, 5)}
+              </Text>
             </TouchableOpacity>
           );
         })}
       </View>
 
-      {/* Actions button */}
-      <TouchableOpacity style={[st.actionsBtn, { borderTopColor: C.border }]} onPress={() => onActionPress(item)} data-testid={`actions-btn-${item.id}`}>
-        <Ionicons name="ellipsis-horizontal" size={16} color={C.accent} />
-        <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Actions</Text>
-      </TouchableOpacity>
+      {/* Actions row */}
+      <View style={[st.actionsRow, { borderTopColor: C.border }]}>
+        <TouchableOpacity style={st.actionBtn} onPress={() => onViewContract(item.id)} data-testid={`today-contract-${item.id}`}>
+          <Ionicons name="document-text-outline" size={14} color={C.accent} />
+          <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Contrat</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={st.actionBtn} onPress={() => onActionPress(item)} data-testid={`today-actions-${item.id}`}>
+          <Ionicons name="ellipsis-horizontal" size={14} color={C.accent} />
+          <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Actions</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const st = StyleSheet.create({
-  card: { flex: 1, borderRadius: 10, padding: 12, borderWidth: 1, borderLeftWidth: 4, maxWidth: '33%' },
+  card: { borderRadius: 10, padding: 12, borderWidth: 1, borderLeftWidth: 4, width: '100%' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  name: { fontSize: 14, fontWeight: '800', flex: 1, marginRight: 6 },
+  name: { fontSize: 15, fontWeight: '800', flex: 1, marginRight: 8 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeText: { fontSize: 11, fontWeight: '700' },
   vehicle: { fontSize: 13, fontWeight: '600', marginBottom: 2 },
@@ -119,5 +122,6 @@ const st = StyleSheet.create({
   payBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusRow: { flexDirection: 'row', gap: 4, marginBottom: 8, flexWrap: 'wrap' },
   statusBtn: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6, borderWidth: 1 },
-  actionsBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 8, borderTopWidth: 1 },
+  actionsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 8, borderTopWidth: 1 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
 });

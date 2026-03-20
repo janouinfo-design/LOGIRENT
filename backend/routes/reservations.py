@@ -189,3 +189,39 @@ async def cancel_reservation(reservation_id: str, user: dict = Depends(get_curre
         logger.error(f"Failed to create cancellation notification: {e}")
 
     return {"message": "Reservation cancelled"}
+
+
+@router.get("/client/reservations")
+async def get_client_reservations_detailed(user: dict = Depends(get_current_user)):
+    """Get client reservations with vehicle names and contract info"""
+    reservations = await db.reservations.find(
+        {"user_id": user['id']}
+    ).sort("start_date", -1).to_list(100)
+
+    vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
+    reservation_ids = [r.get('id') for r in reservations if r.get('id')]
+
+    vehicles_list = await db.vehicles.find(
+        {"id": {"$in": vehicle_ids}},
+        {"_id": 0, "id": 1, "brand": 1, "model": 1, "photos": 1}
+    ).to_list(len(vehicle_ids)) if vehicle_ids else []
+    vehicles_map = {v['id']: v for v in vehicles_list}
+
+    contracts_list = await db.contracts.find(
+        {"reservation_id": {"$in": reservation_ids}},
+        {"_id": 0, "id": 1, "reservation_id": 1, "status": 1}
+    ).to_list(len(reservation_ids)) if reservation_ids else []
+    contracts_map = {c['reservation_id']: c for c in contracts_list}
+
+    result = []
+    for r in reservations:
+        r['_id'] = str(r['_id'])
+        v = vehicles_map.get(r.get('vehicle_id'))
+        c = contracts_map.get(r.get('id'))
+        r['vehicle_name'] = f"{v['brand']} {v['model']}" if v else 'Vehicule'
+        r['vehicle_photo'] = v.get('photos', [None])[0] if v and v.get('photos') else None
+        r['contract_id'] = c['id'] if c else None
+        r['contract_status'] = c['status'] if c else None
+        result.append(r)
+
+    return {"reservations": result, "total": len(result)}

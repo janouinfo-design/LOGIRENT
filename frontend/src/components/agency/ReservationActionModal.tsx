@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import api from '../../../src/api/axios';
-
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+import api from '../../api/axios';
 
 const RES_COLORS: Record<string, string> = {
   confirmed: '#10B981', active: '#3B82F6', pending: '#FBBF24', pending_cash: '#A855F7',
@@ -36,20 +34,105 @@ interface Props {
 export const ReservationActionModal = ({ actionModal, setActionModal, C, statusColor, updateStatus, updatePayment, sendPaymentLink, sendingLink }: Props) => {
   const router = useRouter();
   const [contractLoading, setContractLoading] = useState(false);
+  const [docCheck, setDocCheck] = useState<any>(null);
+  const [docCheckLoading, setDocCheckLoading] = useState(false);
+
+  const checkDocuments = async (reservationId: string) => {
+    setDocCheckLoading(true);
+    try {
+      const resp = await api.get(`/api/admin/reservations/${reservationId}/check-documents`);
+      setDocCheck(resp.data);
+    } catch (err: any) {
+      Platform.OS === 'web' ? window.alert('Erreur verification documents') : Alert.alert('Erreur');
+    } finally {
+      setDocCheckLoading(false);
+    }
+  };
+
+  const handleConfirmWithDocCheck = async (reservationId: string) => {
+    setDocCheckLoading(true);
+    try {
+      const resp = await api.get(`/api/admin/reservations/${reservationId}/check-documents`);
+      if (!resp.data.documents_complete) {
+        setDocCheck(resp.data);
+        const missing = resp.data.missing_documents?.join(', ') || '';
+        const msg = `Documents manquants pour ${resp.data.client_name}:\n${missing}\n\nVoulez-vous confirmer quand meme ?`;
+        if (Platform.OS === 'web') {
+          if (window.confirm(msg)) {
+            updateStatus(reservationId, 'confirmed');
+            setActionModal(null);
+          }
+        } else {
+          Alert.alert('Documents manquants', msg, [
+            { text: 'Annuler', style: 'cancel' },
+            { text: 'Confirmer', onPress: () => { updateStatus(reservationId, 'confirmed'); setActionModal(null); } },
+          ]);
+        }
+      } else {
+        updateStatus(reservationId, 'confirmed');
+        setActionModal(null);
+      }
+    } catch {
+      updateStatus(reservationId, 'confirmed');
+      setActionModal(null);
+    } finally {
+      setDocCheckLoading(false);
+    }
+  };
 
   return (
-    <Modal visible={!!actionModal} transparent animationType="slide" onRequestClose={() => setActionModal(null)}>
+    <Modal visible={!!actionModal} transparent animationType="slide" onRequestClose={() => { setActionModal(null); setDocCheck(null); }}>
       <View style={st.modalOverlay}>
         <View style={[st.modal, { backgroundColor: C.card }]}>
           <View style={st.modalHeader}>
             <Text style={{ color: C.text, fontSize: 18, fontWeight: '800' }}>Actions</Text>
-            <TouchableOpacity onPress={() => setActionModal(null)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
+            <TouchableOpacity onPress={() => { setActionModal(null); setDocCheck(null); }}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
           </View>
           {actionModal && (
             <ScrollView>
               <Text style={{ color: C.textLight, fontSize: 14, marginBottom: 4 }}>{actionModal.user_name} - {actionModal.vehicle_name}</Text>
               <Text style={{ color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 16 }}>CHF {actionModal.total_price?.toFixed(2)}</Text>
 
+              {/* Document Verification */}
+              <Text style={[st.modalSection, { color: C.textLight }]}>Documents client</Text>
+              <TouchableOpacity style={[st.actionBtn, { borderColor: C.border }]}
+                onPress={() => checkDocuments(actionModal.id)} data-testid="check-docs-btn">
+                <Ionicons name="shield-checkmark" size={18} color={docCheck?.documents_complete ? '#10B981' : C.accent} />
+                <Text style={{ color: C.text, fontSize: 14, flex: 1 }}>{docCheckLoading ? 'Verification...' : 'Verifier les documents'}</Text>
+                {docCheckLoading && <ActivityIndicator size="small" color={C.accent} />}
+              </TouchableOpacity>
+
+              {docCheck && (
+                <View style={[st.docCheckResult, { backgroundColor: docCheck.documents_complete ? '#10B98110' : '#EF444410', borderColor: docCheck.documents_complete ? '#10B981' : '#EF4444' }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <Ionicons name={docCheck.documents_complete ? 'checkmark-circle' : 'alert-circle'} size={18} color={docCheck.documents_complete ? '#10B981' : '#EF4444'} />
+                    <Text style={{ color: docCheck.documents_complete ? '#10B981' : '#EF4444', fontSize: 13, fontWeight: '700' }}>
+                      {docCheck.documents_complete ? 'Tous les documents sont fournis' : 'Documents manquants'}
+                    </Text>
+                  </View>
+                  {!docCheck.documents_complete && docCheck.missing_documents?.map((doc: string, i: number) => (
+                    <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 24, marginTop: 2 }}>
+                      <Ionicons name="close-circle" size={14} color="#EF4444" />
+                      <Text style={{ color: '#EF4444', fontSize: 12 }}>{doc}</Text>
+                    </View>
+                  ))}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8, marginLeft: 24 }}>
+                    {[
+                      { key: 'has_id', label: 'CI Recto' },
+                      { key: 'has_id_back', label: 'CI Verso' },
+                      { key: 'has_license', label: 'Permis Recto' },
+                      { key: 'has_license_back', label: 'Permis Verso' },
+                    ].map(({ key, label }) => (
+                      <View key={key} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name={docCheck[key] ? 'checkmark-circle' : 'close-circle'} size={14} color={docCheck[key] ? '#10B981' : '#EF4444'} />
+                        <Text style={{ fontSize: 11, color: docCheck[key] ? '#10B981' : '#EF4444' }}>{label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Contract actions */}
               <Text style={[st.modalSection, { color: C.textLight }]}>Contrat</Text>
               <TouchableOpacity style={[st.actionBtn, { borderColor: C.border }]}
                 onPress={async () => {
@@ -57,12 +140,11 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                   try {
                     const resp = await api.get(`/api/contracts/by-reservation/${actionModal.id}`);
                     if (resp.data) {
-                      setActionModal(null); router.push(`/contract/${resp.data.id}` as any);
+                      setActionModal(null); setDocCheck(null); router.push(`/contract/${resp.data.id}` as any);
                     } else {
-                      // No contract exists, generate one
                       const genResp = await api.post('/api/admin/contracts/generate', { reservation_id: actionModal.id, language: 'fr' });
                       Platform.OS === 'web' ? window.alert('Contrat genere !') : Alert.alert('Succes', 'Contrat genere !');
-                      setActionModal(null); router.push(`/contract/${genResp.data.contract_id}` as any);
+                      setActionModal(null); setDocCheck(null); router.push(`/contract/${genResp.data.contract_id}` as any);
                     }
                   } catch (err: any) {
                     Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur');
@@ -100,21 +182,32 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                 <Text style={{ color: C.text, fontSize: 14 }}>Telecharger le PDF</Text>
               </TouchableOpacity>
 
+              {/* Status */}
               <Text style={[st.modalSection, { color: C.textLight }]}>Statut</Text>
               {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
-                <TouchableOpacity key={s} style={[st.actionBtn, { borderColor: C.border }]} onPress={() => updateStatus(actionModal.id, s)}>
+                <TouchableOpacity key={s} style={[st.actionBtn, { borderColor: C.border }]}
+                  onPress={() => {
+                    if (s === 'confirmed') {
+                      handleConfirmWithDocCheck(actionModal.id);
+                    } else {
+                      updateStatus(actionModal.id, s);
+                      setActionModal(null); setDocCheck(null);
+                    }
+                  }} data-testid={`modal-status-${s}`}>
                   <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: statusColor(s) }} />
                   <Text style={{ color: C.text, fontSize: 14 }}>{statusLabel(s)}</Text>
+                  {s === 'confirmed' && docCheckLoading && <ActivityIndicator size="small" color={C.accent} />}
                 </TouchableOpacity>
               ))}
 
+              {/* Payment */}
               <Text style={[st.modalSection, { color: C.textLight }]}>Paiement</Text>
-              <TouchableOpacity style={[st.actionBtn, { borderColor: C.border }]} onPress={() => updatePayment(actionModal.id, 'paid')}>
+              <TouchableOpacity style={[st.actionBtn, { borderColor: C.border }]} onPress={() => updatePayment(actionModal.id, 'paid')} data-testid="mark-paid-btn">
                 <Ionicons name="checkmark-circle" size={18} color={C.success} />
                 <Text style={{ color: C.text, fontSize: 14 }}>Marquer comme paye</Text>
               </TouchableOpacity>
               {actionModal.payment_status !== 'paid' && (
-                <TouchableOpacity style={[st.actionBtn, { borderColor: C.border, borderBottomWidth: 0 }]} onPress={() => sendPaymentLink(actionModal.id)} disabled={sendingLink}>
+                <TouchableOpacity style={[st.actionBtn, { borderColor: C.border, borderBottomWidth: 0 }]} onPress={() => sendPaymentLink(actionModal.id)} disabled={sendingLink} data-testid="send-payment-link-btn">
                   <Ionicons name="link" size={18} color={C.accent} />
                   <Text style={{ color: C.accent, fontSize: 14 }}>{sendingLink ? 'Envoi...' : 'Envoyer lien de paiement'}</Text>
                 </TouchableOpacity>
@@ -133,4 +226,5 @@ const st = StyleSheet.create({
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   modalSection: { fontSize: 12, fontWeight: '600', marginTop: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 4, borderBottomWidth: 1 },
+  docCheckResult: { borderRadius: 8, padding: 10, marginTop: 4, borderWidth: 1 },
 });
