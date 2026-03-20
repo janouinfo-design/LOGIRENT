@@ -453,8 +453,8 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
         vf["agency_id"] = agency_id
 
     vehicles = await db.vehicles.find(vf).to_list(200)
-
-    result = []
+    vehicle_ids = []
+    vehicles_map = {}
     for v in vehicles:
         vid = v.get('id') or str(v.get('_id', ''))
         if not vid:
@@ -463,36 +463,59 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
             v['id'] = vid
             await db.vehicles.update_one({"_id": v['_id']}, {"$set": {"id": vid}})
         v.pop('_id', None)
+        vehicle_ids.append(vid)
+        vehicles_map[vid] = v
 
-        # Query reservations - use both datetime and string comparisons for data consistency
-        sd_str = sd.isoformat()
-        ed_str = ed.isoformat()
-        reservations = await db.reservations.find({
-            "vehicle_id": vid,
-            "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
-            "$or": [
-                {"start_date": {"$lt": ed}, "end_date": {"$gt": sd}},
-                {"start_date": {"$lt": ed_str}, "end_date": {"$gt": sd_str}},
-            ]
-        }, {"_id": 0, "id": 1, "user_name": 1, "start_date": 1, "end_date": 1, "status": 1, "payment_method": 1}).to_list(500)
+    # Fetch ALL reservations for these vehicles with active status, filter dates in Python
+    all_reservations = await db.reservations.find({
+        "vehicle_id": {"$in": vehicle_ids},
+        "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
+    }, {"_id": 0}).to_list(2000)
 
-        slots = []
-        for r in reservations:
-            rid = r.get('id', '')
-            slots.append({
-                "id": rid,
-                "user_name": r.get('user_name', ''),
-                "start": r['start_date'].isoformat() if isinstance(r['start_date'], dt) else str(r['start_date']),
-                "end": r['end_date'].isoformat() if isinstance(r['end_date'], dt) else str(r['end_date']),
-                "status": r.get('status', '')
-            })
+    def parse_date(d):
+        if isinstance(d, dt):
+            return d
+        if isinstance(d, str):
+            try:
+                return dt.fromisoformat(d.replace('Z', '+00:00').replace('+00:00', ''))
+            except:
+                try:
+                    return dt.strptime(d[:19], "%Y-%m-%dT%H:%M:%S")
+                except:
+                    try:
+                        return dt.strptime(d[:10], "%Y-%m-%d")
+                    except:
+                        return None
+        return None
 
+    # Group by vehicle and filter by date range
+    vehicle_reservations: dict = {vid: [] for vid in vehicle_ids}
+    for r in all_reservations:
+        r_start = parse_date(r.get('start_date'))
+        r_end = parse_date(r.get('end_date'))
+        if not r_start or not r_end:
+            continue
+        # Overlap check: reservation overlaps [sd, ed] if start < ed AND end > sd
+        if r_start < ed and r_end > sd:
+            vid = r.get('vehicle_id', '')
+            if vid in vehicle_reservations:
+                vehicle_reservations[vid].append({
+                    "id": r.get('id', ''),
+                    "user_name": r.get('user_name', ''),
+                    "start": r_start.isoformat(),
+                    "end": r_end.isoformat(),
+                    "status": r.get('status', ''),
+                })
+
+    result = []
+    for vid in vehicle_ids:
+        v = vehicles_map[vid]
         result.append({
             "id": vid, "brand": v.get('brand', ''), "model": v.get('model', ''),
             "price_per_day": v.get('price_per_day', 0), "type": v.get('type', ''),
             "seats": v.get('seats', 0), "transmission": v.get('transmission', ''),
             "fuel_type": v.get('fuel_type', ''), "options": v.get('options', []),
-            "reservations": slots
+            "reservations": vehicle_reservations[vid]
         })
 
     return {"vehicles": result}
