@@ -103,7 +103,7 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
 
 @router.get("/reservations", response_model=List[Reservation])
 async def get_reservations(user: dict = Depends(get_current_user)):
-    reservations = await db.reservations.find({"user_id": user['id']}).sort("created_at", -1).to_list(100)
+    reservations = await db.reservations.find({"user_id": user['id']}).sort("start_date", -1).to_list(100)
     return [Reservation(**r) for r in reservations]
 
 

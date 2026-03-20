@@ -619,7 +619,7 @@ async def get_admin_reservations(skip: int = 0, limit: int = 20, status: Optiona
     if status:
         query["status"] = status
 
-    reservations = await db.reservations.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    reservations = await db.reservations.find(query).sort("start_date", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.reservations.count_documents(query)
 
     # Batch fetch users and vehicles

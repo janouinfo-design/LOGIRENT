@@ -441,10 +441,10 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
     agency_id = user.get('agency_id')
     is_super = user.get('role') == 'super_admin'
 
-    from datetime import datetime as dt
+    from datetime import datetime as dt, timedelta
     try:
         sd = dt.fromisoformat(start_date)
-        ed = dt.fromisoformat(end_date)
+        ed = dt.fromisoformat(end_date).replace(hour=23, minute=59, second=59)
     except:
         raise HTTPException(status_code=400, detail="Invalid date format")
 
@@ -464,11 +464,17 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
             await db.vehicles.update_one({"_id": v['_id']}, {"$set": {"id": vid}})
         v.pop('_id', None)
 
+        # Query reservations - use both datetime and string comparisons for data consistency
+        sd_str = sd.isoformat()
+        ed_str = ed.isoformat()
         reservations = await db.reservations.find({
             "vehicle_id": vid,
             "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
-            "$or": [{"start_date": {"$lt": ed}, "end_date": {"$gt": sd}}]
-        }, {"_id": 0, "id": 1, "user_name": 1, "start_date": 1, "end_date": 1, "status": 1}).to_list(100)
+            "$or": [
+                {"start_date": {"$lt": ed}, "end_date": {"$gt": sd}},
+                {"start_date": {"$lt": ed_str}, "end_date": {"$gt": sd_str}},
+            ]
+        }, {"_id": 0, "id": 1, "user_name": 1, "start_date": 1, "end_date": 1, "status": 1, "payment_method": 1}).to_list(500)
 
         slots = []
         for r in reservations:
