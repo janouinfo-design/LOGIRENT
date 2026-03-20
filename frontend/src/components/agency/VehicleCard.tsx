@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Vehicle, getStatus, getPhotoUrl, vst } from './vehicleTypes';
+import { Vehicle, getStatus, getPhotoUrl } from './vehicleTypes';
 
 interface Props {
   item: Vehicle;
@@ -14,57 +14,105 @@ interface Props {
 export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPress }: Props) {
   const sc = getStatus(item.status);
   const photo = item.photos?.[0] ? getPhotoUrl(item.photos[0]) : null;
-  const docCount = item.documents?.filter(d => !d.is_deleted).length || 0;
   const hasPhotos = item.photos && item.photos.length > 0;
+  const fuelLabel = item.fuel_type === 'electric' ? 'Electrique' : item.fuel_type === 'hybrid' ? 'Hybride' : item.fuel_type === 'diesel' ? 'Diesel' : 'Essence';
+  const transLabel = item.transmission === 'automatic' ? 'Automatique' : 'Manuel';
 
   return (
-    <View style={[vst.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
-      <TouchableOpacity onPress={() => hasPhotos ? onPhotoPress(item) : onEdit(item)} activeOpacity={0.8} style={vst.photoBox}>
-        {photo ? (
-          <Image source={{ uri: photo }} style={vst.photo} resizeMode="cover" />
-        ) : (
-          <View style={[vst.photoPlaceholder, { backgroundColor: C.border + '40' }]}>
-            <Ionicons name="car-sport" size={28} color={C.textLight} />
-          </View>
-        )}
-        <View style={[vst.statusOverlay, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
-          <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: sc.text }} />
-          <Text style={{ color: sc.text, fontSize: 11, fontWeight: '800' }}>{sc.label}</Text>
+    <View style={[cs.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
+      {/* Top: Price + Détails */}
+      <View style={cs.topRow}>
+        <View>
+          <Text style={[cs.price, { color: C.text }]}>CHF {item.price_per_day}</Text>
+          <Text style={[cs.priceUnit, { color: C.textLight }]}>/jour</Text>
         </View>
-        {docCount > 0 && (
-          <View style={[vst.docCountBadge, { backgroundColor: '#3B82F6' }]} data-testid={`doc-count-${item.id}`}>
-            <Ionicons name="document-attach" size={11} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>{docCount}</Text>
+        <TouchableOpacity style={cs.detailsBtn} onPress={() => onEdit(item)} data-testid={`edit-vehicle-${item.id}`}>
+          <Text style={cs.detailsBtnText}>Détails</Text>
+          <Ionicons name="arrow-forward" size={14} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Photo */}
+      <TouchableOpacity onPress={() => hasPhotos ? onPhotoPress(item) : onEdit(item)} activeOpacity={0.85} style={cs.photoWrap}>
+        {photo ? (
+          <Image source={{ uri: photo }} style={cs.photo} resizeMode="cover" />
+        ) : (
+          <View style={[cs.photoPlaceholder, { backgroundColor: C.border + '30' }]}>
+            <Ionicons name="car-sport" size={48} color={C.textLight} />
           </View>
         )}
+        {/* Status dot */}
+        <View style={[cs.statusDot, { backgroundColor: sc.text }]} data-testid={`vehicle-status-${item.id}`} />
+        {/* Photo count */}
         {hasPhotos && (
-          <View style={{ position: 'absolute', top: 4, left: 4, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 5, paddingVertical: 2, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={cs.photoCount}>
             <Ionicons name="images" size={10} color="#fff" />
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>{item.photos!.length}</Text>
+            <Text style={cs.photoCountText}>{item.photos!.length}</Text>
           </View>
         )}
       </TouchableOpacity>
 
-      <View style={vst.cardInfo}>
-        <Text style={[vst.vehicleName, { color: C.text }]} numberOfLines={1}>{item.brand} {item.model}</Text>
-        <Text style={{ color: C.textLight, fontSize: 12, marginTop: 2 }}>{item.year} | {item.type}</Text>
-        {item.plate_number ? (
-          <View style={[vst.plateTag, { backgroundColor: C.accent + '15', borderColor: C.accent + '40' }]}>
-            <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700' }}>{item.plate_number}</Text>
+      {/* Info */}
+      <View style={cs.info}>
+        <Text style={[cs.brand, { color: '#7C3AED' }]}>{item.brand.toUpperCase()}</Text>
+        <Text style={[cs.model, { color: C.text }]} numberOfLines={1}>{item.model} {item.year}</Text>
+
+        {/* Feature Badges */}
+        <View style={cs.badges}>
+          <View style={[cs.badge, { backgroundColor: C.bg, borderColor: C.border }]}>
+            <Ionicons name="people-outline" size={12} color={C.textLight} />
+            <Text style={[cs.badgeText, { color: C.text }]}>{item.seats} Places</Text>
           </View>
-        ) : null}
-        <View style={vst.cardMeta}>
-          <Text style={{ color: C.textLight, fontSize: 11 }}>{item.seats}pl | {item.transmission === 'automatic' ? 'Auto' : 'Man.'}</Text>
+          <View style={[cs.badge, { backgroundColor: C.bg, borderColor: C.border }]}>
+            <Ionicons name="cog-outline" size={12} color={C.textLight} />
+            <Text style={[cs.badgeText, { color: C.text }]}>{transLabel}</Text>
+          </View>
+          <View style={[cs.badge, { backgroundColor: C.bg, borderColor: C.border }]}>
+            <Ionicons name="flash-outline" size={12} color={C.textLight} />
+            <Text style={[cs.badgeText, { color: C.text }]}>{fuelLabel}</Text>
+          </View>
         </View>
-        <View style={vst.priceRow}>
-          <Text style={[vst.price, { color: C.accent }]}>CHF {item.price_per_day}</Text>
-          <Text style={{ color: C.textLight, fontSize: 11 }}>/jour</Text>
-        </View>
-        <TouchableOpacity onPress={() => onEdit(item)} style={[vst.editBtn, { backgroundColor: C.accent }]} data-testid={`edit-vehicle-${item.id}`}>
-          <Ionicons name="create-outline" size={14} color="#fff" />
-          <Text style={vst.editBtnText}>Modifier</Text>
-        </TouchableOpacity>
+
+        {/* Plate */}
+        {item.plate_number && (
+          <View style={[cs.plate, { borderColor: C.border }]}>
+            <Text style={[cs.plateText, { color: C.textLight }]}>{item.plate_number}</Text>
+          </View>
+        )}
       </View>
     </View>
   );
 }
+
+const cs = StyleSheet.create({
+  card: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+
+  // Top Row
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 14, paddingTop: 14, paddingBottom: 8 },
+  price: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
+  priceUnit: { fontSize: 12, fontWeight: '500', marginTop: -2 },
+  detailsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#7C3AED', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  detailsBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
+  // Photo
+  photoWrap: { position: 'relative', marginHorizontal: 0 },
+  photo: { width: '100%', height: 220, backgroundColor: '#f0f0f0' },
+  photoPlaceholder: { width: '100%', height: 220, justifyContent: 'center', alignItems: 'center' },
+  statusDot: { position: 'absolute', top: 10, right: 10, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#fff' },
+  photoCount: { position: 'absolute', bottom: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.55)' },
+  photoCountText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+
+  // Info
+  info: { padding: 14, paddingTop: 10 },
+  brand: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 },
+  model: { fontSize: 17, fontWeight: '800', marginBottom: 10 },
+
+  // Badges
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
+  badgeText: { fontSize: 11, fontWeight: '600' },
+
+  // Plate
+  plate: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, alignSelf: 'flex-start' },
+  plateText: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
+});
