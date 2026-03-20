@@ -156,8 +156,7 @@ export default function AgencyPage() {
           <View key={vehicle.id} style={isMobile ? { width: '100%' } : { width: '32%', minWidth: 300 }}>
             <VehicleCard
               vehicle={vehicle}
-              onPress={() => router.push(`/vehicle/${vehicle.id}`)}
-              index={index}
+              onPress={() => router.push(`/booking/${vehicle.id}`)}              index={index}
             />
           </View>
         ))}

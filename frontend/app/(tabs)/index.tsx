@@ -226,7 +226,7 @@ export default function HomeScreen() {
               <AnimatedCard index={index}>
                 <VehicleCard
                   vehicle={vehicle}
-                  onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                  onPress={() => router.push(`/booking/${vehicle.id}`)}
                   index={index}
                 />
               </AnimatedCard>

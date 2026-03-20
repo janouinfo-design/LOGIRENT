@@ -24,6 +24,12 @@ const COLORS = {
   error: '#EF4444',
 };
 
+const DEFAULT_OPTIONS = [
+  { name: 'GPS', price_per_day: 10, icon: 'navigate' },
+  { name: 'Siège enfant', price_per_day: 8, icon: 'happy' },
+  { name: 'Conducteur supplémentaire', price_per_day: 15, icon: 'people' },
+];
+
 export default function BookingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -69,6 +75,19 @@ export default function BookingScreen() {
 
   const vehicle = selectedVehicle;
 
+  // Merge default options with vehicle-specific options (avoid duplicates)
+  const allOptions = React.useMemo(() => {
+    const vehicleOpts = vehicle?.options || [];
+    const vehicleOptNames = new Set(vehicleOpts.map((o: any) => o.name));
+    const merged = [...vehicleOpts];
+    for (const dOpt of DEFAULT_OPTIONS) {
+      if (!vehicleOptNames.has(dOpt.name)) {
+        merged.push(dOpt);
+      }
+    }
+    return merged;
+  }, [vehicle]);
+
   if (!vehicle) {
     return (
       <View style={styles.loadingContainer}>
@@ -80,7 +99,7 @@ export default function BookingScreen() {
   const totalDays = differenceInDays(endDate, startDate);
   const basePrice = vehicle.price_per_day * totalDays;
   const optionsPrice = selectedOptions.reduce((total, optName) => {
-    const option = vehicle.options.find(o => o.name === optName);
+    const option = allOptions.find((o: any) => o.name === optName);
     return total + (option ? option.price_per_day * totalDays : 0);
   }, 0);
   const totalPrice = basePrice + optionsPrice;
@@ -282,41 +301,42 @@ export default function BookingScreen() {
         />
 
         {/* Options */}
-        {vehicle.options.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Options supplémentaires</Text>
-            {vehicle.options.map((option) => {
-              const isSelected = selectedOptions.includes(option.name);
-              const optionTotal = option.price_per_day * totalDays;
-              return (
-                <TouchableOpacity
-                  key={option.name}
-                  style={[
-                    styles.optionCard,
-                    isSelected && styles.optionCardSelected,
-                  ]}
-                  onPress={() => toggleOption(option.name)}
-                >
-                  <View style={styles.optionLeft}>
-                    <View style={[
-                      styles.checkbox,
-                      isSelected && styles.checkboxSelected,
-                    ]}>
-                      {isSelected && (
-                        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-                      )}
-                    </View>
-                    <Text style={styles.optionName}>{option.name}</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Options supplémentaires</Text>
+          {allOptions.map((option: any) => {
+            const isSelected = selectedOptions.includes(option.name);
+            const optionTotal = option.price_per_day * totalDays;
+            const optionIcon = option.icon || 'options';
+            return (
+              <TouchableOpacity
+                key={option.name}
+                style={[
+                  styles.optionCard,
+                  isSelected && styles.optionCardSelected,
+                ]}
+                onPress={() => toggleOption(option.name)}
+                data-testid={`option-${option.name.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <View style={styles.optionLeft}>
+                  <View style={[
+                    styles.checkbox,
+                    isSelected && styles.checkboxSelected,
+                  ]}>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+                    )}
                   </View>
-                  <View style={styles.optionRight}>
-                    <Text style={styles.optionUnitPrice}>CHF {option.price_per_day}/day</Text>
-                    <Text style={styles.optionTotal}>CHF {optionTotal.toFixed(2)}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
+                  <Ionicons name={optionIcon as any} size={18} color={isSelected ? COLORS.primary : COLORS.textLight} style={{ marginRight: 6 }} />
+                  <Text style={styles.optionName}>{option.name}</Text>
+                </View>
+                <View style={styles.optionRight}>
+                  <Text style={styles.optionUnitPrice}>CHF {option.price_per_day}/jour</Text>
+                  <Text style={styles.optionTotal}>CHF {optionTotal.toFixed(2)}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         {/* Payment Method Selection */}
         <View style={styles.section}>

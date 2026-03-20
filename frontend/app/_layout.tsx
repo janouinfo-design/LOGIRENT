@@ -118,7 +118,6 @@ function AppContent() {
             <Stack.Screen name="(auth)/login" />
             <Stack.Screen name="(auth)/register" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="vehicle/[id]" />
             <Stack.Screen name="booking/[id]" />
             <Stack.Screen name="payment-success" />
             <Stack.Screen name="payment-cancel" />

@@ -52,7 +52,7 @@ export default function AgencyReservations() {
   const [sendingLink, setSendingLink] = useState(false);
   const [planningMonth, setPlanningMonth] = useState(startOfMonth(new Date()));
   const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [showAllVehicles, setShowAllVehicles] = useState(false);
+  const [showAllVehicles, setShowAllVehicles] = useState(true);
   const [vehicleSearch, setVehicleSearch] = useState('');
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const highlightAnim = useRef(new Animated.Value(1)).current;

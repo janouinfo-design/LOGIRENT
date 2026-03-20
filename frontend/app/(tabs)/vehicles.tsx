@@ -125,7 +125,7 @@ export default function VehiclesScreen() {
               <View key={vehicle.id} style={isMobile ? { width: '100%' } : { width: '32%', minWidth: 300 }}>
                 <VehicleCard
                   vehicle={vehicle}
-                  onPress={() => router.push(`/vehicle/${vehicle.id}`)}
+                  onPress={() => router.push(`/booking/${vehicle.id}`)}
                   index={index}
                 />
               </View>

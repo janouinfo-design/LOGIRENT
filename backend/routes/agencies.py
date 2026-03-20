@@ -466,7 +466,7 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
 
         reservations = await db.reservations.find({
             "vehicle_id": vid,
-            "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
+            "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
             "$or": [{"start_date": {"$lt": ed}, "end_date": {"$gt": sd}}]
         }, {"_id": 0, "id": 1, "user_name": 1, "start_date": 1, "end_date": 1, "status": 1}).to_list(100)
 
