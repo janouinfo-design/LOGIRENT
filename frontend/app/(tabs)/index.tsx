@@ -8,21 +8,6 @@ import VehicleCard from '../../src/components/VehicleCard';
 import { useI18n } from '../../src/i18n';
 import { useThemeStore } from '../../src/store/themeStore';
 
-const LOGO_URL = 'https://static.prod-images.emergentagent.com/jobs/5f87ba17-413e-4204-98d4-1c8f25a6208a/images/6552fb693c88f79e17c59c43f1efe1446e03b6ddd3093a08b690934bdc28ae75.png';
-
-const _C = {
-  purple: '#6B21A8',
-  purpleLight: '#7C3AED',
-  purpleDark: '#4C1D95',
-  dark: '#1A1A2E',
-  gray: '#6B7280',
-  grayLight: '#9CA3AF',
-  bg: '#FAFAFA',
-  card: '#FFFFFF',
-  text: '#111827',
-  border: '#E5E7EB',
-};
-
 const vehicleTypes = [
   { id: 'all', icon: 'grid-outline' },
   { id: 'SUV', icon: 'car-sport-outline' },
@@ -36,42 +21,16 @@ const typeNameMap: Record<string, Record<string, string>> = {
   en: { all: 'All', SUV: 'SUV', berline: 'Sedan', citadine: 'City Car', utilitaire: 'Utility' },
 };
 
-// Animated card wrapper for scroll animations
 function AnimatedCard({ children, index }: { children: React.ReactNode; index: number }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-
-  useEffect(() => {
-    const delay = index * 80;
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 500, delay, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      {children}
-    </Animated.View>
-  );
-}
-
-function AnimatedSection({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(40)).current;
-
+  const slideAnim = useRef(new Animated.Value(20)).current;
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 600, delay, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 600, delay, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, delay: index * 60, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, delay: index * 60, useNativeDriver: true }),
     ]).start();
   }, []);
-
-  return (
-    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
-      {children}
-    </Animated.View>
-  );
+  return <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>{children}</Animated.View>;
 }
 
 export default function HomeScreen() {
@@ -82,11 +41,9 @@ export default function HomeScreen() {
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
   const { width } = useWindowDimensions();
-  const isMobile = width < 1024;
+  const isDesktop = width >= 1024;
 
-  useEffect(() => {
-    fetchVehicles({});
-  }, []);
+  useEffect(() => { fetchVehicles({}); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -102,370 +59,271 @@ export default function HomeScreen() {
     fetchVehicles(filters);
   };
 
+  // ==================== SEARCH SIDEBAR (Desktop) ====================
+  const SearchPanel = () => (
+    <View style={[st.searchPanel, { backgroundColor: C.card, borderColor: C.border }]} data-testid="search-panel">
+      <Text style={[st.searchTitle, { color: C.text }]}>Rechercher un véhicule</Text>
+
+      <TouchableOpacity
+        style={[st.searchBar, { borderColor: C.border, backgroundColor: C.bg }]}
+        onPress={() => router.push('/(tabs)/vehicles')}
+        data-testid="hero-search"
+      >
+        <Ionicons name="search" size={18} color={C.textLight} />
+        <Text style={[st.searchPlaceholder, { color: C.textLight }]}>{t('searchPlaceholder')}</Text>
+      </TouchableOpacity>
+
+      {/* Quick Filters */}
+      <Text style={[st.filterLabel, { color: C.textLight }]}>Catégories</Text>
+      <View style={st.filterGrid}>
+        {vehicleTypes.map(type => {
+          const active = selectedType === type.id;
+          return (
+            <TouchableOpacity
+              key={type.id}
+              style={[st.filterChip, { backgroundColor: active ? '#7C3AED' : C.bg, borderColor: active ? '#7C3AED' : C.border }]}
+              onPress={() => handleTypeSelect(type.id)}
+              data-testid={`category-${type.id}`}
+            >
+              <Ionicons name={type.icon as any} size={14} color={active ? '#fff' : '#7C3AED'} />
+              <Text style={[st.filterChipText, { color: active ? '#fff' : C.text }]}>{typeNameMap[lang]?.[type.id] || type.id}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Stats */}
+      <View style={[st.statsBox, { backgroundColor: C.bg }]}>
+        <View style={st.stat}>
+          <Text style={[st.statNum, { color: '#7C3AED' }]}>{vehicles.length}+</Text>
+          <Text style={[st.statLabel, { color: C.textLight }]}>{lang === 'fr' ? 'Véhicules' : 'Vehicles'}</Text>
+        </View>
+        <View style={st.stat}>
+          <Text style={[st.statNum, { color: '#7C3AED' }]}>24/7</Text>
+          <Text style={[st.statLabel, { color: C.textLight }]}>Support</Text>
+        </View>
+      </View>
+
+      {/* CTA */}
+      <TouchableOpacity style={st.ctaBtn} onPress={() => router.push('/(tabs)/vehicles')}>
+        <Text style={st.ctaBtnText}>{t('ctaButton')}</Text>
+        <Ionicons name="arrow-forward" size={16} color="#fff" />
+      </TouchableOpacity>
+    </View>
+  );
+
+  // ==================== MOBILE SEARCH BAR ====================
+  const MobileSearch = () => (
+    <View style={[st.mobileSearch, { backgroundColor: C.card, borderColor: C.border }]}>
+      <TouchableOpacity
+        style={[st.mobileSearchBar, { borderColor: C.border, backgroundColor: C.bg }]}
+        onPress={() => router.push('/(tabs)/vehicles')}
+        data-testid="hero-search"
+      >
+        <Ionicons name="search" size={18} color={C.textLight} />
+        <Text style={[st.searchPlaceholder, { color: C.textLight }]}>{t('searchPlaceholder')}</Text>
+        <View style={st.mobileSearchArrow}>
+          <Ionicons name="arrow-forward" size={14} color="#fff" />
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: C.bg }]} edges={['top']}>
+    <SafeAreaView style={[st.container, { backgroundColor: C.bg }]} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-
-        {/* Navigation Menu */}
-        {/* Content */}
-
-        {/* Hero Section */}
-        <AnimatedSection delay={0}>
-          <View style={[styles.hero, { backgroundColor: C.bg }]}>
-            <View style={[styles.heroBg, { backgroundColor: C.primary }]} />
-            <View style={styles.heroInner}>
-              {/* Image on top */}
-              <View style={styles.heroImageWrap}>
-                <Image
-                  source={{ uri: 'https://images.unsplash.com/photo-1762602671608-06e044a71448?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTF8MHwxfHNlYXJjaHwyfHxsdXh1cnklMjBjYXIlMjByZW50YWwlMjBwcmVtaXVtfGVufDB8fHx8MTc3MjAxMzA3MXww&ixlib=rb-4.1.0&q=85' }}
-                  style={styles.heroImage}
-                  resizeMode="cover"
-                />
-              </View>
-              {/* Content below */}
-              <View style={styles.heroContent}>
-                <Text style={[styles.heroGreeting, { color: C.text }]}>{t('greeting')}</Text>
-                <Text style={[styles.heroTitle, { color: C.text }]}>LogiRent</Text>
-                <Text style={[styles.heroSubtitle, { color: C.textLight }]}>{t('heroSubtitle')}</Text>
-
-                {/* Search Bar */}
-                <View style={[styles.heroSearch, { backgroundColor: C.card, borderColor: C.border }]}>
-                  <Ionicons name="search" size={18} color={C.gray} />
-                  <TouchableOpacity
-                    style={[styles.heroSearchInput, { color: C.text }]}
-                    onPress={() => router.push('/(tabs)/vehicles')}
-                    data-testid="hero-search"
-                  >
-                    <Text style={[styles.heroSearchPlaceholder, { color: C.textLight }]}>{t('searchPlaceholder')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.heroSearchBtn}
-                    onPress={() => router.push('/(tabs)/vehicles')}
-                  >
-                    <Ionicons name="arrow-forward" size={16} color="#FFF" />
-                  </TouchableOpacity>
-                </View>
-
-                {/* Stats */}
-                <View style={styles.heroStats}>
-                  <View style={styles.heroStat}>
-                    <Text style={styles.heroStatNum}>{vehicles.length}+</Text>
-                    <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Véhicules' : 'Vehicles'}</Text>
-                  </View>
-                  <View style={styles.heroStatDivider} />
-                  <View style={styles.heroStat}>
-                    <Text style={styles.heroStatNum}>500+</Text>
-                    <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Clients' : 'Clients'}</Text>
-                  </View>
-                  <View style={styles.heroStatDivider} />
-                  <View style={styles.heroStat}>
-                    <Text style={styles.heroStatNum}>24/7</Text>
-                    <Text style={styles.heroStatLabel}>{lang === 'fr' ? 'Support' : 'Support'}</Text>
-                  </View>
-                </View>
-              </View>
+        {/* Compact Header */}
+        <View style={[st.header, { backgroundColor: '#7C3AED' }]}>
+          <View style={st.headerInner}>
+            <View>
+              <Text style={st.headerGreeting}>{t('greeting')}</Text>
+              <Text style={st.headerTitle}>LogiRent</Text>
+            </View>
+            <View style={st.headerRight}>
+              <Text style={st.headerSub}>{lang === 'fr' ? 'Location de véhicules' : 'Vehicle Rental'}</Text>
+              <Text style={st.headerStat}>{vehicles.length} {lang === 'fr' ? 'véhicules disponibles' : 'vehicles available'}</Text>
             </View>
           </View>
-        </AnimatedSection>
+        </View>
 
-        {/* Categories */}
-        <AnimatedSection delay={200}>
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: C.text }]}>{t('categories')}</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20 }}
-            >
-              {vehicleTypes.map((type) => {
+        {/* Mobile: search + categories inline */}
+        {!isDesktop && (
+          <>
+            <MobileSearch />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.catRow}>
+              {vehicleTypes.map(type => {
                 const active = selectedType === type.id;
                 return (
                   <TouchableOpacity
                     key={type.id}
-                    style={[
-                      styles.catPill,
-                      {
-                        backgroundColor: active ? '#7C3AED' : '#FFFFFF',
-                        borderColor: active ? '#7C3AED' : '#D1D5DB',
-                      },
-                    ]}
+                    style={[st.catPill, { backgroundColor: active ? '#7C3AED' : C.card, borderColor: active ? '#7C3AED' : C.border }]}
                     onPress={() => handleTypeSelect(type.id)}
                     data-testid={`category-${type.id}`}
                   >
-                    <Ionicons name={type.icon as any} size={18} color={active ? '#FFFFFF' : '#7C3AED'} />
-                    <Text style={[styles.catText, { color: active ? '#FFFFFF' : '#1F2937' }]}>
-                      {typeNameMap[lang]?.[type.id] || type.id}
-                    </Text>
+                    <Ionicons name={type.icon as any} size={16} color={active ? '#fff' : '#7C3AED'} />
+                    <Text style={[st.catText, { color: active ? '#fff' : C.text }]}>{typeNameMap[lang]?.[type.id] || type.id}</Text>
                   </TouchableOpacity>
                 );
               })}
             </ScrollView>
-          </View>
-        </AnimatedSection>
-
-        {/* Vehicle Count */}
-        <AnimatedSection delay={350}>
-          <View style={styles.resultsRow}>
-            <Text style={styles.resultsText}>
-              {vehicles.length} {t('vehiclesCount')}
-            </Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
-              <Text style={styles.viewAll}>{t('viewAll')}</Text>
-            </TouchableOpacity>
-          </View>
-        </AnimatedSection>
-
-        {/* Vehicle Grid */}
-        <View style={[styles.vehicleGrid, width < 768 ? styles.vehicleGridMobile : styles.vehicleGridDesktop]}>
-          {vehicles.map((vehicle, index) => (
-            <View key={vehicle.id} style={width >= 768 ? { width: '32%', minWidth: 300 } : { width: '100%' }}>
-              <AnimatedCard index={index}>
-                <VehicleCard
-                  vehicle={vehicle}
-                  onPress={() => router.push(`/booking/${vehicle.id}`)}
-                  index={index}
-                />
-              </AnimatedCard>
-            </View>
-          ))}
-        </View>
-
-        {vehicles.length === 0 && (
-          <View style={styles.empty}>
-            <Ionicons name="car-outline" size={48} color={C.grayLight} />
-            <Text style={[styles.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
-          </View>
+          </>
         )}
 
-        {/* Why LogiRent Section */}
-        <AnimatedSection delay={500}>
-          <View style={styles.whySection}>
-            <Text style={[styles.sectionTitle, { color: C.text }]}>{t('whyUs')}</Text>
-            <View style={styles.benefitsGrid}>
+        {/* Main Content */}
+        <View style={[st.main, isDesktop && st.mainDesktop]}>
+          {/* Vehicle Grid - LEFT / PRIMARY */}
+          <View style={[st.vehicleCol, isDesktop && { flex: 1 }]}>
+            <View style={st.resultsRow}>
+              <Text style={[st.resultsText, { color: C.text }]}>{vehicles.length} {t('vehiclesCount')}</Text>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
+                <Text style={st.viewAll}>{t('viewAll')}</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={[st.grid, isDesktop ? st.gridDesktop : st.gridMobile]}>
+              {vehicles.map((vehicle, index) => (
+                <View key={vehicle.id} style={isDesktop ? { width: '48%', minWidth: 280 } : { width: '100%' }}>
+                  <AnimatedCard index={index}>
+                    <VehicleCard
+                      vehicle={vehicle}
+                      onPress={() => router.push(`/booking/${vehicle.id}`)}
+                      index={index}
+                    />
+                  </AnimatedCard>
+                </View>
+              ))}
+            </View>
+
+            {vehicles.length === 0 && (
+              <View style={st.empty}>
+                <Ionicons name="car-outline" size={48} color={C.textLight} />
+                <Text style={[st.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Search Panel - RIGHT (Desktop only) */}
+          {isDesktop && (
+            <View style={st.sidebarCol}>
+              <SearchPanel />
+
+              {/* Benefits in sidebar */}
+              <View style={[st.benefitsCard, { backgroundColor: C.card, borderColor: C.border }]}>
+                <Text style={[st.benefitsTitle, { color: C.text }]}>{t('whyUs')}</Text>
+                {[
+                  { icon: 'car-sport', titleKey: 'benefit1Title' as const },
+                  { icon: 'headset', titleKey: 'benefit2Title' as const },
+                  { icon: 'pricetag', titleKey: 'benefit3Title' as const },
+                  { icon: 'calendar-clear', titleKey: 'benefit4Title' as const },
+                ].map((b, i) => (
+                  <View key={i} style={st.benefitRow}>
+                    <View style={st.benefitIcon}><Ionicons name={b.icon as any} size={16} color="#7C3AED" /></View>
+                    <Text style={[st.benefitText, { color: C.text }]}>{t(b.titleKey)}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+        </View>
+
+        {/* Mobile: Benefits + CTA at bottom */}
+        {!isDesktop && (
+          <View style={st.mobileBenefits}>
+            <Text style={[st.sectionTitle, { color: C.text }]}>{t('whyUs')}</Text>
+            <View style={st.benefitsGrid}>
               {[
                 { icon: 'car-sport', titleKey: 'benefit1Title' as const, descKey: 'benefit1Desc' as const },
                 { icon: 'headset', titleKey: 'benefit2Title' as const, descKey: 'benefit2Desc' as const },
                 { icon: 'pricetag', titleKey: 'benefit3Title' as const, descKey: 'benefit3Desc' as const },
                 { icon: 'calendar-clear', titleKey: 'benefit4Title' as const, descKey: 'benefit4Desc' as const },
-              ].map((benefit, i) => (
-                <View key={i} style={styles.benefitCard}>
-                  <View style={styles.benefitIcon}>
-                    <Ionicons name={benefit.icon as any} size={24} color={C.purpleLight} />
-                  </View>
-                  <Text style={styles.benefitTitle}>{t(benefit.titleKey)}</Text>
-                  <Text style={styles.benefitDesc}>{t(benefit.descKey)}</Text>
+              ].map((b, i) => (
+                <View key={i} style={[st.benefitCard, { backgroundColor: C.card, borderColor: C.border }]}>
+                  <View style={st.benefitIconBig}><Ionicons name={b.icon as any} size={22} color="#7C3AED" /></View>
+                  <Text style={[st.benefitCardTitle, { color: C.text }]}>{t(b.titleKey)}</Text>
+                  <Text style={[st.benefitCardDesc, { color: C.textLight }]}>{t(b.descKey)}</Text>
                 </View>
               ))}
             </View>
           </View>
-        </AnimatedSection>
-
-        {/* CTA Banner */}
-        <AnimatedSection delay={650}>
-          <View style={styles.cta}>
-            <Text style={styles.ctaTitle}>{t('ctaTitle')}</Text>
-            <Text style={styles.ctaSub}>{t('ctaSubtitle')}</Text>
-            <TouchableOpacity style={styles.ctaButton} onPress={() => router.push('/(tabs)/vehicles')}>
-              <Text style={styles.ctaButtonText}>{t('ctaButton')}</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        </AnimatedSection>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const st = StyleSheet.create({
   container: { flex: 1 },
-  hero: {
-    margin: 20,
-    marginBottom: 0,
-    borderRadius: 20,
-    overflow: 'hidden',
-    minHeight: 300,
-  },
-  heroBg: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 300,
-    height: 300,
-    opacity: 0.15,
-    borderRadius: 150,
-  },
-  heroInner: {
-    flexDirection: 'column',
-  },
-  heroImageWrap: {
-    width: '100%',
-    height: 200,
-  },
-  heroImage: {
-    width: '100%',
-    height: '100%',
-  },
-  heroContent: {
-    padding: 20,
-  },
-  heroGreeting: { fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', fontWeight: '600' },
-  heroTitle: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    marginTop: 4,
-    marginBottom: 8,
-  },
-  heroSubtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22 },
-  heroSearch: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    paddingLeft: 14,
-    marginTop: 22,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    maxWidth: 400,
-  },
-  heroSearchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-  },
-  heroSearchPlaceholder: {
-    color: 'rgba(255,255,255,0.5)',
-    fontSize: 13,
-  },
-  heroSearchBtn: { width: 38,
-    height: 38,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 4,
-  },
-  heroStats: {
-    flexDirection: 'row',
-    marginTop: 24,
-    gap: 0,
-  },
-  heroStat: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
-  heroStatNum: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  heroStatLabel: {
-    fontSize: 11,
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: 2,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  heroStatDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignSelf: 'center',
-  },
-  section: { marginTop: 28 },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    paddingHorizontal: 20,
-    marginBottom: 16,
-  },
-  catPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 25,
-    marginRight: 10,
-    borderWidth: 1.5,
-  },
-  catPillActive: { backgroundColor: '#7C3AED', borderColor: '#7C3AED' },
-  catText: { fontSize: 13, fontWeight: '600' },
-  catTextActive: { color: '#FFFFFF' },
-  resultsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 28,
-    marginBottom: 16,
-  },
-  resultsText: { fontSize: 14, fontWeight: '500' },
-  viewAll: { fontSize: 13, fontWeight: '600' },
-  vehicleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    gap: 16,
-    maxWidth: 1200,
-    alignSelf: 'center',
-    width: '100%',
-  },
-  vehicleGridMobile: {
-    flexDirection: 'column',
-    alignItems: 'stretch',
-    gap: 14,
-  },
-  vehicleGridDesktop: {
-    justifyContent: 'flex-start',
-  },
+
+  // Compact Header
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14 },
+  headerInner: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  headerGreeting: { fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)', fontWeight: '600' },
+  headerTitle: { fontSize: 24, fontWeight: '900', color: '#fff', marginTop: 2 },
+  headerRight: { alignItems: 'flex-end' },
+  headerSub: { fontSize: 12, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
+  headerStat: { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
+
+  // Mobile Search
+  mobileSearch: { paddingHorizontal: 16, paddingVertical: 10, borderBottomWidth: 1 },
+  mobileSearchBar: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  mobileSearchArrow: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#7C3AED', alignItems: 'center', justifyContent: 'center' },
+  searchPlaceholder: { fontSize: 13, flex: 1 },
+
+  // Categories
+  catRow: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
+  catPill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  catText: { fontSize: 12, fontWeight: '600' },
+
+  // Main Layout
+  main: { paddingHorizontal: 16, marginTop: 4 },
+  mainDesktop: { flexDirection: 'row', gap: 20, maxWidth: 1400, alignSelf: 'center', width: '100%' },
+  vehicleCol: { flex: 1 },
+  sidebarCol: { width: 320, paddingTop: 4 },
+
+  // Results Row
+  resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingHorizontal: 4 },
+  resultsText: { fontSize: 14, fontWeight: '600' },
+  viewAll: { fontSize: 13, fontWeight: '600', color: '#7C3AED' },
+
+  // Vehicle Grid
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  gridMobile: { flexDirection: 'column' },
+  gridDesktop: { justifyContent: 'flex-start' },
   empty: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { fontSize: 15, marginTop: 10 },
-  whySection: { marginTop: 40 },
-  benefitsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 20,
-    gap: 14,
-  },
-  benefitCard: {
-    width: '47%',
-    minWidth: 150,
-    borderRadius: 14,
-    padding: 18,
-    borderWidth: 1,
-  },
-  benefitIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(107, 33, 168, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  benefitTitle: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
-  benefitDesc: { fontSize: 12, lineHeight: 16 },
-  cta: {
-    margin: 20,
-    borderRadius: 20,
-    padding: 28,
-    alignItems: 'center',
-  },
-  ctaTitle: { fontSize: 22, fontWeight: '800', color: '#FFFFFF', textAlign: 'center' },
-  ctaSub: { fontSize: 14, color: 'rgba(255,255,255,0.7)', marginTop: 8, textAlign: 'center' },
-  ctaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  ctaButtonText: { fontSize: 14, fontWeight: '700' },
+  emptyText: { fontSize: 14, marginTop: 10 },
+
+  // Search Panel (Desktop Sidebar)
+  searchPanel: { borderRadius: 14, borderWidth: 1, padding: 18, marginBottom: 14 },
+  searchTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
+  searchBar: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  filterLabel: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
+  filterGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 14 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
+  filterChipText: { fontSize: 11, fontWeight: '600' },
+  statsBox: { flexDirection: 'row', justifyContent: 'space-around', borderRadius: 10, padding: 12, marginBottom: 14 },
+  stat: { alignItems: 'center' },
+  statNum: { fontSize: 20, fontWeight: '800' },
+  statLabel: { fontSize: 10, textTransform: 'uppercase', marginTop: 2 },
+  ctaBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#7C3AED', borderRadius: 10, paddingVertical: 12 },
+  ctaBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+
+  // Benefits sidebar
+  benefitsCard: { borderRadius: 14, borderWidth: 1, padding: 16 },
+  benefitsTitle: { fontSize: 14, fontWeight: '700', marginBottom: 12 },
+  benefitRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
+  benefitIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(124, 58, 237, 0.08)', alignItems: 'center', justifyContent: 'center' },
+  benefitText: { fontSize: 13, fontWeight: '500', flex: 1 },
+
+  // Mobile Benefits
+  mobileBenefits: { paddingHorizontal: 16, marginTop: 20 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', marginBottom: 12 },
+  benefitsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  benefitCard: { width: '48%', minWidth: 150, borderRadius: 12, borderWidth: 1, padding: 14 },
+  benefitIconBig: { width: 38, height: 38, borderRadius: 10, backgroundColor: 'rgba(124, 58, 237, 0.08)', alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
+  benefitCardTitle: { fontSize: 13, fontWeight: '700', marginBottom: 3 },
+  benefitCardDesc: { fontSize: 11, lineHeight: 15 },
 });
