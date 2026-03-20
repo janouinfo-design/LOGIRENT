@@ -186,7 +186,7 @@ export default function HomeScreen() {
 
             <View style={[st.grid, isDesktop ? st.gridDesktop : st.gridMobile]}>
               {vehicles.map((vehicle, index) => (
-                <View key={vehicle.id} style={isDesktop ? { width: '48%', minWidth: 280 } : { width: '100%' }}>
+                <View key={vehicle.id} style={isDesktop ? { width: '31.5%', minWidth: 260 } : { width: '100%' }}>
                   <AnimatedCard index={index}>
                     <VehicleCard
                       vehicle={vehicle}
@@ -282,7 +282,7 @@ const st = StyleSheet.create({
   main: { paddingHorizontal: 16, marginTop: 4 },
   mainDesktop: { flexDirection: 'row', gap: 20, maxWidth: 1400, alignSelf: 'center', width: '100%' },
   vehicleCol: { flex: 1 },
-  sidebarCol: { width: 320, paddingTop: 4 },
+  sidebarCol: { width: 280, paddingTop: 4 },
 
   // Results Row
   resultsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingHorizontal: 4 },
