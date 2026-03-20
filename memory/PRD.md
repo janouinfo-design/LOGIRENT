@@ -1,36 +1,33 @@
 # LogiRent - Product Requirements Document
 
 ## Original Problem Statement
-Complete car rental solution "LogiRent" with multi-agency support, deployed on user's VPS (logirent.ch, app.logirent.ch).
+Complete car rental solution "LogiRent" with multi-agency support, deployed on user's VPS (logirent.ch).
 
 ## Tech Stack
-- **Frontend**: React Native (Expo) - Web + Mobile
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **Integrations**: Stripe, Resend, Navixy, OpenAI (doc validation)
+- Frontend: React Native (Expo), Backend: FastAPI, Database: MongoDB
+- Integrations: Stripe, Resend, Navixy, OpenAI (doc validation)
 
 ## What's Been Implemented
 
 ### Core Features
-- Multi-agency platform, role-based access, vehicle management
-- Reservation system (Stripe + cash + TWINT), GPS tracking, contract generation, email notifications
+- Multi-agency platform, role-based access, vehicle management, reservation system, GPS tracking, contracts, emails
 
-### Session March 20, 2026 - All Changes
-1. **Homepage redesign**: Compact header, 2-column desktop layout (vehicles left, search sidebar right), vehicles immediately visible, category filtering
-2. **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation with auto-generated contract
-3. **Admin-configurable booking options**: GPS, Siège enfant, Conducteur supplémentaire with custom prices per agency
-4. **Admin Planning fix**: Shows ALL vehicles + completed reservations
-5. **Vehicle detail page removed**: Links go to booking directly
-6. **Login redirect**: Client → reservations page
+### Session March 20, 2026
+1. **Admin Vehicles 3-Column Grid** (latest): Responsive layout (3 cols desktop, 2 tablet, 1 mobile), large images (220px), price header with "Détails" button, brand uppercase purple, feature badges
+2. **Homepage redesign**: Compact header, 2-column layout (vehicles left, search right), vehicles immediately visible
+3. **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation + auto-contract
+4. **Admin-configurable booking options per agency**: GPS, Siège enfant, Conducteur supplémentaire
+5. **Planning fix**: Shows ALL vehicles + completed reservations
+6. **Vehicle detail page removed**, login redirects to reservations
 7. **Notifications fix**: React hooks ordering
 
 ## Key Files
+- `/app/frontend/app/agency-app/vehicles.tsx` - 3-column responsive grid
+- `/app/frontend/src/components/agency/VehicleCard.tsx` - Redesigned card
 - `/app/frontend/app/(tabs)/index.tsx` - Redesigned homepage
 - `/app/frontend/app/booking/[id].tsx` - 4-step booking wizard
-- `/app/frontend/app/agency-app/contract-template.tsx` - BookingOptionsSection
 - `/app/backend/routes/admin.py` - Booking options CRUD
-- `/app/backend/routes/agencies.py` - Public booking options endpoint
-- `/app/backend/routes/contracts.py` - Auto-generate contract endpoint
+- `/app/backend/routes/contracts.py` - Auto-generate contract
 
 ## Credentials
 - Super Admin: `superadmin@logirent.ch` / `LogiRent2024!`
@@ -44,12 +41,5 @@ cd /home/ubuntu/apps/LOGIRENT/frontend && npx expo export --platform web && sudo
 ```
 
 ## Backlog
-### P1
-- Push Notifications natives
-- Resend domain verification (user DNS action)
-- Health Dashboard super-admin
-
-### P2
-- Driver/Agent mobile app
-- App Store / Play Store deployment
-- Advanced analytics
+### P1: Push Notifications, Resend domain verification, Health Dashboard
+### P2: Driver/Agent mobile app, App Store deployment, Analytics
