@@ -1,59 +1,36 @@
 # LogiRent - Product Requirements Document
 
 ## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with multi-agency support, reservation management, vehicle tracking, and payment processing. Deployed on user's VPS (logirent.ch, app.logirent.ch).
+Complete car rental solution "LogiRent" with multi-agency support, deployed on user's VPS (logirent.ch, app.logirent.ch).
 
 ## Tech Stack
 - **Frontend**: React Native (Expo) - Web + Mobile
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
-- **Integrations**: Stripe (payments), Resend (emails), Navixy (GPS tracking), OpenAI (doc validation)
+- **Integrations**: Stripe, Resend, Navixy, OpenAI (doc validation)
 
 ## What's Been Implemented
 
-### Core Features (Complete)
-- Multi-agency vehicle rental platform
-- Role-based access (super_admin, admin, client)
-- Vehicle management with availability calendar
-- Reservation system with payment (Stripe + cash + TWINT)
-- GPS tracking via Navixy integration
-- Contract generation & PDF
-- Email notifications via Resend
+### Core Features
+- Multi-agency platform, role-based access, vehicle management
+- Reservation system (Stripe + cash + TWINT), GPS tracking, contract generation, email notifications
 
-### Session March 20, 2026 - All Features
-- **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation
-  - Step 1: Date/time picker + options selection
-  - Step 2: Full recap (vehicle, dates, options, price breakdown, conditions)
-  - Step 3: Payment method (Carte, TWINT, Espèces)
-  - Step 4: Confirmation + auto-generated contract download
-- **Auto Contract Generation**: `POST /api/contracts/auto-generate/{reservation_id}` (client-facing, idempotent)
-- **Admin-configurable booking options per agency**: GPS, Siège enfant, Conducteur supplémentaire with custom prices
-- **Admin Planning**: Shows ALL vehicles + completed reservations
-- **Login redirect**: Client → reservations page
-- **Vehicle detail page removed**: Links go to booking directly
-- **Notifications fix**: React hooks ordering bug resolved
+### Session March 20, 2026 - All Changes
+1. **Homepage redesign**: Compact header, 2-column desktop layout (vehicles left, search sidebar right), vehicles immediately visible, category filtering
+2. **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation with auto-generated contract
+3. **Admin-configurable booking options**: GPS, Siège enfant, Conducteur supplémentaire with custom prices per agency
+4. **Admin Planning fix**: Shows ALL vehicles + completed reservations
+5. **Vehicle detail page removed**: Links go to booking directly
+6. **Login redirect**: Client → reservations page
+7. **Notifications fix**: React hooks ordering
 
-## Architecture
-```
-/app
-├── backend/
-│   ├── routes/
-│   │   ├── agencies.py    # + public booking-options endpoint
-│   │   ├── admin.py       # + admin booking-options CRUD
-│   │   ├── contracts.py   # + auto-generate contract for clients
-│   │   ├── auth.py, notifications.py, reservations.py, vehicles.py
-│   └── models.py
-├── frontend/
-│   ├── app/
-│   │   ├── booking/[id].tsx         # 4-step wizard
-│   │   ├── agency-app/
-│   │   │   └── contract-template.tsx # + BookingOptionsSection
-│   │   └── (tabs)/
-│   │       ├── notifications.tsx    # Fixed hooks
-│   │       ├── reservations.tsx     # Default landing
-│   │       └── profile.tsx          # Document upload
-│   └── src/store/
-```
+## Key Files
+- `/app/frontend/app/(tabs)/index.tsx` - Redesigned homepage
+- `/app/frontend/app/booking/[id].tsx` - 4-step booking wizard
+- `/app/frontend/app/agency-app/contract-template.tsx` - BookingOptionsSection
+- `/app/backend/routes/admin.py` - Booking options CRUD
+- `/app/backend/routes/agencies.py` - Public booking options endpoint
+- `/app/backend/routes/contracts.py` - Auto-generate contract endpoint
 
 ## Credentials
 - Super Admin: `superadmin@logirent.ch` / `LogiRent2024!`
