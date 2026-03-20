@@ -9,24 +9,25 @@ Complete car rental solution "LogiRent" with multi-agency support, deployed on u
 
 ## What's Been Implemented
 
-### Core Features
-- Multi-agency platform, role-based access, vehicle management, reservation system, GPS tracking, contracts, emails
-
-### Session March 20, 2026
-1. **Admin Vehicles 3-Column Grid** (latest): Responsive layout (3 cols desktop, 2 tablet, 1 mobile), large images (220px), price header with "Détails" button, brand uppercase purple, feature badges
-2. **Homepage redesign**: Compact header, 2-column layout (vehicles left, search right), vehicles immediately visible
-3. **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation + auto-contract
-4. **Admin-configurable booking options per agency**: GPS, Siège enfant, Conducteur supplémentaire
-5. **Planning fix**: Shows ALL vehicles + completed reservations
-6. **Vehicle detail page removed**, login redirects to reservations
-7. **Notifications fix**: React hooks ordering
+### Session March 20, 2026 - All Changes
+1. **Client vehicles page**: Compact layout, categories LEFT + search RIGHT, 3-column responsive grid
+2. **Admin reservations fix**: Vehicle-schedule query handles datetime+string dates via $or, end-of-day boundary, limit 500. Returns 13 reservations for March (was 2)
+3. **Sort by start_date**: Both admin and client reservations sorted by start_date DESC
+4. **Admin vehicles 3-column grid**: Large images, price header, feature badges
+5. **Homepage redesign**: Compact header, 2-column layout (vehicles left, search right)
+6. **4-step Booking Wizard**: Sélection → Validation → Paiement → Confirmation + auto-contract
+7. **Admin-configurable booking options per agency**: GPS, Siège enfant, Conducteur supplémentaire
+8. **Planning fix**: Shows ALL vehicles + completed reservations
+9. **Vehicle detail page removed**, login redirects to reservations
+10. **Notifications fix**: React hooks ordering
 
 ## Key Files
-- `/app/frontend/app/agency-app/vehicles.tsx` - 3-column responsive grid
-- `/app/frontend/src/components/agency/VehicleCard.tsx` - Redesigned card
+- `/app/frontend/app/(tabs)/vehicles.tsx` - Client vehicles (compact, 3-col)
+- `/app/frontend/app/agency-app/vehicles.tsx` - Admin vehicles (3-col grid)
+- `/app/frontend/app/booking/[id].tsx` - 4-step wizard
 - `/app/frontend/app/(tabs)/index.tsx` - Redesigned homepage
-- `/app/frontend/app/booking/[id].tsx` - 4-step booking wizard
-- `/app/backend/routes/admin.py` - Booking options CRUD
+- `/app/backend/routes/agencies.py` - Vehicle schedule (date fix)
+- `/app/backend/routes/admin.py` - Reservations sort + booking options
 - `/app/backend/routes/contracts.py` - Auto-generate contract
 
 ## Credentials
