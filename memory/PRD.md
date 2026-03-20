@@ -1,18 +1,18 @@
 # LogiRent - Product Requirements Document
 
 ## Original Problem Statement
-Build a complete car rental solution named "LogiRent" with multi-agency support, reservation management, vehicle tracking, and payment processing. The user's primary goal was to migrate the application to their own VPS while fixing critical issues.
+Build a complete car rental solution named "LogiRent" with multi-agency support, reservation management, vehicle tracking, and payment processing. The user deployed to their own VPS (logirent.ch, app.logirent.ch) and the development focuses on fixing bugs and adding new features.
 
 ## Tech Stack
 - **Frontend**: React Native (Expo) - Web + Mobile
 - **Backend**: FastAPI (Python)
-- **Database**: MongoDB (migrating from Atlas to self-hosted)
-- **Integrations**: Stripe (payments), Resend (emails), Navixy (GPS tracking), OpenAI (via emergentintegrations)
+- **Database**: MongoDB
+- **Integrations**: Stripe (payments), Resend (emails), Navixy (GPS tracking), OpenAI (via emergentintegrations for doc validation)
 
 ## User Roles
 - **Super Admin**: Global dashboard, manage all agencies
 - **Agency Admin**: Manage own agency vehicles, reservations, clients
-- **Client**: Browse vehicles, make reservations, manage profile
+- **Client**: Browse vehicles, make reservations, manage profile, upload documents
 
 ## What's Been Implemented
 
@@ -26,27 +26,15 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 - Email notifications via Resend
 - QR code for agency public pages
 
-### VPS Migration & Stability Fixes (March 2026)
-- Migration scripts refactored (secure, modular: 01-04 steps)
-- LogiRent/LogiTime project isolation
-- Backend port conflict resolution (pm2 management)
-- Environment consistency (standardized env vars)
-- Frontend routing protection (withAuth HOC)
-- JWT secret security fix
-- Version tracking endpoint (`/api/version`)
-
-### Bug Fixes - Session March 19, 2026
-- **Frontend URL fix**: Added `|| ''` fallback to `EXPO_PUBLIC_BACKEND_URL`
-- **CORS fix**: Moved middleware before routes, added explicit origins
-- **Agencies KeyError fix**: Changed `agency['id']` to `agency.get('id')` throughout
-- **VPS data cleanup**: Created `scripts/fix_vps_data.py`
-- **Admin-agency linkage**: Fixed missing `agency_id`
-
-### Bug Fixes - Session March 19, 2026 (Fork)
-- **Notifications page blank (FIXED)**: Fixed React hooks violation in `notifications.tsx` - hooks (useRouter, useNotificationStore, useState) were called AFTER a conditional return, violating React's Rules of Hooks. Moved all hooks before conditional returns.
-- **Admin Planning View**: Backend code already robust with `vehicle.get('id')` and auto-repair logic. Verified endpoint returns all vehicles with their reservations correctly.
-- **Document Upload in Client Profile**: Already implemented with recto/verso for both ID and license. Backend endpoints for AI-verified upload are in place.
-- **Calendar Booking**: Already implemented - selecting a date with no reservations shows "Réserver un véhicule" button navigating to vehicles list.
+### Session March 19-20, 2026 - Bug Fixes & Features
+- **Notifications page blank (FIXED)**: Fixed React hooks violation in `notifications.tsx`
+- **Admin Planning shows ALL vehicles**: Changed `showAllVehicles` default to `true`, added `completed` status to backend reservation query
+- **Vehicle detail page deleted**: Removed `/vehicle/[id]`, all links redirect to `/booking/[id]`
+- **Client login redirect**: Now goes to `/(tabs)/reservations` instead of home
+- **Booking options**: Added GPS (CHF 10/j), Siège enfant (CHF 8/j), Conducteur supplémentaire (CHF 15/j) as default options
+- **Document upload in client profile**: Recto/verso for ID and license with AI validation (already implemented)
+- Fixed backend CORS, URLs, data integrity issues
+- Created VPS deployment scripts and guides
 
 ## Architecture
 ```
@@ -54,26 +42,22 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 ├── backend/
 │   ├── server.py          # FastAPI app + CORS config
 │   ├── routes/
-│   │   ├── agencies.py    # Agency CRUD + vehicle schedule
+│   │   ├── agencies.py    # Agency CRUD + vehicle schedule (includes completed)
 │   │   ├── admin.py       # Admin dashboard endpoints
-│   │   ├── auth.py        # Authentication + doc upload
-│   │   ├── notifications.py # Notification CRUD
-│   │   ├── reservations.py # Client reservations
-│   │   └── vehicles.py    # Vehicle management
-│   └── models.py          # Pydantic models
+│   │   ├── auth.py        # Auth + document upload endpoints
+│   │   ├── notifications.py
+│   │   ├── reservations.py
+│   │   └── vehicles.py
+│   └── models.py
 ├── frontend/
-│   ├── src/
-│   │   ├── api/axios.ts   # Configured axios instance
-│   │   ├── store/         # Zustand stores
-│   │   └── components/    # Shared components
-│   └── app/               # Expo Router pages
-│       ├── agency-app/    # Agency admin interface
-│       ├── admin/         # Super admin interface
-│       └── (tabs)/        # Client interface
+│   ├── app/
+│   │   ├── booking/[id].tsx    # Booking with default options (GPS, siège enfant, conducteur supp.)
+│   │   ├── agency-app/         # Admin interface (planning defaults to show all vehicles)
+│   │   └── (tabs)/             # Client interface (login → reservations)
+│   └── src/
+│       ├── store/              # Zustand stores
+│       └── components/
 └── scripts/
-    ├── fix_vps_data.py    # VPS database cleanup
-    ├── backend.sh         # PM2 process management
-    └── WORKFLOW_DEPLOIEMENT.md
 ```
 
 ## Key Credentials
@@ -81,23 +65,20 @@ Build a complete car rental solution named "LogiRent" with multi-agency support,
 - Agency Admin: `admin-geneva@logirent.ch` / `LogiRent2024!`
 - Client: `jean.dupont@gmail.com` / `LogiRent2024!`
 
-## VPS Deployment
-- Domain: `logirent.ch` / `www.logirent.ch` / `app.logirent.ch`
-- Server: Ubuntu VPS at `ov-4ae980`
-- Project path: `/home/ubuntu/apps/LOGIRENT`
-- Frontend served by Nginx from `/var/www/logirent/`
-- Backend managed by PM2 on port 8001
-
-### Deployment Commands (for user)
-**Backend:** `cd /home/ubuntu/apps/LOGIRENT && git pull origin main && bash scripts/backend.sh restart`
-**Frontend:** `cd /home/ubuntu/apps/LOGIRENT/frontend && npx expo export --platform web && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/`
+## VPS Deployment Commands
+```bash
+# Backend
+cd /home/ubuntu/apps/LOGIRENT && git pull origin main && bash scripts/backend.sh restart
+# Frontend (MUST delete old files!)
+cd /home/ubuntu/apps/LOGIRENT/frontend && npx expo export --platform web && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/
+```
 
 ## Backlog
 
 ### P1 - Upcoming
 - Push Notifications: Re-implement native push for mobile app
 - Resend domain verification (user action required - DNS records)
-- Health Dashboard: Super-admin panel for data inconsistency detection
+- Health Dashboard: Super-admin for data inconsistency detection
 
 ### P2 - Future
 - Driver/Agent mobile application
