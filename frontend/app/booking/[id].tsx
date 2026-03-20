@@ -9,6 +9,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import { useReservationStore } from '../../src/store/reservationStore';
 import { useAuthStore } from '../../src/store/authStore';
+import api from '../../src/api/axios';
 import Button from '../../src/components/Button';
 import MiniCalendar from '../../src/components/MiniCalendar';
 
@@ -67,6 +68,8 @@ export default function BookingScreen() {
   // Check if documents are uploaded
   const hasDocuments = user?.id_photo && user?.license_photo;
 
+  const [agencyOptions, setAgencyOptions] = useState<any[]>([]);
+
   useEffect(() => {
     if (id) {
       fetchVehicle(id);
@@ -75,18 +78,28 @@ export default function BookingScreen() {
 
   const vehicle = selectedVehicle;
 
-  // Merge default options with vehicle-specific options (avoid duplicates)
+  // Fetch booking options from the vehicle's agency
+  useEffect(() => {
+    if (vehicle?.agency_id) {
+      api.get(`/api/agencies/${vehicle.agency_id}/booking-options`)
+        .then(res => setAgencyOptions(res.data.options || []))
+        .catch(() => setAgencyOptions(DEFAULT_OPTIONS));
+    }
+  }, [vehicle?.agency_id]);
+
+  // Merge agency options with vehicle-specific options (avoid duplicates)
   const allOptions = React.useMemo(() => {
     const vehicleOpts = vehicle?.options || [];
     const vehicleOptNames = new Set(vehicleOpts.map((o: any) => o.name));
     const merged = [...vehicleOpts];
-    for (const dOpt of DEFAULT_OPTIONS) {
-      if (!vehicleOptNames.has(dOpt.name)) {
-        merged.push(dOpt);
+    const sourceOpts = agencyOptions.length > 0 ? agencyOptions : DEFAULT_OPTIONS;
+    for (const opt of sourceOpts) {
+      if (!vehicleOptNames.has(opt.name)) {
+        merged.push(opt);
       }
     }
     return merged;
-  }, [vehicle]);
+  }, [vehicle, agencyOptions]);
 
   if (!vehicle) {
     return (

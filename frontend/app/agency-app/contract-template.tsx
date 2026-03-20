@@ -7,6 +7,178 @@ import { useThemeStore } from '../../src/store/themeStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
+// ==================== Booking Options Section ====================
+function BookingOptionsSection({ colors: C }: { colors: any }) {
+  const [options, setOptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPrice, setNewPrice] = useState('');
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const fetchOptions = useCallback(async () => {
+    try {
+      const res = await api.get('/api/admin/booking-options');
+      setOptions(res.data.options || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchOptions(); }, [fetchOptions]);
+
+  const saveOptions = async () => {
+    setSaving(true);
+    try {
+      const res = await api.put('/api/admin/booking-options', { options });
+      setOptions(res.data.options || []);
+      setHasChanges(false);
+      Alert.alert('Succès', 'Options de réservation mises à jour');
+    } catch (e) {
+      Alert.alert('Erreur', 'Impossible de sauvegarder');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleEnabled = (idx: number) => {
+    const updated = [...options];
+    updated[idx] = { ...updated[idx], enabled: !updated[idx].enabled };
+    setOptions(updated);
+    setHasChanges(true);
+  };
+
+  const updateOptionPrice = (idx: number, val: string) => {
+    const updated = [...options];
+    updated[idx] = { ...updated[idx], price_per_day: parseFloat(val) || 0 };
+    setOptions(updated);
+    setHasChanges(true);
+  };
+
+  const updateOptionName = (idx: number, val: string) => {
+    const updated = [...options];
+    updated[idx] = { ...updated[idx], name: val };
+    setOptions(updated);
+    setHasChanges(true);
+  };
+
+  const removeOption = (idx: number) => {
+    const updated = options.filter((_, i) => i !== idx);
+    setOptions(updated);
+    setHasChanges(true);
+  };
+
+  const addOption = () => {
+    if (!newName.trim()) return;
+    setOptions([...options, { name: newName.trim(), price_per_day: parseFloat(newPrice) || 0, enabled: true }]);
+    setNewName('');
+    setNewPrice('');
+    setHasChanges(true);
+  };
+
+  if (loading) return <ActivityIndicator color={C.accent} style={{ marginVertical: 20 }} />;
+
+  return (
+    <View style={[optStyles.section, { backgroundColor: C.card, borderColor: C.border }]} data-testid="booking-options-section">
+      <View style={optStyles.sectionHeader}>
+        <Ionicons name="options-outline" size={18} color={C.accent} />
+        <Text style={[optStyles.sectionTitle, { color: C.text }]}>Options de réservation</Text>
+      </View>
+      <Text style={[optStyles.hint, { color: C.textLight }]}>
+        Options proposées aux clients lors de la réservation (GPS, siège enfant, etc.)
+      </Text>
+
+      {options.map((opt, idx) => (
+        <View key={idx} style={[optStyles.optRow, { borderColor: C.border, backgroundColor: opt.enabled ? C.bg : C.bg + '80' }]} data-testid={`booking-option-row-${idx}`}>
+          <TouchableOpacity onPress={() => toggleEnabled(idx)} style={optStyles.toggleBtn} data-testid={`toggle-option-${idx}`}>
+            <Ionicons name={opt.enabled ? 'checkbox' : 'square-outline'} size={22} color={opt.enabled ? '#10B981' : C.textLight} />
+          </TouchableOpacity>
+          <View style={{ flex: 1, gap: 4 }}>
+            <TextInput
+              style={[optStyles.optNameInput, { color: C.text, borderColor: C.border }]}
+              value={opt.name}
+              onChangeText={v => updateOptionName(idx, v)}
+              placeholder="Nom de l'option"
+              placeholderTextColor={C.textLight + '60'}
+              data-testid={`option-name-${idx}`}
+            />
+          </View>
+          <View style={optStyles.priceWrap}>
+            <Text style={[optStyles.priceLbl, { color: C.textLight }]}>CHF/jour</Text>
+            <TextInput
+              style={[optStyles.optPriceInput, { color: C.text, borderColor: C.border }]}
+              value={String(opt.price_per_day || '')}
+              onChangeText={v => updateOptionPrice(idx, v)}
+              keyboardType="numeric"
+              data-testid={`option-price-${idx}`}
+            />
+          </View>
+          <TouchableOpacity onPress={() => removeOption(idx)} style={optStyles.removeBtn} data-testid={`remove-option-${idx}`}>
+            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      {/* Add new option */}
+      <View style={[optStyles.addRow, { borderColor: C.border }]}>
+        <TextInput
+          style={[optStyles.addInput, { color: C.text, borderColor: C.border, flex: 2 }]}
+          value={newName}
+          onChangeText={setNewName}
+          placeholder="Nouvelle option"
+          placeholderTextColor={C.textLight + '60'}
+          data-testid="new-option-name"
+        />
+        <TextInput
+          style={[optStyles.addInput, { color: C.text, borderColor: C.border, flex: 1 }]}
+          value={newPrice}
+          onChangeText={setNewPrice}
+          placeholder="CHF/jour"
+          placeholderTextColor={C.textLight + '60'}
+          keyboardType="numeric"
+          data-testid="new-option-price"
+        />
+        <TouchableOpacity style={[optStyles.addBtn, { backgroundColor: C.accent }]} onPress={addOption} data-testid="add-option-btn">
+          <Ionicons name="add" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {hasChanges && (
+        <TouchableOpacity style={[optStyles.saveBtn, { backgroundColor: '#10B981' }]} onPress={saveOptions} disabled={saving} data-testid="save-options-btn">
+          {saving ? <ActivityIndicator color="#fff" size="small" /> : (
+            <>
+              <Ionicons name="save" size={16} color="#fff" />
+              <Text style={optStyles.saveBtnText}>Sauvegarder les options</Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+}
+
+const optStyles = StyleSheet.create({
+  section: { borderRadius: 12, borderWidth: 1, padding: 16, marginBottom: 12 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: '700' },
+  hint: { fontSize: 11, marginBottom: 10 },
+  optRow: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 10, padding: 10, marginBottom: 8 },
+  toggleBtn: { padding: 2 },
+  optNameInput: { fontSize: 14, fontWeight: '600', borderBottomWidth: 1, paddingVertical: 2 },
+  priceWrap: { alignItems: 'center', gap: 2 },
+  priceLbl: { fontSize: 9, fontWeight: '600' },
+  optPriceInput: { fontSize: 14, fontWeight: '700', textAlign: 'center', borderBottomWidth: 1, width: 60, paddingVertical: 2 },
+  removeBtn: { padding: 4 },
+  addRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  addInput: { borderWidth: 1, borderRadius: 8, padding: 8, fontSize: 13 },
+  addBtn: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 12, borderRadius: 10, marginTop: 10 },
+  saveBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+});
+// ==================== End Booking Options ====================
+
 const PRICE_FIELDS = [
   { key: 'price_per_day', label: 'Par Jour (CHF)' },
   { key: 'price_weekend_fri', label: 'Week-end Ven-Lun' },
@@ -225,6 +397,9 @@ export default function ContractTemplatePage() {
           ))}
         </View>
       </View>
+
+      {/* Booking Options */}
+      <BookingOptionsSection colors={C} />
 
       {/* Legal Text */}
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} data-testid="legal-section">

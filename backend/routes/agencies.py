@@ -526,3 +526,18 @@ async def setup_init():
     await db.users.update_many({"role": {"$exists": False}}, {"$set": {"role": "client", "agency_id": None}})
 
     return {"message": "Plateforme initialisée", "agency_id": agency.id, "agency_name": agency.name}
+
+
+@router.get("/agencies/{agency_id}/booking-options")
+async def get_agency_booking_options(agency_id: str):
+    """Public endpoint to get booking options for a specific agency"""
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "id": 1, "booking_options": 1})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agency not found")
+    options = agency.get("booking_options", [
+        {"name": "GPS", "price_per_day": 10, "enabled": True},
+        {"name": "Siège enfant", "price_per_day": 8, "enabled": True},
+        {"name": "Conducteur supplémentaire", "price_per_day": 15, "enabled": True},
+    ])
+    # Only return enabled options
+    return {"options": [o for o in options if o.get("enabled", True)]}

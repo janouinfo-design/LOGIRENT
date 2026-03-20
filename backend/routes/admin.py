@@ -1048,3 +1048,40 @@ async def delete_template_logo(user: dict = Depends(get_agency_admin)):
         {"$set": {"logo_path": None, "updated_at": datetime.utcnow().isoformat()}}
     )
     return {"message": "Logo supprimé"}
+
+
+
+# ==================== BOOKING OPTIONS ====================
+
+class BookingOptionInput(PydanticBaseModel):
+    name: str
+    price_per_day: float
+    enabled: bool = True
+
+class BookingOptionsUpdate(PydanticBaseModel):
+    options: list[BookingOptionInput]
+
+
+@router.get("/admin/booking-options")
+async def get_booking_options(user: dict = Depends(get_agency_admin)):
+    agency_id = user.get("agency_id")
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agency not found")
+    options = agency.get("booking_options", [
+        {"name": "GPS", "price_per_day": 10, "enabled": True},
+        {"name": "Siège enfant", "price_per_day": 8, "enabled": True},
+        {"name": "Conducteur supplémentaire", "price_per_day": 15, "enabled": True},
+    ])
+    return {"options": options}
+
+
+@router.put("/admin/booking-options")
+async def update_booking_options(data: BookingOptionsUpdate, user: dict = Depends(get_agency_admin)):
+    agency_id = user.get("agency_id")
+    options = [o.dict() for o in data.options]
+    await db.agencies.update_one(
+        {"id": agency_id},
+        {"$set": {"booking_options": options, "updated_at": datetime.utcnow().isoformat()}}
+    )
+    return {"options": options, "message": "Options de réservation mises à jour"}
