@@ -93,10 +93,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: C.border,
     width: '100%',
-    maxWidth: 380,
   },
   cardMobile: {
-    maxWidth: '100%',
   },
   topRow: {
     flexDirection: 'row',
@@ -135,11 +133,11 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    aspectRatio: 1.5,
+    aspectRatio: 2.2,
     overflow: 'hidden',
   },
   imageContainerMobile: {
-    aspectRatio: 1.4,
+    aspectRatio: 1.6,
   },
   carImage: {
     width: '100%',
