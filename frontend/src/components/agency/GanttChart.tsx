@@ -22,6 +22,7 @@ interface VehicleSchedule {
 interface GanttChartProps {
   C: any;
   schedule: VehicleSchedule[];
+  orphanReservations?: { id: string; start: string; end: string; status: string; user_name?: string }[];
   planningMonth: Date;
   scheduleLoading: boolean;
   refreshing: boolean;
@@ -40,7 +41,7 @@ const LABEL_W = 120;
 const ROW_H = 40;
 
 export const GanttChart = ({
-  C, schedule, planningMonth, scheduleLoading, refreshing, onRefresh,
+  C, schedule, orphanReservations = [], planningMonth, scheduleLoading, refreshing, onRefresh,
   vehicleSearch, setVehicleSearch, showAllVehicles, setShowAllVehicles,
   highlightId, highlightAnim, updateStatus,
 }: GanttChartProps) => {
@@ -151,7 +152,7 @@ export const GanttChart = ({
         {/* Planning cards below the Gantt */}
         <View style={{ padding: 16, paddingTop: 12 }}>
           <Text style={{ color: C.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
-            Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0)})
+            Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0) + orphanReservations.length})
           </Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
             {schedule.map(v => v.reservations.map(r => {
@@ -187,6 +188,38 @@ export const GanttChart = ({
                 </Animated.View>
               );
             })).flat()}
+            {/* Orphan reservations (no matching vehicle) */}
+            {orphanReservations.map(r => {
+              const color = RES_COLORS[r.status] || C.textLight;
+              return (
+                <Animated.View key={r.id} style={{
+                  width: '32%', backgroundColor: C.card, borderRadius: 10,
+                  borderWidth: 1, borderColor: C.border,
+                  borderLeftWidth: 4, borderLeftColor: color, padding: 12,
+                }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <Text style={{ color: C.text, fontSize: 16, fontWeight: '800', flex: 1 }} numberOfLines={1}>Vehicule non assigne</Text>
+                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: color + '25' }}>
+                      <Text style={{ color, fontSize: 14, fontWeight: '800' }}>{statusLabel(r.status)}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ color: C.textLight, fontSize: 14 }}>{r.start?.slice(5, 10)} -> {r.end?.slice(5, 10)}</Text>
+                  {r.user_name ? <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2 }} numberOfLines={1}>{r.user_name}</Text> : null}
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                    {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
+                      <TouchableOpacity key={s} onPress={() => updateStatus(r.id, s)}
+                        style={{
+                          paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5,
+                          backgroundColor: r.status === s ? (RES_COLORS[s] || C.textLight) + '30' : 'transparent',
+                          borderWidth: 1, borderColor: r.status === s ? (RES_COLORS[s] || C.textLight) : C.border,
+                        }}>
+                        <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 13, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </Animated.View>
+              );
+            })}
           </View>
         </View>
       </ScrollView>

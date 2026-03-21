@@ -44,6 +44,7 @@ export default function AgencyReservations() {
   const [viewMode, setViewMode] = useState<'list' | 'planning'>('planning');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [schedule, setSchedule] = useState<VehicleSchedule[]>([]);
+  const [orphanReservations, setOrphanReservations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string | null>(null);
@@ -55,6 +56,7 @@ export default function AgencyReservations() {
   const [showAllVehicles, setShowAllVehicles] = useState(true);
   const [vehicleSearch, setVehicleSearch] = useState('');
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const highlightAnim = useRef(new Animated.Value(1)).current;
   const router = useRouter();
 
@@ -98,6 +100,7 @@ export default function AgencyReservations() {
       const ed = format(endOfMonth(planningMonth), 'yyyy-MM-dd');
       const res = await api.get(`/api/admin/vehicle-schedule?start_date=${sd}&end_date=${ed}`);
       setSchedule(res.data.vehicles || res.data || []);
+      setOrphanReservations(res.data.orphan_reservations || []);
     } catch (e) { console.error(e); }
     finally { setScheduleLoading(false); }
   }, [planningMonth]);
@@ -111,8 +114,14 @@ export default function AgencyReservations() {
     let list = reservations;
     if (filter) list = list.filter(r => r.status === filter);
     if (search) list = list.filter(r => r.user_name?.toLowerCase().includes(search.toLowerCase()) || r.vehicle_name?.toLowerCase().includes(search.toLowerCase()));
+    // Sort by start_date
+    list = [...list].sort((a, b) => {
+      const da = new Date(a.start_date).getTime();
+      const db = new Date(b.start_date).getTime();
+      return sortOrder === 'desc' ? db - da : da - db;
+    });
     return list;
-  }, [reservations, filter, search]);
+  }, [reservations, filter, search, sortOrder]);
 
   const statusColor = (s: string) => RES_COLORS[s] || C.textLight;
   const statusLabel = (s: string) => {
@@ -212,7 +221,7 @@ export default function AgencyReservations() {
           </ScrollView>
 
           <GanttChart
-            C={C} schedule={schedule} planningMonth={planningMonth}
+            C={C} schedule={schedule} orphanReservations={orphanReservations} planningMonth={planningMonth}
             scheduleLoading={scheduleLoading} refreshing={refreshing} onRefresh={onRefresh}
             vehicleSearch={vehicleSearch} setVehicleSearch={setVehicleSearch}
             showAllVehicles={showAllVehicles} setShowAllVehicles={setShowAllVehicles}
@@ -225,9 +234,19 @@ export default function AgencyReservations() {
       {/* LIST VIEW */}
       {viewMode === 'list' && (
         <>
-          <View style={[st.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Ionicons name="search" size={18} color={C.textLight} />
-            <TextInput style={[st.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginTop: 12 }}>
+            <View style={[st.searchBar, { backgroundColor: C.card, borderColor: C.border, flex: 1, margin: 0 }]}>
+              <Ionicons name="search" size={18} color={C.textLight} />
+              <TextInput style={[st.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
+            </View>
+            <TouchableOpacity
+              style={{ backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderRadius: 10, padding: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }}
+              onPress={() => setSortOrder(sortOrder === 'desc' ? 'asc' : 'desc')}
+              data-testid="sort-toggle"
+            >
+              <Ionicons name={sortOrder === 'desc' ? 'arrow-down' : 'arrow-up'} size={16} color={C.accent} />
+              <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>Date</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginTop: 12, marginBottom: 4 }}>

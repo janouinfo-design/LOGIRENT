@@ -31,7 +31,7 @@ export default function AgencyAppHome() {
     try {
       const [statsResp, resResp, todayResp, agenciesResp, alertsResp] = await Promise.all([
         api.get('/api/admin/stats'),
-        api.get('/api/admin/reservations?limit=5'),
+        api.get('/api/admin/reservations?limit=10'),
         api.get('/api/admin/reservations/today'),
         api.get('/api/agencies'),
         api.get('/api/admin/vehicles/document-alerts?days=30').catch(() => ({ data: { alerts: [] } })),
@@ -206,30 +206,32 @@ export default function AgencyAppHome() {
         )}
       </View>
 
-      {/* Recent reservations */}
-      <Text style={[s.sectionTitle, { color: C.text }]}>Dernieres reservations</Text>
-      {recentReservations.length === 0 ? (
-        <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}><Text style={{ color: C.textLight, fontSize: 14 }}>Aucune reservation recente</Text></View>
-      ) : (
-        recentReservations.map((r) => (
-          <TouchableOpacity key={r.id} style={[s.resCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid={`recent-res-${r.id}`}
-            onPress={() => router.push(`/agency-app/reservations?highlight=${r.id}` as any)}>
-            <View style={s.resHeader}>
-              <Text style={[s.resClient, { color: C.text }]}>{r.user_name}</Text>
-              <View style={[s.statusBadge, { backgroundColor: statusColor(r.status) + '20' }]}>
-                <Text style={[s.statusText, { color: statusColor(r.status) }]}>{statusLabel(r.status)}</Text>
-              </View>
-            </View>
-            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 6 }}>{r.vehicle_name}</Text>
-            <View style={s.resFooter}>
-              <Text style={{ color: C.textLight, fontSize: 12 }}>
-                {r.start_date ? format(new Date(r.start_date), 'dd MMM', { locale: fr }) : ''} - {r.end_date ? format(new Date(r.end_date), 'dd MMM yyyy', { locale: fr }) : ''}
-              </Text>
-              <Text style={{ color: C.accent, fontSize: 14, fontWeight: '700' }}>CHF {r.total_price?.toFixed(2)}</Text>
-            </View>
+      {/* Recent reservations - as cards */}
+      <View style={{ marginBottom: 24 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Dernieres reservations</Text>
+          <TouchableOpacity onPress={() => router.push('/agency-app/reservations')} data-testid="see-all-recent">
+            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
           </TouchableOpacity>
-        ))
-      )}
+        </View>
+        {recentReservations.length === 0 ? (
+          <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}><Text style={{ color: C.textLight, fontSize: 14 }}>Aucune reservation recente</Text></View>
+        ) : (
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {recentReservations.map((r: any) => (
+              <View key={r.id} style={{ width: cardW }}>
+                <TodayReservationCard
+                  item={r}
+                  C={C}
+                  onStatusChange={updateStatus}
+                  onActionPress={(item) => router.push(`/agency-app/reservations?highlight=${item.id}` as any)}
+                  onViewContract={handleViewContract}
+                />
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }

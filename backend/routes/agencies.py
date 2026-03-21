@@ -466,9 +466,10 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
         vehicle_ids.append(vid)
         vehicles_map[vid] = v
 
-    # Fetch ALL reservations for these vehicles with active status, filter dates in Python
+    # Fetch ALL reservations with active status (not just those with matching vehicle_id)
+    base_filter = {} if is_super else {"agency_id": agency_id}
     all_reservations = await db.reservations.find({
-        "vehicle_id": {"$in": vehicle_ids},
+        **base_filter,
         "status": {"$in": ["pending", "pending_cash", "confirmed", "active", "completed"]},
     }, {"_id": 0}).to_list(2000)
 
@@ -490,6 +491,7 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
 
     # Group by vehicle and filter by date range
     vehicle_reservations: dict = {vid: [] for vid in vehicle_ids}
+    orphan_reservations = []
     for r in all_reservations:
         r_start = parse_date(r.get('start_date'))
         r_end = parse_date(r.get('end_date'))
@@ -498,14 +500,17 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
         # Overlap check: reservation overlaps [sd, ed] if start < ed AND end > sd
         if r_start < ed and r_end > sd:
             vid = r.get('vehicle_id', '')
+            entry = {
+                "id": r.get('id', ''),
+                "user_name": r.get('user_name', ''),
+                "start": r_start.isoformat(),
+                "end": r_end.isoformat(),
+                "status": r.get('status', ''),
+            }
             if vid in vehicle_reservations:
-                vehicle_reservations[vid].append({
-                    "id": r.get('id', ''),
-                    "user_name": r.get('user_name', ''),
-                    "start": r_start.isoformat(),
-                    "end": r_end.isoformat(),
-                    "status": r.get('status', ''),
-                })
+                vehicle_reservations[vid].append(entry)
+            else:
+                orphan_reservations.append(entry)
 
     result = []
     for vid in vehicle_ids:
@@ -518,7 +523,7 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
             "reservations": vehicle_reservations[vid]
         })
 
-    return {"vehicles": result}
+    return {"vehicles": result, "orphan_reservations": orphan_reservations}
 
 
 # Admin login
