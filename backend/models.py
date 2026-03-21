@@ -165,6 +165,7 @@ class Vehicle(BaseModel):
     documents: List[dict] = []
     agency_id: Optional[str] = None
     pricing_tiers: List[dict] = []
+    seasonal_pricing: List[dict] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -324,3 +325,55 @@ class PricingTier(BaseModel):
 
 class PricingTiersUpdate(BaseModel):
     pricing_tiers: list[dict]
+
+
+# ==================== SEASONAL PRICING MODELS ====================
+
+class SeasonalPrice(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    name: str  # e.g. "Ete 2026", "Noel", "Promo Printemps"
+    start_date: str  # ISO date string YYYY-MM-DD
+    end_date: str
+    modifier_type: str = "percentage"  # "percentage" or "fixed_price"
+    modifier_value: float = 0  # -20 for 20% discount, or 150 for fixed CHF 150/day
+    active: bool = True
+
+class SeasonalPricingUpdate(BaseModel):
+    seasonal_pricing: list[dict]
+
+
+# ==================== VEHICLE INSPECTION MODELS ====================
+
+class InspectionItem(BaseModel):
+    name: str
+    checked: bool = False
+    condition: str = "ok"  # ok, damaged, missing
+    notes: Optional[str] = None
+    photo: Optional[str] = None
+
+class VehicleInspection(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    reservation_id: str
+    vehicle_id: str
+    agency_id: Optional[str] = None
+    type: str  # "checkout" (depart) or "checkin" (retour)
+    items: List[dict] = []
+    photos: List[str] = []
+    km_reading: Optional[int] = None
+    fuel_level: Optional[str] = None  # full, 3/4, 1/2, 1/4, empty
+    notes: Optional[str] = None
+    signature_data: Optional[str] = None
+    completed_by: Optional[str] = None
+    completed_at: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+class InspectionCreate(BaseModel):
+    reservation_id: str
+    vehicle_id: str
+    type: str  # checkout or checkin
+    items: List[dict] = []
+    photos: List[str] = []
+    km_reading: Optional[int] = None
+    fuel_level: Optional[str] = None
+    notes: Optional[str] = None
+    signature_data: Optional[str] = None

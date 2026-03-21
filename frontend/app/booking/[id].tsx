@@ -129,7 +129,24 @@ export default function BookingScreen() {
 
   const totalDays = Math.max(differenceInDays(endDate, startDate), 1);
   const selectedTier = selectedTierId ? vehicle.pricing_tiers?.find((t: any) => t.id === selectedTierId && t.active) : null;
-  const basePrice = selectedTier ? selectedTier.price : vehicle.price_per_day * totalDays;
+
+  // Check for active seasonal pricing
+  const seasonalPrice = useMemo(() => {
+    const seasonal = vehicle.seasonal_pricing || [];
+    const startStr = format(startDate, 'yyyy-MM-dd');
+    const endStr = format(endDate, 'yyyy-MM-dd');
+    return seasonal.find((s: any) => s.active && s.start_date <= startStr && s.end_date >= endStr);
+  }, [vehicle.seasonal_pricing, startDate, endDate]);
+
+  const applySeasonalModifier = (price: number) => {
+    if (!seasonalPrice) return price;
+    if (seasonalPrice.modifier_type === 'fixed_price') return seasonalPrice.modifier_value * totalDays;
+    if (seasonalPrice.modifier_type === 'percentage') return price * (1 + seasonalPrice.modifier_value / 100);
+    return price;
+  };
+
+  const rawBasePrice = selectedTier ? selectedTier.price : vehicle.price_per_day * totalDays;
+  const basePrice = applySeasonalModifier(rawBasePrice);
   const optionsPrice = selectedOptions.reduce((t, name) => {
     const o = allOptions.find((x: any) => x.name === name);
     return t + (o ? o.price_per_day * totalDays : 0);
@@ -334,6 +351,18 @@ export default function BookingScreen() {
           );
         })}
       </View>
+
+      {/* Seasonal Price Banner */}
+      {seasonalPrice && (
+        <View style={[s.section, { backgroundColor: '#FEF3C7', borderRadius: 10, padding: 12, marginBottom: 8, borderWidth: 1, borderColor: '#F59E0B' }]} data-testid="seasonal-price-banner">
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="pricetag" size={16} color="#D97706" />
+            <Text style={{ color: '#92400E', fontSize: 13, fontWeight: '700', flex: 1 }}>
+              {seasonalPrice.name} {seasonalPrice.modifier_type === 'percentage' ? `(${seasonalPrice.modifier_value}%)` : `CHF ${seasonalPrice.modifier_value}/jour`}
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* Quick Price Preview */}
       <View style={s.section}>

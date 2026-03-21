@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { Vehicle, VehicleDocument, TYPES, TRANSMISSIONS, FUELS, STATUSES, DOC_TYPES, getStatus, getDocIcon, formatFileSize, getExpiryStatus, getPhotoUrl, vst } from './vehicleTypes';
 import { VehiclePricingManager } from './VehiclePricingManager';
+import SeasonalPricingManager from './SeasonalPricingManager';
 
 interface Props {
   vehicle: Vehicle | null;
@@ -330,6 +331,9 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
 
               {/* Pricing Tiers */}
               {currentVehicle && <VehiclePricingManager vehicleId={currentVehicle.id} C={C} />}
+
+              {/* Seasonal Pricing */}
+              {currentVehicle && <SeasonalPricingManager vehicleId={currentVehicle.id} />}
 
               {/* Documents */}
               <View style={[vst.sectionHeader, { borderTopColor: C.border }]}>

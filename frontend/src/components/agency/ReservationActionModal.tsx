@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Platform, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../../api/axios';
+import VehicleInspectionForm from './VehicleInspectionForm';
 
 const RES_COLORS: Record<string, string> = {
   confirmed: '#10B981', active: '#3B82F6', pending: '#FBBF24', pending_cash: '#A855F7',
@@ -17,7 +18,7 @@ const statusLabel = (s: string) => {
 interface Reservation {
   id: string; user_name: string; user_email: string; vehicle_name: string;
   start_date: string; end_date: string; total_days: number; total_price: number;
-  status: string; payment_status: string; payment_method?: string;
+  status: string; payment_status: string; payment_method?: string; vehicle_id?: string;
 }
 
 interface Props {
@@ -36,6 +37,27 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
   const [contractLoading, setContractLoading] = useState(false);
   const [docCheck, setDocCheck] = useState<any>(null);
   const [docCheckLoading, setDocCheckLoading] = useState(false);
+  const [showInspection, setShowInspection] = useState<'checkout' | 'checkin' | null>(null);
+  const [inspections, setInspections] = useState<any[]>([]);
+  const [inspLoading, setInspLoading] = useState(false);
+
+  useEffect(() => {
+    if (actionModal) {
+      loadInspections(actionModal.id);
+    } else {
+      setInspections([]);
+      setShowInspection(null);
+    }
+  }, [actionModal?.id]);
+
+  const loadInspections = async (resId: string) => {
+    setInspLoading(true);
+    try {
+      const { data } = await api.get(`/api/inspections/reservation/${resId}`);
+      setInspections(data.inspections || []);
+    } catch (e) { console.error(e); }
+    setInspLoading(false);
+  };
 
   const checkDocuments = async (reservationId: string) => {
     setDocCheckLoading(true);
@@ -189,6 +211,42 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
               </TouchableOpacity>
 
               {/* Status */}
+              <Text style={[st.modalSection, { color: C.textLight }]}>Etat des lieux</Text>
+              {inspLoading ? <ActivityIndicator size="small" color={C.accent} /> : showInspection ? (
+                <View>
+                  <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }} onPress={() => setShowInspection(null)}>
+                    <Ionicons name="arrow-back" size={16} color={C.accent} />
+                    <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Retour</Text>
+                  </TouchableOpacity>
+                  <VehicleInspectionForm
+                    reservationId={actionModal.id}
+                    vehicleId={actionModal.vehicle_id || ''}
+                    type={showInspection}
+                    onComplete={() => { setShowInspection(null); loadInspections(actionModal.id); }}
+                  />
+                </View>
+              ) : (
+                <View>
+                  {(['checkout', 'checkin'] as const).map(t => {
+                    const done = inspections.find((i: any) => i.type === t);
+                    const label = t === 'checkout' ? 'Depart' : 'Retour';
+                    const icon = t === 'checkout' ? 'log-out-outline' : 'log-in-outline';
+                    return (
+                      <TouchableOpacity key={t} style={[st.actionBtn, { borderColor: C.border }]}
+                        onPress={() => setShowInspection(t)} data-testid={`inspection-${t}-btn`}>
+                        <Ionicons name={icon as any} size={18} color={done ? '#10B981' : C.accent} />
+                        <Text style={{ color: C.text, fontSize: 14, flex: 1 }}>Etat des lieux - {label}</Text>
+                        {done && <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B98120', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Ionicons name="checkmark-circle" size={12} color="#10B981" />
+                          <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '600' }}>Complete</Text>
+                        </View>}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+
+              {/* Statut reservation */}
               <Text style={[st.modalSection, { color: C.textLight }]}>Statut</Text>
               {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
                 <TouchableOpacity key={s} style={[st.actionBtn, { borderColor: C.border }]}

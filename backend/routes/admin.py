@@ -1200,3 +1200,52 @@ async def update_vehicle_pricing(vehicle_id: str, data: PricingTiersUpdate, user
         {"$set": {"pricing_tiers": tiers, "updated_at": datetime.utcnow().isoformat()}}
     )
     return {"message": "Tarifs mis a jour", "pricing_tiers": tiers}
+
+
+# ==================== SEASONAL PRICING ENDPOINTS ====================
+
+@router.get("/admin/vehicles/{vehicle_id}/seasonal-pricing")
+async def get_vehicle_seasonal_pricing(vehicle_id: str, user: dict = Depends(get_admin_user)):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    pricing = vehicle.get("seasonal_pricing", [])
+    return {"seasonal_pricing": pricing}
+
+
+@router.put("/admin/vehicles/{vehicle_id}/seasonal-pricing")
+async def update_vehicle_seasonal_pricing(vehicle_id: str, data: dict, user: dict = Depends(get_admin_user)):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    if user.get('role') != 'super_admin' and vehicle.get('agency_id') != user.get('agency_id'):
+        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que les vehicules de votre agence")
+
+    seasonal = []
+    for s in data.get("seasonal_pricing", []):
+        seasonal.append({
+            "id": s.get("id") or str(uuid.uuid4()),
+            "name": s.get("name", ""),
+            "start_date": s.get("start_date", ""),
+            "end_date": s.get("end_date", ""),
+            "modifier_type": s.get("modifier_type", "percentage"),
+            "modifier_value": float(s.get("modifier_value", 0)),
+            "active": s.get("active", True),
+        })
+
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"seasonal_pricing": seasonal, "updated_at": datetime.utcnow().isoformat()}}
+    )
+    return {"message": "Tarifs saisonniers mis a jour", "seasonal_pricing": seasonal}
+
+
+@router.get("/vehicles/{vehicle_id}/seasonal-pricing")
+async def get_vehicle_seasonal_pricing_public(vehicle_id: str):
+    """Public endpoint: get active seasonal pricing for a vehicle"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    pricing = [s for s in vehicle.get("seasonal_pricing", []) if s.get("active", True)]
+    return {"seasonal_pricing": pricing}
