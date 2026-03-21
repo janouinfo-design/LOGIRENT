@@ -8,6 +8,8 @@ Car rental management solution (React Native/Expo frontend, FastAPI backend, Mon
 - Vehicle fleet management with categories
 - **Vehicle Pricing Tiers**: Admin configures tariff lines per vehicle. Client selects a forfait on booking page. Price auto-calculated.
 - **Forfait linked to reservation**: Selected tier stored in reservation, displayed in admin details and contract
+- **Agency ownership security**: Agency admins can only modify pricing tiers for their own agency's vehicles (403 for others)
+- **PDF Contract with Tier Details**: Generated contracts include a highlighted "Forfait selectionne" section with tier name, km, price, period
 - Client registration with document upload (ID + license, recto/verso)
 - AI document verification (via OpenAI)
 - Multi-step booking wizard (4 steps) with forfait selection
@@ -32,8 +34,9 @@ Car rental management solution (React Native/Expo frontend, FastAPI backend, Mon
 - Integrations: Stripe, Resend, Navixy, OpenAI (emergentintegrations)
 
 ## Key Endpoints
-- `GET/PUT /api/admin/vehicles/{id}/pricing` - Vehicle pricing tiers CRUD
-- `POST /api/reservations` - Create reservation (now accepts `selected_tier_id`)
+- `GET/PUT /api/admin/vehicles/{id}/pricing` - Vehicle pricing tiers CRUD (agency-scoped)
+- `POST /api/reservations` - Create reservation (accepts `selected_tier_id`)
+- `POST /api/admin/contracts/generate` - Generate contract (includes selected tier in PDF)
 - `GET /api/admin/reservations/today` - Today's reservations
 - `GET /api/client/reservations` - Client reservations with contract info
 - `PUT /api/contracts/{id}/sign` - Sign contract + auto-confirm + email PDF
@@ -49,14 +52,21 @@ Stored in `reservations.selected_tier`:
 {"id": "uuid", "name": "Forfait weekend 500km", "kilometers": 500, "price": 200.0, "period": "weekend"}
 ```
 
+Contract data fields for tier:
+- `selected_tier_name`, `selected_tier_km`, `selected_tier_price`, `selected_tier_period`
+
 ## Upcoming Tasks (P1)
 - Tarifs saisonniers/promo (extension du systeme actuel)
 - Phase 3: Notifications agence, checklist vehicule, e-signature check-out/in
-- Configurable option pricing from admin panel
 - Push notifications
 
 ## Backlog (P2-P3)
-- Revenue statistics per option
-- Health dashboard (super-admin)
+- Revenue statistics per option/tier
+- Health dashboard (super-admin, orphan reservation cleanup)
 - Driver/Agent mobile app
+- E-Signature intégrée pour les contrats
 - App Store deployment
+
+## Known Issues
+- Resend domain not verified (user-side DNS action required)
+- VPS deployment: always use cache-clearing commands when deploying frontend
