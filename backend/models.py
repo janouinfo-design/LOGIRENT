@@ -164,6 +164,7 @@ class Vehicle(BaseModel):
     color: Optional[str] = None
     documents: List[dict] = []
     agency_id: Optional[str] = None
+    pricing_tiers: List[dict] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -306,3 +307,18 @@ class ContractGenerate(BaseModel):
 
 class ContractSign(BaseModel):
     signature_data: str
+
+
+
+# ==================== PRICING TIER MODELS ====================
+
+class PricingTier(BaseModel):
+    name: str
+    kilometers: Optional[int] = None
+    price: float
+    period: Optional[str] = None  # jour, weekend, semaine, mois, custom
+    order: int = 0
+    active: bool = True
+
+class PricingTiersUpdate(BaseModel):
+    pricing_tiers: list[dict]

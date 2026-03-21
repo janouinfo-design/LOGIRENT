@@ -3,6 +3,7 @@ import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, ActivityInd
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { Vehicle, VehicleDocument, TYPES, TRANSMISSIONS, FUELS, STATUSES, DOC_TYPES, getStatus, getDocIcon, formatFileSize, getExpiryStatus, getPhotoUrl, vst } from './vehicleTypes';
+import { VehiclePricingManager } from './VehiclePricingManager';
 
 interface Props {
   vehicle: Vehicle | null;
@@ -326,6 +327,9 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                   </>
                 )}
               </TouchableOpacity>
+
+              {/* Pricing Tiers */}
+              {currentVehicle && <VehiclePricingManager vehicleId={currentVehicle.id} C={C} />}
 
               {/* Documents */}
               <View style={[vst.sectionHeader, { borderTopColor: C.border }]}>

@@ -8,6 +8,16 @@ export interface VehicleOption {
   price_per_day: number;
 }
 
+export interface PricingTier {
+  id: string;
+  name: string;
+  kilometers: number | null;
+  price: number;
+  period: string;
+  order: number;
+  active: boolean;
+}
+
 export interface Vehicle {
   id: string;
   brand: string;
@@ -25,6 +35,7 @@ export interface Vehicle {
   location: string;
   agency_id?: string;
   created_at: string;
+  pricing_tiers?: PricingTier[];
 }
 
 interface VehicleFilters {

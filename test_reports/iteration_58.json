@@ -1,0 +1,57 @@
+{
+  "summary": "Iteration 58 - Vehicle Pricing Tiers Feature Testing. Backend APIs 100% working. Frontend VehiclePricingManager fixed and now renders in admin vehicle edit modal. VehiclePricingDisplay on booking page NOT rendering despite API returning pricing_tiers correctly - requires main agent investigation.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "VehiclePricingDisplay",
+        "issue": "Component not rendering on booking page even though API returns pricing_tiers correctly. The vehicle store receives the data but the component conditional {vehicle.pricing_tiers?.length > 0 && ...} is not triggering render.",
+        "selector": "[data-testid='pricing-display']",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Booking page pricing display",
+        "issue": "VehiclePricingDisplay not showing on /booking/{vehicleId} page. API returns pricing_tiers (verified via curl and network intercept), but component doesn't render. Zustand store may not be properly passing pricing_tiers to component.",
+        "affected_selectors": ["[data-testid='pricing-display']", "[data-testid='pricing-row-*']"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration58_pricing_tiers.py",
+    "/app/test_reports/pytest/pytest_iteration58.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Fix VehiclePricingDisplay not rendering on booking page - API returns pricing_tiers but component doesn't show",
+    "Debug why vehicle.pricing_tiers is not available in booking page component despite API returning it",
+    "Check if Zustand store selectedVehicle is properly including pricing_tiers field"
+  ],
+  "critical_code_review_comments": [
+    "VehiclePricingManager was missing from EditVehicleModal.tsx JSX - fixed by adding it after Photos section",
+    "Vehicle interface in vehicleStore.ts was missing pricing_tiers field - fixed by adding PricingTier interface and pricing_tiers?: PricingTier[] field",
+    "Booking page uses vehicle from Zustand store but pricing_tiers may not be properly hydrated"
+  ],
+  "updated_files": [
+    "/app/frontend/src/store/vehicleStore.ts",
+    "/app/frontend/src/components/agency/EditVehicleModal.tsx",
+    "/app/backend/tests/test_iteration58_pricing_tiers.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "70%"
+  },
+  "test_credentials": {
+    "admin": "admin-geneva@logirent.ch / LogiRent2024!",
+    "client": "jean.dupont@gmail.com / LogiRent2024!"
+  },
+  "seed_data_creation": "Added 5 pricing tiers to vehicle fd354ff5-2aa6-421d-86f0-94016b1b1669 (Toyota Yaris Hybrid) for testing",
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Backend pricing tiers APIs fully working. Admin VehiclePricingManager in edit modal now renders (scroll down in modal to see it). Client booking page VehiclePricingDisplay NOT rendering - this is the main issue to fix. The API returns pricing_tiers correctly but the React component doesn't render.",
+  "rca_of_the_issue": "VehiclePricingDisplay not rendering: 1) API returns pricing_tiers correctly (verified via curl), 2) Network intercept shows pricing_tiers in response, 3) Component conditional check {vehicle.pricing_tiers?.length > 0} not triggering, 4) Possible cause: Zustand store not properly hydrating pricing_tiers to selectedVehicle, or component not re-rendering when store updates"
+}

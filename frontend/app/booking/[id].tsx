@@ -11,6 +11,7 @@ import { useReservationStore } from '../../src/store/reservationStore';
 import { useAuthStore } from '../../src/store/authStore';
 import api from '../../src/api/axios';
 import MiniCalendar from '../../src/components/MiniCalendar';
+import { VehiclePricingDisplay } from '../../src/components/VehiclePricingDisplay';
 
 const C = {
   primary: '#1E3A8A',
@@ -280,6 +281,13 @@ export default function BookingScreen() {
         title={showDatePicker === 'start' ? 'Date de départ' : 'Date de retour'}
         vehicleId={id}
       />
+
+      {/* Pricing Tiers */}
+      {vehicle.pricing_tiers?.length > 0 && (
+        <View style={s.section}>
+          <VehiclePricingDisplay tiers={vehicle.pricing_tiers} C={C} />
+        </View>
+      )}
 
       {/* Options */}
       <View style={s.section}>

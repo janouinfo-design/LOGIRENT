@@ -9,7 +9,7 @@ import json
 import os
 
 from database import db
-from models import AdminStats, AdminUserUpdate, Base64UserPhoto, PaymentTransaction
+from models import AdminStats, AdminUserUpdate, Base64UserPhoto, PaymentTransaction, PricingTiersUpdate
 from pydantic import BaseModel as PydanticBaseModel
 from deps import get_admin_user, get_agency_admin, hash_password
 from utils.notifications import create_notification
@@ -1159,3 +1159,40 @@ async def check_client_documents(reservation_id: str, user: dict = Depends(get_a
         "has_license": bool(client.get("license_photo")),
         "has_license_back": bool(client.get("license_photo_back")),
     }
+
+
+# ==================== VEHICLE PRICING TIERS ====================
+
+@router.get("/admin/vehicles/{vehicle_id}/pricing")
+async def get_vehicle_pricing(vehicle_id: str, user: dict = Depends(get_admin_user)):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0, "pricing_tiers": 1})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    tiers = vehicle.get("pricing_tiers", [])
+    tiers.sort(key=lambda t: t.get("order", 0))
+    return {"pricing_tiers": tiers}
+
+
+@router.put("/admin/vehicles/{vehicle_id}/pricing")
+async def update_vehicle_pricing(vehicle_id: str, data: PricingTiersUpdate, user: dict = Depends(get_admin_user)):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    tiers = []
+    for i, t in enumerate(data.pricing_tiers):
+        tiers.append({
+            "id": t.get("id") or str(uuid.uuid4()),
+            "name": t.get("name", ""),
+            "kilometers": t.get("kilometers"),
+            "price": float(t.get("price", 0)),
+            "period": t.get("period", ""),
+            "order": t.get("order", i),
+            "active": t.get("active", True),
+        })
+
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"pricing_tiers": tiers, "updated_at": datetime.utcnow().isoformat()}}
+    )
+    return {"message": "Tarifs mis a jour", "pricing_tiers": tiers}
