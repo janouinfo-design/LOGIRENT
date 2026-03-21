@@ -208,10 +208,22 @@ export default function BookingScreen() {
     }
   };
 
-  const handleDownloadContract = () => {
+  const handleDownloadContract = async () => {
     if (!contractId) return;
-    const url = `${process.env.EXPO_PUBLIC_BACKEND_URL || ''}/api/contracts/${contractId}/pdf`;
-    if (Platform.OS === 'web') window.open(url, '_blank');
+    try {
+      const resp = await api.get(`/api/contracts/${contractId}/pdf`, { responseType: 'blob' });
+      if (Platform.OS === 'web') {
+        const blob = new Blob([resp.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `contrat_${contractId.slice(0, 8)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error('Download error:', err);
+    }
   };
 
   // ==================== STEP 1: Sélection ====================
