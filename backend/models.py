@@ -204,6 +204,7 @@ class Reservation(BaseModel):
     start_date: datetime
     end_date: datetime
     options: List[ReservationOption] = []
+    selected_tier: Optional[dict] = None
     total_days: int
     base_price: float
     options_price: float
@@ -222,6 +223,7 @@ class ReservationCreate(BaseModel):
     end_date: datetime
     options: List[str] = []
     payment_method: str = "card"
+    selected_tier_id: Optional[str] = None
 
 
 class ReservationUpdate(BaseModel):

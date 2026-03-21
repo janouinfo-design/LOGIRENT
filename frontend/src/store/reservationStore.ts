@@ -32,7 +32,7 @@ interface ReservationState {
   currentReservation: Reservation | null;
   isLoading: boolean;
   fetchReservations: () => Promise<void>;
-  createReservation: (data: { vehicle_id: string; start_date: string; end_date: string; options: string[]; payment_method?: string }) => Promise<Reservation>;
+  createReservation: (data: { vehicle_id: string; start_date: string; end_date: string; options: string[]; payment_method?: string; selected_tier_id?: string }) => Promise<Reservation>;
   cancelReservation: (id: string) => Promise<void>;
   initiatePayment: (reservationId: string, originUrl: string, paymentMethodType?: string) => Promise<{ url: string; session_id: string }>;
   checkPaymentStatus: (sessionId: string) => Promise<any>;

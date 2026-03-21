@@ -98,6 +98,7 @@ export default function BookingScreen() {
   const [createdReservation, setCreatedReservation] = useState<any>(null);
   const [contractId, setContractId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
 
   const hasDocuments = user?.id_photo && user?.license_photo;
 
@@ -127,7 +128,8 @@ export default function BookingScreen() {
   }
 
   const totalDays = Math.max(differenceInDays(endDate, startDate), 1);
-  const basePrice = vehicle.price_per_day * totalDays;
+  const selectedTier = selectedTierId ? vehicle.pricing_tiers?.find((t: any) => t.id === selectedTierId && t.active) : null;
+  const basePrice = selectedTier ? selectedTier.price : vehicle.price_per_day * totalDays;
   const optionsPrice = selectedOptions.reduce((t, name) => {
     const o = allOptions.find((x: any) => x.name === name);
     return t + (o ? o.price_per_day * totalDays : 0);
@@ -174,6 +176,7 @@ export default function BookingScreen() {
         end_date: ed.toISOString(),
         options: selectedOptions,
         payment_method: effectivePayment,
+        selected_tier_id: selectedTierId || undefined,
       });
 
       setCreatedReservation(reservation);
@@ -285,7 +288,14 @@ export default function BookingScreen() {
       {/* Pricing Tiers */}
       {vehicle.pricing_tiers?.length > 0 && (
         <View style={s.section}>
-          <VehiclePricingDisplay tiers={vehicle.pricing_tiers} C={C} />
+          <VehiclePricingDisplay
+            tiers={vehicle.pricing_tiers}
+            C={C}
+            selectedTierId={selectedTierId}
+            onSelectTier={setSelectedTierId}
+            defaultPrice={vehicle.price_per_day * totalDays}
+            totalDays={totalDays}
+          />
         </View>
       )}
 
@@ -377,7 +387,7 @@ export default function BookingScreen() {
           <Text style={s.recapLabel}>Détail du prix</Text>
         </View>
         <View style={s.priceRow}>
-          <Text style={s.priceLabel}>Base ({totalDays}j x CHF {vehicle.price_per_day})</Text>
+          <Text style={s.priceLabel}>{selectedTier ? `Forfait: ${selectedTier.name}` : `Base (${totalDays}j x CHF ${vehicle.price_per_day})`}</Text>
           <Text style={s.priceVal}>CHF {basePrice.toFixed(2)}</Text>
         </View>
         {optionsPrice > 0 && (

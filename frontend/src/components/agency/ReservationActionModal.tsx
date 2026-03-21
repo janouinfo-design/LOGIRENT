@@ -91,7 +91,13 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
           {actionModal && (
             <ScrollView>
               <Text style={{ color: C.textLight, fontSize: 14, marginBottom: 4 }}>{actionModal.user_name} - {actionModal.vehicle_name}</Text>
-              <Text style={{ color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 16 }}>CHF {actionModal.total_price?.toFixed(2)}</Text>
+              <Text style={{ color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 4 }}>CHF {actionModal.total_price?.toFixed(2)}</Text>
+              {(actionModal as any).selected_tier && (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12, backgroundColor: C.accent + '10', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}>
+                  <Ionicons name="pricetag" size={14} color={C.accent} />
+                  <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Forfait: {(actionModal as any).selected_tier.name} - CHF {(actionModal as any).selected_tier.price}</Text>
+                </View>
+              )}
 
               {/* Document Verification */}
               <Text style={[st.modalSection, { color: C.textLight }]}>Documents client</Text>

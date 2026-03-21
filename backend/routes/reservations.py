@@ -36,6 +36,22 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
 
     base_price = vehicle['price_per_day'] * total_days
 
+    # Handle selected pricing tier
+    selected_tier = None
+    if reservation_data.selected_tier_id:
+        pricing_tiers = vehicle.get('pricing_tiers', [])
+        for tier in pricing_tiers:
+            if tier.get('id') == reservation_data.selected_tier_id and tier.get('active', True):
+                selected_tier = {
+                    "id": tier['id'],
+                    "name": tier.get('name', ''),
+                    "kilometers": tier.get('kilometers'),
+                    "price": float(tier.get('price', 0)),
+                    "period": tier.get('period', ''),
+                }
+                base_price = float(tier['price'])
+                break
+
     vehicle_options = {opt['name']: opt for opt in vehicle.get('options', [])}
     selected_options = []
     options_price = 0
@@ -60,6 +76,7 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
         start_date=reservation_data.start_date,
         end_date=reservation_data.end_date,
         options=selected_options,
+        selected_tier=selected_tier,
         total_days=total_days,
         base_price=base_price,
         options_price=options_price,
