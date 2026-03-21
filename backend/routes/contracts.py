@@ -254,6 +254,40 @@ def generate_contract_pdf(contract_data: dict, signature_base64: str = None) -> 
     story.append(pt)
     story.append(Spacer(1, 2 * mm))
 
+    # ======================== SELECTED PRICING TIER ========================
+    tier_name = d.get("selected_tier_name")
+    if tier_name:
+        tier_km = d.get("selected_tier_km", "")
+        tier_price = d.get("selected_tier_price", "")
+        tier_period = d.get("selected_tier_period", "")
+        period_labels = {"jour": "/jour", "weekend": "/weekend", "semaine": "/semaine", "mois": "/mois", "custom": ""}
+        period_suffix = period_labels.get(tier_period, "")
+        try:
+            tier_price_str = f"CHF {float(tier_price):.0f}{period_suffix}"
+        except (ValueError, TypeError):
+            tier_price_str = str(tier_price)
+        km_str = f"{tier_km} km inclus" if tier_km else ""
+
+        tier_data = [[
+            _cell("Forfait selectionne", bold=True, size=8, color='#2563EB'),
+            _value(tier_name),
+            _label("Km inclus"),
+            _value(km_str),
+            _label("Prix forfait"),
+            _cell(tier_price_str, bold=True, size=9, color='#2563EB'),
+        ]]
+        tier_t = Table(tier_data, colWidths=[30*mm, CW/4 - 10*mm, 20*mm, CW/4 - 10*mm, 22*mm, CW - CW/2 - 52*mm])
+        tier_t.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0.75, ACCENT),
+            ('INNERGRID', (0, 0), (-1, -1), 0.4, BORDER),
+            ('TOPPADDING', (0, 0), (-1, -1), 3), ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+            ('LEFTPADDING', (0, 0), (-1, -1), 4),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#EFF6FF')),
+        ]))
+        story.append(tier_t)
+        story.append(Spacer(1, 2 * mm))
+
     # ======================== LEGAL TEXT ========================
     agency_website = d.get("agency_website", "www.abicar.ch")
     deductible = d.get('deductible', '1000')
@@ -504,6 +538,14 @@ async def generate_contract(data: ContractGenerate, user: dict = Depends(get_adm
         "deductible": "1000",
     }
 
+    # Add selected pricing tier details
+    selected_tier = reservation.get("selected_tier")
+    if selected_tier:
+        contract_data["selected_tier_name"] = selected_tier.get("name", "")
+        contract_data["selected_tier_km"] = selected_tier.get("kilometers", "")
+        contract_data["selected_tier_price"] = selected_tier.get("price", "")
+        contract_data["selected_tier_period"] = selected_tier.get("period", "")
+
     # Apply agency contract template defaults
     agency_id = reservation.get("agency_id")
     if agency_id:
@@ -574,6 +616,7 @@ async def update_contract_fields(contract_id: str, fields: dict, user: dict = De
         "price_per_day", "price_weekend_fri", "price_weekend_sat",
         "price_hour", "price_week", "price_month_2000", "price_month_3000", "price_extra_km",
         "damages",
+        "selected_tier_name", "selected_tier_km", "selected_tier_price", "selected_tier_period",
     }
     updates = {}
     for k, v in fields.items():
@@ -916,6 +959,14 @@ async def auto_generate_contract(reservation_id: str, user: dict = Depends(get_c
         "total_price": reservation.get("total_price", 0),
         "deductible": "1000",
     }
+
+    # Add selected pricing tier details
+    selected_tier = reservation.get("selected_tier")
+    if selected_tier:
+        contract_data["selected_tier_name"] = selected_tier.get("name", "")
+        contract_data["selected_tier_km"] = selected_tier.get("kilometers", "")
+        contract_data["selected_tier_price"] = selected_tier.get("price", "")
+        contract_data["selected_tier_period"] = selected_tier.get("period", "")
 
     # Apply agency template
     agency_id = reservation.get("agency_id")

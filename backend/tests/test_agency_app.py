@@ -12,7 +12,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://wonderful-franklin-2.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-pricing.preview.emergentagent.com')
 
 # Test credentials
 AGENCY_ADMIN = {"email": "admin@test.com", "password": "admin123"}

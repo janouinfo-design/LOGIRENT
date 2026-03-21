@@ -10,7 +10,7 @@ import os
 import uuid
 import io
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://wonderful-franklin-2.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-pricing.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin-geneva@logirent.ch"

@@ -1179,6 +1179,10 @@ async def update_vehicle_pricing(vehicle_id: str, data: PricingTiersUpdate, user
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
 
+    # Agency admins can only modify their own vehicles
+    if user.get('role') != 'super_admin' and vehicle.get('agency_id') != user.get('agency_id'):
+        raise HTTPException(status_code=403, detail="Vous ne pouvez modifier que les vehicules de votre agence")
+
     tiers = []
     for i, t in enumerate(data.pricing_tiers):
         tiers.append({
