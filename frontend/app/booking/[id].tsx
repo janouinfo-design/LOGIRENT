@@ -123,20 +123,21 @@ export default function BookingScreen() {
     return merged;
   }, [vehicle, agencyOptions]);
 
+  // Check for active seasonal pricing (must be before conditional return - Rules of Hooks)
+  const seasonalPrice = useMemo(() => {
+    const seasonal = vehicle?.seasonal_pricing || [];
+    if (!seasonal.length) return null;
+    const startStr = format(startDate, 'yyyy-MM-dd');
+    const endStr = format(endDate, 'yyyy-MM-dd');
+    return seasonal.find((s: any) => s.active && s.start_date <= startStr && s.end_date >= endStr) || null;
+  }, [vehicle?.seasonal_pricing, startDate, endDate]);
+
   if (!vehicle) {
     return <View style={s.loading}><ActivityIndicator size="large" color={C.primary} /></View>;
   }
 
   const totalDays = Math.max(differenceInDays(endDate, startDate), 1);
   const selectedTier = selectedTierId ? vehicle.pricing_tiers?.find((t: any) => t.id === selectedTierId && t.active) : null;
-
-  // Check for active seasonal pricing
-  const seasonalPrice = useMemo(() => {
-    const seasonal = vehicle.seasonal_pricing || [];
-    const startStr = format(startDate, 'yyyy-MM-dd');
-    const endStr = format(endDate, 'yyyy-MM-dd');
-    return seasonal.find((s: any) => s.active && s.start_date <= startStr && s.end_date >= endStr);
-  }, [vehicle.seasonal_pricing, startDate, endDate]);
 
   const applySeasonalModifier = (price: number) => {
     if (!seasonalPrice) return price;
