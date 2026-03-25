@@ -26,8 +26,9 @@ async def get_vehicles(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None
 ):
-    query = {"status": {"$ne": "maintenance"}}
+    query = {}
 
+    # Filtres optionnels
     if type:
         query["type"] = type
     if min_price is not None:

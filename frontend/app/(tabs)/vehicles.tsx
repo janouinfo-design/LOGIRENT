@@ -51,9 +51,12 @@ export default function VehiclesScreen() {
   };
 
   const filteredVehicles = useMemo(() => {
-    if (!search) return vehicles;
-    const q = search.toLowerCase();
-    return vehicles.filter(v => `${v.brand} ${v.model}`.toLowerCase().includes(q) || v.type?.toLowerCase().includes(q));
+    let filtered = vehicles.filter(v => v.status !== 'maintenance');
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(v => `${v.brand} ${v.model}`.toLowerCase().includes(q) || v.type?.toLowerCase().includes(q));
+    }
+    return filtered;
   }, [vehicles, search]);
 
   const activeFiltersCount = [selectedType, selectedTransmission].filter(f => f !== 'Tous' && f !== 'Toutes').length;
