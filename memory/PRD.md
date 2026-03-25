@@ -1,46 +1,71 @@
-# TimeSheet - Plateforme SaaS Complete de Gestion RH
+# TimeSheet - Plateforme SaaS de Gestion du Temps
 
-## Problem Statement
-Plateforme SaaS de gestion du temps et des ressources humaines pour entreprises suisses.
+## Problème Original
+Application complète de suivi du temps (TimeSheet) pour entreprises suisses avec:
+- Rôles: Employee, Manager, Admin
+- Suivi du temps: Clock-in/out, pauses, géofencing GPS
+- Gestion de projets: Budgets, taux horaires (CHF/EUR/USD)
+- Absences, Notes de frais, Documents RH
+- Facturation et Paie (exports Cresus/Abacus/WinBiz)
+- Interface mobile style "logirent"
 
-## Tech Stack
-- Frontend: Expo Web (React Native Web) with expo-router
-- Backend: FastAPI (Python), MongoDB
-- Maps: Leaflet.js (GPS geofencing)
+## Architecture Technique
+- **Frontend**: React Native for Web (Expo Router)
+- **Backend**: FastAPI (Python) - Architecture modulaire
+- **Base de données**: MongoDB
+- **Auth**: JWT avec AsyncStorage
 
-## Sidebar Structure
+## Structure Backend (Refactorisé)
 ```
-Tableau de bord | Feuilles de temps | Projets | Planning | Absences | Annuaire | Dossier RH | Rapports | Analytique
-├── Comptabilite (collapsible)
-│   ├── Factures | Paie | Notes de frais
-├── Parametres (collapsible)
-│   ├── Utilisateurs | Departements | Clients | Activites | Abonnement | Journal d'audit
-Top bar: Messagerie | Notifications | Profil (dropdown)
+/app/backend/
+├── server.py          # Point d'entrée (50 lignes)
+├── config.py          # DB, JWT, sécurité
+├── models/
+│   ├── enums.py       # UserRole, TimesheetStatus, etc.
+│   └── schemas.py     # Modèles Pydantic
+├── utils/
+│   ├── auth.py        # Authentification (hash, tokens, dependencies)
+│   └── helpers.py     # Utilitaires (haversine, notifications, audit)
+├── routes/
+│   ├── auth.py        # Authentification
+│   ├── admin.py       # Entreprises, départements, utilisateurs, clients, activités
+│   ├── projects.py    # Projets CRUD + stats
+│   ├── timeentries.py # Pointages + timer
+│   ├── leaves.py      # Absences
+│   ├── finance.py     # Factures, dépenses, paie
+│   ├── notifications.py
+│   ├── stats.py       # Stats, soldes, analytics, audit logs
+│   ├── reports.py     # PDF/Excel
+│   ├── planning.py    # Planning + horaires
+│   ├── hr.py          # Annuaire, messagerie, documents RH
+│   └── subscriptions.py
 ```
 
-## Features Implemented (All pages in vignettes/grid format with search + filters)
-1. Pointage GPS avec geofencing + timer temps reel
-2. Projets: budget CHF, taux horaire, heures/mois, carte GPS
-3. Absences: 7 types, workflow approbation, recherche, filtres statut, modifier/supprimer
-4. Notes de frais: categories, recherche, filtres, modifier/supprimer, approbation
-5. Notifications: vignettes, recherche, filtres type, modifier/supprimer
-6. Annuaire: recherche, bouton modifier, compteurs actifs/absents
-7. Dossier RH: vignettes, recherche, filtres categorie
-8. Factures: vignettes, recherche, filtres statut, cartes resume
-9. Paie: export Cresus/Abacus/WinBiz
-10. Planning: calendrier hebdomadaire
-11. Analytique: KPIs + graphiques Chart.js
-12. Menu Comptabilite: sous-menu (Factures, Paie, Notes de frais)
-13. Menu Parametres: sous-menu (Utilisateurs, Departements, etc.)
-14. Top bar: Messagerie + Notifications + Profil (dropdown)
+## Fonctionnalités Implémentées
+- [x] Auth (register, login, JWT)
+- [x] Gestion entreprises/départements/utilisateurs
+- [x] Gestion clients et activités
+- [x] Projets avec budgets, taux, géofencing GPS
+- [x] Pointage (clock-in/out, pauses, chrono)
+- [x] Absences (CRUD, approbation)
+- [x] Facturation
+- [x] Notes de frais
+- [x] Planning et horaires
+- [x] Notifications
+- [x] Reports PDF/Excel
+- [x] Export paie (Cresus, Abacus, WinBiz)
+- [x] Analytics dashboard
+- [x] Messagerie interne
+- [x] Documents RH
+- [x] Dashboard mobile style "logirent" (timer card, chips projet, stats grid, progress bars)
+- [x] Backend refactorisé en architecture modulaire
 
-## Credentials
+## Credentials de Test
 - Admin: admin@timesheet.ch / admin123
 - Manager: manager@test.ch / test123
 - Employee: employe@test.ch / test123
 
-## Remaining Tasks
-- P2: Mode hors-ligne PWA
-- P3: Plans SaaS avec feature gating
-- P4: Application mobile native
-- Refactoring: decouper server.py en modules
+## Backlog (P2-P4)
+- P2: Mode hors-ligne (PWA)
+- P3: Plans d'abonnement SaaS (feature gating)
+- P4: Compilation mobile native (APK/IPA)
