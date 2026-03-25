@@ -140,6 +140,19 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
         </View>
       ))}
 
+      {/* AI Damage Detection */}
+      <Text style={s.sectionTitle}>Detection de dommages IA</Text>
+      <DamageAnalyzer
+        inspectionId={existing?.id}
+        context={type}
+        onAnalysisComplete={(result) => {
+          if (result?.damages?.length > 0) {
+            const damageNotes = result.damages.map((d: any) => `${d.type} (${d.zone}) - ${d.severite}: ${d.description}`).join('\n');
+            setNotes(prev => prev ? `${prev}\n\n--- Analyse IA ---\n${damageNotes}` : `--- Analyse IA ---\n${damageNotes}`);
+          }
+        }}
+      />
+
       {/* General Notes */}
       <Text style={s.sectionTitle}>Remarques generales</Text>
       <TextInput style={s.generalNotes} placeholder="Notes supplementaires..." placeholderTextColor={C.textLight} value={notes} onChangeText={v => !isReadOnly && setNotes(v)} multiline numberOfLines={3} editable={!isReadOnly} data-testid="general-notes" />
