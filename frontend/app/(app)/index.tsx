@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import api from '../../src/services/api';
 
@@ -44,27 +43,31 @@ export default function DashboardScreen() {
 
   const loadData = useCallback(async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) return;
-      const headers = { Authorization: `Bearer ${token}` };
-      const [userRes, projRes, entryRes, weekRes, balRes] = await Promise.all([
-        api.get('/auth/me', { headers }),
-        api.get('/projects', { headers }),
-        api.get('/timeentries/current', { headers }),
-        api.get('/stats/weekly', { headers }),
-        api.get('/stats/balances', { headers }),
+      // api already has auth token set via setAuthToken in AuthContext
+      const projRes = await api.get('/projects');
+      if (Array.isArray(projRes.data)) {
+        setProjects(projRes.data);
+        if (projRes.data.length > 0 && !selectedProject) {
+          setSelectedProject(projRes.data[0].id);
+        }
+      }
+
+      const [userRes, entryRes, weekRes, balRes] = await Promise.all([
+        api.get('/auth/me'),
+        api.get('/timeentries/current'),
+        api.get('/stats/weekly'),
+        api.get('/stats/balances'),
       ]);
       setUser(userRes.data);
-      setProjects(projRes.data);
       setCurrentEntry(entryRes.data);
       setWeekly(weekRes.data);
       setBalances(balRes.data);
       if (entryRes.data?.entry?.project_id) {
         setSelectedProject(entryRes.data.entry.project_id);
-      } else if (projRes.data.length > 0 && !selectedProject) {
-        setSelectedProject(projRes.data[0].id);
       }
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+    } catch (e: any) {
+      console.error('Dashboard load error:', e?.message || e);
+    } finally { setLoading(false); }
   }, []);
 
   useFocusEffect(useCallback(() => { loadData(); }, [loadData]));
@@ -91,17 +94,11 @@ export default function DashboardScreen() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [currentEntry]);
 
-  const getHeaders = async () => {
-    const token = await AsyncStorage.getItem('token');
-    return { Authorization: `Bearer ${token}` };
-  };
-
   const handleClockIn = async () => {
     if (!selectedProject) return;
     setActionLoading(true);
     try {
-      const headers = await getHeaders();
-      await api.post('/timeentries/clock-in', { project_id: selectedProject, billable: true }, { headers });
+      await api.post('/timeentries/clock-in', { project_id: selectedProject, billable: true });
       await loadData();
     } catch (e: any) { console.error(e?.response?.data?.detail || e); } finally { setActionLoading(false); }
   };
@@ -109,8 +106,7 @@ export default function DashboardScreen() {
   const handleClockOut = async () => {
     setActionLoading(true);
     try {
-      const headers = await getHeaders();
-      await api.post('/timeentries/clock-out', { project_id: currentEntry.entry?.project_id, billable: true }, { headers });
+      await api.post('/timeentries/clock-out', { project_id: currentEntry.entry?.project_id, billable: true });
       await loadData();
     } catch (e: any) { console.error(e?.response?.data?.detail || e); } finally { setActionLoading(false); }
   };
@@ -118,11 +114,10 @@ export default function DashboardScreen() {
   const handleBreakToggle = async () => {
     setActionLoading(true);
     try {
-      const headers = await getHeaders();
       if (currentEntry.on_break) {
-        await api.post('/timeentries/break-end', {}, { headers });
+        await api.post('/timeentries/break-end', {});
       } else {
-        await api.post('/timeentries/break-start', {}, { headers });
+        await api.post('/timeentries/break-start', {});
       }
       await loadData();
     } catch (e: any) { console.error(e?.response?.data?.detail || e); } finally { setActionLoading(false); }
@@ -231,22 +226,43 @@ export default function DashboardScreen() {
 
       {/* Project Selector */}
       {!currentEntry.active && (
-        <View style={s.sectionCard} data-testid="project-selector">
+        <View style={s.sectionCard} testID="project-selector">
           <Text style={s.sectionTitle}>Projet</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.projectScroll}>
-            {projects.map((p) => (
-              <Pressable
-                key={p.id}
-                style={[s.projectChip, selectedProject === p.id && s.projectChipActive]}
-                onPress={() => setSelectedProject(p.id)}
-                data-testid={`project-chip-${p.id}`}
-              >
-                <Text style={[s.projectChipText, selectedProject === p.id && s.projectChipTextActive]}>
-                  {p.name}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
+          {projects.length > 0 ? (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingTop: 10 }}>
+              {projects.slice(0, 6).map((p) => {
+                const isSelected = selectedProject === p.id;
+                return (
+                  <TouchableOpacity
+                    key={p.id}
+                    onPress={() => setSelectedProject(p.id)}
+                    activeOpacity={0.7}
+                    style={{
+                      display: 'flex',
+                      paddingLeft: 16, paddingRight: 16, paddingTop: 8, paddingBottom: 8,
+                      borderRadius: 20,
+                      backgroundColor: isSelected ? '#DBEAFE' : '#F0F4F8',
+                      marginBottom: 8,
+                      marginRight: 8,
+                      borderWidth: 2,
+                      borderColor: isSelected ? '#2563EB' : '#E2E8F0',
+                      alignSelf: 'flex-start',
+                    }}
+                  >
+                    <Text style={{
+                      fontSize: 13,
+                      fontWeight: isSelected ? '600' : '500',
+                      color: isSelected ? '#2563EB' : '#64748B',
+                    }}>
+                      {p.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            <Text style={{ color: C.textLight, marginTop: 8, fontSize: 13 }}>Chargement des projets...</Text>
+          )}
         </View>
       )}
 
@@ -344,16 +360,6 @@ const s = StyleSheet.create({
   },
   actionBtnIcon: { color: '#FFF', fontSize: 16 },
   actionBtnText: { color: '#FFF', fontSize: 13, fontWeight: '600' },
-
-  // Project Selector
-  projectScroll: { marginTop: 10 },
-  projectChip: {
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
-    backgroundColor: C.bg, marginRight: 8, borderWidth: 1.5, borderColor: C.border,
-  },
-  projectChipActive: { backgroundColor: C.primaryLight, borderColor: C.primary },
-  projectChipText: { fontSize: 13, fontWeight: '500', color: C.textSec },
-  projectChipTextActive: { color: C.primary, fontWeight: '600' },
 
   // Section Card
   sectionCard: {
