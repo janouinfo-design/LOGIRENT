@@ -63,6 +63,8 @@ Frontend: `cd ~/apps/LOGIRENT/frontend && git pull origin main && rm -rf .expo .
 
 ## Bug Fixes Applied
 - 2026-03-25: Fixed signature canvas erasing after drawing (canvas width/height re-applied on React re-render, replaced with useRef + JS dimension setting)
+- 2026-03-25: Integrated DamageAnalyzer component into VehicleInspectionForm (was imported but not rendered)
+- 2026-03-25: AI Damage Detection feature fully tested (backend + frontend) - iteration_62
 
 ## Backlog (P2-P3)
 - Test AI Damage Detection feature (P1)
