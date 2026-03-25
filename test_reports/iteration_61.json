@@ -80,7 +80,7 @@
     "GET /api/admin/stats/advanced",
     "GET /api/admin/stats/tier-analytics",
     "GET /api/vehicles",
-    "GET /api/vehicles?agency_id=63683791-8741-445a-be42-9e74861bee89",
+    "GET /api/vehicles?agency_id=logirent-preview-3",
     "PUT /api/contracts/{contract_id}/sign",
     "GET /api/admin/contracts"
   ]

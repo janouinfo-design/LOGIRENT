@@ -8,7 +8,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://logirent-pricing.preview.emergentagent.com')).rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://logirent-preview-3.preview.emergentagent.com')).rstrip('/')
 
 # Test credentials
 AGENCY_ADMIN_EMAIL = "admin-geneva@logirent.ch"

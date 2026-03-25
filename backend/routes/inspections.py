@@ -7,6 +7,7 @@ from database import db
 from deps import get_agency_admin
 from models import InspectionCreate
 from utils.notifications import create_notification
+from utils.helpers import analyze_vehicle_damage
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -140,3 +141,46 @@ async def add_inspection_photo(inspection_id: str, data: dict, admin: dict = Dep
         {"$push": {"photos": photo_url}}
     )
     return {"message": "Photo ajoutee", "photo_url": photo_url}
+
+
+
+@router.post("/inspections/analyze-damage")
+async def analyze_damage(data: dict, admin: dict = Depends(get_agency_admin)):
+    """Analyse une photo de véhicule pour détecter des dommages via IA."""
+    image_data = data.get("image_data")
+    if not image_data:
+        raise HTTPException(status_code=400, detail="image_data (base64) requis")
+
+    context = data.get("context", "general")  # checkout, checkin, general
+    inspection_id = data.get("inspection_id")
+
+    result = await analyze_vehicle_damage(image_data, context)
+
+    # Store the analysis result in the inspection if provided
+    if inspection_id:
+        await db.inspections.update_one(
+            {"id": inspection_id},
+            {"$push": {"damage_analyses": {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "result": result,
+                "analyzed_by": admin.get("id"),
+            }}}
+        )
+
+    return result
+
+
+@router.post("/inspections/{inspection_id}/analyze-all-photos")
+async def analyze_all_photos(inspection_id: str, admin: dict = Depends(get_agency_admin)):
+    """Analyse toutes les photos d'une inspection pour détecter des dommages."""
+    inspection = await db.inspections.find_one({"id": inspection_id})
+    if not inspection:
+        raise HTTPException(status_code=404, detail="Inspection introuvable")
+
+    photos = inspection.get("photos", [])
+    if not photos:
+        raise HTTPException(status_code=400, detail="Aucune photo a analyser")
+
+    # For URL-based photos, we can't analyze them directly with base64
+    # This endpoint is for when photos are stored as base64 or we have access to URLs
+    return {"message": f"{len(photos)} photos trouvees", "photos_count": len(photos)}

@@ -9,7 +9,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-pricing.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://logirent-preview-3.preview.emergentagent.com')
 
 # Test credentials
 AGENCY_ADMIN = {"email": "admin-geneva@logirent.ch", "password": "LogiRent2024"}
