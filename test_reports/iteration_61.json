@@ -1,0 +1,87 @@
+{
+  "summary": "Iteration 61 - Backend Testing for Analytics Dashboard, Vehicle List Bug Fix, and E-Signature. All 24 tests passed. Analytics endpoints return all required KPIs. Vehicle list now correctly includes maintenance vehicles (Geneva: 7 vehicles including 1 in maintenance). E-signature endpoint working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_iteration61_analytics_vehicles_esignature.py",
+    "/app/test_reports/pytest/pytest_iteration61.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "GET /api/admin/stats/advanced correctly returns all required fields: revenue_this_month, reservations_this_month, avg_booking_duration, revenue_per_vehicle, vehicle_utilization, payment_methods, weekly_trends, cancellation_rate",
+    "GET /api/admin/stats/tier-analytics correctly returns tier_stats array with name/bookings/revenue/avg_price, plus with_tier and without_tier counts",
+    "GET /api/vehicles no longer filters out maintenance status vehicles - bug fix verified",
+    "Geneva agency (63683791-8741-445a-be42-9e74861bee89) correctly returns 7 vehicles including 1 in maintenance (Range Rover Evoque P250)",
+    "PUT /api/contracts/{contract_id}/sign endpoint accepts signature_data and properly validates auth, contract existence, and signed status"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_iteration61_analytics_vehicles_esignature.py"
+  ],
+  "success_rate": {
+    "backend": "100% (24/24 tests passed)",
+    "frontend": "N/A - backend only testing requested"
+  },
+  "test_credentials": {
+    "super_admin": "superadmin@logirent.ch / LogiRent2024!",
+    "agency_admin_geneva": "admin-geneva@logirent.ch / LogiRent2024! (agency_id: 63683791-8741-445a-be42-9e74861bee89)"
+  },
+  "seed_data_creation": "None - using existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "All 3 features verified: (1) Analytics dashboard endpoints fully working with all KPIs, (2) Vehicle list bug fixed - maintenance vehicles now included, (3) E-signature endpoint working. Geneva has 7 vehicles: 6 available + 1 maintenance (Range Rover Evoque P250).",
+  "features_verified": {
+    "analytics_advanced_stats": {
+      "GET_admin_stats_advanced": "PASS - Returns 200",
+      "revenue_this_month": "PASS - Numeric value returned",
+      "reservations_this_month": "PASS - Integer value returned",
+      "avg_booking_duration": "PASS - Numeric value in days",
+      "revenue_per_vehicle": "PASS - Array with id/name/revenue/bookings",
+      "vehicle_utilization": "PASS - Array with id/name/utilization/booked_days",
+      "payment_methods": "PASS - Array with method/count/total",
+      "weekly_trends": "PASS - Array with week/bookings/revenue",
+      "cancellation_rate": "PASS - Percentage value 0-100"
+    },
+    "analytics_tier_analytics": {
+      "GET_admin_stats_tier_analytics": "PASS - Returns 200",
+      "tier_stats": "PASS - Array with name/bookings/revenue/avg_price",
+      "with_tier": "PASS - Integer count",
+      "without_tier": "PASS - Integer count"
+    },
+    "vehicle_list_bug_fix": {
+      "GET_vehicles": "PASS - Returns all vehicles",
+      "maintenance_included": "PASS - Maintenance status vehicles NOT filtered out",
+      "geneva_vehicle_count": "PASS - 7 vehicles returned",
+      "geneva_maintenance_vehicle": "PASS - Range Rover Evoque P250 (status=maintenance) included"
+    },
+    "e_signature": {
+      "auth_required": "PASS - Returns 401/403 without auth",
+      "nonexistent_contract": "PASS - Returns 404",
+      "accepts_signature_data": "PASS - Endpoint accepts base64 signature",
+      "already_signed_check": "PASS - Returns 400 for already signed contracts"
+    }
+  },
+  "test_data_used": {
+    "geneva_agency_id": "63683791-8741-445a-be42-9e74861bee89",
+    "geneva_vehicles": {
+      "total": 7,
+      "available": 6,
+      "maintenance": 1
+    },
+    "maintenance_vehicle": "Range Rover Evoque P250"
+  },
+  "api_endpoints_tested": [
+    "GET /api/admin/stats/advanced",
+    "GET /api/admin/stats/tier-analytics",
+    "GET /api/vehicles",
+    "GET /api/vehicles?agency_id=63683791-8741-445a-be42-9e74861bee89",
+    "PUT /api/contracts/{contract_id}/sign",
+    "GET /api/admin/contracts"
+  ]
+}

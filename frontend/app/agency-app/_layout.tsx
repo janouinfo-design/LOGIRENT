@@ -47,6 +47,7 @@ export default function AgencyAppLayout() {
     { key: 'reservations', label: 'Réservations', icon: 'calendar', iconO: 'calendar-outline' },
     { key: 'vehicles', label: 'Véhicules', icon: 'car', iconO: 'car-outline' },
     { key: 'statistics', label: 'Stats', icon: 'stats-chart', iconO: 'stats-chart-outline' },
+    { key: 'analytics', label: 'Analytics', icon: 'analytics', iconO: 'analytics-outline' },
     { key: 'tracking', label: 'GPS', icon: 'navigate', iconO: 'navigate-outline' },
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
     { key: 'contract-template', label: 'Modèle', icon: 'document-text', iconO: 'document-text-outline' },
@@ -114,6 +115,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="reservations" options={{ title: 'Réservations' }} />
           <Tabs.Screen name="vehicles" options={{ title: 'Véhicules' }} />
           <Tabs.Screen name="statistics" options={{ title: 'Stats' }} />
+          <Tabs.Screen name="analytics" options={{ title: 'Analytics' }} />
           <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
           <Tabs.Screen name="contract-template" options={{ title: 'Modèle' }} />

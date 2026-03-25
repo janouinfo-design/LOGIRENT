@@ -199,6 +199,34 @@ async def get_agency_comparison(user: dict = Depends(get_admin_user)):
     return result
 
 
+@router.get("/admin/stats/tier-analytics")
+async def get_tier_analytics(user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    rf = {} if is_super else {"agency_id": agency_id}
+
+    pipeline = [
+        {"$match": {**rf, "selected_tier": {"$ne": None}}},
+        {"$group": {
+            "_id": "$selected_tier.name",
+            "bookings": {"$sum": 1},
+            "revenue": {"$sum": "$total_price"},
+            "avg_price": {"$avg": "$total_price"},
+        }},
+        {"$sort": {"revenue": -1}},
+    ]
+    tier_stats = await db.reservations.aggregate(pipeline).to_list(20)
+
+    total_with_tier = await db.reservations.count_documents({**rf, "selected_tier": {"$ne": None}})
+    total_without_tier = await db.reservations.count_documents({**rf, "selected_tier": None})
+
+    return {
+        "tier_stats": [{"name": t["_id"] or "Sans forfait", "bookings": t["bookings"], "revenue": t["revenue"], "avg_price": round(t["avg_price"], 2)} for t in tier_stats],
+        "with_tier": total_with_tier,
+        "without_tier": total_without_tier,
+    }
+
+
 @router.get("/admin/stats/revenue-forecast")
 async def get_revenue_forecast(user: dict = Depends(get_admin_user)):
     agency_id = user.get('agency_id')
