@@ -63,11 +63,15 @@ export default function SignatureCanvas({ onSave, saving, colors: C }: Props) {
 function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
-  const [hasDrawn, setHasDrawn] = useState(false);
+  const hasDrawnRef = useRef(false);
+  const [canConfirm, setCanConfirm] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // Set canvas dimensions via JS to avoid React re-applying attributes on re-render (which clears the canvas)
+    canvas.width = 500;
+    canvas.height = 150;
 
     const getPos = (e: MouseEvent | TouchEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -89,7 +93,7 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
       ctx.beginPath();
       ctx.moveTo(x, y);
       drawingRef.current = true;
-      setHasDrawn(true);
+      hasDrawnRef.current = true;
     };
 
     const onMove = (e: MouseEvent | TouchEvent) => {
@@ -110,6 +114,10 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
     const onEnd = (e: MouseEvent | TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      if (drawingRef.current && hasDrawnRef.current) {
+        // Only update state when stroke is finished, not during drawing
+        setCanConfirm(true);
+      }
       drawingRef.current = false;
     };
 
@@ -139,7 +147,8 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    setHasDrawn(false);
+    hasDrawnRef.current = false;
+    setCanConfirm(false);
   };
 
   const handleConfirm = () => {
@@ -154,8 +163,6 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
       <View style={[st.canvasWrap, { borderColor: C.border }]}>
         <canvas
           ref={(el: HTMLCanvasElement | null) => { canvasRef.current = el; }}
-          width={500}
-          height={150}
           style={{ width: '100%', height: 150, backgroundColor: '#FFFFFF', borderRadius: 8, cursor: 'crosshair', touchAction: 'none' }}
         />
       </View>
@@ -164,9 +171,9 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
           <Text style={{ color: C.text, fontSize: 13 }}>Effacer</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[st.btn, { backgroundColor: '#10B981', opacity: !hasDrawn || saving ? 0.5 : 1 }]}
+          style={[st.btn, { backgroundColor: '#10B981', opacity: !canConfirm || saving ? 0.5 : 1 }]}
           onPress={handleConfirm}
-          disabled={!hasDrawn || saving}
+          disabled={!canConfirm || saving}
           data-testid="signature-confirm-btn"
         >
           <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>{saving ? 'Envoi...' : 'Confirmer la signature'}</Text>

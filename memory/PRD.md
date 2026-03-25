@@ -17,7 +17,7 @@ PM2: `logirent-backend` (port 8001), `logitime-backend` (port 8002)
 - **Vehicle Pricing Tiers**: Admin configures tariff packages per vehicle
 - **Seasonal/Promo Pricing**: Date-based price modifiers (% discount or fixed price/day)
 - **Vehicle Inspections**: Checkout + Checkin forms with checklist, km, fuel, conditions
-- **Dashboard Analytics (NEW)**: Revenue/vehicle, occupancy rates, tier analytics, payment methods, weekly trends, KPIs, cancellation rate
+- **Dashboard Analytics**: Revenue/vehicle, occupancy rates, tier analytics, payment methods, weekly trends, KPIs, cancellation rate
 - **E-Signature**: Digital contract signing with canvas (SignatureCanvas component)
 - **PDF Contract with Tier Details**: Contracts include selected tier info
 - **Agency Ownership Security**: Admins can only modify their own agency's vehicles
@@ -34,6 +34,7 @@ PM2: `logirent-backend` (port 8001), `logitime-backend` (port 8002)
 - Email notifications via Resend
 - GPS tracking via Navixy
 - Notification system (in-app + email)
+- **AI Damage Detection**: Photo upload + GPT-5.2 analysis for vehicle damage (TESTING PENDING)
 
 ## Key Endpoints
 ### Analytics
@@ -48,6 +49,7 @@ PM2: `logirent-backend` (port 8001), `logitime-backend` (port 8002)
 - `GET /api/inspections/defaults` - Default 10-item checklist
 - `POST /api/inspections` - Create checkout/checkin inspection
 - `GET /api/inspections/reservation/{id}` - Inspections for a reservation
+- `POST /api/inspections/{id}/analyze-damage` - AI damage analysis
 
 ### E-Signature
 - `PUT /api/contracts/{id}/sign` - Sign contract with base64 signature data
@@ -59,15 +61,22 @@ PM2: `logirent-backend` (port 8001), `logitime-backend` (port 8002)
 Backend: `cd ~/apps/LOGIRENT/backend && git pull origin main && source venv/bin/activate && pip install -r requirements.txt && pm2 restart logirent-backend`
 Frontend: `cd ~/apps/LOGIRENT/frontend && git pull origin main && rm -rf .expo .metro-cache node_modules/.cache dist && npx expo export --platform web --clear && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/ && sudo systemctl reload nginx`
 
+## Bug Fixes Applied
+- 2026-03-25: Fixed signature canvas erasing after drawing (canvas width/height re-applied on React re-render, replaced with useRef + JS dimension setting)
+
 ## Backlog (P2-P3)
+- Test AI Damage Detection feature (P1)
 - Pricing dynamique IA (prix auto selon demande/saison)
-- Detection dommages IA (photo -> analyse auto)
 - Maintenance predictive (alertes km/date)
 - Multi-canal (sync Expedia, Kayak)
 - Programme fidelite (points, reductions)
 - App mobile native (push notifications, offline)
 - Driver/Agent mobile app
 - App Store deployment
+- Health Dashboard super-admin
+
+## Pending Decision
+- Tech stack migration (ReactJS/NodeJS/MSSQL) - User asked if Emergent can do it. Explained limitations (no MSSQL). Awaiting user decision.
 
 ## Known Issues
 - Resend domain not verified (user-side DNS action required)
