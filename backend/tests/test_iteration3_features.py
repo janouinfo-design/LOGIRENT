@@ -6,7 +6,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://timesheet-projects.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://mobile-payroll.preview.emergentagent.com')
 
 # Test credentials
 EMPLOYEE_EMAIL = "employe@test.ch"

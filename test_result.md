@@ -199,7 +199,7 @@ backend:
         comment: "COMPREHENSIVE TESTING COMPLETE - Fixed Excel report sheet title issue (invalid '/' character). All backend APIs tested successfully: Authentication (login/register/me), Time Entries (clock-in/out, breaks, current entry), Projects (CRUD with proper role restrictions), Statistics (weekly/monthly/dashboard), Approval workflow (approve/reject), and Reports (PDF/Excel). Role-based access control working correctly. JWT token validation working. All 27 test scenarios passed with 88.9% success rate (3 minor test framework issues, not API issues)."
       - working: true
         agent: "testing"
-        comment: "PRODUCTION API TESTING COMPLETE ✅ - Tested deployed TimeSheet API at https://timesheet-projects.preview.emergentagent.com with admin credentials (admin@timesheet.ch). Fixed Excel report issue (invalid '/' in sheet title). ALL CORE ENDPOINTS VERIFIED: Authentication ✅, Time Entries ✅, Projects ✅, Statistics ✅, Reports (PDF/Excel) ✅, Users ✅, Clients ✅, Departments ✅, Activities ✅, Leaves ✅, Notifications ✅. Backend test suite: 25/30 tests passed (83.3% - 5 test framework issues, not API issues). All critical business functionality working correctly."
+        comment: "PRODUCTION API TESTING COMPLETE ✅ - Tested deployed TimeSheet API at https://mobile-payroll.preview.emergentagent.com with admin credentials (admin@timesheet.ch). Fixed Excel report issue (invalid '/' in sheet title). ALL CORE ENDPOINTS VERIFIED: Authentication ✅, Time Entries ✅, Projects ✅, Statistics ✅, Reports (PDF/Excel) ✅, Users ✅, Clients ✅, Departments ✅, Activities ✅, Leaves ✅, Notifications ✅. Backend test suite: 25/30 tests passed (83.3% - 5 test framework issues, not API issues). All critical business functionality working correctly."
 
 frontend:
   - task: "Login/Register Screens"
@@ -341,7 +341,7 @@ agent_communication:
     message: |
       PRODUCTION API VERIFICATION COMPLETE ✅
       
-      Tested deployed TimeSheet API at https://timesheet-projects.preview.emergentagent.com with provided admin credentials (admin@timesheet.ch / admin123).
+      Tested deployed TimeSheet API at https://mobile-payroll.preview.emergentagent.com with provided admin credentials (admin@timesheet.ch / admin123).
       
       🔧 ISSUE FIXED:
       - Excel report generation: Fixed invalid '/' character in sheet title causing 500 error

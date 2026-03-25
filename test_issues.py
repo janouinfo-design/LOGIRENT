@@ -7,7 +7,7 @@ import requests
 import json
 
 # Backend URL from frontend/.env
-BACKEND_URL = "https://timesheet-projects.preview.emergentagent.com/api"
+BACKEND_URL = "https://mobile-payroll.preview.emergentagent.com/api"
 
 # Test credentials
 MANAGER_CREDS = {"email": "manager@test.ch", "password": "test123"}
