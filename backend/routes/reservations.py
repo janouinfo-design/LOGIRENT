@@ -22,13 +22,8 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     if vehicle['status'] == 'maintenance':
         raise HTTPException(status_code=400, detail="Vehicle is under maintenance")
 
-    overlap = await db.reservations.find_one({
-        "vehicle_id": reservation_data.vehicle_id,
-        "status": {"$in": ["confirmed", "active"]},
-        "$or": [{"start_date": {"$lt": reservation_data.end_date}, "end_date": {"$gt": reservation_data.start_date}}]
-    })
-    if overlap:
-        raise HTTPException(status_code=400, detail="Ce vehicule n'est pas disponible pour les dates selectionnees.")
+    # Category-based booking: overlap check removed
+    # The agency guarantees the booked vehicle OR an equivalent in the same category
 
     total_days = (reservation_data.end_date - reservation_data.start_date).days
     if total_days <= 0:

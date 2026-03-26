@@ -192,20 +192,6 @@ export default function BookingFlow() {
   }, [selectedVehicle]);
 
   // Check vehicle availability
-  const isVehicleFree = (v: VehicleSchedule) => {
-    if (!startDate || !endDate) return true;
-    const sd = startDate.getTime();
-    const ed = endDate.getTime();
-    for (const r of v.reservations) {
-      try {
-        const rs = parseISO(r.start).getTime();
-        const re = parseISO(r.end).getTime();
-        if (sd < re && ed > rs) return false;
-      } catch {}
-    }
-    return true;
-  };
-
   // Pricing
   const totalDays = startDate && endDate ? Math.max(1, differenceInDays(endDate, startDate)) : 0;
   const basePrice = selectedVehicle ? selectedVehicle.price_per_day * totalDays : 0;
@@ -420,15 +406,9 @@ export default function BookingFlow() {
             <TouchableOpacity onPress={() => setStep('calendar')}><Text style={{ color: C.textLight, fontSize: 11, textDecorationLine: 'underline' }}>Modifier</Text></TouchableOpacity>
           </View>
 
-          <View style={s.legendRow}>
-            <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#10B981' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Disponible</Text></View>
-            <View style={s.legendItem}><View style={[s.legendDot, { backgroundColor: '#EF4444' }]} /><Text style={{ color: C.textLight, fontSize: 11 }}>Occupé</Text></View>
-          </View>
-
           {loadingSchedule ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} /> : (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
               {schedule.map(v => {
-                const free = isVehicleFree(v);
                 const selected = selectedVehicle?.id === v.id;
                 const cardWidth = (Dimensions.get('window').width - 32 - 30) / 4;
                 return (
@@ -443,24 +423,13 @@ export default function BookingFlow() {
                         backgroundColor: C.card,
                         overflow: 'hidden',
                       },
-                      !free && { opacity: 0.45 },
                     ]}
-                    onPress={() => free ? setSelectedVehicle(v) : showAlert('Indisponible', 'Ce véhicule est occupé pour ces dates')}
+                    onPress={() => setSelectedVehicle(v)}
                     data-testid={`vehicle-${v.id}`}
                   >
                     {/* Photo placeholder */}
                     <View style={{ width: '100%', height: 70, backgroundColor: C.border + '30', justifyContent: 'center', alignItems: 'center' }}>
-                      <Ionicons name="car-sport" size={26} color={free ? C.accent : '#EF4444'} />
-                      {/* Status badge */}
-                      <View style={{
-                        position: 'absolute', bottom: 3, left: 3,
-                        flexDirection: 'row', alignItems: 'center', gap: 3,
-                        paddingHorizontal: 5, paddingVertical: 2, borderRadius: 5,
-                        backgroundColor: free ? '#10B98120' : '#EF444420',
-                      }}>
-                        <View style={{ width: 5, height: 5, borderRadius: 3, backgroundColor: free ? '#10B981' : '#EF4444' }} />
-                        <Text style={{ color: free ? '#10B981' : '#EF4444', fontSize: 8, fontWeight: '800' }}>{free ? 'Dispo' : 'Occupe'}</Text>
-                      </View>
+                      <Ionicons name="car-sport" size={26} color={C.accent} />
                       {/* Selected check */}
                       {selected && (
                         <View style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: C.accent, justifyContent: 'center', alignItems: 'center' }}>
@@ -490,7 +459,7 @@ export default function BookingFlow() {
           )}
 
           {/* Next */}
-          {selectedVehicle && isVehicleFree(selectedVehicle) && (
+          {selectedVehicle && (
             <View style={{ position: 'sticky' as any, bottom: 0, left: 0, right: 0, padding: 16, paddingBottom: 20, backgroundColor: C.bg, borderTopWidth: 1, borderTopColor: C.border, marginHorizontal: -20, marginBottom: -20, marginTop: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                 <View>
