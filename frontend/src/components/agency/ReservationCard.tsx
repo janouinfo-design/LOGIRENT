@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const STATUS_MAP: Record<string, { label: string; short: string; color: string }> = {
-  pending: { label: 'En attente', short: 'Atten', color: '#FBBF24' },
+  pending: { label: 'Confirmee', short: 'Conf', color: '#10B981' },
   pending_cash: { label: 'Especes', short: 'Espec', color: '#A855F7' },
   confirmed: { label: 'Confirmee', short: 'Confi', color: '#10B981' },
   active: { label: 'Active', short: 'Activ', color: '#3B82F6' },

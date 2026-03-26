@@ -5,7 +5,7 @@ import logging
 from database import db, STRIPE_API_KEY
 from models import CheckoutRequest, PaymentTransaction
 from deps import get_current_user
-from utils.email import send_reservation_confirmation
+from utils.email import send_payment_confirmation
 from utils.notifications import create_notification, notify_admins_of_agency
 
 logger = logging.getLogger(__name__)
@@ -92,19 +92,19 @@ async def get_payment_status(session_id: str, user: dict = Depends(get_current_u
                 reservation = await db.reservations.find_one({"id": transaction['reservation_id']})
                 vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
                 if reservation and vehicle:
-                    await send_reservation_confirmation(user, vehicle, reservation)
+                    await send_payment_confirmation(user, vehicle, reservation)
                     # Notify client: payment success
                     vname = f"{vehicle['brand']} {vehicle['model']}"
                     await create_notification(
                         user['id'], 'payment_success',
-                        f"Votre paiement de CHF {reservation['total_price']:.2f} pour {vname} a été confirmé.",
+                        f"Votre paiement de CHF {reservation['total_price']:.2f} pour {vname} a ete confirme. Votre reservation est entierement validee.",
                         transaction['reservation_id']
                     )
                     # Notify agency admins: payment received
                     if reservation.get('agency_id'):
                         await notify_admins_of_agency(
                             reservation['agency_id'], 'payment_received',
-                            f"Paiement de CHF {reservation['total_price']:.2f} reçu de {user['name']} pour {vname}.",
+                            f"Paiement de CHF {reservation['total_price']:.2f} recu de {user['name']} pour {vname}.",
                             transaction['reservation_id']
                         )
             except Exception as email_error:

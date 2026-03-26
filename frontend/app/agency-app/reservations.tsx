@@ -25,7 +25,7 @@ interface VehicleSchedule {
 
 const STATUS_FILTERS = [
   { value: null, label: 'Toutes' },
-  { value: 'pending', label: 'En attente' },
+  { value: 'pending', label: 'Confirmee' },
   { value: 'pending_cash', label: 'Especes' },
   { value: 'confirmed', label: 'Confirmees' },
   { value: 'active', label: 'Actives' },
@@ -125,7 +125,7 @@ export default function AgencyReservations() {
 
   const statusColor = (s: string) => RES_COLORS[s] || C.textLight;
   const statusLabel = (s: string) => {
-    const map: Record<string, string> = { pending: 'En attente', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee' };
+    const map: Record<string, string> = { pending: 'Confirmee', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee' };
     return map[s] || s;
   };
 

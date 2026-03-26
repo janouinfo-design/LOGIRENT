@@ -15,7 +15,7 @@ from deps import get_admin_user, get_agency_admin, hash_password
 from utils.notifications import create_notification
 from utils.helpers import verify_document_with_ai
 from utils.email import (
-    send_email, send_reservation_confirmation,
+    send_email, send_reservation_confirmation, send_payment_confirmation,
     generate_status_change_email
 )
 
@@ -752,12 +752,12 @@ async def update_payment_status(reservation_id: str, payment_status: str, user: 
             res_user = await db.users.find_one({"id": reservation['user_id']})
             vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
             if res_user and vehicle:
-                await send_reservation_confirmation(res_user, vehicle, reservation)
+                await send_payment_confirmation(res_user, vehicle, reservation)
                 # Notify client: payment confirmed by admin
                 vname = f"{vehicle['brand']} {vehicle['model']}"
                 await create_notification(
                     res_user['id'], 'payment_success',
-                    f"Votre paiement de CHF {reservation['total_price']:.2f} pour {vname} a été confirmé.",
+                    f"Votre paiement de CHF {reservation['total_price']:.2f} pour {vname} a ete confirme. Votre reservation est entierement validee.",
                     reservation_id
                 )
         except Exception as email_error:

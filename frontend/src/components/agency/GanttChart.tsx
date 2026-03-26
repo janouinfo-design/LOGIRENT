@@ -10,7 +10,7 @@ const RES_COLORS: Record<string, string> = {
 };
 
 const statusLabel = (s: string) => {
-  const map: Record<string, string> = { pending: 'En attente', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee' };
+  const map: Record<string, string> = { pending: 'Confirmee', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee' };
   return map[s] || s;
 };
 

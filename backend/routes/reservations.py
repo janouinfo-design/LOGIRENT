@@ -6,7 +6,7 @@ import logging
 from database import db
 from models import Reservation, ReservationCreate, ReservationUpdate, ReservationOption
 from deps import get_current_user
-from utils.email import send_cash_reservation_email
+from utils.email import send_reservation_confirmation
 from utils.notifications import create_notification, notify_admins_of_agency
 
 logger = logging.getLogger(__name__)
@@ -24,11 +24,11 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
 
     overlap = await db.reservations.find_one({
         "vehicle_id": reservation_data.vehicle_id,
-        "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
+        "status": {"$in": ["confirmed", "active"]},
         "$or": [{"start_date": {"$lt": reservation_data.end_date}, "end_date": {"$gt": reservation_data.start_date}}]
     })
     if overlap:
-        raise HTTPException(status_code=400, detail="Ce véhicule n'est pas disponible pour les dates sélectionnées.")
+        raise HTTPException(status_code=400, detail="Ce vehicule n'est pas disponible pour les dates selectionnees.")
 
     total_days = (reservation_data.end_date - reservation_data.start_date).days
     if total_days <= 0:
@@ -67,7 +67,9 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     payment_method = reservation_data.payment_method
     if payment_method not in ["card", "cash"]:
         payment_method = "card"
-    status = "pending_cash" if payment_method == "cash" else "pending"
+
+    # Auto-confirmation: all reservations are confirmed immediately
+    status = "confirmed"
 
     reservation = Reservation(
         user_id=user['id'],
@@ -87,29 +89,31 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
 
     await db.reservations.insert_one(reservation.dict())
 
-    if payment_method == "cash":
-        try:
-            await send_cash_reservation_email(user, vehicle, reservation.dict())
-        except Exception as email_error:
-            logger.error(f"Failed to send cash reservation email: {email_error}")
-
-    # Notify client: reservation created
     vname = f"{vehicle['brand']} {vehicle['model']}"
+    category = vehicle.get('type', 'Standard')
+
+    # Send confirmation email (card or cash)
+    try:
+        await send_reservation_confirmation(user, vehicle, reservation.dict())
+    except Exception as email_error:
+        logger.error(f"Failed to send confirmation email: {email_error}")
+
+    # Notify client: reservation confirmed
     try:
         await create_notification(
-            user['id'], 'reservation_created',
-            f"Votre réservation pour {vname} du {reservation.start_date.strftime('%d/%m/%Y')} au {reservation.end_date.strftime('%d/%m/%Y')} a été créée.",
+            user['id'], 'reservation_confirmed',
+            f"Votre reservation pour {vname} (categorie {category}) du {reservation.start_date.strftime('%d/%m/%Y')} au {reservation.end_date.strftime('%d/%m/%Y')} est confirmee. N'oubliez pas votre carte d'identite et votre permis de conduire.",
             reservation.id
         )
     except Exception as e:
         logger.error(f"Failed to create client notification: {e}")
 
-    # Notify agency admins: new reservation
+    # Notify agency admins: new confirmed reservation
     if vehicle.get('agency_id'):
         try:
             await notify_admins_of_agency(
                 vehicle['agency_id'], 'new_reservation',
-                f"Nouvelle réservation de {user['name']} pour {vname} ({reservation.start_date.strftime('%d/%m/%Y')} - {reservation.end_date.strftime('%d/%m/%Y')}).",
+                f"Nouvelle reservation confirmee de {user['name']} pour {vname} ({reservation.start_date.strftime('%d/%m/%Y')} - {reservation.end_date.strftime('%d/%m/%Y')}). Paiement: {'especes' if payment_method == 'cash' else 'carte'}.",
                 reservation.id
             )
         except Exception as e:

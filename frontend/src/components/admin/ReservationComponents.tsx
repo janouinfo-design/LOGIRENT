@@ -93,7 +93,7 @@ export function StatusActionModal({ visible, type, reservation, C, onClose, onSt
   if (!visible || !reservation) return null;
   const statusOpts = [
     { value: 'pending', label: 'En attente', icon: 'time', color: '#F59E0B' },
-    { value: 'pending_cash', label: 'Especes en attente', icon: 'cash', color: '#D97706' },
+    { value: 'pending_cash', label: 'Especes', icon: 'cash', color: '#D97706' },
     { value: 'confirmed', label: 'Confirmee', icon: 'checkmark-circle', color: '#10B981' },
     { value: 'active', label: 'Active', icon: 'car', color: '#1E3A8A' },
     { value: 'completed', label: 'Terminee', icon: 'checkmark-done', color: '#6B7280' },

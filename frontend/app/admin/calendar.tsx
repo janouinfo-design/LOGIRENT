@@ -207,8 +207,8 @@ export default function AdminCalendar() {
 
   const getStatusLabel = (status: string) => {
     const map: Record<string, string> = {
-      confirmed: 'Confirmée', active: 'Active', pending: 'En attente',
-      pending_cash: 'Espèces', cancelled: 'Annulée', completed: 'Terminée',
+      confirmed: 'Confirmee', active: 'Active', pending: 'Confirmee',
+      pending_cash: 'Especes', cancelled: 'Annulee', completed: 'Terminee',
     };
     return map[status] || status;
   };
@@ -600,7 +600,7 @@ export default function AdminCalendar() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sectionTitle}>Paiement</Text>
                   <Text style={styles.sectionValue}>
-                    {selectedEvent.payment_status === 'paid' ? 'Payé' : selectedEvent.payment_status === 'pending' ? 'En attente' : 'Non payé'}
+                    {selectedEvent.payment_status === 'paid' ? 'Paye' : selectedEvent.payment_status === 'pending' ? 'En cours' : 'Non paye'}
                     {selectedEvent.payment_method === 'cash' ? ' (Espèces)' : ' (Carte)'}
                   </Text>
                 </View>

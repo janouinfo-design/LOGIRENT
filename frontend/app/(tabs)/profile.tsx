@@ -111,7 +111,7 @@ export default function ProfileScreen() {
     return map[s] || '#6B7280';
   };
   const resStatusLabel = (s: string) => {
-    const map: Record<string, string> = { pending: 'En attente', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee', signed: 'Signe' };
+    const map: Record<string, string> = { pending: 'Confirmee', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee', signed: 'Signe' };
     return map[s] || s;
   };
 

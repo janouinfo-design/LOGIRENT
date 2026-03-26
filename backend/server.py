@@ -200,14 +200,15 @@ app.include_router(api_router)
 
 
 async def _check_reminders_task():
-    """Send reminder notifications for reservations starting tomorrow"""
+    """Send reminder notifications AND emails for reservations starting tomorrow"""
     from datetime import timedelta
+    from utils.email import send_reminder_24h
     now = datetime.utcnow()
     tomorrow_start = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow_end = tomorrow_start + timedelta(days=1)
 
     upcoming = await db.reservations.find({
-        "status": {"$in": ["confirmed", "pending_cash"]},
+        "status": {"$in": ["confirmed"]},
         "start_date": {"$gte": tomorrow_start, "$lt": tomorrow_end}
     }).to_list(100)
 
@@ -221,13 +222,22 @@ async def _check_reminders_task():
             continue
 
         vehicle = await db.vehicles.find_one({"id": res['vehicle_id']})
-        vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Véhicule"
+        vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Vehicule"
+        user = await db.users.find_one({"id": res['user_id']})
 
         await create_notification(
             res['user_id'], 'reservation_reminder',
-            f"Rappel : Votre location de {vname} commence demain le {res['start_date'].strftime('%d/%m/%Y')}.",
+            f"Rappel : Votre location de {vname} commence demain le {res['start_date'].strftime('%d/%m/%Y')}. N'oubliez pas votre carte d'identite et votre permis de conduire.",
             res['id']
         )
+
+        # Send reminder email
+        if user and vehicle:
+            try:
+                await send_reminder_24h(user, vehicle, res)
+            except Exception as e:
+                logger.error(f"Failed to send reminder email: {e}")
+
         created += 1
     return created
 

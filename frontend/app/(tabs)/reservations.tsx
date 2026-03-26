@@ -28,15 +28,15 @@ const _C = {
 const statusLabels: Record<string, string> = {
   confirmed: 'Confirmée',
   active: 'En cours',
-  pending: 'En attente',
-  pending_cash: 'Espèces en attente',
+  pending: 'Confirmee',
+  pending_cash: 'Especes',
   cancelled: 'Annulée',
   completed: 'Terminée',
 };
 
 const paymentLabels: Record<string, string> = {
   paid: 'Payé',
-  pending: 'En attente',
+  pending: 'Confirmee',
   unpaid: 'Non payé',
 };
 
@@ -289,7 +289,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.warning }]} />
-          <Text style={calStyles.legendText}>En attente</Text>
+          <Text style={calStyles.legendText}>Confirmee</Text>
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.success }]} />
@@ -396,7 +396,7 @@ function ReservationsScreen() {
 
   const filters = [
     { id: 'all', label: 'Toutes' },
-    { id: 'pending', label: 'En attente' },
+    { id: 'pending', label: 'Confirmee' },
     { id: 'confirmed', label: 'Confirmées' },
     { id: 'active', label: 'En cours' },
     { id: 'completed', label: 'Terminées' },
