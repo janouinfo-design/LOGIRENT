@@ -14,7 +14,7 @@ from deps import (
 )
 from utils.helpers import generate_slug
 from utils.notifications import create_notification
-from utils.email import send_email, send_cash_reservation_email
+from utils.email import send_email, send_reservation_confirmation
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -248,13 +248,8 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     if vehicle.get('status') == 'maintenance':
         raise HTTPException(status_code=400, detail="Véhicule en maintenance")
 
-    overlap = await db.reservations.find_one({
-        "vehicle_id": data.vehicle_id,
-        "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
-        "$or": [{"start_date": {"$lt": data.end_date}, "end_date": {"$gt": data.start_date}}]
-    })
-    if overlap:
-        raise HTTPException(status_code=400, detail="Véhicule non disponible pour ces dates")
+    # Category-based booking: overlap check removed
+    # The agency guarantees the booked vehicle OR an equivalent in the same category
 
     total_days = (data.end_date - data.start_date).days
     if total_days <= 0:
@@ -272,7 +267,7 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
             options_price += opt_total
 
     total_price = base_price + options_price
-    status = "pending_cash" if data.payment_method == "cash" else "pending"
+    status = "confirmed"
 
     reservation = {
         "id": str(uuid.uuid4()),
@@ -297,16 +292,15 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     reservation.pop('_id', None)
 
     await create_notification(
-        data.client_id, 'new_reservation',
-        f"Une réservation a été créée pour vous : {vehicle['brand']} {vehicle['model']} du {data.start_date.strftime('%d/%m/%Y')} au {data.end_date.strftime('%d/%m/%Y')}.",
+        data.client_id, 'reservation_confirmed',
+        f"Votre reservation pour {vehicle['brand']} {vehicle['model']} (categorie {vehicle.get('type', 'Standard')}) du {data.start_date.strftime('%d/%m/%Y')} au {data.end_date.strftime('%d/%m/%Y')} est confirmee. N'oubliez pas votre carte d'identite et votre permis de conduire.",
         reservation['id']
     )
 
-    if data.payment_method == "cash":
-        try:
-            await send_cash_reservation_email(client, vehicle, reservation)
-        except Exception as e:
-            logger.error(f"Failed to send cash email: {e}")
+    try:
+        await send_reservation_confirmation(client, vehicle, reservation)
+    except Exception as e:
+        logger.error(f"Failed to send confirmation email: {e}")
 
     return {"message": "Réservation créée", "reservation": reservation}
 
