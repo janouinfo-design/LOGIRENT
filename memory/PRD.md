@@ -3,83 +3,60 @@
 ## Product Overview
 Complete car rental management solution (React Native/Expo frontend, FastAPI backend, MongoDB).
 
-## Deployment Architecture
-```
-www.logirent.ch     -> Site vitrine marketing (Infomaniak)
-app.logirent.ch     -> Application LogiRent (VPS 83.228.217.250)
-api.logirent.ch     -> API backend (VPS 83.228.217.250)
-```
-PM2: `logirent-backend` (port 8001), `logitime-backend` (port 8002)
+## Deployment
+- `app.logirent.ch` → Frontend (VPS Nginx)
+- `api.logirent.ch` → Backend (VPS PM2)
+- EAS Build for Android APK (`eas build --platform android --profile preview`)
 
 ## Core Features (Implemented)
-- Multi-agency management with super admin
-- Vehicle fleet management with categories, photos, documents
-- **Vehicle Pricing Tiers**: Admin configures tariff packages per vehicle
-- **Seasonal/Promo Pricing**: Date-based price modifiers (% discount or fixed price/day)
-- **Vehicle Inspections**: Checkout + Checkin forms with checklist, km, fuel, conditions
-- **Dashboard Analytics**: Revenue/vehicle, occupancy rates, tier analytics, payment methods, weekly trends, KPIs, cancellation rate
-- **E-Signature**: Digital contract signing with canvas (SignatureCanvas component)
-- **PDF Contract with Tier Details**: Contracts include selected tier info
-- **Agency Ownership Security**: Admins can only modify their own agency's vehicles
-- Client registration with document upload (ID + license)
-- AI document verification (via OpenAI)
-- Multi-step booking wizard with forfait + seasonal pricing
-- Contract generation (PDF) and auto-email
-- Post-signature workflow: auto status update + PDF email
-- Client "Mes Reservations" dashboard
-- Admin "Reservations du jour" cards
-- Gantt chart planning view
-- Configurable booking options (GPS, child seat, etc.)
+- Multi-agency management with super admin RBAC
+- Vehicle fleet management (categories, photos, documents, pricing tiers, seasonal pricing)
+- **Auto-confirmed reservations** (no more "pending" status - all reservations are confirmed immediately)
+- **Email system**: Confirmation email, Payment confirmation email, 24h reminder email (all French, with CI+permis reminder)
+- **Notification system**: In-app notifications for clients and agency admins
+- **24h Reminder Cron**: Automatic email + notification 24h before reservation start
+- E-Signature (digital contract signing with canvas)
+- PDF Contract generation with tier details
+- Vehicle Inspections (checkin/checkout with AI damage detection)
+- Analytics Dashboard (revenue, occupancy, trends)
 - Stripe payment integration
-- Email notifications via Resend
 - GPS tracking via Navixy
-- Notification system (in-app + email)
-- **AI Damage Detection**: Photo upload + GPT-5.2 analysis for vehicle damage (TESTING PENDING)
+- Client document upload (ID + license) with AI verification
+
+## Email Templates
+1. **Confirmation de reservation** - Sent immediately when booking, includes vehicle details, dates, price, CI/permis reminder, cash note if applicable
+2. **Confirmation de paiement** - Sent after payment (Stripe or admin manual), confirms payment received
+3. **Rappel 24h** - Sent 24h before pickup, includes full details, location, CI/permis reminder
+- Sender: `contact@logirent.ch` via Resend
+
+## Reservation Status Flow
+- `confirmed` → Auto-set on creation (replaces old pending/pending_cash)
+- `active` → Vehicle picked up
+- `completed` → Vehicle returned
+- `cancelled` → Reservation cancelled
 
 ## Key Endpoints
-### Analytics
-- `GET /api/admin/stats/advanced` - Full analytics (revenue, occupancy, trends, payment methods)
-- `GET /api/admin/stats/tier-analytics` - Tier/package popularity and revenue stats
-
-### Pricing
-- `GET/PUT /api/admin/vehicles/{id}/pricing` - Vehicle pricing tiers CRUD
-- `GET/PUT /api/admin/vehicles/{id}/seasonal-pricing` - Seasonal pricing CRUD
-
-### Inspections
-- `GET /api/inspections/defaults` - Default 10-item checklist
-- `POST /api/inspections` - Create checkout/checkin inspection
-- `GET /api/inspections/reservation/{id}` - Inspections for a reservation
-- `POST /api/inspections/{id}/analyze-damage` - AI damage analysis
-
-### E-Signature
-- `PUT /api/contracts/{id}/sign` - Sign contract with base64 signature data
-
-### Vehicles
-- `GET /api/vehicles` - All vehicles (including maintenance) - client filters maintenance in UI
+- `POST /api/reservations` → Auto-confirmed + email + notification
+- `POST /api/payments/create-checkout` → Stripe checkout
+- `POST /api/payments/webhook` → Stripe webhook → payment email
+- `PUT /api/admin/reservations/{id}/payment-status` → Manual payment → payment email
 
 ## Deploy Commands
-Backend: `cd ~/apps/LOGIRENT/backend && git pull origin main && source venv/bin/activate && pip install -r requirements.txt && pm2 restart logirent-backend`
-Frontend: `cd ~/apps/LOGIRENT/frontend && git pull origin main && rm -rf .expo .metro-cache node_modules/.cache dist && npx expo export --platform web --clear && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/ && sudo systemctl reload nginx`
+Backend: `cd ~/apps/LOGIRENT/backend && git fetch origin && git reset --hard origin/main && source venv/bin/activate && pip install -r requirements.txt && pm2 restart logirent-backend`
+Frontend Web: `cd ~/apps/LOGIRENT/frontend && git fetch origin && git reset --hard origin/main && rm -f package-lock.json && rm -rf .expo .metro-cache node_modules/.cache dist && npx expo export --platform web --clear && sudo rm -rf /var/www/logirent/* && sudo cp -r dist/* /var/www/logirent/ && sudo systemctl reload nginx`
+Mobile APK: `cd ~/apps/LOGIRENT/frontend && git fetch origin && git reset --hard origin/main && rm -f package-lock.json && eas build --platform android --profile preview`
 
-## Bug Fixes Applied
-- 2026-03-25: Fixed signature canvas erasing after drawing (canvas width/height re-applied on React re-render, replaced with useRef + JS dimension setting)
-- 2026-03-25: Integrated DamageAnalyzer component into VehicleInspectionForm (was imported but not rendered)
-- 2026-03-25: AI Damage Detection feature fully tested (backend + frontend) - iteration_62
+## Bug Fixes
+- 2026-03-26: Signature canvas erasing after drawing (useRef instead of useState)
+- 2026-03-26: DamageAnalyzer not rendered in VehicleInspectionForm
+- 2026-03-26: app.json splash-icon.png → splash-image.png, #000 → #000000
+- 2026-03-26: Auto-confirmation system (replaced pending/pending_cash with confirmed)
+- 2026-03-26: All "En attente" wording replaced by "Confirmee" across frontend
 
-## Backlog (P2-P3)
-- Test AI Damage Detection feature (P1)
-- Pricing dynamique IA (prix auto selon demande/saison)
-- Maintenance predictive (alertes km/date)
-- Multi-canal (sync Expedia, Kayak)
-- Programme fidelite (points, reductions)
-- App mobile native (push notifications, offline)
-- Driver/Agent mobile app
-- App Store deployment
-- Health Dashboard super-admin
-
-## Pending Decision
-- Tech stack migration (ReactJS/NodeJS/MSSQL) - User asked if Emergent can do it. Explained limitations (no MSSQL). Awaiting user decision.
-
-## Known Issues
-- Resend domain not verified (user-side DNS action required)
-- VPS: always clear cache when deploying frontend
+## Backlog
+- P2: Pricing dynamique IA
+- P2: Maintenance predictive (alertes km/date)
+- P3: Multi-canal (Expedia, Kayak)
+- P3: Programme fidelite
+- P3: App Store / Play Store deployment
+- P3: Health Dashboard super-admin
