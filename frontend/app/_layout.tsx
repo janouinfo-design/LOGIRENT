@@ -135,15 +135,19 @@ export default function RootLayout() {
 
   useEffect(() => {
     const init = async () => {
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        const impToken = params.get('imp_token');
-        if (impToken) {
-          const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
-          const axiosModule = (await import('axios')).default;
-          await AsyncStorage.setItem('token', impToken);
-          axiosModule.defaults.headers.common['Authorization'] = `Bearer ${impToken}`;
-          window.history.replaceState(null, '', window.location.pathname);
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const impToken = params.get('imp_token');
+          if (impToken) {
+            const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+            const axiosModule = (await import('axios')).default;
+            await AsyncStorage.setItem('token', impToken);
+            axiosModule.defaults.headers.common['Authorization'] = `Bearer ${impToken}`;
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        } catch (e) {
+          // Ignore web-only errors on native
         }
       }
       await loadUser();
