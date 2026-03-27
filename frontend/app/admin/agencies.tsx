@@ -69,7 +69,9 @@ export default function AgenciesPage() {
       });
       const { access_token } = res.data;
       if (newWindow) {
-        newWindow.location.href = `${API_URL}/agency-app?imp_token=${access_token}`;
+        // Use current origin (app.logirent.ch) not API_URL (api.logirent.ch)
+        const frontendOrigin = typeof window !== 'undefined' ? window.location.origin : API_URL;
+        newWindow.location.href = `${frontendOrigin}/agency-app?imp_token=${access_token}`;
       }
     } catch (e: any) {
       if (newWindow) newWindow.close();
