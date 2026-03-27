@@ -985,6 +985,82 @@ async def toggle_agency_active(agency_id: str, user: dict = Depends(get_admin_us
 
 
 
+# ======================== AGENCY MODULES ========================
+
+DEFAULT_MODULES = {
+    "online_booking": True,
+    "stripe_payment": True,
+    "cash_payment": True,
+    "inspections": True,
+    "ai_damage": True,
+    "email_notifications": True,
+    "gps_tracking": True,
+    "e_signature": True,
+    "analytics": True,
+}
+
+MODULE_LABELS = {
+    "online_booking": "Reservations en ligne",
+    "stripe_payment": "Paiement Stripe",
+    "cash_payment": "Paiement en especes",
+    "inspections": "Inspections vehicules",
+    "ai_damage": "Detection de dommages IA",
+    "email_notifications": "Notifications email",
+    "gps_tracking": "GPS / Tracking",
+    "e_signature": "E-Signature contrats",
+    "analytics": "Analytics Dashboard",
+}
+
+
+@router.get("/admin/agencies/{agency_id}/modules")
+async def get_agency_modules(agency_id: str, user: dict = Depends(get_admin_user)):
+    if user.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="Super admin only")
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agency not found")
+    modules = agency.get('modules', DEFAULT_MODULES.copy())
+    # Ensure all default modules exist
+    for key, val in DEFAULT_MODULES.items():
+        if key not in modules:
+            modules[key] = val
+    return {"agency_id": agency_id, "modules": modules, "labels": MODULE_LABELS}
+
+
+@router.put("/admin/agencies/{agency_id}/modules")
+async def update_agency_modules(agency_id: str, data: dict, user: dict = Depends(get_admin_user)):
+    if user.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="Super admin only")
+    agency = await db.agencies.find_one({"id": agency_id})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agency not found")
+    modules = data.get('modules', {})
+    # Only allow valid module keys
+    clean_modules = {}
+    for key in DEFAULT_MODULES:
+        clean_modules[key] = bool(modules.get(key, DEFAULT_MODULES[key]))
+    await db.agencies.update_one({"id": agency_id}, {"$set": {"modules": clean_modules}})
+    return {"message": "Modules mis a jour", "modules": clean_modules}
+
+
+@router.get("/agency-modules")
+async def get_my_agency_modules(user: dict = Depends(get_admin_user)):
+    """Get modules for the current user's agency"""
+    agency_id = user.get('agency_id')
+    if not agency_id:
+        return {"modules": DEFAULT_MODULES.copy()}
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        return {"modules": DEFAULT_MODULES.copy()}
+    modules = agency.get('modules', DEFAULT_MODULES.copy())
+    for key, val in DEFAULT_MODULES.items():
+        if key not in modules:
+            modules[key] = val
+    return {"modules": modules}
+
+
+
+
 # ======================== CONTRACT TEMPLATE ========================
 
 @router.get("/admin/contract-template")

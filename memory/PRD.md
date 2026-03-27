@@ -10,6 +10,7 @@ Complete car rental management solution (React Native/Expo frontend, FastAPI bac
 
 ## Core Features (Implemented)
 - Multi-agency management with super admin RBAC
+- **Agency Modules System** (super admin can enable/disable features per agency: reservations, Stripe, cash, inspections, AI damage, email, GPS, e-signature, analytics)
 - Vehicle fleet management (categories, photos, documents, pricing tiers, seasonal pricing)
 - **Auto-confirmed reservations** (no more "pending" status - all reservations are confirmed immediately)
 - **Email system**: Confirmation email, Payment confirmation email, 24h reminder email (all French, with CI+permis reminder)

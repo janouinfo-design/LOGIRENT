@@ -55,6 +55,11 @@ export default function AgenciesPage() {
   const [qrAgency, setQrAgency] = useState<Agency | null>(null);
   const [qrType, setQrType] = useState<'both' | 'client' | 'admin'>('both');
   const [impersonating, setImpersonating] = useState<string | null>(null);
+  const [modulesAgency, setModulesAgency] = useState<Agency | null>(null);
+  const [modules, setModules] = useState<Record<string, boolean>>({});
+  const [moduleLabels, setModuleLabels] = useState<Record<string, string>>({});
+  const [loadingModules, setLoadingModules] = useState(false);
+  const [savingModules, setSavingModules] = useState(false);
 
   const isSuperAdmin = user?.role === 'super_admin';
 
@@ -77,6 +82,37 @@ export default function AgenciesPage() {
       if (newWindow) newWindow.close();
       alert(e.response?.data?.detail || 'Erreur d\'impersonation');
     } finally { setImpersonating(null); }
+  };
+
+  const handleOpenModules = async (agency: Agency) => {
+    setModulesAgency(agency);
+    setLoadingModules(true);
+    try {
+      const token = useAuthStore.getState().token;
+      const res = await axios.get(`${API_URL}/api/admin/agencies/${agency.id}/modules`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setModules(res.data.modules);
+      setModuleLabels(res.data.labels);
+    } catch (e: any) {
+      alert(e.response?.data?.detail || 'Erreur chargement modules');
+      setModulesAgency(null);
+    } finally { setLoadingModules(false); }
+  };
+
+  const handleSaveModules = async () => {
+    if (!modulesAgency) return;
+    setSavingModules(true);
+    try {
+      const token = useAuthStore.getState().token;
+      await axios.put(`${API_URL}/api/admin/agencies/${modulesAgency.id}/modules`, { modules }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Modules mis a jour');
+      setModulesAgency(null);
+    } catch (e: any) {
+      alert(e.response?.data?.detail || 'Erreur sauvegarde');
+    } finally { setSavingModules(false); }
   };
 
   // Backup super admin token on mount
@@ -267,6 +303,19 @@ export default function AgenciesPage() {
                     >
                       <Ionicons name="qr-code-outline" size={13} color="#FFF" />
                       <Text style={[styles.qrBtnText, { fontSize: 12 }]}>QR Codes</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+                        backgroundColor: '#6C2BD920',
+                        paddingVertical: 7, borderRadius: 6, borderWidth: 1,
+                        borderColor: '#6C2BD9',
+                      }}
+                      onPress={() => handleOpenModules(agency)}
+                      data-testid={`modules-${agency.id}`}
+                    >
+                      <Ionicons name="grid" size={14} color="#6C2BD9" />
+                      <Text style={{ color: '#6C2BD9', fontSize: 12, fontWeight: '700' }}>Modules</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{
@@ -491,6 +540,96 @@ export default function AgenciesPage() {
               </TouchableOpacity>
             </View>
           </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Modules Modal */}
+      <Modal visible={!!modulesAgency} transparent animationType="fade" onRequestClose={() => setModulesAgency(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxWidth: 420 }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Modules - {modulesAgency?.name}</Text>
+              <TouchableOpacity onPress={() => setModulesAgency(null)} data-testid="modules-modal-close">
+                <Ionicons name="close" size={24} color={COLORS.textLight} />
+              </TouchableOpacity>
+            </View>
+            <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 16 }}>
+              Activez ou desactivez les modules pour cette agence.
+            </Text>
+            {loadingModules ? (
+              <ActivityIndicator size="large" color={COLORS.accent} style={{ marginVertical: 30 }} />
+            ) : (
+              <View style={{ gap: 8 }}>
+                {Object.keys(modules).map((key) => {
+                  const moduleIcons: Record<string, string> = {
+                    online_booking: 'calendar',
+                    stripe_payment: 'card',
+                    cash_payment: 'cash',
+                    inspections: 'clipboard',
+                    ai_damage: 'scan',
+                    email_notifications: 'mail',
+                    gps_tracking: 'navigate',
+                    e_signature: 'create',
+                    analytics: 'bar-chart',
+                  };
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={{
+                        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                        backgroundColor: modules[key] ? '#10B98110' : COLORS.background,
+                        borderWidth: 1, borderColor: modules[key] ? '#10B981' : COLORS.border,
+                        borderRadius: 10, padding: 12,
+                      }}
+                      onPress={() => setModules(prev => ({ ...prev, [key]: !prev[key] }))}
+                      data-testid={`module-toggle-${key}`}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <View style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          backgroundColor: modules[key] ? '#10B98120' : COLORS.border + '40',
+                          justifyContent: 'center', alignItems: 'center',
+                        }}>
+                          <Ionicons name={(moduleIcons[key] || 'cube') as any} size={18} color={modules[key] ? '#10B981' : COLORS.textLight} />
+                        </View>
+                        <Text style={{ color: COLORS.text, fontSize: 13, fontWeight: '600' }}>
+                          {moduleLabels[key] || key}
+                        </Text>
+                      </View>
+                      <View style={{
+                        width: 44, height: 24, borderRadius: 12,
+                        backgroundColor: modules[key] ? '#10B981' : COLORS.border,
+                        justifyContent: 'center',
+                        paddingHorizontal: 2,
+                      }}>
+                        <View style={{
+                          width: 20, height: 20, borderRadius: 10,
+                          backgroundColor: '#FFF',
+                          alignSelf: modules[key] ? 'flex-end' : 'flex-start',
+                        }} />
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: COLORS.border, borderRadius: 10, height: 44, justifyContent: 'center', alignItems: 'center' }}
+                onPress={() => setModulesAgency(null)}
+              >
+                <Text style={{ color: COLORS.text, fontWeight: '600' }}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: '#6C2BD9', borderRadius: 10, height: 44, justifyContent: 'center', alignItems: 'center', opacity: savingModules ? 0.6 : 1 }}
+                onPress={handleSaveModules}
+                disabled={savingModules}
+                data-testid="modules-save-btn"
+              >
+                <Text style={{ color: '#FFF', fontWeight: '700' }}>{savingModules ? 'Sauvegarde...' : 'Sauvegarder'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
     </View>

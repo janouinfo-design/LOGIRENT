@@ -2,19 +2,40 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal, FlatList, ScrollView, ActivityIndicator } from 'react-native';
 import { Tabs, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
 import { useThemeStore } from '../../src/store/themeStore';
 
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
+
+// Map tabs to modules
+const TAB_MODULE_MAP: Record<string, string> = {
+  analytics: 'analytics',
+  tracking: 'gps_tracking',
+  statistics: 'analytics',
+};
+
 export default function AgencyAppLayout() {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout, loadUser } = useAuthStore();
+  const { user, isAuthenticated, logout, loadUser, token } = useAuthStore();
   const { unreadCount, notifications, fetchNotifications, fetchUnreadCount, markAsRead, markAllAsRead } = useNotificationStore();
   const { mode, colors: C, toggleTheme, loadTheme } = useThemeStore();
   const [showNotifs, setShowNotifs] = useState(false);
+  const [agencyModules, setAgencyModules] = useState<Record<string, boolean>>({});
+  const [modulesLoaded, setModulesLoaded] = useState(false);
 
   useEffect(() => { loadTheme(); }, []);
+
+  // Load agency modules
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      axios.get(`${API_URL}/api/agency-modules`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => { setAgencyModules(res.data.modules || {}); setModulesLoaded(true); })
+        .catch(() => { setAgencyModules({}); setModulesLoaded(true); });
+    }
+  }, [isAuthenticated, token]);
 
   useEffect(() => {
     if (!isAuthenticated) { router.replace('/admin-login'); return; }
@@ -41,18 +62,26 @@ export default function AgencyAppLayout() {
     return `Il y a ${Math.floor(hours / 24)}j`;
   };
 
-  const TABS = [
+  const ALL_TABS = [
     { key: 'index', label: 'Accueil', icon: 'home', iconO: 'home-outline' },
-    { key: 'book', label: 'Réserver', icon: 'add-circle', iconO: 'add-circle-outline' },
-    { key: 'reservations', label: 'Réservations', icon: 'calendar', iconO: 'calendar-outline' },
-    { key: 'vehicles', label: 'Véhicules', icon: 'car', iconO: 'car-outline' },
+    { key: 'book', label: 'Reserver', icon: 'add-circle', iconO: 'add-circle-outline' },
+    { key: 'reservations', label: 'Reservations', icon: 'calendar', iconO: 'calendar-outline' },
+    { key: 'vehicles', label: 'Vehicules', icon: 'car', iconO: 'car-outline' },
     { key: 'statistics', label: 'Stats', icon: 'stats-chart', iconO: 'stats-chart-outline' },
     { key: 'analytics', label: 'Analytics', icon: 'analytics', iconO: 'analytics-outline' },
     { key: 'tracking', label: 'GPS', icon: 'navigate', iconO: 'navigate-outline' },
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
-    { key: 'contract-template', label: 'Modèle', icon: 'document-text', iconO: 'document-text-outline' },
+    { key: 'contract-template', label: 'Modele', icon: 'document-text', iconO: 'document-text-outline' },
     { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
   ];
+
+  // Filter tabs based on agency modules
+  const TABS = ALL_TABS.filter(tab => {
+    const moduleKey = TAB_MODULE_MAP[tab.key];
+    if (!moduleKey) return true; // Tabs without module mapping are always shown
+    if (!modulesLoaded) return true; // Show all until modules are loaded
+    return agencyModules[moduleKey] === true; // Only show if explicitly enabled
+  });
 
   const isTabActive = (key: string) => {
     if (key === 'index') return pathname === '/' || pathname === '';
@@ -85,7 +114,10 @@ export default function AgencyAppLayout() {
           </View>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.tabsRow} contentContainerStyle={s.tabsContent}>
-          {TABS.map(tab => {
+          {ALL_TABS.map(tab => {
+            const moduleKey = TAB_MODULE_MAP[tab.key];
+            const isHidden = modulesLoaded && moduleKey && agencyModules[moduleKey] === false;
+            if (isHidden) return null;
             const active = isTabActive(tab.key);
             return (
               <TouchableOpacity
