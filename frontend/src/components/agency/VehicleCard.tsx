@@ -15,182 +15,107 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPre
   const sc = getStatus(item.status);
   const photo = item.photos?.[0] ? getPhotoUrl(item.photos[0]) : null;
   const hasPhotos = item.photos && item.photos.length > 0;
-  const fuelIcon = item.fuel_type === 'electric' ? 'flash' : item.fuel_type === 'hybrid' ? 'leaf' : 'flame';
-  const fuelLabel = item.fuel_type === 'electric' ? 'Electrique' : item.fuel_type === 'hybrid' ? 'Hybride' : item.fuel_type === 'diesel' ? 'Diesel' : 'Essence';
+  const fuelLabel = item.fuel_type === 'electric' ? 'Elec.' : item.fuel_type === 'hybrid' ? 'Hybride' : item.fuel_type === 'diesel' ? 'Diesel' : 'Essence';
   const transLabel = item.transmission === 'automatic' ? 'Auto' : 'Manuel';
 
   return (
-    <View
+    <TouchableOpacity
+      onPress={() => onEdit(item)}
+      activeOpacity={0.85}
       style={[cs.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]}
       data-testid={`vehicle-card-${item.id}`}
     >
-      {/* Image Section */}
-      <TouchableOpacity
-        onPress={() => hasPhotos ? onPhotoPress(item) : onEdit(item)}
-        activeOpacity={0.9}
-        style={cs.imageWrap}
-      >
+      {/* Image */}
+      <View style={cs.imageWrap}>
         {photo ? (
-          <View style={[cs.imageContainer, { backgroundColor: '#f4f4f5' }]}>
-            <Image source={{ uri: photo }} style={cs.image} resizeMode="contain" />
+          <View style={[cs.imageContainer, { backgroundColor: '#f0f0f2' }]}>
+            <Image source={{ uri: photo }} style={cs.image} resizeMode="cover" />
           </View>
         ) : (
           <View style={[cs.imagePlaceholder, { backgroundColor: C.bg }]}>
-            <View style={cs.placeholderInner}>
-              <Ionicons name="car-sport" size={52} color={C.textLight + '40'} />
-              <Text style={{ color: C.textLight + '60', fontSize: 12, marginTop: 6, fontWeight: '500' }}>Aucune photo</Text>
-            </View>
+            <Ionicons name="car-sport" size={36} color={C.textLight + '40'} />
           </View>
         )}
-
-        {/* Status Badge */}
         <View style={[cs.statusBadge, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
-          <Ionicons name={sc.icon as any} size={11} color={sc.text} />
+          <View style={[cs.statusDot, { backgroundColor: sc.text }]} />
           <Text style={[cs.statusText, { color: sc.text }]}>{sc.label}</Text>
         </View>
-
-        {/* Photo Count */}
-        {hasPhotos && (
+        {hasPhotos && item.photos!.length > 1 && (
           <View style={cs.photoCount}>
-            <Ionicons name="images" size={11} color="#fff" />
+            <Ionicons name="images" size={10} color="#fff" />
             <Text style={cs.photoCountText}>{item.photos!.length}</Text>
           </View>
         )}
-      </TouchableOpacity>
+      </View>
 
-      {/* Content Section */}
+      {/* Content */}
       <View style={cs.content}>
-        {/* Brand + Year */}
-        <View style={cs.brandRow}>
-          <Text style={[cs.brand, { color: '#7C3AED' }]}>{item.brand.toUpperCase()}</Text>
+        <View style={cs.topLine}>
+          <Text style={[cs.brand, { color: C.textLight }]}>{item.brand}</Text>
           <Text style={[cs.year, { color: C.textLight }]}>{item.year}</Text>
         </View>
-
-        {/* Model */}
         <Text style={[cs.model, { color: C.text }]} numberOfLines={1}>{item.model}</Text>
-
-        {/* Plate Number - Prominent */}
-        {item.plate_number && (
-          <View style={cs.plateWrap}>
-            <View style={[cs.plateBadge, { backgroundColor: '#1a1f36', borderColor: '#2d3354' }]}>
-              <View style={cs.plateCountryStripe} />
-              <Text style={cs.plateText}>{item.plate_number}</Text>
-            </View>
-          </View>
-        )}
-
-        {/* Price */}
         <View style={cs.priceRow}>
           <Text style={[cs.price, { color: C.text }]}>CHF {item.price_per_day}</Text>
-          <Text style={[cs.priceUnit, { color: C.textLight }]}>/jour</Text>
+          <Text style={[cs.priceUnit, { color: C.textLight }]}> /jour</Text>
         </View>
-
-        {/* Feature Tags */}
         <View style={cs.tagsRow}>
-          <View style={[cs.tag, { backgroundColor: C.bg, borderColor: C.border }]}>
-            <Ionicons name="people-outline" size={12} color={C.textLight} />
-            <Text style={[cs.tagText, { color: C.text }]}>{item.seats}</Text>
-          </View>
-          <View style={[cs.tag, { backgroundColor: C.bg, borderColor: C.border }]}>
-            <Ionicons name="cog-outline" size={12} color={C.textLight} />
-            <Text style={[cs.tagText, { color: C.text }]}>{transLabel}</Text>
-          </View>
-          <View style={[cs.tag, { backgroundColor: C.bg, borderColor: C.border }]}>
-            <Ionicons name={fuelIcon as any} size={12} color={C.textLight} />
-            <Text style={[cs.tagText, { color: C.text }]}>{fuelLabel}</Text>
-          </View>
+          <Text style={[cs.tag, { color: C.textLight, backgroundColor: C.bg, borderColor: C.border }]}>{item.seats}pl</Text>
+          <Text style={[cs.tag, { color: C.textLight, backgroundColor: C.bg, borderColor: C.border }]}>{transLabel}</Text>
+          <Text style={[cs.tag, { color: C.textLight, backgroundColor: C.bg, borderColor: C.border }]}>{fuelLabel}</Text>
         </View>
-
-        {/* Action Button */}
-        <TouchableOpacity
-          style={cs.detailsBtn}
-          onPress={() => onEdit(item)}
-          data-testid={`edit-vehicle-${item.id}`}
-          activeOpacity={0.8}
-        >
-          <Text style={cs.detailsBtnText}>Voir les details</Text>
-          <Ionicons name="arrow-forward" size={15} color="#fff" />
-        </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 const cs = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
   } as any,
 
-  // Image
   imageWrap: { position: 'relative' },
-  imageContainer: { width: '100%', height: 170, justifyContent: 'center', alignItems: 'center' },
+  imageContainer: { width: '100%', height: 140 },
   image: { width: '100%', height: '100%' },
-  imagePlaceholder: { width: '100%', height: 170, justifyContent: 'center', alignItems: 'center' },
-  placeholderInner: { alignItems: 'center' },
+  imagePlaceholder: { width: '100%', height: 140, justifyContent: 'center', alignItems: 'center' },
 
   statusBadge: {
-    position: 'absolute', top: 10, left: 10,
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 10, paddingVertical: 5,
-    borderRadius: 8, borderWidth: 1,
+    position: 'absolute', top: 8, left: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderRadius: 6, borderWidth: 1,
   },
-  statusText: { fontSize: 12, fontWeight: '800' },
+  statusDot: { width: 6, height: 6, borderRadius: 3 },
+  statusText: { fontSize: 11, fontWeight: '700' },
 
   photoCount: {
-    position: 'absolute', bottom: 10, right: 10,
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.6)',
+    position: 'absolute', bottom: 8, right: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 6, paddingVertical: 3,
+    borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.55)',
   },
-  photoCountText: { color: '#fff', fontSize: 11, fontWeight: '700' },
+  photoCountText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
-  // Content
-  content: { padding: 16, gap: 6 },
+  content: { padding: 12, gap: 2 },
 
-  brandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  brand: { fontSize: 13, fontWeight: '800', letterSpacing: 1.8 },
-  year: { fontSize: 13, fontWeight: '600' },
+  topLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  brand: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 } as any,
+  year: { fontSize: 11, fontWeight: '500' },
 
-  model: { fontSize: 22, fontWeight: '900', letterSpacing: -0.3, marginBottom: 2 },
+  model: { fontSize: 16, fontWeight: '800', letterSpacing: -0.2, marginBottom: 2 },
 
-  // Plate
-  plateWrap: { marginTop: 2, marginBottom: 4, alignSelf: 'flex-start' },
-  plateBadge: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: 5, borderWidth: 1.5,
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
+  price: { fontSize: 18, fontWeight: '900' },
+  priceUnit: { fontSize: 12, fontWeight: '500' },
+
+  tagsRow: { flexDirection: 'row', gap: 5, marginTop: 6 },
+  tag: {
+    fontSize: 11, fontWeight: '600',
+    paddingHorizontal: 8, paddingVertical: 4,
+    borderRadius: 6, borderWidth: 1,
     overflow: 'hidden',
   },
-  plateCountryStripe: {
-    width: 8, height: '100%',
-    backgroundColor: '#003DA5',
-  },
-  plateText: {
-    color: '#fff', fontSize: 14, fontWeight: '800',
-    letterSpacing: 2, paddingHorizontal: 12, paddingVertical: 5,
-  },
-
-  // Price
-  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 2, marginTop: 4 },
-  price: { fontSize: 26, fontWeight: '900', letterSpacing: -0.5 },
-  priceUnit: { fontSize: 14, fontWeight: '500' },
-
-  // Tags
-  tagsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
-  tag: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 8, borderWidth: 1,
-  },
-  tagText: { fontSize: 12, fontWeight: '600' },
-
-  // Action
-  detailsBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 12, borderRadius: 10,
-    backgroundColor: '#7C3AED', marginTop: 10,
-  },
-  detailsBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
