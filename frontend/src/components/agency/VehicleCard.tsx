@@ -85,34 +85,34 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPre
 }
 
 const cs = StyleSheet.create({
-  card: { borderRadius: 14, borderWidth: 1, overflow: 'hidden' },
+  card: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
 
   // Top Row
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 14, paddingTop: 14, paddingBottom: 8 },
-  price: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
-  priceUnit: { fontSize: 12, fontWeight: '500', marginTop: -2 },
-  detailsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#7C3AED', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 10 },
+  price: { fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  priceUnit: { fontSize: 13, fontWeight: '500', marginTop: -2 },
+  detailsBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#7C3AED', paddingHorizontal: 16, paddingVertical: 9, borderRadius: 20 },
   detailsBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 
   // Photo
   photoWrap: { position: 'relative', marginHorizontal: 0 },
-  photo: { width: '100%', height: 220, backgroundColor: '#f0f0f0' },
-  photoPlaceholder: { width: '100%', height: 220, justifyContent: 'center', alignItems: 'center' },
+  photo: { width: '100%', height: 200, backgroundColor: '#f0f0f0' },
+  photoPlaceholder: { width: '100%', height: 200, justifyContent: 'center', alignItems: 'center' },
   statusDot: { position: 'absolute', top: 10, right: 10, width: 12, height: 12, borderRadius: 6, borderWidth: 2, borderColor: '#fff' },
   photoCount: { position: 'absolute', bottom: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 3, borderRadius: 8, backgroundColor: 'rgba(0,0,0,0.55)' },
   photoCountText: { color: '#fff', fontSize: 10, fontWeight: '700' },
 
   // Info
-  info: { padding: 14, paddingTop: 10 },
-  brand: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 },
-  model: { fontSize: 17, fontWeight: '800', marginBottom: 10 },
+  info: { padding: 16, paddingTop: 12 },
+  brand: { fontSize: 12, fontWeight: '700', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 2 },
+  model: { fontSize: 19, fontWeight: '800', marginBottom: 12 },
 
   // Badges
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8, borderWidth: 1 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
+  badgeText: { fontSize: 12, fontWeight: '600' },
 
   // Plate
-  plate: { marginTop: 8, paddingTop: 8, borderTopWidth: 1, alignSelf: 'flex-start' },
-  plateText: { fontSize: 12, fontWeight: '700', letterSpacing: 1 },
+  plate: { marginTop: 10, paddingTop: 10, borderTopWidth: 1, alignSelf: 'flex-start' },
+  plateText: { fontSize: 13, fontWeight: '700', letterSpacing: 1 },
 });
