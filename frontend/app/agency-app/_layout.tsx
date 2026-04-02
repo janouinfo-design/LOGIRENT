@@ -152,6 +152,8 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
           <Tabs.Screen name="contract-template" options={{ title: 'Modèle' }} />
           <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
+          <Tabs.Screen name="vehicle-detail" options={{ title: 'Detail', href: null }} />
+          <Tabs.Screen name="complete-contract" options={{ title: 'Contrat', href: null }} />
         </Tabs>
       </View>
 
