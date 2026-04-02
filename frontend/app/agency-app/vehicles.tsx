@@ -10,8 +10,8 @@ import EditVehicleModal from '../../src/components/agency/EditVehicleModal';
 import NewVehicleModal from '../../src/components/agency/NewVehicleModal';
 import PhotoGalleryModal from '../../src/components/agency/PhotoGalleryModal';
 
-const GAP = 16;
-const PAD = 20;
+const GAP = 18;
+const PAD = 24;
 
 export default function AgencyVehicles() {
   const { user } = useAuthStore();
@@ -26,7 +26,6 @@ export default function AgencyVehicles() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [galleryVehicle, setGalleryVehicle] = useState<Vehicle | null>(null);
 
-  // Responsive columns: 3 on desktop (>1200), 2 on tablet (>768), 1 on mobile
   const numCols = width >= 1200 ? 3 : width >= 768 ? 2 : 1;
   const cardW = (width - PAD * 2 - GAP * (numCols - 1)) / numCols;
 
@@ -70,44 +69,82 @@ export default function AgencyVehicles() {
     return counts;
   }, [vehicles]);
 
-  if (loading) return <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color="#7C3AED" /></View>;
+  if (loading) return (
+    <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}>
+      <ActivityIndicator size="large" color="#7C3AED" />
+    </View>
+  );
 
   return (
     <View style={[st.container, { backgroundColor: C.bg }]}>
       {/* Header */}
       <View style={st.header}>
-        <Text style={[st.headerTitle, { color: C.text }]}>Véhicules</Text>
-        <Text style={[st.headerCount, { color: C.textLight }]}>{vehicles.length} véhicules</Text>
+        <View>
+          <Text style={[st.headerTitle, { color: C.text }]}>Flotte de vehicules</Text>
+          <Text style={[st.headerSub, { color: C.textLight }]}>{vehicles.length} vehicules enregistres</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => setShowAddModal(true)}
+          style={st.addBtn}
+          data-testid="add-vehicle-btn"
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={20} color="#fff" />
+          <Text style={st.addBtnText}>Ajouter</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Search */}
       <View style={[st.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
         <Ionicons name="search" size={18} color={C.textLight} />
-        <TextInput style={[st.searchInput, { color: C.text }]} placeholder="Rechercher (nom, plaque)..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} data-testid="vehicle-search" />
-        {search ? <TouchableOpacity onPress={() => setSearch('')}><Ionicons name="close-circle" size={18} color={C.textLight} /></TouchableOpacity> : null}
-      </View>
-
-      {/* Status Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.filterRow}>
-        {[{ v: 'all', l: 'Tous', icon: 'grid', color: '#7C3AED' }, ...STATUSES.map(s => ({ v: s.v, l: s.l, icon: getStatus(s.v).icon, color: getStatus(s.v).text }))].map(f => (
-          <TouchableOpacity key={f.v} onPress={() => setStatusFilter(f.v)} data-testid={`filter-${f.v}`}
-            style={[st.filterTab, { backgroundColor: statusFilter === f.v ? f.color + '15' : C.card, borderColor: statusFilter === f.v ? f.color : C.border }]}>
-            <Ionicons name={f.icon as any} size={14} color={statusFilter === f.v ? f.color : C.textLight} />
-            <Text style={{ color: statusFilter === f.v ? f.color : C.textLight, fontSize: 12, fontWeight: statusFilter === f.v ? '700' : '500' }}>{f.l}</Text>
-            <View style={[st.countBadge, { backgroundColor: f.color + '20' }]}>
-              <Text style={{ color: f.color, fontSize: 10, fontWeight: '800' }}>{statusCounts[f.v] || 0}</Text>
-            </View>
+        <TextInput
+          style={[st.searchInput, { color: C.text }]}
+          placeholder="Rechercher par nom, plaque, type..."
+          placeholderTextColor={C.textLight}
+          value={search}
+          onChangeText={setSearch}
+          data-testid="vehicle-search"
+        />
+        {search ? (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Ionicons name="close-circle" size={18} color={C.textLight} />
           </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Add Button */}
-      <View style={{ paddingHorizontal: PAD, paddingBottom: 12 }}>
-        <TouchableOpacity onPress={() => setShowAddModal(true)} style={st.addBtn} data-testid="add-vehicle-btn">
-          <Ionicons name="add-circle" size={20} color="#fff" />
-          <Text style={st.addBtnText}>Ajouter un véhicule</Text>
-        </TouchableOpacity>
+        ) : null}
       </View>
+
+      {/* Status Filter Tabs */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.filterRow}>
+        {[
+          { v: 'all', l: 'Tous', icon: 'grid', color: '#7C3AED' },
+          ...STATUSES.map(s => ({ v: s.v, l: s.l, icon: getStatus(s.v).icon, color: getStatus(s.v).text }))
+        ].map(f => {
+          const isActive = statusFilter === f.v;
+          return (
+            <TouchableOpacity
+              key={f.v}
+              onPress={() => setStatusFilter(f.v)}
+              data-testid={`filter-${f.v}`}
+              style={[
+                st.filterTab,
+                {
+                  backgroundColor: isActive ? f.color + '12' : C.card,
+                  borderColor: isActive ? f.color : C.border,
+                },
+              ]}
+            >
+              <Ionicons name={f.icon as any} size={14} color={isActive ? f.color : C.textLight} />
+              <Text style={{ color: isActive ? f.color : C.textLight, fontSize: 13, fontWeight: isActive ? '700' : '500' }}>
+                {f.l}
+              </Text>
+              <View style={[st.countBadge, { backgroundColor: isActive ? f.color + '20' : C.bg }]}>
+                <Text style={{ color: isActive ? f.color : C.textLight, fontSize: 11, fontWeight: '800' }}>
+                  {statusCounts[f.v] || 0}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
 
       {/* Vehicle Grid */}
       <ScrollView
@@ -122,8 +159,9 @@ export default function AgencyVehicles() {
 
         {filtered.length === 0 && (
           <View style={st.empty}>
-            <Ionicons name="car-outline" size={48} color={C.textLight} />
-            <Text style={{ color: C.textLight, fontSize: 14, marginTop: 8 }}>Aucun véhicule trouvé</Text>
+            <Ionicons name="car-outline" size={52} color={C.textLight + '40'} />
+            <Text style={{ color: C.textLight, fontSize: 15, marginTop: 10, fontWeight: '500' }}>Aucun vehicule trouve</Text>
+            <Text style={{ color: C.textLight + '80', fontSize: 13, marginTop: 4 }}>Essayez de modifier vos filtres</Text>
           </View>
         )}
       </ScrollView>
@@ -143,16 +181,40 @@ export default function AgencyVehicles() {
 
 const st = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: PAD, paddingTop: 16, paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' },
-  headerTitle: { fontSize: 22, fontWeight: '900' },
-  headerCount: { fontSize: 13, fontWeight: '500' },
-  searchBar: { flexDirection: 'row', alignItems: 'center', marginHorizontal: PAD, marginBottom: 10, borderRadius: 12, paddingHorizontal: 14, gap: 8, borderWidth: 1 },
-  searchInput: { flex: 1, fontSize: 14, paddingVertical: 11 },
-  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 12 },
-  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1.5 },
-  countBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 10, minWidth: 20, alignItems: 'center' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12, backgroundColor: '#7C3AED' },
+
+  header: {
+    paddingHorizontal: PAD, paddingTop: 20, paddingBottom: 14,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+  },
+  headerTitle: { fontSize: 26, fontWeight: '900', letterSpacing: -0.3 },
+  headerSub: { fontSize: 14, fontWeight: '500', marginTop: 2 },
+
+  addBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 18, paddingVertical: 11,
+    borderRadius: 10, backgroundColor: '#7C3AED',
+  },
   addBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  searchBar: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: PAD, marginBottom: 12,
+    borderRadius: 12, paddingHorizontal: 14, gap: 10, borderWidth: 1,
+  },
+  searchInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
+
+  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 16 },
+  filterTab: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderRadius: 10, borderWidth: 1.5,
+  },
+  countBadge: {
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: 10, minWidth: 22, alignItems: 'center',
+  },
+
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  empty: { alignItems: 'center', paddingTop: 60 },
+
+  empty: { alignItems: 'center', paddingTop: 80 },
 });
