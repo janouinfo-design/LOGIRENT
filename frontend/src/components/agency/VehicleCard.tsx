@@ -14,108 +14,155 @@ interface Props {
 export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPress }: Props) {
   const sc = getStatus(item.status);
   const photo = item.photos?.[0] ? getPhotoUrl(item.photos[0]) : null;
-  const hasPhotos = item.photos && item.photos.length > 0;
-  const fuelLabel = item.fuel_type === 'electric' ? 'Elec.' : item.fuel_type === 'hybrid' ? 'Hybride' : item.fuel_type === 'diesel' ? 'Diesel' : 'Essence';
-  const transLabel = item.transmission === 'automatic' ? 'Auto' : 'Manuel';
+  const photoCount = item.photos?.length || 0;
+  const fuelLabel = item.fuel_type === 'electric' ? 'Electrique' : item.fuel_type === 'hybrid' ? 'Hybride' : item.fuel_type === 'diesel' ? 'Diesel' : 'Essence';
+  const transLabel = item.transmission === 'automatic' ? 'Automatique' : 'Manuelle';
 
   return (
-    <TouchableOpacity
-      onPress={() => onEdit(item)}
-      activeOpacity={0.85}
-      style={[cs.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]}
-      data-testid={`vehicle-card-${item.id}`}
-    >
-      {/* Image */}
-      <View style={cs.imageWrap}>
+    <View style={[s.card, { width: cardW, backgroundColor: C.card, borderColor: C.border }]} data-testid={`vehicle-card-${item.id}`}>
+
+      {/* === PHOTO ZONE (cliquable -> galerie) === */}
+      <TouchableOpacity
+        onPress={() => photoCount > 0 ? onPhotoPress(item) : onEdit(item)}
+        activeOpacity={0.9}
+        style={s.photoZone}
+        data-testid={`photo-zone-${item.id}`}
+      >
         {photo ? (
-          <View style={[cs.imageContainer, { backgroundColor: '#f0f0f2' }]}>
-            <Image source={{ uri: photo }} style={cs.image} resizeMode="cover" />
-          </View>
+          <Image source={{ uri: photo }} style={s.photo} resizeMode="cover" />
         ) : (
-          <View style={[cs.imagePlaceholder, { backgroundColor: C.bg }]}>
-            <Ionicons name="car-sport" size={36} color={C.textLight + '40'} />
+          <View style={[s.photoPlaceholder, { backgroundColor: C.bg }]}>
+            <Ionicons name="car-sport-outline" size={40} color={C.textLight + '50'} />
+            <Text style={{ color: C.textLight + '70', fontSize: 11, marginTop: 4 }}>Aucune photo</Text>
           </View>
         )}
-        <View style={[cs.statusBadge, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
-          <View style={[cs.statusDot, { backgroundColor: sc.text }]} />
-          <Text style={[cs.statusText, { color: sc.text }]}>{sc.label}</Text>
+
+        {/* Status badge */}
+        <View style={[s.badge, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
+          <View style={[s.dot, { backgroundColor: sc.text }]} />
+          <Text style={[s.badgeText, { color: sc.text }]}>{sc.label}</Text>
         </View>
-        {hasPhotos && item.photos!.length > 1 && (
-          <View style={cs.photoCount}>
-            <Ionicons name="images" size={10} color="#fff" />
-            <Text style={cs.photoCountText}>{item.photos!.length}</Text>
+
+        {/* Photo count badge */}
+        {photoCount > 1 && (
+          <View style={s.photoBadge}>
+            <Ionicons name="camera" size={12} color="#fff" />
+            <Text style={s.photoBadgeText}>{photoCount}</Text>
           </View>
         )}
+      </TouchableOpacity>
+
+      {/* === INFO === */}
+      <View style={s.info}>
+        <Text style={[s.brandYear, { color: C.textLight }]}>{item.brand} · {item.year}</Text>
+        <Text style={[s.model, { color: C.text }]} numberOfLines={1}>{item.model}</Text>
+
+        {/* Specs row */}
+        <View style={s.specs}>
+          <View style={[s.spec, { backgroundColor: C.bg }]}>
+            <Ionicons name="people-outline" size={12} color={C.textLight} />
+            <Text style={[s.specText, { color: C.textLight }]}>{item.seats} pl.</Text>
+          </View>
+          <View style={[s.spec, { backgroundColor: C.bg }]}>
+            <Ionicons name="cog-outline" size={12} color={C.textLight} />
+            <Text style={[s.specText, { color: C.textLight }]}>{transLabel}</Text>
+          </View>
+          <View style={[s.spec, { backgroundColor: C.bg }]}>
+            <Ionicons name="speedometer-outline" size={12} color={C.textLight} />
+            <Text style={[s.specText, { color: C.textLight }]}>{fuelLabel}</Text>
+          </View>
+        </View>
+
+        {/* Price */}
+        <View style={s.priceRow}>
+          <Text style={[s.priceFrom, { color: C.textLight }]}>A partir de</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
+            <Text style={[s.price, { color: C.text }]}>CHF {item.price_per_day}</Text>
+            <Text style={[s.priceUnit, { color: C.textLight }]}> /jour</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Content */}
-      <View style={cs.content}>
-        <View style={cs.topLine}>
-          <Text style={[cs.brand, { color: C.textLight }]}>{item.brand}</Text>
-          <Text style={[cs.year, { color: C.textLight }]}>{item.year}</Text>
-        </View>
-        <Text style={[cs.model, { color: C.text }]} numberOfLines={1}>{item.model}</Text>
-        <View style={cs.priceRow}>
-          <Text style={[cs.price, { color: C.text }]}>CHF {item.price_per_day}</Text>
-          <Text style={[cs.priceUnit, { color: C.textLight }]}> /jour</Text>
-        </View>
-        <View style={cs.tagsRow}>
-          <Text style={[cs.tag, { color: C.textLight, backgroundColor: C.bg, borderColor: C.border }]}>{item.seats}pl</Text>
-          <Text style={[cs.tag, { color: C.textLight, backgroundColor: C.bg, borderColor: C.border }]}>{transLabel}</Text>
-          <Text style={[cs.tag, { color: C.textLight, backgroundColor: C.bg, borderColor: C.border }]}>{fuelLabel}</Text>
-        </View>
+      {/* === CTA BUTTONS === */}
+      <View style={[s.cta, { borderTopColor: C.border }]}>
+        <TouchableOpacity
+          onPress={() => onEdit(item)}
+          style={[s.btnSecondary, { borderColor: C.border }]}
+          data-testid={`details-btn-${item.id}`}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="information-circle-outline" size={16} color={C.textLight} />
+          <Text style={[s.btnSecondaryText, { color: C.text }]}>Details</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => onEdit(item)}
+          style={s.btnPrimary}
+          data-testid={`reserve-btn-${item.id}`}
+          activeOpacity={0.8}
+        >
+          <Text style={s.btnPrimaryText}>Reserver</Text>
+          <Ionicons name="arrow-forward" size={14} color="#fff" />
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
-const cs = StyleSheet.create({
+const s = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
     overflow: 'hidden',
-    boxShadow: '0 1px 8px rgba(0,0,0,0.05)',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
   } as any,
 
-  imageWrap: { position: 'relative' },
-  imageContainer: { width: '100%', height: 140 },
-  image: { width: '100%', height: '100%' },
-  imagePlaceholder: { width: '100%', height: 140, justifyContent: 'center', alignItems: 'center' },
+  // Photo
+  photoZone: { position: 'relative', height: 160, overflow: 'hidden' } as any,
+  photo: { width: '100%', height: '100%' },
+  photoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  statusBadge: {
-    position: 'absolute', top: 8, left: 8,
+  badge: {
+    position: 'absolute', top: 10, left: 10,
     flexDirection: 'row', alignItems: 'center', gap: 5,
+    paddingHorizontal: 9, paddingVertical: 4,
+    borderRadius: 20, borderWidth: 1,
+  },
+  dot: { width: 7, height: 7, borderRadius: 4 },
+  badgeText: { fontSize: 11, fontWeight: '700' },
+
+  photoBadge: {
+    position: 'absolute', bottom: 10, right: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 6, borderWidth: 1,
+    borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.6)',
   },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusText: { fontSize: 11, fontWeight: '700' },
+  photoBadgeText: { color: '#fff', fontSize: 11, fontWeight: '700' },
 
-  photoCount: {
-    position: 'absolute', bottom: 8, right: 8,
-    flexDirection: 'row', alignItems: 'center', gap: 3,
-    paddingHorizontal: 6, paddingVertical: 3,
-    borderRadius: 6, backgroundColor: 'rgba(0,0,0,0.55)',
+  // Info
+  info: { padding: 14, gap: 4 },
+  brandYear: { fontSize: 12, fontWeight: '500' },
+  model: { fontSize: 17, fontWeight: '800', letterSpacing: -0.2 },
+
+  specs: { flexDirection: 'row', gap: 6, marginTop: 6, flexWrap: 'wrap' },
+  spec: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8 },
+  specText: { fontSize: 11, fontWeight: '600' },
+
+  priceRow: { marginTop: 10 },
+  priceFrom: { fontSize: 10, fontWeight: '500', marginBottom: 1 },
+  price: { fontSize: 22, fontWeight: '900', letterSpacing: -0.5 },
+  priceUnit: { fontSize: 13, fontWeight: '500' },
+
+  // CTA
+  cta: { flexDirection: 'row', gap: 8, padding: 12, paddingTop: 12, borderTopWidth: 1 },
+  btnSecondary: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 5, paddingVertical: 10, borderRadius: 10, borderWidth: 1.5,
   },
-  photoCountText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-
-  content: { padding: 12, gap: 2 },
-
-  topLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  brand: { fontSize: 11, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 } as any,
-  year: { fontSize: 11, fontWeight: '500' },
-
-  model: { fontSize: 16, fontWeight: '800', letterSpacing: -0.2, marginBottom: 2 },
-
-  priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
-  price: { fontSize: 18, fontWeight: '900' },
-  priceUnit: { fontSize: 12, fontWeight: '500' },
-
-  tagsRow: { flexDirection: 'row', gap: 5, marginTop: 6 },
-  tag: {
-    fontSize: 11, fontWeight: '600',
-    paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 6, borderWidth: 1,
-    overflow: 'hidden',
+  btnSecondaryText: { fontSize: 13, fontWeight: '700' },
+  btnPrimary: {
+    flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 5, paddingVertical: 10, borderRadius: 10, backgroundColor: '#7C3AED',
   },
+  btnPrimaryText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });
