@@ -100,7 +100,23 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
     try {
       const photos = [...(currentVehicle.photos || [])];
       photos.splice(photoIndex, 1);
-      await api.put(`/api/admin/vehicles/${currentVehicle.id}`, { photos });
+      await api.put(`/api/admin/vehicles/${currentVehicle.id}/photos`, { photos });
+      await refreshVehicle();
+      onSaved();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
+  const handleMovePhoto = async (fromIndex: number, toIndex: number) => {
+    if (!currentVehicle) return;
+    const photos = [...(currentVehicle.photos || [])];
+    if (toIndex < 0 || toIndex >= photos.length) return;
+    const [moved] = photos.splice(fromIndex, 1);
+    photos.splice(toIndex, 0, moved);
+    try {
+      await api.put(`/api/admin/vehicles/${currentVehicle.id}/photos`, { photos });
       await refreshVehicle();
       onSaved();
     } catch (e: any) {
@@ -301,20 +317,37 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
               </View>
 
               {currentVehicle?.photos && currentVehicle.photos.length > 0 ? (
-                <View style={vst.photosGrid}>
-                  {currentVehicle.photos.map((photo, idx) => (
-                    <View key={idx} style={vst.photoThumb}>
-                      <TouchableOpacity onPress={() => setPreviewPhoto(getPhotoUrl(photo))} activeOpacity={0.8}>
-                        <Image source={{ uri: getPhotoUrl(photo) }} style={vst.photoThumbImg} resizeMode="cover" />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleDeletePhoto(idx)} style={vst.photoDeleteBtn} data-testid={`delete-photo-${idx}`}>
-                        <Ionicons name="close-circle" size={22} color="#EF4444" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                <View style={{ marginBottom: 8 }}>
+                  {currentVehicle.photos.map((photo, idx) => {
+                    const photoUrl = getPhotoUrl(photo);
+                    const isFirst = idx === 0;
+                    const isLast = idx === (currentVehicle.photos?.length || 1) - 1;
+                    return (
+                      <View key={`photo-${idx}`} style={{ marginBottom: 10, borderRadius: 10, borderWidth: 1.5, borderColor: isFirst ? C.accent + '50' : C.border, backgroundColor: C.bg }} data-testid={`photo-item-${idx}`}>
+                        <TouchableOpacity onPress={() => setPreviewPhoto(photoUrl)} activeOpacity={0.85} style={{ backgroundColor: '#111', borderTopLeftRadius: 8, borderTopRightRadius: 8, minHeight: 120, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          <Image source={{ uri: photoUrl }} style={{ width: 460, height: 120 }} resizeMode="contain" />
+                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8 }}>
+                          <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                            {isFirst ? <Text style={{ color: C.accent, fontSize: 10, fontWeight: '800', marginRight: 6, backgroundColor: C.accent + '20', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' }}>PRINCIPALE</Text> : null}
+                            <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '500' }}>Photo {idx + 1}</Text>
+                          </View>
+                          <TouchableOpacity onPress={() => handleMovePhoto(idx, idx - 1)} disabled={isFirst} style={{ padding: 6, marginRight: 4 }} data-testid={`move-photo-up-${idx}`}>
+                            <Text style={{ color: isFirst ? C.border : C.accent, fontSize: 16 }}>&#9650;</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleMovePhoto(idx, idx + 1)} disabled={isLast} style={{ padding: 6, marginRight: 4 }} data-testid={`move-photo-down-${idx}`}>
+                            <Text style={{ color: isLast ? C.border : C.accent, fontSize: 16 }}>&#9660;</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => handleDeletePhoto(idx)} style={{ padding: 6, backgroundColor: '#EF444412', borderRadius: 6 }} data-testid={`delete-photo-${idx}`}>
+                            <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>Supprimer</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })}
                 </View>
               ) : (
-                <View style={{ alignItems: 'center', paddingVertical: 12, opacity: 0.5 }}>
+                <View style={{ alignItems: 'center', paddingVertical: 16, opacity: 0.5 }}>
                   <Ionicons name="images-outline" size={28} color={C.textLight} />
                   <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>Aucune photo</Text>
                 </View>

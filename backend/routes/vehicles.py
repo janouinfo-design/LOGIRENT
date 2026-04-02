@@ -204,6 +204,19 @@ async def update_vehicle(vehicle_id: str, vehicle_data: VehicleCreate, user: dic
     return Vehicle(**updated)
 
 
+
+@router.put("/admin/vehicles/{vehicle_id}/photos")
+async def update_vehicle_photos(vehicle_id: str, data: dict, user: dict = Depends(get_current_user)):
+    existing = await db.vehicles.find_one({"id": vehicle_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    photos = data.get("photos", [])
+    await db.vehicles.update_one({"id": vehicle_id}, {"$set": {"photos": photos}})
+    updated = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    return {"photos": updated.get("photos", []), "message": "Photos updated"}
+
+
+
 @router.delete("/admin/vehicles/{vehicle_id}")
 async def delete_vehicle(vehicle_id: str, user: dict = Depends(get_current_user)):
     result = await db.vehicles.delete_one({"id": vehicle_id})
