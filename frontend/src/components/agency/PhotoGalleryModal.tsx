@@ -59,7 +59,7 @@ export default function PhotoGalleryModal({ visible, photos, title, initialIndex
               <View key={idx} style={{ width: SCREEN_W, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 8 }}>
                 <Image
                   source={{ uri: getPhotoUrl(photo) }}
-                  style={{ width: SCREEN_W - 16, height: SCREEN_H * 0.6, borderRadius: 12 }}
+                  style={{ width: SCREEN_W - 16, height: SCREEN_H * 0.8, borderRadius: 12 }}
                   resizeMode="contain"
                 />
               </View>

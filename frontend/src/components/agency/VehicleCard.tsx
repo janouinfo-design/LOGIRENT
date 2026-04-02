@@ -31,7 +31,7 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPre
         style={cs.imageWrap}
       >
         {photo ? (
-          <View style={[cs.imageContainer, { backgroundColor: '#111318' }]}>
+          <View style={[cs.imageContainer, { backgroundColor: '#f4f4f5' }]}>
             <Image source={{ uri: photo }} style={cs.image} resizeMode="contain" />
           </View>
         ) : (
