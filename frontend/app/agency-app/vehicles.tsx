@@ -203,10 +203,10 @@ const st = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
 
-  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 16 },
+  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 18, paddingTop: 4 },
   filterTab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 14, paddingVertical: 9,
+    paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 10, borderWidth: 1.5,
   },
   countBadge: {
