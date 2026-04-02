@@ -113,7 +113,7 @@ export default function AgencyVehicles() {
       </View>
 
       {/* Status Filter Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.filterRow}>
+      <View style={st.filterRow}>
         {[
           { v: 'all', l: 'Tous', icon: 'grid', color: '#7C3AED' },
           ...STATUSES.map(s => ({ v: s.v, l: s.l, icon: getStatus(s.v).icon, color: getStatus(s.v).text }))
@@ -144,7 +144,7 @@ export default function AgencyVehicles() {
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
 
       {/* Vehicle Grid */}
       <ScrollView
@@ -203,7 +203,7 @@ const st = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
 
-  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 18, paddingTop: 4 },
+  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 18, paddingTop: 4, flexDirection: 'row', flexWrap: 'wrap' },
   filterTab: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     paddingHorizontal: 14, paddingVertical: 10,
