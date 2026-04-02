@@ -126,18 +126,18 @@ const cs = StyleSheet.create({
 
   // Image
   imageWrap: { position: 'relative' },
-  imageContainer: { width: '100%', height: 220, justifyContent: 'center', alignItems: 'center' },
+  imageContainer: { width: '100%', height: 170, justifyContent: 'center', alignItems: 'center' },
   image: { width: '100%', height: '100%' },
-  imagePlaceholder: { width: '100%', height: 220, justifyContent: 'center', alignItems: 'center' },
+  imagePlaceholder: { width: '100%', height: 170, justifyContent: 'center', alignItems: 'center' },
   placeholderInner: { alignItems: 'center' },
 
   statusBadge: {
     position: 'absolute', top: 10, left: 10,
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 9, paddingVertical: 4,
+    paddingHorizontal: 10, paddingVertical: 5,
     borderRadius: 8, borderWidth: 1,
   },
-  statusText: { fontSize: 11, fontWeight: '700' },
+  statusText: { fontSize: 12, fontWeight: '800' },
 
   photoCount: {
     position: 'absolute', bottom: 10, right: 10,

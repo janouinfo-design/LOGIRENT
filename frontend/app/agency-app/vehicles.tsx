@@ -10,8 +10,8 @@ import EditVehicleModal from '../../src/components/agency/EditVehicleModal';
 import NewVehicleModal from '../../src/components/agency/NewVehicleModal';
 import PhotoGalleryModal from '../../src/components/agency/PhotoGalleryModal';
 
-const GAP = 18;
-const PAD = 24;
+const GAP = 14;
+const PAD = 16;
 
 export default function AgencyVehicles() {
   const { user } = useAuthStore();
@@ -26,7 +26,7 @@ export default function AgencyVehicles() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [galleryVehicle, setGalleryVehicle] = useState<Vehicle | null>(null);
 
-  const numCols = width >= 1200 ? 3 : width >= 768 ? 2 : 1;
+  const numCols = width >= 960 ? 3 : width >= 600 ? 2 : 1;
   const cardW = (width - PAD * 2 - GAP * (numCols - 1)) / numCols;
 
   const openGallery = async (v: Vehicle) => {
