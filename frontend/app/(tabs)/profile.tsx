@@ -305,6 +305,7 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
+    { icon: 'receipt', label: 'Mes factures', action: () => router.push('/my-invoices' as any) },
     { icon: 'card', label: 'Moyens de paiement' },
     { icon: 'notifications', label: 'Notifications' },
     { icon: 'shield-checkmark', label: 'Confidentialité' },
@@ -594,7 +595,7 @@ export default function ProfileScreen() {
           <Text style={[styles.sectionTitle, { color: C.text }]}>Paramètres</Text>
           <View style={[styles.menuCard, { backgroundColor: C.card, borderColor: C.border }]}>
             {menuItems.map((item, i) => (
-              <TouchableOpacity key={item.label} style={[styles.menuItem, i < menuItems.length - 1 && styles.menuBorder]} data-testid={`menu-${i}`}>
+              <TouchableOpacity key={item.label} style={[styles.menuItem, i < menuItems.length - 1 && styles.menuBorder]} onPress={() => item.action && item.action()} data-testid={`menu-${i}`}>
                 <View style={styles.menuLeft}>
                   <View style={styles.menuIcon}><Ionicons name={item.icon as any} size={18} color={C.purple} /></View>
                   <Text style={styles.menuText}>{item.label}</Text>

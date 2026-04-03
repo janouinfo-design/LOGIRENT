@@ -377,3 +377,83 @@ class InspectionCreate(BaseModel):
     fuel_level: Optional[str] = None
     notes: Optional[str] = None
     signature_data: Optional[str] = None
+
+
+# ==================== INVOICE MODELS ====================
+
+InvoiceStatus = str  # draft, pending, partially_paid, paid, overdue, cancelled, refunded
+InvoiceType = str    # deposit, reservation, final, penalty, credit_note
+PaymentMethodType = str  # stripe_card, stripe_twint, qr_bill, bank_transfer, cash
+
+
+class InvoiceItem(BaseModel):
+    code: str
+    label: str
+    quantity: float = 1
+    unit_price: float
+    tax_rate: float = 7.7
+    total_excl_tax: float
+    total_incl_tax: float
+
+
+class Invoice(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    invoice_number: str = ""
+    invoice_type: str = "reservation"  # deposit, reservation, final, penalty, credit_note
+    status: str = "draft"  # draft, pending, partially_paid, paid, overdue, cancelled, refunded
+
+    customer_id: str
+    reservation_id: Optional[str] = None
+    vehicle_id: Optional[str] = None
+    agency_id: Optional[str] = None
+
+    issue_date: str = ""  # ISO date YYYY-MM-DD
+    due_date: str = ""
+    currency: str = "CHF"
+
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+    subtotal_excl_tax: float = 0
+    tax_total: float = 0
+    total_incl_tax: float = 0
+    amount_paid: float = 0
+    balance_due: float = 0
+
+    payment_method: Optional[str] = None
+    stripe_payment_intent_id: Optional[str] = None
+    stripe_session_id: Optional[str] = None
+    qr_reference: Optional[str] = None
+
+    pdf_url: Optional[str] = None
+
+    items: List[dict] = []
+    notes: Optional[str] = None
+
+    parent_invoice_id: Optional[str] = None  # for credit notes / penalties linked to an invoice
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class InvoiceCreateFromReservation(BaseModel):
+    reservation_id: str
+    invoice_type: str = "reservation"  # deposit, reservation, final
+    custom_items: Optional[List[dict]] = None
+    notes: Optional[str] = None
+
+
+class InvoicePenaltyAdd(BaseModel):
+    items: List[dict]  # [{code, label, quantity, unit_price}]
+    notes: Optional[str] = None
+
+
+class InvoicePaymentRequest(BaseModel):
+    invoice_id: str
+    payment_method: str = "stripe_card"  # stripe_card, stripe_twint
+    origin_url: str
+
+
+class InvoiceMarkPaid(BaseModel):
+    payment_method: str = "cash"  # cash, bank_transfer, qr_bill
+    notes: Optional[str] = None

@@ -21,6 +21,7 @@ from routes.agencies import router as agencies_router
 from routes.navixy import router as navixy_router
 from routes.contracts import router as contracts_router
 from routes.inspections import router as inspections_router
+from routes.invoices import router as invoices_router
 from utils.notifications import create_notification
 
 # Create the main app
@@ -65,6 +66,7 @@ api_router.include_router(agencies_router)
 api_router.include_router(navixy_router)
 api_router.include_router(contracts_router)
 api_router.include_router(inspections_router)
+api_router.include_router(invoices_router)
 
 
 # ==================== VERSION ENDPOINT ====================
