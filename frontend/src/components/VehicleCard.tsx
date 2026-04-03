@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, useWindowDimensions } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Vehicle } from '../store/vehicleStore';
 import { useI18n } from '../i18n';
@@ -11,195 +12,90 @@ interface Props {
   index?: number;
 }
 
-const C = {
-  purple: '#6B21A8',
-  purpleLight: '#7C3AED',
-  dark: '#1A1A2E',
-  gray: '#6B7280',
-  grayLight: '#9CA3AF',
-  bg: '#F3F4F6',
-  card: '#FFFFFF',
-  text: '#111827',
-  border: '#E5E7EB',
-  success: '#10B981',
-  error: '#EF4444',
-};
+const ACCENT = '#7C3AED';
 
 export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
+  const router = useRouter();
   const { t } = useI18n();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
   const isAvailable = vehicle.status === 'available';
   const hasPhoto = vehicle.photos?.length > 0;
+  const photoCount = vehicle.photos?.length || 0;
+  const fuelLabel = vehicle.fuel_type === 'electric' ? 'Elec.' : vehicle.fuel_type === 'hybrid' ? 'Hybride' : vehicle.fuel_type === 'diesel' ? 'Diesel' : 'Essence';
+  const transLabel = vehicle.transmission === 'automatic' ? 'Auto' : 'Manuel';
+
+  const goDetail = () => router.push(`/vehicle/${vehicle.id}`);
+  const goBook = () => router.push(`/booking/${vehicle.id}`);
 
   return (
-    <View
-      style={[styles.card, isMobile && styles.cardMobile]}
-      data-testid={`vehicle-card-${vehicle.id}`}
-    >
-      {/* Top Row: Price + Details Button */}
-      <View style={styles.topRow}>
-        <View>
-          <Text style={[styles.price, isMobile && styles.priceMobile]}>CHF {vehicle.price_per_day}</Text>
-          <Text style={styles.perDay}>{t('perDay')}</Text>
-        </View>
-        <TouchableOpacity style={styles.detailsBtn} onPress={onPress} data-testid={`vehicle-details-${vehicle.id}`}>
-          <Text style={styles.detailsBtnText}>{t('details')}</Text>
-          <Ionicons name="arrow-forward" size={14} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Car Image */}
-      <TouchableOpacity style={[styles.imageContainer, isMobile && styles.imageContainerMobile]} onPress={onPress} activeOpacity={0.9}>
+    <View style={[s.card]} data-testid={`vehicle-card-${vehicle.id}`}>
+      {/* Photo */}
+      <TouchableOpacity onPress={goDetail} activeOpacity={0.9} style={[s.photoZone, isMobile && { height: 180 }]}>
         {hasPhoto ? (
-          <Image source={{ uri: getPhotoUrl(vehicle.photos[0]) }} style={styles.carImage} resizeMode="cover" />
+          <Image source={{ uri: getPhotoUrl(vehicle.photos[0]) }} style={s.photo} resizeMode="cover" />
         ) : (
-          <View style={styles.placeholder}>
-            <Ionicons name="car-sport" size={48} color={C.grayLight} />
-          </View>
+          <View style={s.placeholder}><Ionicons name="car-sport-outline" size={40} color="#D1D5DB" /></View>
         )}
-        {/* Availability dot */}
-        <View style={[styles.statusDot, { backgroundColor: isAvailable ? C.success : C.error }]} />
+        <View style={[s.statusBadge, { backgroundColor: isAvailable ? '#10B98118' : '#EF444418', borderColor: isAvailable ? '#10B98140' : '#EF444440' }]}>
+          <View style={[s.statusDot, { backgroundColor: isAvailable ? '#10B981' : '#EF4444' }]} />
+          <Text style={{ fontSize: 11, fontWeight: '700', color: isAvailable ? '#059669' : '#DC2626' }}>{isAvailable ? 'Disponible' : 'Indisponible'}</Text>
+        </View>
+        {photoCount > 1 && (
+          <View style={s.photoBadge}><Ionicons name="camera" size={11} color="#fff" /><Text style={s.photoBadgeText}>{photoCount}</Text></View>
+        )}
       </TouchableOpacity>
 
-      {/* Bottom Info */}
-      <View style={styles.bottomInfo}>
-        <Text style={styles.brand}>{vehicle.brand}</Text>
-        <Text style={[styles.model, isMobile && styles.modelMobile]}>{vehicle.model} {vehicle.year}</Text>
-        <View style={styles.specsRow}>
-          <View style={styles.specChip}>
-            <Ionicons name="people-outline" size={12} color={C.purple} />
-            <Text style={styles.specText}>{vehicle.seats} {t('seats')}</Text>
-          </View>
-          <View style={styles.specChip}>
-            <Ionicons name="cog-outline" size={12} color={C.purple} />
-            <Text style={styles.specText}>{vehicle.transmission === 'automatic' ? t('automatic') : t('manual')}</Text>
-          </View>
-          <View style={styles.specChip}>
-            <Ionicons name="flash-outline" size={12} color={C.purple} />
-            <Text style={styles.specText}>{vehicle.fuel_type}</Text>
-          </View>
+      {/* Info */}
+      <View style={s.info}>
+        <Text style={s.brand}>{vehicle.brand} · {vehicle.year}</Text>
+        <Text style={[s.model, isMobile && { fontSize: 18 }]} numberOfLines={1}>{vehicle.model}</Text>
+        <View style={s.specsRow}>
+          <Text style={s.spec}>{vehicle.seats} pl.</Text>
+          <Text style={s.spec}>{transLabel}</Text>
+          <Text style={s.spec}>{fuelLabel}</Text>
         </View>
+        <View style={s.priceRow}>
+          <Text style={s.price}>CHF {vehicle.price_per_day}</Text>
+          <Text style={s.priceUnit}> /jour</Text>
+        </View>
+      </View>
+
+      {/* CTA */}
+      <View style={s.cta}>
+        <TouchableOpacity onPress={goDetail} style={s.btnSec} data-testid={`details-btn-${vehicle.id}`} activeOpacity={0.7}>
+          <Ionicons name="information-circle-outline" size={15} color="#6B7280" />
+          <Text style={s.btnSecText}>Details</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={goBook} style={s.btnPrim} data-testid={`reserve-btn-${vehicle.id}`} activeOpacity={0.8}>
+          <Text style={s.btnPrimText}>Reserver</Text>
+          <Ionicons name="arrow-forward" size={14} color="#fff" />
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: C.card,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: C.border,
-    width: '100%',
-  },
-  cardMobile: {
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 4,
-  },
-  price: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: C.dark,
-  },
-  priceMobile: {
-    fontSize: 22,
-  },
-  perDay: {
-    fontSize: 11,
-    color: C.grayLight,
-    marginTop: -2,
-  },
-  detailsBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: C.purple,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  detailsBtnText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  imageContainer: {
-    width: '100%',
-    aspectRatio: 2.2,
-    overflow: 'hidden',
-  },
-  imageContainerMobile: {
-    aspectRatio: 1.6,
-  },
-  carImage: {
-    width: '100%',
-    height: '100%',
-  },
-  placeholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  statusDot: {
-    position: 'absolute',
-    top: 8,
-    right: 12,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: C.card,
-  },
-  bottomInfo: {
-    paddingHorizontal: 16,
-    paddingBottom: 14,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: C.border,
-  },
-  brand: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: C.purple,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  model: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: C.text,
-    marginTop: 2,
-  },
-  modelMobile: {
-    fontSize: 18,
-  },
-  specsRow: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 8,
-    flexWrap: 'wrap',
-  },
-  specChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: C.bg,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  specText: {
-    fontSize: 10,
-    fontWeight: '500',
-    color: C.gray,
-    textTransform: 'capitalize',
-  },
+const s = StyleSheet.create({
+  card: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' } as any,
+  photoZone: { position: 'relative', height: 160, overflow: 'hidden' },
+  photo: { width: '100%', height: '100%' },
+  placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6' },
+  statusBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  photoBadge: { position: 'absolute', bottom: 8, right: 8, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 7, paddingVertical: 3, borderRadius: 16, backgroundColor: 'rgba(0,0,0,0.6)' },
+  photoBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  info: { padding: 12, gap: 3 },
+  brand: { fontSize: 12, fontWeight: '500', color: '#6B7280' },
+  model: { fontSize: 16, fontWeight: '800', color: '#111827', letterSpacing: -0.2 },
+  specsRow: { flexDirection: 'row', gap: 5, marginTop: 6 },
+  spec: { fontSize: 11, fontWeight: '600', color: '#6B7280', backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, overflow: 'hidden' },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', marginTop: 6 },
+  price: { fontSize: 20, fontWeight: '900', color: '#111827' },
+  priceUnit: { fontSize: 12, fontWeight: '500', color: '#9CA3AF' },
+  cta: { flexDirection: 'row', gap: 8, padding: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#E5E7EB' },
+  btnSec: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E7EB' },
+  btnSecText: { fontSize: 13, fontWeight: '700', color: '#111827' },
+  btnPrim: { flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: 10, backgroundColor: ACCENT },
+  btnPrimText: { color: '#fff', fontSize: 13, fontWeight: '700' },
 });
