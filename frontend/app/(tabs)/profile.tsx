@@ -306,6 +306,7 @@ export default function ProfileScreen() {
 
   const menuItems = [
     { icon: 'receipt', label: 'Mes factures', action: () => router.push('/my-invoices' as any) },
+    { icon: 'scan', label: 'Mes documents', action: () => router.push('/my-documents' as any) },
     { icon: 'card', label: 'Moyens de paiement' },
     { icon: 'notifications', label: 'Notifications' },
     { icon: 'shield-checkmark', label: 'Confidentialité' },

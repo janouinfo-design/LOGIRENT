@@ -19,6 +19,41 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+async def _store_client_document(client_id: str, image_data: str, doc_type: str) -> str:
+    """Store a client document in object storage and create a document record."""
+    try:
+        from utils.storage import put_object, get_public_url
+
+        raw = image_data
+        if ',' in raw:
+            raw = raw.split(',', 1)[1]
+        content = base64.b64decode(raw)
+
+        path = f"logirent/documents/{client_id}/{doc_type}_{uuid.uuid4()}.jpg"
+        put_object(path, content, "image/jpeg")
+        url = get_public_url(path)
+
+        doc_record = {
+            "id": str(uuid.uuid4()),
+            "client_id": client_id,
+            "uploader_id": client_id,
+            "doc_type": doc_type,
+            "filename": f"{doc_type}.jpg",
+            "storage_path": path,
+            "url": url,
+            "status": "pending",
+            "extracted_data": {},
+            "validated_by": None,
+            "validated_at": None,
+            "created_at": datetime.utcnow(),
+        }
+        await db.documents.insert_one(doc_record)
+        return url
+    except Exception as e:
+        logger.error(f"Failed to store document in object storage: {e}")
+        return ""
+
+
 @router.post("/auth/register", response_model=TokenResponse)
 async def register(user_data: UserCreate):
     existing = await db.users.find_one({"email": user_data.email.lower()})
@@ -193,10 +228,13 @@ async def upload_license_b64(body: Base64Upload, user: dict = Depends(get_curren
     if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
         return {"message": "Document rejeté", "verification": verification, "rejected": True}
 
+    # Store in object storage + documents collection
+    doc_url = await _store_client_document(user['id'], body.image_data, "license_front")
+
     await db.users.update_one(
         {"id": user['id']},
         {"$set": {
-            "license_photo": body.image_data,
+            "license_photo": doc_url or body.image_data,
             "license_verification": {
                 "is_valid": verification.get("is_valid", True),
                 "confidence": verification.get("confidence", 0),
@@ -211,7 +249,7 @@ async def upload_license_b64(body: Base64Upload, user: dict = Depends(get_curren
             }
         }}
     )
-    return {"message": "License uploaded successfully", "license_photo": body.image_data, "verification": verification}
+    return {"message": "License uploaded successfully", "license_photo": doc_url or body.image_data, "verification": verification}
 
 
 @router.post("/auth/upload-license-back-b64")
@@ -221,11 +259,13 @@ async def upload_license_back_b64(body: Base64Upload, user: dict = Depends(get_c
     if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
         return {"message": "Document rejeté", "verification": verification, "rejected": True}
 
+    doc_url = await _store_client_document(user['id'], body.image_data, "license_back")
+
     await db.users.update_one(
         {"id": user['id']},
-        {"$set": {"license_photo_back": body.image_data}}
+        {"$set": {"license_photo_back": doc_url or body.image_data}}
     )
-    return {"message": "License back uploaded", "license_photo_back": body.image_data, "verification": verification}
+    return {"message": "License back uploaded", "license_photo_back": doc_url or body.image_data, "verification": verification}
 
 
 @router.post("/auth/upload-id-b64")
@@ -235,10 +275,12 @@ async def upload_id_b64(body: Base64Upload, user: dict = Depends(get_current_use
     if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
         return {"message": "Document rejeté", "verification": verification, "rejected": True}
 
+    doc_url = await _store_client_document(user['id'], body.image_data, "id_card_front")
+
     await db.users.update_one(
         {"id": user['id']},
         {"$set": {
-            "id_photo": body.image_data,
+            "id_photo": doc_url or body.image_data,
             "id_verification": {
                 "is_valid": verification.get("is_valid", True),
                 "confidence": verification.get("confidence", 0),
@@ -253,7 +295,7 @@ async def upload_id_b64(body: Base64Upload, user: dict = Depends(get_current_use
             }
         }}
     )
-    return {"message": "ID uploaded successfully", "id_photo": body.image_data, "verification": verification}
+    return {"message": "ID uploaded successfully", "id_photo": doc_url or body.image_data, "verification": verification}
 
 
 @router.post("/auth/upload-id-back-b64")
@@ -263,11 +305,13 @@ async def upload_id_back_b64(body: Base64Upload, user: dict = Depends(get_curren
     if not verification.get("is_valid", True) and verification.get("confidence", 0) > 60:
         return {"message": "Document rejeté", "verification": verification, "rejected": True}
 
+    doc_url = await _store_client_document(user['id'], body.image_data, "id_card_back")
+
     await db.users.update_one(
         {"id": user['id']},
-        {"$set": {"id_photo_back": body.image_data}}
+        {"$set": {"id_photo_back": doc_url or body.image_data}}
     )
-    return {"message": "ID back uploaded", "id_photo_back": body.image_data, "verification": verification}
+    return {"message": "ID back uploaded", "id_photo_back": doc_url or body.image_data, "verification": verification}
 
 
 @router.post("/auth/upload-id")

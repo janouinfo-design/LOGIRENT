@@ -11,7 +11,7 @@ import os
 from database import db
 from models import AdminStats, AdminUserUpdate, Base64UserPhoto, PaymentTransaction, PricingTiersUpdate
 from pydantic import BaseModel as PydanticBaseModel
-from deps import get_admin_user, get_agency_admin, hash_password
+from deps import get_admin_user, get_agency_admin, get_current_user, hash_password
 from utils.notifications import create_notification
 from utils.helpers import verify_document_with_ai
 from utils.email import (
@@ -1179,7 +1179,7 @@ async def upload_document(
 @router.post("/documents/upload-base64")
 async def upload_document_base64(
     data: dict,
-    user=Depends(get_admin_user),
+    user=Depends(get_current_user),
 ):
     """Upload a document from camera capture (base64 encoded)."""
     from utils.storage import put_object, get_public_url
@@ -1239,7 +1239,7 @@ async def get_client_documents(client_id: str, user: dict = Depends(get_admin_us
 
 
 @router.get("/documents/my")
-async def get_my_documents(user: dict = Depends(get_admin_user)):
+async def get_my_documents(user: dict = Depends(get_current_user)):
     """Get documents uploaded by or for the current user."""
     user_id = user['id']
     docs = await db.documents.find(
