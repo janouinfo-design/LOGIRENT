@@ -72,6 +72,8 @@ export default function AgencyAppLayout() {
     { key: 'tracking', label: 'GPS', icon: 'navigate', iconO: 'navigate-outline' },
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline' },
     { key: 'invoices', label: 'Factures', icon: 'receipt', iconO: 'receipt-outline' },
+    { key: 'documents', label: 'Documents', icon: 'scan', iconO: 'scan-outline' },
+    { key: 'billing-settings', label: 'Facturation', icon: 'settings', iconO: 'settings-outline' },
     { key: 'contract-template', label: 'Modele', icon: 'document-text', iconO: 'document-text-outline' },
     { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
   ];
@@ -152,6 +154,8 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
           <Tabs.Screen name="invoices" options={{ title: 'Factures' }} />
+          <Tabs.Screen name="documents" options={{ title: 'Documents' }} />
+          <Tabs.Screen name="billing-settings" options={{ title: 'Facturation' }} />
           <Tabs.Screen name="contract-template" options={{ title: 'Modèle' }} />
           <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
           <Tabs.Screen name="vehicle-detail" options={{ title: 'Detail', href: null }} />

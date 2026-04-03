@@ -1059,6 +1059,234 @@ async def get_my_agency_modules(user: dict = Depends(get_admin_user)):
     return {"modules": modules}
 
 
+# ======================== AGENCY BILLING SETTINGS ========================
+
+class BillingSettings(PydanticBaseModel):
+    company_name: str = ""
+    street: str = ""
+    house_number: str = ""
+    pcode: str = ""
+    city: str = ""
+    country: str = "CH"
+    phone: str = ""
+    email: str = ""
+    website: str = ""
+    iban: str = ""
+    vat_number: str = ""
+
+
+@router.get("/admin/billing-settings")
+async def get_billing_settings(user: dict = Depends(get_agency_admin)):
+    """Get agency billing settings (IBAN, company info for invoices)."""
+    agency_id = user.get('agency_id')
+    settings = await db.billing_settings.find_one({"agency_id": agency_id}, {"_id": 0})
+    if not settings:
+        return {
+            "agency_id": agency_id,
+            "company_name": "",
+            "street": "",
+            "house_number": "",
+            "pcode": "",
+            "city": "",
+            "country": "CH",
+            "phone": "",
+            "email": "",
+            "website": "",
+            "iban": "",
+            "vat_number": "",
+        }
+    return settings
+
+
+@router.put("/admin/billing-settings")
+async def update_billing_settings(data: BillingSettings, user: dict = Depends(get_agency_admin)):
+    """Update agency billing settings (IBAN, company info for invoices)."""
+    agency_id = user.get('agency_id')
+    doc = {
+        "agency_id": agency_id,
+        "company_name": data.company_name,
+        "street": data.street,
+        "house_number": data.house_number,
+        "pcode": data.pcode,
+        "city": data.city,
+        "country": data.country,
+        "phone": data.phone,
+        "email": data.email,
+        "website": data.website,
+        "iban": data.iban,
+        "vat_number": data.vat_number,
+        "updated_at": datetime.utcnow(),
+    }
+    await db.billing_settings.update_one(
+        {"agency_id": agency_id},
+        {"$set": doc},
+        upsert=True,
+    )
+    return {"message": "Parametres de facturation mis a jour", **doc}
+
+
+# ======================== DOCUMENT SCANNING ========================
+
+@router.post("/admin/clients/{client_id}/documents")
+async def upload_client_document(client_id: str, user: dict = Depends(get_agency_admin)):
+    """Upload a client document (ID card, driver license) via base64."""
+    from fastapi import Request
+    # This endpoint handles base64 uploads from the camera/gallery
+    pass
+
+
+@router.post("/documents/upload")
+async def upload_document(
+    doc_type: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(get_admin_user),
+):
+    """Upload a scanned document (ID card, license) to secure storage."""
+    from utils.storage import put_object, get_public_url
+
+    allowed_types = ['id_card_front', 'id_card_back', 'license_front', 'license_back', 'other']
+    if doc_type not in allowed_types:
+        raise HTTPException(status_code=400, detail=f"Type invalide. Types: {allowed_types}")
+
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 10MB)")
+
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    path = f"logirent/documents/{user.get('id', 'unknown')}/{doc_type}_{uuid.uuid4()}.{ext}"
+
+    put_object(path, content, file.content_type or "image/jpeg")
+    url = get_public_url(path)
+
+    doc_record = {
+        "id": str(uuid.uuid4()),
+        "uploader_id": user['id'],
+        "doc_type": doc_type,
+        "filename": file.filename,
+        "storage_path": path,
+        "url": url,
+        "status": "pending",  # pending, validated, rejected
+        "extracted_data": {},
+        "validated_by": None,
+        "validated_at": None,
+        "created_at": datetime.utcnow(),
+    }
+    await db.documents.insert_one(doc_record)
+    doc_record.pop('_id', None)
+    return doc_record
+
+
+@router.post("/documents/upload-base64")
+async def upload_document_base64(
+    data: dict,
+    user=Depends(get_admin_user),
+):
+    """Upload a document from camera capture (base64 encoded)."""
+    from utils.storage import put_object, get_public_url
+
+    base64_data = data.get('image')
+    doc_type = data.get('doc_type', 'other')
+    client_id = data.get('client_id')
+    filename = data.get('filename', 'capture.jpg')
+
+    if not base64_data:
+        raise HTTPException(status_code=400, detail="Image base64 manquante")
+
+    # Strip data URI prefix if present
+    if ',' in base64_data:
+        base64_data = base64_data.split(',', 1)[1]
+
+    import base64 as b64
+    try:
+        content = b64.b64decode(base64_data)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Base64 invalide")
+
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 10MB)")
+
+    target_id = client_id or user['id']
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
+    path = f"logirent/documents/{target_id}/{doc_type}_{uuid.uuid4()}.{ext}"
+
+    put_object(path, content, "image/jpeg")
+    url = get_public_url(path)
+
+    doc_record = {
+        "id": str(uuid.uuid4()),
+        "client_id": target_id,
+        "uploader_id": user['id'],
+        "doc_type": doc_type,
+        "filename": filename,
+        "storage_path": path,
+        "url": url,
+        "status": "pending",
+        "extracted_data": {},
+        "validated_by": None,
+        "validated_at": None,
+        "created_at": datetime.utcnow(),
+    }
+    await db.documents.insert_one(doc_record)
+    doc_record.pop('_id', None)
+    return doc_record
+
+
+@router.get("/documents/client/{client_id}")
+async def get_client_documents(client_id: str, user: dict = Depends(get_admin_user)):
+    """List all documents for a client."""
+    docs = await db.documents.find({"client_id": client_id}, {"_id": 0}).sort("created_at", -1).to_list(50)
+    return docs
+
+
+@router.get("/documents/my")
+async def get_my_documents(user: dict = Depends(get_admin_user)):
+    """Get documents uploaded by or for the current user."""
+    user_id = user['id']
+    docs = await db.documents.find(
+        {"$or": [{"client_id": user_id}, {"uploader_id": user_id}]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return docs
+
+
+@router.put("/documents/{doc_id}/validate")
+async def validate_document(doc_id: str, data: dict, user: dict = Depends(get_agency_admin)):
+    """Validate a document and save extracted data."""
+    doc = await db.documents.find_one({"id": doc_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document introuvable")
+
+    extracted = data.get('extracted_data', {})
+    status = data.get('status', 'validated')
+
+    await db.documents.update_one(
+        {"id": doc_id},
+        {"$set": {
+            "status": status,
+            "extracted_data": extracted,
+            "validated_by": user['id'],
+            "validated_at": datetime.utcnow(),
+        }}
+    )
+
+    # Update client profile with extracted data if available
+    client_id = doc.get('client_id')
+    if client_id and extracted and status == 'validated':
+        update_fields = {}
+        if extracted.get('name'):
+            update_fields['name'] = extracted['name']
+        if extracted.get('date_of_birth'):
+            update_fields['date_of_birth'] = extracted['date_of_birth']
+        if extracted.get('license_number'):
+            update_fields['license_number'] = extracted['license_number']
+        if extracted.get('license_expiry_date'):
+            update_fields['license_expiry_date'] = extracted['license_expiry_date']
+        if extracted.get('nationality'):
+            update_fields['nationality'] = extracted['nationality']
+        if update_fields:
+            await db.users.update_one({"id": client_id}, {"$set": update_fields})
+
+    return {"message": "Document valide", "status": status}
 
 
 # ======================== CONTRACT TEMPLATE ========================

@@ -375,7 +375,26 @@ async def get_invoice_pdf(invoice_id: str, user: dict = Depends(get_current_user
     if inv.get('vehicle_id'):
         vehicle = await db.vehicles.find_one({"id": inv['vehicle_id']}, {"_id": 0})
 
-    pdf_bytes = generate_invoice_pdf(inv, customer or {}, vehicle)
+    # Get agency billing settings
+    company = None
+    if inv.get('agency_id'):
+        billing = await db.billing_settings.find_one({"agency_id": inv['agency_id']}, {"_id": 0})
+        if billing and billing.get('company_name'):
+            company = {
+                "name": billing['company_name'],
+                "street": billing.get('street', ''),
+                "house_number": billing.get('house_number', ''),
+                "pcode": billing.get('pcode', ''),
+                "city": billing.get('city', ''),
+                "country": billing.get('country', 'CH'),
+                "phone": billing.get('phone', ''),
+                "email": billing.get('email', ''),
+                "website": billing.get('website', ''),
+                "iban": billing.get('iban', ''),
+                "vat_number": billing.get('vat_number', ''),
+            }
+
+    pdf_bytes = generate_invoice_pdf(inv, customer or {}, vehicle, company)
 
     return Response(
         content=pdf_bytes,
