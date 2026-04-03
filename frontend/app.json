@@ -6,18 +6,36 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "logirent",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "ch.logirent.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "LogiRent utilise la camera pour scanner vos documents et photographier les vehicules.",
+        "NSPhotoLibraryUsageDescription": "LogiRent accede a vos photos pour telecharger vos documents d'identite et permis de conduire.",
+        "NSLocationWhenInUseUsageDescription": "LogiRent utilise votre position pour trouver les agences les plus proches."
+      },
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#7C3AED"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.logirent.frontend"
+      "package": "ch.logirent.app",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -30,14 +48,33 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-image.png",
-          "imageWidth": 200,
+          "imageWidth": 250,
           "resizeMode": "contain",
-          "backgroundColor": "#000000"
+          "backgroundColor": "#7C3AED"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "LogiRent accede a vos photos pour telecharger vos documents.",
+          "cameraPermission": "LogiRent utilise la camera pour scanner vos documents."
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    },
+    "owner": "YOUR_EXPO_USERNAME",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/YOUR_EAS_PROJECT_ID"
     }
   }
 }
