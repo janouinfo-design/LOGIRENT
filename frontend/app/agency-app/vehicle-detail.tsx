@@ -250,11 +250,11 @@ export default function VehicleDetail() {
               )}
 
               {/* CTA */}
-              <TouchableOpacity style={p.ctaPrimary} data-testid="reserve-now-btn" activeOpacity={0.85}>
+              <TouchableOpacity style={p.ctaPrimary} data-testid="reserve-now-btn" activeOpacity={0.85} onPress={() => router.push({ pathname: '/booking/[id]', params: { id: vehicle.id } })}>
                 <Text style={p.ctaPrimaryText}>Reserver maintenant</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
-              <TouchableOpacity style={[p.ctaSecondary, { borderColor: C.border }]} data-testid="check-availability-btn" activeOpacity={0.7}>
+              <TouchableOpacity style={[p.ctaSecondary, { borderColor: C.border }]} data-testid="check-availability-btn" activeOpacity={0.7} onPress={() => router.push({ pathname: '/booking/[id]', params: { id: vehicle.id } })}>
                 <Ionicons name="calendar-outline" size={18} color={ACCENT} />
                 <Text style={[p.ctaSecondaryText, { color: ACCENT }]}>Voir la disponibilite</Text>
               </TouchableOpacity>
