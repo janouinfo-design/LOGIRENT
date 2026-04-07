@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView, Alert } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../api/axios';
@@ -30,8 +30,83 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [showPickerModal, setShowPickerModal] = useState(false);
+  const [showWebcam, setShowWebcam] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  const takePhoto = async () => {
+  // ---- WEB: Webcam capture ----
+  const startWebcam = async () => {
+    setShowPickerModal(false);
+    if (Platform.OS !== 'web') {
+      // On native, use expo-image-picker
+      return takePhotoNative();
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setShowWebcam(true);
+      // Attach stream after render
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      }, 100);
+    } catch (e: any) {
+      Alert.alert('Erreur webcam', e.message || 'Impossible d\'acceder a la camera');
+    }
+  };
+
+  const captureFromWebcam = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+    setPreview(dataUrl);
+    setResult(null);
+    stopWebcam();
+  };
+
+  const stopWebcam = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    setShowWebcam(false);
+  };
+
+  // ---- WEB: File picker ----
+  const pickFileWeb = () => {
+    setShowPickerModal(false);
+    if (Platform.OS !== 'web') {
+      return pickFromGalleryNative();
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const base64 = ev.target?.result as string;
+        setPreview(base64);
+        setResult(null);
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  // ---- NATIVE: expo-image-picker ----
+  const takePhotoNative = async () => {
     setShowPickerModal(false);
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -56,7 +131,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
     }
   };
 
-  const pickFromGallery = async () => {
+  const pickFromGalleryNative = async () => {
     setShowPickerModal(false);
     try {
       const res = await ImagePicker.launchImageLibraryAsync({
@@ -103,26 +178,51 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
 
       {!preview ? (
         <View>
-          <TouchableOpacity style={s.uploadArea} onPress={() => setShowPickerModal(true)} data-testid="upload-photo-btn">
-            <Ionicons name="camera-outline" size={32} color={C.accent} />
-            <Text style={s.uploadText}>Prendre ou importer une photo</Text>
-            <Text style={s.uploadHint}>L'IA analysera automatiquement les dommages</Text>
-          </TouchableOpacity>
-
-          {showPickerModal && (
-            <View style={s.pickerModal}>
-              <TouchableOpacity style={s.pickerOption} onPress={takePhoto} data-testid="take-photo-btn">
-                <Ionicons name="camera" size={20} color="#FFF" />
-                <Text style={s.pickerOptionText}>Camera</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[s.pickerOption, { backgroundColor: C.accent }]} onPress={pickFromGallery} data-testid="pick-gallery-btn">
-                <Ionicons name="images" size={20} color="#FFF" />
-                <Text style={s.pickerOptionText}>Galerie</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={s.pickerCancel} onPress={() => setShowPickerModal(false)} data-testid="cancel-picker-btn">
-                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Annuler</Text>
-              </TouchableOpacity>
+          {showWebcam && Platform.OS === 'web' ? (
+            <View style={s.webcamContainer} data-testid="webcam-view">
+              {/* @ts-ignore - web-only element */}
+              <video
+                ref={(el: any) => { videoRef.current = el; }}
+                autoPlay
+                playsInline
+                muted
+                style={{ width: '100%', height: 280, borderRadius: 10, objectFit: 'cover', backgroundColor: '#000' }}
+              />
+              <View style={s.webcamActions}>
+                <TouchableOpacity style={s.webcamCaptureBtn} onPress={captureFromWebcam} data-testid="webcam-capture-btn">
+                  <Ionicons name="radio-button-on" size={28} color="#FFF" />
+                  <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '700' }}>Capturer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.webcamCancelBtn} onPress={stopWebcam} data-testid="webcam-cancel-btn">
+                  <Ionicons name="close" size={18} color={C.textLight} />
+                  <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Annuler</Text>
+                </TouchableOpacity>
+              </View>
             </View>
+          ) : (
+            <>
+              <TouchableOpacity style={s.uploadArea} onPress={() => setShowPickerModal(true)} data-testid="upload-photo-btn">
+                <Ionicons name="camera-outline" size={32} color={C.accent} />
+                <Text style={s.uploadText}>Prendre ou importer une photo</Text>
+                <Text style={s.uploadHint}>L'IA analysera automatiquement les dommages</Text>
+              </TouchableOpacity>
+
+              {showPickerModal && (
+                <View style={s.pickerModal}>
+                  <TouchableOpacity style={s.pickerOption} onPress={startWebcam} data-testid="take-photo-btn">
+                    <Ionicons name="camera" size={20} color="#FFF" />
+                    <Text style={s.pickerOptionText}>Camera</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[s.pickerOption, { backgroundColor: C.accent }]} onPress={pickFileWeb} data-testid="pick-gallery-btn">
+                    <Ionicons name="images" size={20} color="#FFF" />
+                    <Text style={s.pickerOptionText}>Galerie</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={s.pickerCancel} onPress={() => setShowPickerModal(false)} data-testid="cancel-picker-btn">
+                    <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Annuler</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
           )}
         </View>
       ) : (
@@ -261,4 +361,8 @@ const s = StyleSheet.create({
   pickerOption: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.blue, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
   pickerOptionText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
   pickerCancel: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10 },
+  webcamContainer: { borderRadius: 12, overflow: 'hidden', backgroundColor: '#000', marginBottom: 10 },
+  webcamActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, paddingVertical: 12, backgroundColor: '#111' },
+  webcamCaptureBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#DC2626', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 30 },
+  webcamCancelBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 12, paddingVertical: 8 },
 });
