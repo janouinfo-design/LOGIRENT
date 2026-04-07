@@ -86,7 +86,10 @@ export default function MyDocumentsScreen() {
         filename: `${docType}.jpg`,
       });
       await fetchDocs();
-      Alert.alert('Succes', 'Document envoye pour verification');
+      Alert.alert('Succes', 'Document envoye - Analyse OCR en cours...');
+      // Poll for OCR completion
+      setTimeout(() => fetchDocs(), 6000);
+      setTimeout(() => fetchDocs(), 15000);
     } catch (e: any) {
       Alert.alert('Erreur', e.response?.data?.detail || 'Erreur upload');
     }
@@ -160,6 +163,25 @@ export default function MyDocumentsScreen() {
                 <Image source={{ uri: existing.url }} style={s.docPreview} resizeMode="cover" />
               )}
 
+              {existing?.ocr_status && (
+                <View style={[s.ocrStatusRow, {
+                  backgroundColor: existing.ocr_status === 'completed' ? '#10B98110' : existing.ocr_status === 'processing' ? '#F59E0B10' : '#EF444410'
+                }]}>
+                  <Ionicons
+                    name={existing.ocr_status === 'completed' ? 'checkmark-circle' : existing.ocr_status === 'processing' ? 'hourglass-outline' : 'alert-circle'}
+                    size={14}
+                    color={existing.ocr_status === 'completed' ? '#059669' : existing.ocr_status === 'processing' ? '#B45309' : '#DC2626'}
+                  />
+                  <Text style={{
+                    fontSize: 12, fontWeight: '600',
+                    color: existing.ocr_status === 'completed' ? '#059669' : existing.ocr_status === 'processing' ? '#B45309' : '#DC2626'
+                  }}>
+                    {existing.ocr_status === 'completed' ? `OCR: Donnees extraites (${existing.ocr_confidence || 0}%)` :
+                     existing.ocr_status === 'processing' ? 'Analyse OCR en cours...' : 'OCR echoue'}
+                  </Text>
+                </View>
+              )}
+
               {isUploading ? (
                 <View style={s.uploadingState}>
                   <ActivityIndicator color={ACCENT} />
@@ -213,6 +235,7 @@ const s = StyleSheet.create({
   docLabel: { fontSize: 15, fontWeight: '700', color: '#111827' },
   statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, alignSelf: 'flex-start', marginTop: 4 },
   docPreview: { width: '100%', height: 140, borderRadius: 10, marginBottom: 12 },
+  ocrStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginBottom: 10 },
   uploadingState: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16 },
   docActions: { flexDirection: 'row', gap: 10 },
   cameraBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#111827', paddingVertical: 12, borderRadius: 10 },

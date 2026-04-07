@@ -34,6 +34,7 @@ export default function DocumentScanScreen() {
   const [extractedData, setExtractedData] = useState<Record<string, string>>({});
   const [searchClient, setSearchClient] = useState('');
   const [showPreview, setShowPreview] = useState<string | null>(null);
+  const [ocrRunning, setOcrRunning] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -110,11 +111,30 @@ export default function DocumentScanScreen() {
         filename,
       });
       fetchDocs(selectedClient.id);
-      Alert.alert('Succes', 'Document uploade');
+      Alert.alert('Succes', 'Document uploade - OCR en cours...');
+      // Poll for OCR completion after a delay
+      setTimeout(() => { if (selectedClient) fetchDocs(selectedClient.id); }, 5000);
+      setTimeout(() => { if (selectedClient) fetchDocs(selectedClient.id); }, 12000);
     } catch (e: any) {
       Alert.alert('Erreur', e.response?.data?.detail || 'Erreur upload');
     }
     setUploading(false);
+  };
+
+  const triggerOcr = async (docId: string) => {
+    setOcrRunning(docId);
+    try {
+      const res = await api.post(`/api/documents/${docId}/ocr`);
+      if (res.data.extracted_data) {
+        Alert.alert('OCR termine', `Confiance: ${res.data.confidence}%`);
+      } else {
+        Alert.alert('OCR', res.data.message || 'Extraction terminee');
+      }
+      if (selectedClient) fetchDocs(selectedClient.id);
+    } catch (e: any) {
+      Alert.alert('Erreur OCR', e.response?.data?.detail || 'Erreur');
+    }
+    setOcrRunning(null);
   };
 
   const handleValidate = async (status: string) => {
@@ -141,7 +161,7 @@ export default function DocumentScanScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
         <Text style={[s.title, { color: C.text }]}>Scan de documents</Text>
         <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 16 }}>
-          Scannez les pieces d'identite et permis de vos clients. Validez manuellement les informations.
+          Scannez les pieces d'identite et permis de vos clients. L'OCR IA extrait automatiquement les informations.
         </Text>
 
         <View style={[s.mainGrid, !isWide && { flexDirection: 'column' }]}>
@@ -232,22 +252,57 @@ export default function DocumentScanScreen() {
                                 <View style={[s.docStatusBadge, { backgroundColor: sc.bg }]}>
                                   <Text style={{ color: sc.text, fontSize: 10, fontWeight: '700' }}>{sc.label}</Text>
                                 </View>
+                                {doc.ocr_status && (
+                                  <View style={[s.ocrBadge, {
+                                    backgroundColor: doc.ocr_status === 'completed' ? '#10B98120' : doc.ocr_status === 'processing' ? '#F59E0B20' : '#EF444420'
+                                  }]}>
+                                    <Ionicons name={doc.ocr_status === 'completed' ? 'scan' : doc.ocr_status === 'processing' ? 'hourglass' : 'alert-circle'} size={10} color={doc.ocr_status === 'completed' ? '#059669' : doc.ocr_status === 'processing' ? '#B45309' : '#DC2626'} />
+                                    <Text style={{ fontSize: 9, fontWeight: '700', color: doc.ocr_status === 'completed' ? '#059669' : doc.ocr_status === 'processing' ? '#B45309' : '#DC2626' }}>
+                                      {doc.ocr_status === 'completed' ? `OCR ${doc.ocr_confidence || 0}%` : doc.ocr_status === 'processing' ? 'OCR...' : 'OCR echoue'}
+                                    </Text>
+                                  </View>
+                                )}
                               </TouchableOpacity>
                               <View style={{ padding: 10 }}>
                                 <Text style={{ color: C.text, fontSize: 13, fontWeight: '700' }}>
                                   {DOC_TYPES.find(d => d.key === doc.doc_type)?.label || doc.doc_type}
                                 </Text>
                                 <Text style={{ color: C.textLight, fontSize: 11 }}>{new Date(doc.created_at).toLocaleDateString('fr-CH')}</Text>
-                                {doc.status === 'pending' && (
-                                  <TouchableOpacity
-                                    style={s.validateBtn}
-                                    onPress={() => { setShowValidate(doc); setExtractedData(doc.extracted_data || {}); }}
-                                    data-testid={`validate-${doc.id}`}
-                                  >
-                                    <Ionicons name="create" size={14} color="#fff" />
-                                    <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Valider</Text>
-                                  </TouchableOpacity>
+                                {doc.extracted_data && Object.keys(doc.extracted_data).length > 0 && (
+                                  <View style={{ marginTop: 4 }}>
+                                    {doc.extracted_data.name && <Text style={{ color: C.text, fontSize: 11 }}>{doc.extracted_data.name}</Text>}
+                                    {doc.extracted_data.document_number && <Text style={{ color: C.textLight, fontSize: 10 }}>N° {doc.extracted_data.document_number}</Text>}
+                                  </View>
                                 )}
+                                <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                                  {doc.status === 'pending' && (
+                                    <TouchableOpacity
+                                      style={s.validateBtn}
+                                      onPress={() => { setShowValidate(doc); setExtractedData(doc.extracted_data || {}); }}
+                                      data-testid={`validate-${doc.id}`}
+                                    >
+                                      <Ionicons name="create" size={14} color="#fff" />
+                                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Valider</Text>
+                                    </TouchableOpacity>
+                                  )}
+                                  {(!doc.ocr_status || doc.ocr_status === 'failed') && (
+                                    <TouchableOpacity
+                                      style={s.ocrBtn}
+                                      onPress={() => triggerOcr(doc.id)}
+                                      disabled={ocrRunning === doc.id}
+                                      data-testid={`ocr-${doc.id}`}
+                                    >
+                                      {ocrRunning === doc.id ? (
+                                        <ActivityIndicator size="small" color={ACCENT} />
+                                      ) : (
+                                        <>
+                                          <Ionicons name="scan" size={14} color={ACCENT} />
+                                          <Text style={{ color: ACCENT, fontSize: 12, fontWeight: '700' }}>OCR</Text>
+                                        </>
+                                      )}
+                                    </TouchableOpacity>
+                                  )}
+                                </View>
                               </View>
                             </View>
                           );
@@ -273,7 +328,15 @@ export default function DocumentScanScreen() {
             {showValidate?.url && (
               <Image source={{ uri: showValidate.url }} style={s.modalImage} resizeMode="contain" />
             )}
-            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 8, marginTop: 12 }}>Saisie manuelle des informations</Text>
+            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 8, marginTop: 12 }}>
+              {showValidate?.ocr_status === 'completed' ? 'Informations pre-remplies par OCR IA - Verifiez et corrigez si necessaire' : 'Saisie manuelle des informations'}
+            </Text>
+            {showValidate?.ocr_confidence > 0 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, backgroundColor: '#10B98110', padding: 8, borderRadius: 8 }}>
+                <Ionicons name="scan" size={16} color="#059669" />
+                <Text style={{ color: '#059669', fontSize: 12, fontWeight: '700' }}>OCR Confiance: {showValidate.ocr_confidence}%</Text>
+              </View>
+            )}
 
             {[
               { key: 'name', label: 'Nom complet', placeholder: 'Jean Dupont' },
@@ -282,6 +345,9 @@ export default function DocumentScanScreen() {
               { key: 'document_number', label: 'N° document', placeholder: '12345678' },
               { key: 'license_number', label: 'N° permis', placeholder: 'G123456' },
               { key: 'license_expiry_date', label: 'Expiration permis', placeholder: '01.01.2030' },
+              { key: 'expiry_date', label: 'Date expiration doc', placeholder: '01.01.2030' },
+              { key: 'place_of_birth', label: 'Lieu de naissance', placeholder: 'Geneve' },
+              { key: 'license_categories', label: 'Categories permis', placeholder: 'B, B1' },
             ].map(f => (
               <View key={f.key} style={{ marginBottom: 8 }}>
                 <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>{f.label}</Text>
@@ -343,7 +409,9 @@ const s = StyleSheet.create({
   docImageWrap: { position: 'relative' },
   docImage: { width: '100%', height: 130 },
   docStatusBadge: { position: 'absolute', top: 6, right: 6, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  validateBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: ACCENT, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, marginTop: 8, alignSelf: 'flex-start' },
+  validateBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: ACCENT, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, alignSelf: 'flex-start' },
+  ocrBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, borderWidth: 1, borderColor: ACCENT, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, alignSelf: 'flex-start' },
+  ocrBadge: { position: 'absolute', bottom: 6, left: 6, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
   modalContent: { width: '100%', maxWidth: 500, borderRadius: 16, padding: 20, maxHeight: '90%' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },

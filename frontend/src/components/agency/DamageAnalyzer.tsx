@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../api/axios';
@@ -29,24 +29,51 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
   const [preview, setPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [showPickerModal, setShowPickerModal] = useState(false);
 
-  const pickPhoto = () => {
-    if (Platform.OS !== 'web') return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.onchange = (e: any) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const base64 = ev.target?.result as string;
-        setPreview(base64);
+  const takePhoto = async () => {
+    setShowPickerModal(false);
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission requise', 'Autorisez la camera pour prendre une photo.');
+        return;
+      }
+      const res = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+        base64: true,
+        allowsEditing: true,
+      });
+      if (!res.canceled && res.assets[0]) {
+        const asset = res.assets[0];
+        const uri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+        setPreview(uri);
         setResult(null);
-      };
-      reader.readAsDataURL(file);
-    };
-    input.click();
+      }
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message || 'Erreur camera');
+    }
+  };
+
+  const pickFromGallery = async () => {
+    setShowPickerModal(false);
+    try {
+      const res = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+        base64: true,
+        allowsEditing: true,
+      });
+      if (!res.canceled && res.assets[0]) {
+        const asset = res.assets[0];
+        const uri = asset.base64 ? `data:image/jpeg;base64,${asset.base64}` : asset.uri;
+        setPreview(uri);
+        setResult(null);
+      }
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message || 'Erreur galerie');
+    }
   };
 
   const analyzePhoto = async () => {
@@ -75,11 +102,29 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
       </View>
 
       {!preview ? (
-        <TouchableOpacity style={s.uploadArea} onPress={pickPhoto} data-testid="upload-photo-btn">
-          <Ionicons name="camera-outline" size={32} color={C.accent} />
-          <Text style={s.uploadText}>Prendre ou importer une photo</Text>
-          <Text style={s.uploadHint}>L'IA analysera automatiquement les dommages</Text>
-        </TouchableOpacity>
+        <View>
+          <TouchableOpacity style={s.uploadArea} onPress={() => setShowPickerModal(true)} data-testid="upload-photo-btn">
+            <Ionicons name="camera-outline" size={32} color={C.accent} />
+            <Text style={s.uploadText}>Prendre ou importer une photo</Text>
+            <Text style={s.uploadHint}>L'IA analysera automatiquement les dommages</Text>
+          </TouchableOpacity>
+
+          {showPickerModal && (
+            <View style={s.pickerModal}>
+              <TouchableOpacity style={s.pickerOption} onPress={takePhoto} data-testid="take-photo-btn">
+                <Ionicons name="camera" size={20} color="#FFF" />
+                <Text style={s.pickerOptionText}>Camera</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[s.pickerOption, { backgroundColor: C.accent }]} onPress={pickFromGallery} data-testid="pick-gallery-btn">
+                <Ionicons name="images" size={20} color="#FFF" />
+                <Text style={s.pickerOptionText}>Galerie</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={s.pickerCancel} onPress={() => setShowPickerModal(false)} data-testid="cancel-picker-btn">
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       ) : (
         <View>
           <View style={s.previewWrap}>
@@ -212,4 +257,8 @@ const s = StyleSheet.create({
   recoText: { fontSize: 11, color: '#1E40AF', flex: 1 },
   newPhotoBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 8, marginTop: 8, borderWidth: 1, borderColor: C.border, borderRadius: 8 },
   newPhotoBtnText: { fontSize: 12, fontWeight: '600', color: C.accent },
+  pickerModal: { flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap', justifyContent: 'center' },
+  pickerOption: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: C.blue, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
+  pickerOptionText: { color: '#FFF', fontSize: 13, fontWeight: '700' },
+  pickerCancel: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 10 },
 });

@@ -14,6 +14,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from deps import get_admin_user, get_agency_admin, get_current_user, hash_password
 from utils.notifications import create_notification
 from utils.helpers import verify_document_with_ai
+from utils.helpers import extract_document_ocr
 from utils.email import (
     send_email, send_reservation_confirmation, send_payment_confirmation,
     generate_status_change_email
@@ -1222,13 +1223,38 @@ async def upload_document_base64(
         "url": url,
         "status": "pending",
         "extracted_data": {},
+        "ocr_status": "processing",
+        "ocr_confidence": 0,
         "validated_by": None,
         "validated_at": None,
         "created_at": datetime.utcnow(),
     }
     await db.documents.insert_one(doc_record)
+    doc_id = doc_record["id"]
     doc_record.pop('_id', None)
+
+    # Launch OCR in background
+    asyncio.create_task(_run_ocr_background(doc_id, base64_data, doc_type))
+
     return doc_record
+
+
+async def _run_ocr_background(doc_id: str, base64_data: str, doc_type: str):
+    """Run OCR extraction in background after document upload."""
+    try:
+        ocr_result = await extract_document_ocr(base64_data, doc_type)
+        update = {
+            "ocr_status": "completed" if ocr_result.get("success") else "failed",
+            "ocr_confidence": ocr_result.get("confidence", 0),
+            "ocr_result": ocr_result,
+        }
+        if ocr_result.get("success") and ocr_result.get("extracted_data"):
+            update["extracted_data"] = ocr_result["extracted_data"]
+        await db.documents.update_one({"id": doc_id}, {"$set": update})
+        logger.info(f"OCR completed for document {doc_id}: confidence={ocr_result.get('confidence', 0)}%")
+    except Exception as e:
+        logger.error(f"OCR background task failed for {doc_id}: {e}")
+        await db.documents.update_one({"id": doc_id}, {"$set": {"ocr_status": "failed"}})
 
 
 @router.get("/documents/client/{client_id}")
@@ -1287,6 +1313,50 @@ async def validate_document(doc_id: str, data: dict, user: dict = Depends(get_ag
             await db.users.update_one({"id": client_id}, {"$set": update_fields})
 
     return {"message": "Document valide", "status": status}
+
+
+@router.post("/documents/{doc_id}/ocr")
+async def trigger_document_ocr(doc_id: str, user: dict = Depends(get_admin_user)):
+    """Manually trigger OCR extraction on a document."""
+    doc = await db.documents.find_one({"id": doc_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document introuvable")
+
+    url = doc.get("url")
+    if not url:
+        raise HTTPException(status_code=400, detail="Document sans image")
+
+    # Download image from URL and convert to base64
+    import httpx
+    import base64 as b64
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url)
+            resp.raise_for_status()
+            image_b64 = b64.b64encode(resp.content).decode("utf-8")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Impossible de telecharger l'image: {str(e)[:100]}")
+
+    await db.documents.update_one({"id": doc_id}, {"$set": {"ocr_status": "processing"}})
+
+    ocr_result = await extract_document_ocr(image_b64, doc.get("doc_type", "other"))
+
+    update = {
+        "ocr_status": "completed" if ocr_result.get("success") else "failed",
+        "ocr_confidence": ocr_result.get("confidence", 0),
+        "ocr_result": ocr_result,
+    }
+    if ocr_result.get("success") and ocr_result.get("extracted_data"):
+        update["extracted_data"] = ocr_result["extracted_data"]
+
+    await db.documents.update_one({"id": doc_id}, {"$set": update})
+
+    return {
+        "message": "OCR termine",
+        "ocr_status": update["ocr_status"],
+        "confidence": update.get("ocr_confidence", 0),
+        "extracted_data": ocr_result.get("extracted_data", {}),
+    }
 
 
 # ======================== CONTRACT TEMPLATE ========================
