@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, ScrollView, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import api from '../../api/axios';
 
 const C = { accent: '#7C3AED', bg: '#F9FAFB', card: '#FFF', text: '#111827', textLight: '#6B7280', border: '#E5E7EB', success: '#10B981', error: '#EF4444', warning: '#F59E0B', blue: '#2563EB' };
