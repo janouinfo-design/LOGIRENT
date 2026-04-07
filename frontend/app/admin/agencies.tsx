@@ -504,14 +504,14 @@ export default function AgenciesPage() {
                 <Text style={styles.qrDescription}>Le client scanne ce code pour s'inscrire et acceder au catalogue de l'agence.</Text>
                 <View style={styles.qrContainer} data-testid="qr-code-client">
                   <QRCode
-                    value={`${API_URL}/a/${qrAgency?.slug || qrAgency?.id}`}
+                    value={`${typeof window !== 'undefined' ? window.location.origin : API_URL}/a/${qrAgency?.slug || qrAgency?.id}`}
                     size={180}
                     level="H"
                     fgColor="#1A1A2E"
                     bgColor="#FFFFFF"
                   />
                 </View>
-                <Text style={styles.qrUrl} selectable>{API_URL}/a/{qrAgency?.slug || qrAgency?.id}</Text>
+                <Text style={styles.qrUrl} selectable>{typeof window !== 'undefined' ? window.location.origin : API_URL}/a/{qrAgency?.slug || qrAgency?.id}</Text>
               </View>
 
               <View style={styles.qrDivider} />
@@ -525,14 +525,14 @@ export default function AgenciesPage() {
                 <Text style={styles.qrDescription}>L'admin scanne ce code pour acceder a l'application mobile de gestion de l'agence.</Text>
                 <View style={styles.qrContainer} data-testid="qr-code-admin">
                   <QRCode
-                    value={`${API_URL}/admin-login`}
+                    value={`${typeof window !== 'undefined' ? window.location.origin : API_URL}/admin-login`}
                     size={180}
                     level="H"
                     fgColor="#1A1A2E"
                     bgColor="#FFFFFF"
                   />
                 </View>
-                <Text style={styles.qrUrl} selectable>{API_URL}/admin-login</Text>
+                <Text style={styles.qrUrl} selectable>{typeof window !== 'undefined' ? window.location.origin : API_URL}/admin-login</Text>
               </View>
 
               <TouchableOpacity style={styles.saveBtn} onPress={() => setQrAgency(null)} data-testid="qr-modal-close">

@@ -32,9 +32,10 @@ export default function AgencyProfile() {
     })();
   }, []);
 
-  const clientLink = agency ? `${API_URL}/a/${agency.slug || agency.id}` : '';
-  const adminLink = `${API_URL}/admin-login`;
-  const superAdminLink = `${API_URL}/super-admin`;
+  const appOrigin = Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : API_URL;
+  const clientLink = agency ? `${appOrigin}/a/${agency.slug || agency.id}` : '';
+  const adminLink = `${appOrigin}/admin-login`;
+  const superAdminLink = `${appOrigin}/super-admin`;
 
   const copyToClipboard = (text: string) => {
     if (Platform.OS === 'web') {
