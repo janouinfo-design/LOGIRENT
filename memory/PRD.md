@@ -40,7 +40,7 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 1. **Camera Integration Fix (DamageAnalyzer)**: expo-image-picker with launchCameraAsync/launchImageLibraryAsync + webcam PC via navigator.mediaDevices.getUserMedia
 2. **OCR Integration (Document Scanning)**: Automatic OCR via GPT-5.2 vision, background processing, manual trigger, pre-filled validation modal
 3. **Registration Bug Fix**: Fixed TypeScript interface (5 params), added inline error banner, translated UI to French, translated backend error messages
-4. **Reservation Navigation Overhaul**: 3 tabs (Aujourd'hui/Gestion/Planning), Gestion as default with search/filter/pagination, Aujourd'hui with KPIs/activity/table/alerts, Planning with Gantt chart. Full interconnection between views.
+4. **Reservation Page Redesign**: Gestion tab redesigned to match admin mockup - dark top bar (search + quick filters + create), 4 KPI cards, Activite Recente feed, Dernieres Reservations table (Voir/Modifier/Annuler), 3 alert cards, full Toutes les Reservations table (sort + pagination). Planning tab with Gantt chart preserved.
 
 ## Prioritized Backlog
 
