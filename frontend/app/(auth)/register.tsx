@@ -29,28 +29,29 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [apiError, setApiError] = useState('');
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
     
     if (!name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = 'Le nom est requis';
     }
     
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'L\'email est requis';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = 'Format email invalide';
     }
     
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Le mot de passe est requis';
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = 'Minimum 6 caracteres';
     }
     
     if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas';
     }
     
     setErrors(newErrors);
@@ -58,6 +59,7 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
+    setApiError('');
     if (!validate()) return;
     
     setLoading(true);
@@ -65,7 +67,9 @@ export default function RegisterScreen() {
       await register(email, password, name, phone || undefined, agency_id || undefined);
       router.replace('/(tabs)');
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message);
+      const msg = error.message || 'Erreur lors de la creation du compte';
+      setApiError(msg);
+      try { Alert.alert('Erreur', msg); } catch {}
     } finally {
       setLoading(false);
     }
@@ -90,14 +94,24 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>{agency_name ? `Rejoignez ${decodeURIComponent(agency_name)}` : 'Join LogiRent today'}</Text>
+            <Text style={styles.title}>Creer un compte</Text>
+            <Text style={styles.subtitle}>{agency_name ? `Rejoignez ${decodeURIComponent(agency_name)}` : 'Rejoignez LogiRent'}</Text>
           </View>
+
+          {apiError ? (
+            <View style={styles.errorBanner} data-testid="register-error-banner">
+              <Ionicons name="alert-circle" size={18} color="#DC2626" />
+              <Text style={styles.errorBannerText}>{apiError}</Text>
+              <TouchableOpacity onPress={() => setApiError('')}>
+                <Ionicons name="close" size={16} color="#DC2626" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           <View style={styles.form}>
             <Input
-              label="Full Name"
-              placeholder="Enter your full name"
+              label="Nom complet"
+              placeholder="Entrez votre nom complet"
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -107,7 +121,7 @@ export default function RegisterScreen() {
 
             <Input
               label="Email"
-              placeholder="Enter your email"
+              placeholder="Entrez votre email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -117,8 +131,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Phone (Optional)"
-              placeholder="Enter your phone number"
+              label="Telephone (Optionnel)"
+              placeholder="Entrez votre numero"
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -126,8 +140,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Password"
-              placeholder="Create a password"
+              label="Mot de passe"
+              placeholder="Creez un mot de passe"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -136,8 +150,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Confirm Password"
-              placeholder="Confirm your password"
+              label="Confirmer le mot de passe"
+              placeholder="Confirmez votre mot de passe"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -146,7 +160,7 @@ export default function RegisterScreen() {
             />
 
             <Button
-              title="Create Account"
+              title="Creer le compte"
               onPress={handleRegister}
               loading={loading}
               size="large"
@@ -155,9 +169,9 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account?</Text>
+            <Text style={styles.footerText}>Deja un compte ?</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-              <Text style={styles.footerLink}>Sign In</Text>
+              <Text style={styles.footerLink}>Se connecter</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -189,6 +203,23 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 32,
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: '#DC2626',
+    fontSize: 14,
+    fontWeight: '600',
   },
   title: {
     fontSize: 28,

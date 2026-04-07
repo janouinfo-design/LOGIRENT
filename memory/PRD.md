@@ -30,23 +30,26 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 
 ### Session 2026-04-03 - Completed
 1. Swiss Invoicing System: CRUD (5 types), PDF+QR-bill, TVA 7.7%, Stripe+TWINT, admin dashboard, client portal
-2. Agency Billing Settings (QR-IBAN): Admin configures IBAN, company info for invoices
-3. Document Scanning - Admin: Client list, camera/gallery upload, validation with manual data entry
-4. Document Scanning - Client: "Mes documents" page with 4 doc types, progress bar, Scanner/Galerie buttons
-5. Mobile App Configuration: app.json + eas.json, LogiRent icon, bundle ID ch.logirent.app
+2. Agency Billing Settings (QR-IBAN)
+3. Document Scanning - Admin & Client (camera/gallery upload, validation)
+4. Mobile App Configuration: app.json + eas.json
+5. Admin Menu UX Refactoring (grouped dropdown submenus)
+6. Fixed Agency QR codes (app.logirent.ch)
 
 ### Session 2026-04-07 - Completed
-1. **Camera Integration Fix (DamageAnalyzer)**: Replaced web-only `<input type="file">` with `expo-image-picker` (launchCameraAsync + launchImageLibraryAsync) for native camera access on mobile
-2. **OCR Integration (Document Scanning)**: Automatic OCR extraction via GPT-5.2 vision on document upload. Background processing with status tracking. Manual OCR trigger button for admin. Pre-filled validation modal with extracted data (name, DOB, nationality, document number, license number, etc.)
+1. **Camera Integration Fix (DamageAnalyzer)**: expo-image-picker with launchCameraAsync/launchImageLibraryAsync
+2. **OCR Integration (Document Scanning)**: Automatic OCR via GPT-5.2 vision, background processing, manual trigger, pre-filled validation modal
+3. **Registration Bug Fix**: Fixed TypeScript interface (5 params), added inline error banner, translated UI to French, translated backend error messages
 
 ## Prioritized Backlog
 
 ### P1 - Next
 - Dynamic AI Pricing, Predictive Maintenance
-- Automatic invoice email reminders, Accounting export (CSV/XML)
+- Automatic invoice email reminders, Accounting export
 
 ### P2 - Future
-- Multi-channel (Expedia, Kayak), Loyalty program, Real reviews, Multi-currency
+- Multi-channel (Expedia, Kayak), Loyalty program, Multi-currency
 
 ### P3 - Backlog
-- App Store/Play Store submission (blocked on user creating Google Play account), Health dashboard, Check-in selfie, Fine management
+- App Store/Play Store submission (blocked on user creating Google Play account)
+- Health dashboard, Fine management

@@ -58,13 +58,13 @@ async def _store_client_document(client_id: str, image_data: str, doc_type: str)
 async def register(user_data: UserCreate):
     existing = await db.users.find_one({"email": user_data.email.lower()})
     if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="Cet email est deja utilise")
 
     agency_id = user_data.agency_id
     if agency_id:
         agency = await db.agencies.find_one({"id": agency_id})
         if not agency:
-            raise HTTPException(status_code=400, detail="Agency not found")
+            raise HTTPException(status_code=400, detail="Agence introuvable")
 
     user = {
         "id": str(uuid.uuid4()),
