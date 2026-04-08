@@ -646,7 +646,10 @@ export default function AgencyReservations() {
             showAllVehicles={showAllVehicles} setShowAllVehicles={setShowAllVehicles}
             highlightId={highlightId} highlightAnim={highlightAnim}
             updateStatus={updateStatus}
-            onOpenReservation={(res) => setActionModal(res as any)}
+            onOpenReservation={(res) => {
+              const full = reservations.find((r: any) => r.id === res.id);
+              setActionModal(full || res as any);
+            }}
             onCreateReservation={(vehicleId, date) => router.push(`/agency-app/create-reservation?vehicle_id=${vehicleId}&date=${date}` as any)}
             onNavigateMonth={() => setPlanningMonth(startOfMonth(new Date()))}
             onFilterChange={(sf, vt) => { setGanttStatusFilter(sf); setGanttViewType(vt); }}
@@ -675,7 +678,11 @@ export default function AgencyReservations() {
                   borderRadius: 12, padding: 12, marginBottom: 8,
                   ...(r.isOverdue ? { borderLeftWidth: 4, borderLeftColor: '#EF4444' } : {}),
                 }}
-                onPress={() => setActionModal(r as any)}
+                onPress={() => {
+                  // Find full reservation from reservations list
+                  const full = reservations.find((res: any) => res.id === r.id);
+                  setActionModal(full || { ...r, total_price: r.price_per_day * r.total_days } as any);
+                }}
                 activeOpacity={0.7}
               >
                 <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: RES_COLORS[r.status] || '#6B7280' }} />
