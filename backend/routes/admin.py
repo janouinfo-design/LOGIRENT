@@ -767,6 +767,46 @@ async def update_payment_status(reservation_id: str, payment_status: str, user: 
     return {"message": f"Payment status updated to {payment_status}"}
 
 
+
+
+@router.put("/admin/reservations/{reservation_id}/reschedule")
+async def reschedule_reservation(reservation_id: str, new_start: str, new_end: str, user: dict = Depends(get_admin_user)):
+    reservation = await db.reservations.find_one({"id": reservation_id})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation introuvable")
+    if reservation['status'] in ['completed', 'cancelled']:
+        raise HTTPException(status_code=400, detail="Impossible de deplacer une reservation terminee ou annulee")
+
+    start_dt = datetime.fromisoformat(new_start)
+    end_dt = datetime.fromisoformat(new_end)
+    total_days = (end_dt - start_dt).days
+    if total_days <= 0:
+        raise HTTPException(status_code=400, detail="La date de fin doit etre apres la date de debut")
+
+    overlap = await db.reservations.find_one({
+        "vehicle_id": reservation['vehicle_id'],
+        "id": {"$ne": reservation_id},
+        "status": {"$nin": ["cancelled", "completed"]},
+        "start_date": {"$lt": end_dt},
+        "end_date": {"$gt": start_dt},
+    })
+    if overlap:
+        raise HTTPException(status_code=409, detail="Conflit: un autre vehicule est reserve sur cette periode")
+
+    vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']})
+    base_price = vehicle['price_per_day'] * total_days
+    options_price = sum(opt.get('price_per_day', 0) * total_days for opt in reservation.get('options', []))
+    total_price = base_price + options_price
+
+    await db.reservations.update_one({"id": reservation_id}, {"$set": {
+        "start_date": start_dt, "end_date": end_dt,
+        "total_days": total_days, "base_price": base_price,
+        "options_price": options_price, "total_price": total_price,
+        "updated_at": datetime.utcnow(),
+    }})
+    return {"success": True, "message": f"Reservation deplacee du {new_start} au {new_end}", "total_days": total_days, "total_price": total_price}
+
+
 @router.get("/admin/payments")
 async def get_admin_payments(skip: int = 0, limit: int = 20, user: dict = Depends(get_admin_user)):
     transactions = await db.payment_transactions.find({}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
