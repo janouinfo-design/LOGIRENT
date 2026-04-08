@@ -541,6 +541,7 @@ export default function AgencyReservations() {
             highlightId={highlightId} highlightAnim={highlightAnim}
             updateStatus={updateStatus}
             onOpenReservation={(res) => setActionModal(res as any)}
+            onCreateReservation={(vehicleId, date) => router.push(`/agency-app/create-reservation?vehicle_id=${vehicleId}&date=${date}` as any)}
             onNavigateMonth={() => setPlanningMonth(startOfMonth(new Date()))}
           />
         </View>
