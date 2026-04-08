@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, Animated, Modal, Pressable, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, Animated, Modal, Pressable, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, parseISO, isSameDay, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -50,18 +50,23 @@ interface GanttChartProps {
   onOpenReservation?: (res: any) => void;
   onCreateReservation?: (vehicleId: string, date: string) => void;
   onNavigateMonth?: (dir: number) => void;
+  onFilterChange?: (statusFilter: string, viewType: string) => void;
 }
 
 export const GanttChart = ({
   C, schedule, orphanReservations = [], planningMonth, scheduleLoading, refreshing, onRefresh,
   vehicleSearch, setVehicleSearch, showAllVehicles, setShowAllVehicles,
-  highlightId, highlightAnim, updateStatus, onOpenReservation, onCreateReservation, onNavigateMonth,
+  highlightId, highlightAnim, updateStatus, onOpenReservation, onCreateReservation, onNavigateMonth, onFilterChange,
 }: GanttChartProps) => {
 
   const [viewType, setViewType] = useState<ViewType>('month');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [zoom, setZoom] = useState(1);
   const [popup, setPopup] = useState<{ res: Res; vehicle: VehicleSchedule } | null>(null);
+
+  // Notify parent of filter changes
+  const handleViewType = (v: ViewType) => { setViewType(v); onFilterChange?.(statusFilter, v); };
+  const handleStatusFilter = (f: StatusFilter) => { setStatusFilter(f); onFilterChange?.(f, viewType); };
 
   // Drag & Drop state
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -270,7 +275,7 @@ export const GanttChart = ({
       <View style={g.toolbar}>
         <View style={g.viewSwitch}>
           {(['day', 'week', 'month'] as ViewType[]).map(v => (
-            <TouchableOpacity key={v} style={[g.viewBtn, viewType === v && { backgroundColor: C.accent }]} onPress={() => setViewType(v)}>
+            <TouchableOpacity key={v} style={[g.viewBtn, viewType === v && { backgroundColor: C.accent }]} onPress={() => handleViewType(v)}>
               <Text style={{ color: viewType === v ? '#fff' : C.textLight, fontSize: 11, fontWeight: '700' }}>
                 {v === 'day' ? 'Jour' : v === 'week' ? 'Semaine' : 'Mois'}
               </Text>
@@ -300,7 +305,7 @@ export const GanttChart = ({
             { value: 'active', label: 'En cours', icon: 'car' },
             { value: 'overdue', label: 'Retards', icon: 'warning' },
           ] as { value: StatusFilter; label: string; icon: string }[]).map(f => (
-            <TouchableOpacity key={f.value} style={[g.sfBtn, statusFilter === f.value && { backgroundColor: C.accent + '20', borderColor: C.accent }]} onPress={() => setStatusFilter(f.value)}>
+            <TouchableOpacity key={f.value} style={[g.sfBtn, statusFilter === f.value && { backgroundColor: C.accent + '20', borderColor: C.accent }]} onPress={() => handleStatusFilter(f.value)}>
               <Ionicons name={f.icon as any} size={12} color={statusFilter === f.value ? C.accent : C.textLight} />
               <Text style={{ color: statusFilter === f.value ? C.accent : C.textLight, fontSize: 11, fontWeight: '600' }}>{f.label}</Text>
             </TouchableOpacity>
@@ -336,7 +341,7 @@ export const GanttChart = ({
       </ScrollView>
 
       {/* ===== GANTT GRID ===== */}
-      <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
+      <View style={{ maxHeight: 350, overflow: 'scroll' } as any}>
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           <View
             ref={gridRef}
@@ -489,7 +494,7 @@ export const GanttChart = ({
             ))}
           </View>
         </ScrollView>
-      </ScrollView>
+      </View>
 
       {/* ===== RESERVATION POPUP ===== */}
       {popup && (

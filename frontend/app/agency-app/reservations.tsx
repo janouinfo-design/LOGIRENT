@@ -75,6 +75,13 @@ export default function AgencyReservations() {
   const [tablePage, setTablePage] = useState(1);
   const pageSize = 10;
 
+  // Gantt filter sync (from GanttChart child)
+  const [ganttStatusFilter, setGanttStatusFilter] = useState('all');
+  const [ganttViewType, setGanttViewType] = useState('month');
+
+  // Expanded alert in Gestion
+  const [expandedAlert, setExpandedAlert] = useState<'overdue' | 'pending' | 'late' | null>(null);
+
   // Handle highlight param
   useEffect(() => {
     if (params.highlight) {
@@ -194,7 +201,40 @@ export default function AgencyReservations() {
 
   // Overdue
   const overdueList = overdueData?.overdue || [];
-  const pendingPayments = useMemo(() => reservations.filter(r => r.payment_status === 'unpaid' && r.status !== 'cancelled').slice(0, 3), [reservations]);
+  const pendingPayments = useMemo(() => reservations.filter(r => r.payment_status === 'unpaid' && r.status !== 'cancelled'), [reservations]);
+
+  // Planning reservation cards - filtered by schedule data
+  const planningCards = useMemo(() => {
+    if (!schedule.length) return [];
+    const mStart = planningMonth.getTime();
+    const mEnd = endOfMonth(planningMonth).getTime();
+    const now = new Date();
+    let cards: any[] = [];
+    schedule.forEach(v => {
+      (v.reservations || []).forEach(r => {
+        try {
+          const rStart = new Date(r.start).getTime();
+          const rEnd = new Date(r.end).getTime();
+          if (rStart <= mEnd && rEnd >= mStart) {
+            cards.push({
+              ...r, vehicle_brand: v.brand, vehicle_model: v.model,
+              vehicle_name: `${v.brand} ${v.model}`, vehicle_id: v.id,
+              price_per_day: v.price_per_day, start_date: r.start, end_date: r.end,
+              total_days: Math.max(1, Math.ceil((rEnd - rStart) / 86400000)),
+              isOverdue: r.status === 'active' && rEnd < now.getTime(),
+            });
+          }
+        } catch {}
+      });
+    });
+    if (ganttStatusFilter === 'confirmed') cards = cards.filter(r => r.status === 'confirmed');
+    else if (ganttStatusFilter === 'active') cards = cards.filter(r => r.status === 'active');
+    else if (ganttStatusFilter === 'overdue') cards = cards.filter(r => r.isOverdue);
+    if (vehicleSearch) cards = cards.filter(r => r.vehicle_name.toLowerCase().includes(vehicleSearch.toLowerCase()));
+    cards.sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+    return cards;
+  }, [schedule, planningMonth, ganttStatusFilter, vehicleSearch]);
+
 
   // KPI
   const kpiToday = todayData?.total || 0;
@@ -405,42 +445,108 @@ export default function AgencyReservations() {
             </TouchableOpacity>
           </View>
 
-          {/* Alert Cards */}
+          {/* Alert Cards - Expandable */}
           {(overdueList.length > 0 || pendingPayments.length > 0) && (
-            <View style={s.alertRow}>
-              {overdueList.slice(0, 1).map((o: any) => (
-                <TouchableOpacity key={o.id} style={[s.alertCard, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A' }]} onPress={() => setActionModal(o)}>
-                  <View style={[s.alertIcon, { backgroundColor: '#F59E0B20' }]}>
-                    <Ionicons name="car" size={20} color="#D97706" />
+            <View>
+              <View style={s.alertRow}>
+                {overdueList.length > 0 && (
+                  <TouchableOpacity style={[s.alertCard, { backgroundColor: '#FEF3C7', borderColor: expandedAlert === 'overdue' ? '#D97706' : '#FDE68A' }]} onPress={() => setExpandedAlert(expandedAlert === 'overdue' ? null : 'overdue')}>
+                    <View style={[s.alertIcon, { backgroundColor: '#F59E0B20' }]}>
+                      <Ionicons name="car" size={20} color="#D97706" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 13 }}>Vehicule non rendu</Text>
+                      <Text style={{ color: '#78716C', fontSize: 12 }}>{overdueList.length} vehicule(s) en retard</Text>
+                    </View>
+                    <Ionicons name={expandedAlert === 'overdue' ? 'chevron-up' : 'chevron-down'} size={18} color="#D97706" />
+                  </TouchableOpacity>
+                )}
+                {pendingPayments.length > 0 && (
+                  <TouchableOpacity style={[s.alertCard, { backgroundColor: '#E0E7FF', borderColor: expandedAlert === 'pending' ? '#3B82F6' : '#C7D2FE' }]} onPress={() => setExpandedAlert(expandedAlert === 'pending' ? null : 'pending')}>
+                    <View style={[s.alertIcon, { backgroundColor: '#3B82F620' }]}>
+                      <Ionicons name="card" size={20} color="#3B82F6" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: '700', color: '#1E3A8A', fontSize: 13 }}>Paiement en attente</Text>
+                      <Text style={{ color: '#78716C', fontSize: 12 }}>{pendingPayments.length} paiement(s) en attente</Text>
+                    </View>
+                    <Ionicons name={expandedAlert === 'pending' ? 'chevron-up' : 'chevron-down'} size={18} color="#3B82F6" />
+                  </TouchableOpacity>
+                )}
+                {overdueList.length > 0 && (
+                  <TouchableOpacity style={[s.alertCard, { backgroundColor: '#FEE2E2', borderColor: expandedAlert === 'late' ? '#EF4444' : '#FECACA' }]} onPress={() => setExpandedAlert(expandedAlert === 'late' ? null : 'late')}>
+                    <View style={[s.alertIcon, { backgroundColor: '#EF444420' }]}>
+                      <Ionicons name="location" size={20} color="#EF4444" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontWeight: '700', color: '#991B1B', fontSize: 13 }}>Client en retard</Text>
+                      <Text style={{ color: '#78716C', fontSize: 12 }}>{overdueList.length} client(s) en retard</Text>
+                    </View>
+                    <Ionicons name={expandedAlert === 'late' ? 'chevron-up' : 'chevron-down'} size={18} color="#EF4444" />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              {/* Expanded alert list */}
+              {expandedAlert === 'overdue' && overdueList.length > 0 && (
+                <View style={[s.card, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A', marginHorizontal: 16, marginBottom: 12, padding: 0 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, padding: 12, borderBottomWidth: 1, borderColor: '#FDE68A' }}>
+                    <Ionicons name="car" size={16} color="#D97706" />
+                    <Text style={{ color: '#92400E', fontSize: 13, fontWeight: '800' }}>Vehicules non rendus ({overdueList.length})</Text>
                   </View>
-                  <View>
-                    <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 13 }}>Vehicule non rendu</Text>
-                    <Text style={{ color: '#78716C', fontSize: 12 }}>{o.vehicle_name} - En retard</Text>
+                  {overdueList.map((o: any) => (
+                    <TouchableOpacity key={o.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderBottomWidth: 0.5, borderColor: '#FDE68A' }} onPress={() => setActionModal(o)}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '700' }}>{o.vehicle_name}</Text>
+                        <Text style={{ color: '#78716C', fontSize: 11 }}>{o.user_name} - Retard de {o.days_overdue || '?'}j</Text>
+                      </View>
+                      <Text style={{ color: '#D97706', fontSize: 12, fontWeight: '700' }}>CHF {o.total_price}</Text>
+                      <Ionicons name="chevron-forward" size={16} color="#D97706" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {expandedAlert === 'pending' && pendingPayments.length > 0 && (
+                <View style={[s.card, { backgroundColor: '#EEF2FF', borderColor: '#C7D2FE', marginHorizontal: 16, marginBottom: 12, padding: 0 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, padding: 12, borderBottomWidth: 1, borderColor: '#C7D2FE' }}>
+                    <Ionicons name="card" size={16} color="#3B82F6" />
+                    <Text style={{ color: '#1E3A8A', fontSize: 13, fontWeight: '800' }}>Paiements en attente ({pendingPayments.length})</Text>
                   </View>
-                </TouchableOpacity>
-              ))}
-              {pendingPayments.slice(0, 1).map(p => (
-                <TouchableOpacity key={p.id} style={[s.alertCard, { backgroundColor: '#E0E7FF', borderColor: '#C7D2FE' }]} onPress={() => setActionModal(p)}>
-                  <View style={[s.alertIcon, { backgroundColor: '#3B82F620' }]}>
-                    <Ionicons name="card" size={20} color="#3B82F6" />
+                  {pendingPayments.map((p: any) => (
+                    <TouchableOpacity key={p.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderBottomWidth: 0.5, borderColor: '#C7D2FE' }} onPress={() => setActionModal(p)}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#3B82F6' }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '700' }}>{p.user_name}</Text>
+                        <Text style={{ color: '#78716C', fontSize: 11 }}>{p.vehicle_name} - {format(new Date(p.start_date), 'dd/MM')} au {format(new Date(p.end_date), 'dd/MM')}</Text>
+                      </View>
+                      <Text style={{ color: '#3B82F6', fontSize: 12, fontWeight: '700' }}>CHF {p.total_price}</Text>
+                      <Ionicons name="chevron-forward" size={16} color="#3B82F6" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {expandedAlert === 'late' && overdueList.length > 0 && (
+                <View style={[s.card, { backgroundColor: '#FEF2F2', borderColor: '#FECACA', marginHorizontal: 16, marginBottom: 12, padding: 0 }]}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, padding: 12, borderBottomWidth: 1, borderColor: '#FECACA' }}>
+                    <Ionicons name="location" size={16} color="#EF4444" />
+                    <Text style={{ color: '#991B1B', fontSize: 13, fontWeight: '800' }}>Clients en retard ({overdueList.length})</Text>
                   </View>
-                  <View>
-                    <Text style={{ fontWeight: '700', color: '#1E3A8A', fontSize: 13 }}>Paiement en attente</Text>
-                    <Text style={{ color: '#78716C', fontSize: 12 }}>{p.user_name} - Paiement en attente</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-              {overdueList.slice(0, 1).map((o: any) => (
-                <TouchableOpacity key={`late-${o.id}`} style={[s.alertCard, { backgroundColor: '#FEE2E2', borderColor: '#FECACA' }]} onPress={() => setActionModal(o)}>
-                  <View style={[s.alertIcon, { backgroundColor: '#EF444420' }]}>
-                    <Ionicons name="location" size={20} color="#EF4444" />
-                  </View>
-                  <View>
-                    <Text style={{ fontWeight: '700', color: '#991B1B', fontSize: 13 }}>Client en retard</Text>
-                    <Text style={{ color: '#78716C', fontSize: 12 }}>{o.user_name} - Retard {o.days_overdue}j</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+                  {overdueList.map((o: any) => (
+                    <TouchableOpacity key={`late-${o.id}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderBottomWidth: 0.5, borderColor: '#FECACA' }} onPress={() => setActionModal(o)}>
+                      <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ color: '#1E293B', fontSize: 13, fontWeight: '700' }}>{o.user_name}</Text>
+                        <Text style={{ color: '#78716C', fontSize: 11 }}>{o.vehicle_name} - Retard de {o.days_overdue || '?'}j</Text>
+                      </View>
+                      <Text style={{ color: '#EF4444', fontSize: 12, fontWeight: '700' }}>+{o.days_overdue || '?'}j</Text>
+                      <Ionicons name="chevron-forward" size={16} color="#EF4444" />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
             </View>
           )}
 
@@ -513,7 +619,7 @@ export default function AgencyReservations() {
 
       {/* ===== PLANNING VIEW ===== */}
       {viewMode === 'planning' && (
-        <View style={{ flex: 1 }}>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
           <View style={[s.monthNav, { borderColor: C.border }]}>
             <TouchableOpacity onPress={() => setPlanningMonth(addMonths(planningMonth, -1))}>
               <Ionicons name="chevron-back" size={22} color={C.accent} />
@@ -543,8 +649,54 @@ export default function AgencyReservations() {
             onOpenReservation={(res) => setActionModal(res as any)}
             onCreateReservation={(vehicleId, date) => router.push(`/agency-app/create-reservation?vehicle_id=${vehicleId}&date=${date}` as any)}
             onNavigateMonth={() => setPlanningMonth(startOfMonth(new Date()))}
+            onFilterChange={(sf, vt) => { setGanttStatusFilter(sf); setGanttViewType(vt); }}
           />
-        </View>
+
+          {/* ===== PLANNING RESERVATION CARDS ===== */}
+          <View style={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 20 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="list" size={16} color={C.accent} />
+                <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Reservations du mois</Text>
+              </View>
+              <View style={{ backgroundColor: C.accent + '15', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>{planningCards.length} resultat(s)</Text>
+              </View>
+            </View>
+            {planningCards.length === 0 && (
+              <Text style={{ color: C.textLight, fontSize: 13, textAlign: 'center', paddingVertical: 16 }}>Aucune reservation pour cette periode</Text>
+            )}
+            {planningCards.map((r: any) => (
+              <TouchableOpacity
+                key={r.id}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 12,
+                  backgroundColor: C.card, borderWidth: 1, borderColor: r.isOverdue ? '#FECACA' : C.border,
+                  borderRadius: 12, padding: 12, marginBottom: 8,
+                  ...(r.isOverdue ? { borderLeftWidth: 4, borderLeftColor: '#EF4444' } : {}),
+                }}
+                onPress={() => setActionModal(r as any)}
+                activeOpacity={0.7}
+              >
+                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: RES_COLORS[r.status] || '#6B7280' }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontSize: 13, fontWeight: '800' }} numberOfLines={1}>{r.vehicle_name}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11 }}>{r.user_name || 'Client inconnu'}</Text>
+                </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={{ color: C.text, fontSize: 11, fontWeight: '700' }}>
+                    {format(new Date(r.start_date), 'dd/MM')} - {format(new Date(r.end_date), 'dd/MM')}
+                  </Text>
+                  <Text style={{ color: C.textLight, fontSize: 10 }}>{r.total_days}j</Text>
+                </View>
+                <View style={{ backgroundColor: RES_COLORS[r.status] || '#6B7280', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{STATUS_LABELS[r.status] || r.status}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={C.textLight} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
       )}
 
       <ReservationActionModal
