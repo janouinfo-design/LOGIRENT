@@ -44,6 +44,7 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 
 ### Session 2026-04-08 - Completed
 1. **Interactive Gantt Chart (Planning)**: Complete overhaul tested and verified. Features: alert bar (retards/conflits/paiements), Jour/Semaine/Mois views, zoom controls, status filters, vehicle search, legend, conflict detection (red bars), today highlight, click-on-reservation popup with quick actions, click-on-empty-cell to create reservation, horizontal scroll.
+2. **Drag & Drop Reservations**: Added drag & drop to move reservations on the Gantt chart. Long press (300ms) starts drag, mouse move shows ghost preview (blue cells), release calls reschedule API. Backend: PUT /api/admin/reservations/{id}/reschedule with conflict detection (409). DEPLACABLE badge shown in action modal for movable reservations. Only confirmed/pending/pending_cash reservations are draggable.
 
 ## Prioritized Backlog
 

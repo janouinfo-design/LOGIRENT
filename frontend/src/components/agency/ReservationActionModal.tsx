@@ -113,7 +113,15 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
           {actionModal && (
             <ScrollView>
               <Text style={{ color: C.textLight, fontSize: 14, marginBottom: 4 }}>{actionModal.user_name} - {actionModal.vehicle_name}</Text>
-              <Text style={{ color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 4 }}>CHF {actionModal.total_price?.toFixed(2)}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <Text style={{ color: C.text, fontSize: 20, fontWeight: '800' }}>CHF {actionModal.total_price?.toFixed(2)}</Text>
+                {['confirmed', 'pending', 'pending_cash'].includes(actionModal.status) && (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#3B82F615', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1, borderColor: '#3B82F640' }}>
+                    <Ionicons name="move" size={12} color="#3B82F6" />
+                    <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>DEPLACABLE</Text>
+                  </View>
+                )}
+              </View>
               {(actionModal as any).selected_tier && (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12, backgroundColor: C.accent + '10', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}>
                   <Ionicons name="pricetag" size={14} color={C.accent} />
