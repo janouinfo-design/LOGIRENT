@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, ScrollView, Platform, Alert, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl, TextInput, ScrollView, Platform, Alert, Animated, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../../src/api/axios';
@@ -669,39 +669,49 @@ export default function AgencyReservations() {
             {planningCards.length === 0 && (
               <Text style={{ color: C.textLight, fontSize: 13, textAlign: 'center', paddingVertical: 16 }}>Aucune reservation pour cette periode</Text>
             )}
-            {planningCards.map((r: any) => (
-              <TouchableOpacity
-                key={r.id}
-                style={{
-                  flexDirection: 'row', alignItems: 'center', gap: 12,
-                  backgroundColor: C.card, borderWidth: 1, borderColor: r.isOverdue ? '#FECACA' : C.border,
-                  borderRadius: 12, padding: 12, marginBottom: 8,
-                  ...(r.isOverdue ? { borderLeftWidth: 4, borderLeftColor: '#EF4444' } : {}),
-                }}
-                onPress={() => {
-                  // Find full reservation from reservations list
-                  const full = reservations.find((res: any) => res.id === r.id);
-                  setActionModal(full || { ...r, total_price: r.price_per_day * r.total_days } as any);
-                }}
-                activeOpacity={0.7}
-              >
-                <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: RES_COLORS[r.status] || '#6B7280' }} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.text, fontSize: 13, fontWeight: '800' }} numberOfLines={1}>{r.vehicle_name}</Text>
-                  <Text style={{ color: C.textLight, fontSize: 11 }}>{r.user_name || 'Client inconnu'}</Text>
+            {(() => {
+              const screenW = Dimensions.get('window').width;
+              const cardW = Math.floor((screenW - 32 - 24) / 4); // 32px padding, 24px gaps (3 gaps of 8px)
+              const rows: any[][] = [];
+              for (let i = 0; i < planningCards.length; i += 4) {
+                rows.push(planningCards.slice(i, i + 4));
+              }
+              return rows.map((row, ri) => (
+                <View key={ri} style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                  {row.map((r: any) => (
+                    <TouchableOpacity
+                      key={r.id}
+                      style={{
+                        width: cardW,
+                        backgroundColor: C.card, borderWidth: 1, borderColor: r.isOverdue ? '#FECACA' : C.border,
+                        borderRadius: 10, padding: 10,
+                        borderTopWidth: 3, borderTopColor: RES_COLORS[r.status] || '#6B7280',
+                      }}
+                      onPress={() => {
+                        const full = reservations.find((res: any) => res.id === r.id);
+                        setActionModal(full || { ...r, total_price: r.price_per_day * r.total_days } as any);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <View style={{ backgroundColor: RES_COLORS[r.status] || '#6B7280', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ color: '#fff', fontSize: 9, fontWeight: '800' }}>{STATUS_LABELS[r.status] || r.status}</Text>
+                        </View>
+                        <Text style={{ color: C.textLight, fontSize: 10 }}>{r.total_days}j</Text>
+                      </View>
+                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '800', marginBottom: 2 }} numberOfLines={1}>{r.vehicle_name}</Text>
+                      <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700', marginBottom: 4 }} numberOfLines={1}>{r.user_name || 'Client inconnu'}</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Ionicons name="calendar-outline" size={11} color={C.textLight} />
+                        <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>
+                          {format(new Date(r.start_date), 'dd/MM')} - {format(new Date(r.end_date), 'dd/MM')}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-                <View style={{ alignItems: 'center' }}>
-                  <Text style={{ color: C.text, fontSize: 11, fontWeight: '700' }}>
-                    {format(new Date(r.start_date), 'dd/MM')} - {format(new Date(r.end_date), 'dd/MM')}
-                  </Text>
-                  <Text style={{ color: C.textLight, fontSize: 10 }}>{r.total_days}j</Text>
-                </View>
-                <View style={{ backgroundColor: RES_COLORS[r.status] || '#6B7280', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 }}>
-                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800' }}>{STATUS_LABELS[r.status] || r.status}</Text>
-                </View>
-                <Ionicons name="chevron-forward" size={16} color={C.textLight} />
-              </TouchableOpacity>
-            ))}
+              ));
+            })()}
           </View>
         </ScrollView>
       )}
