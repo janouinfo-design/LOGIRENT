@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, Animated } from 'react-native';
+import React, { useMemo, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, ActivityIndicator, RefreshControl, Animated, Modal, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { format, eachDayOfInterval, endOfMonth, parseISO, differenceInDays, isSameDay } from 'date-fns';
+import { format, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, parseISO, isSameDay, differenceInDays, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const RES_COLORS: Record<string, string> = {
@@ -10,19 +10,23 @@ const RES_COLORS: Record<string, string> = {
 };
 
 const statusLabel = (s: string) => {
-  const map: Record<string, string> = { pending: 'Confirmee', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'Active', completed: 'Terminee', cancelled: 'Annulee' };
+  const map: Record<string, string> = { pending: 'En attente', pending_cash: 'Especes', confirmed: 'Confirmee', active: 'En cours', completed: 'Terminee', cancelled: 'Annulee' };
   return map[s] || s;
 };
 
+interface Res { id: string; start: string; end: string; status: string; user_name?: string }
 interface VehicleSchedule {
   id: string; brand: string; model: string; price_per_day: number;
-  reservations: { id: string; start: string; end: string; status: string; user_name?: string }[];
+  reservations: Res[];
 }
+
+type ViewType = 'day' | 'week' | 'month';
+type StatusFilter = 'all' | 'confirmed' | 'active' | 'overdue';
 
 interface GanttChartProps {
   C: any;
   schedule: VehicleSchedule[];
-  orphanReservations?: { id: string; start: string; end: string; status: string; user_name?: string }[];
+  orphanReservations?: Res[];
   planningMonth: Date;
   scheduleLoading: boolean;
   refreshing: boolean;
@@ -34,73 +38,267 @@ interface GanttChartProps {
   highlightId: string | null;
   highlightAnim: Animated.Value;
   updateStatus: (id: string, status: string) => void;
+  onOpenReservation?: (res: any) => void;
+  onCreateReservation?: (vehicleId: string, date: string) => void;
+  onNavigateMonth?: (dir: number) => void;
 }
-
-const CELL_W = 32;
-const LABEL_W = 120;
-const ROW_H = 40;
 
 export const GanttChart = ({
   C, schedule, orphanReservations = [], planningMonth, scheduleLoading, refreshing, onRefresh,
   vehicleSearch, setVehicleSearch, showAllVehicles, setShowAllVehicles,
-  highlightId, highlightAnim, updateStatus,
+  highlightId, highlightAnim, updateStatus, onOpenReservation, onCreateReservation, onNavigateMonth,
 }: GanttChartProps) => {
-  const monthDays = useMemo(() => eachDayOfInterval({ start: planningMonth, end: endOfMonth(planningMonth) }), [planningMonth]);
+
+  const [viewType, setViewType] = useState<ViewType>('month');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [zoom, setZoom] = useState(1); // 0.7, 1, 1.3
+  const [popup, setPopup] = useState<{ res: Res; vehicle: VehicleSchedule; x: number; y: number } | null>(null);
+
   const today = new Date();
+  const CELL_W = Math.round(32 * zoom);
+  const LABEL_W = Math.round(130 * zoom);
+  const ROW_H = Math.round(42 * zoom);
+
+  // Compute days based on view type
+  const days = useMemo(() => {
+    if (viewType === 'day') {
+      return [today];
+    } else if (viewType === 'week') {
+      const ws = startOfWeek(today, { weekStartsOn: 1 });
+      return eachDayOfInterval({ start: ws, end: endOfWeek(today, { weekStartsOn: 1 }) });
+    }
+    return eachDayOfInterval({ start: planningMonth, end: endOfMonth(planningMonth) });
+  }, [viewType, planningMonth]);
+
+  // Conflict detection: find overlapping reservations per vehicle
+  const conflicts = useMemo(() => {
+    const found: Set<string> = new Set();
+    schedule.forEach(v => {
+      const res = v.reservations.filter(r => r.status !== 'cancelled' && r.status !== 'completed');
+      for (let i = 0; i < res.length; i++) {
+        for (let j = i + 1; j < res.length; j++) {
+          try {
+            const aStart = parseISO(res[i].start).getTime();
+            const aEnd = parseISO(res[i].end).getTime();
+            const bStart = parseISO(res[j].start).getTime();
+            const bEnd = parseISO(res[j].end).getTime();
+            if (aStart < bEnd && bStart < aEnd) {
+              found.add(res[i].id);
+              found.add(res[j].id);
+            }
+          } catch {}
+        }
+      }
+    });
+    return found;
+  }, [schedule]);
+
+  // Alert stats
+  const alerts = useMemo(() => {
+    let overdue = 0, conflictCount = conflicts.size, unpaid = 0;
+    schedule.forEach(v => v.reservations.forEach(r => {
+      if (r.status === 'active') {
+        try { if (parseISO(r.end).getTime() < today.getTime()) overdue++; } catch {}
+      }
+    }));
+    // unpaid approximation
+    schedule.forEach(v => v.reservations.forEach(r => {
+      if (r.status === 'pending' || r.status === 'pending_cash') unpaid++;
+    }));
+    return { overdue, conflictCount, unpaid };
+  }, [schedule, conflicts]);
+
+  // Filter vehicles
+  const filteredSchedule = useMemo(() => {
+    let list = schedule;
+    if (!showAllVehicles) list = list.filter(v => v.reservations.length > 0);
+    if (vehicleSearch) list = list.filter(v => `${v.brand} ${v.model}`.toLowerCase().includes(vehicleSearch.toLowerCase()));
+    if (statusFilter !== 'all') {
+      list = list.map(v => ({
+        ...v,
+        reservations: v.reservations.filter(r => {
+          if (statusFilter === 'confirmed') return r.status === 'confirmed';
+          if (statusFilter === 'active') return r.status === 'active';
+          if (statusFilter === 'overdue') {
+            try { return r.status === 'active' && parseISO(r.end).getTime() < today.getTime(); } catch { return false; }
+          }
+          return true;
+        }),
+      })).filter(v => showAllVehicles || v.reservations.length > 0);
+    }
+    return list;
+  }, [schedule, showAllVehicles, vehicleSearch, statusFilter]);
+
+  // Today column index
+  const todayIndex = useMemo(() => days.findIndex(d => isSameDay(d, today)), [days]);
+
+  const handleCellPress = (vehicle: VehicleSchedule, day: Date, res: Res | null) => {
+    if (res) {
+      // Open reservation popup
+      if (onOpenReservation) onOpenReservation(res);
+      else setPopup({ res, vehicle, x: 0, y: 0 });
+    } else if (onCreateReservation) {
+      onCreateReservation(vehicle.id, format(day, 'yyyy-MM-dd'));
+    }
+  };
+
+  const goToday = useCallback(() => {
+    if (onNavigateMonth) {
+      const todayMonth = startOfMonth(today);
+      onNavigateMonth(0); // signal parent to reset to current month
+    }
+    setViewType('month');
+  }, [onNavigateMonth]);
 
   if (scheduleLoading) return <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 40 }} />;
 
   return (
     <>
-      {/* Vehicle search + toggle */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8, marginBottom: 8 }}>
-        <View style={[st.searchBar, { flex: 1, margin: 0, backgroundColor: C.card, borderColor: C.border }]}>
-          <Ionicons name="search" size={16} color={C.textLight} />
-          <TextInput style={[st.searchInput, { color: C.text, paddingVertical: 6 }]} placeholder="Filtrer vehicule..." placeholderTextColor={C.textLight} value={vehicleSearch} onChangeText={setVehicleSearch} data-testid="vehicle-search-planning" />
+      {/* ===== ALERT BAR ===== */}
+      {(alerts.overdue > 0 || alerts.conflictCount > 0 || alerts.unpaid > 0) && (
+        <View style={g.alertBar}>
+          {alerts.overdue > 0 && (
+            <View style={[g.alertChip, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
+              <Ionicons name="time" size={14} color="#EF4444" />
+              <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: '700' }}>{alerts.overdue} retard(s)</Text>
+            </View>
+          )}
+          {alerts.conflictCount > 0 && (
+            <View style={[g.alertChip, { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }]}>
+              <Ionicons name="alert-circle" size={14} color="#EA580C" />
+              <Text style={{ color: '#EA580C', fontSize: 12, fontWeight: '700' }}>{alerts.conflictCount} conflit(s)</Text>
+            </View>
+          )}
+          {alerts.unpaid > 0 && (
+            <View style={[g.alertChip, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+              <Ionicons name="card" size={14} color="#D97706" />
+              <Text style={{ color: '#D97706', fontSize: 12, fontWeight: '700' }}>{alerts.unpaid} paiement(s)</Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity onPress={() => setShowAllVehicles(!showAllVehicles)} style={[st.filterTab, { backgroundColor: showAllVehicles ? C.accent + '20' : C.card, borderColor: showAllVehicles ? C.accent : C.border }]} data-testid="toggle-all-vehicles">
-          <Ionicons name={showAllVehicles ? 'eye' : 'eye-off'} size={14} color={showAllVehicles ? C.accent : C.textLight} />
-          <Text style={{ color: showAllVehicles ? C.accent : C.textLight, fontSize: 11, fontWeight: '600' }}>{showAllVehicles ? 'Tous' : 'Avec res.'}</Text>
+      )}
+
+      {/* ===== TOOLBAR ===== */}
+      <View style={g.toolbar}>
+        {/* View switcher */}
+        <View style={g.viewSwitch}>
+          {(['day', 'week', 'month'] as ViewType[]).map(v => (
+            <TouchableOpacity key={v} style={[g.viewBtn, viewType === v && { backgroundColor: C.accent }]} onPress={() => setViewType(v)}>
+              <Text style={{ color: viewType === v ? '#fff' : C.textLight, fontSize: 11, fontWeight: '700' }}>
+                {v === 'day' ? 'Jour' : v === 'week' ? 'Semaine' : 'Mois'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Today button */}
+        <TouchableOpacity style={[g.todayBtn, { borderColor: C.accent }]} onPress={goToday}>
+          <Ionicons name="today" size={14} color={C.accent} />
+          <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>Aujourd'hui</Text>
         </TouchableOpacity>
+
+        {/* Zoom */}
+        <View style={g.zoomWrap}>
+          <TouchableOpacity onPress={() => setZoom(Math.max(0.7, zoom - 0.15))} style={g.zoomBtn}>
+            <Ionicons name="remove" size={14} color={C.textLight} />
+          </TouchableOpacity>
+          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>{Math.round(zoom * 100)}%</Text>
+          <TouchableOpacity onPress={() => setZoom(Math.min(1.5, zoom + 0.15))} style={g.zoomBtn}>
+            <Ionicons name="add" size={14} color={C.textLight} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Status filter */}
+        <View style={g.statusFilters}>
+          {([
+            { value: 'all', label: 'Tous', icon: 'grid' },
+            { value: 'confirmed', label: 'Confirmes', icon: 'checkmark-circle' },
+            { value: 'active', label: 'En cours', icon: 'car' },
+            { value: 'overdue', label: 'Retards', icon: 'warning' },
+          ] as { value: StatusFilter; label: string; icon: string }[]).map(f => (
+            <TouchableOpacity key={f.value} style={[g.sfBtn, statusFilter === f.value && { backgroundColor: C.accent + '20', borderColor: C.accent }]} onPress={() => setStatusFilter(f.value)}>
+              <Ionicons name={f.icon as any} size={12} color={statusFilter === f.value ? C.accent : C.textLight} />
+              <Text style={{ color: statusFilter === f.value ? C.accent : C.textLight, fontSize: 11, fontWeight: '600' }}>{f.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Vehicle search */}
+        <View style={[g.searchWrap, { borderColor: C.border, backgroundColor: C.card }]}>
+          <Ionicons name="search" size={14} color={C.textLight} />
+          <TextInput style={[g.searchInput, { color: C.text }]} placeholder="Vehicule..." placeholderTextColor={C.textLight} value={vehicleSearch} onChangeText={setVehicleSearch} />
+        </View>
       </View>
 
+      {/* ===== LEGEND ===== */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 12, marginBottom: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <View style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: '#D1FAE5', borderWidth: 1, borderColor: '#A7F3D0' }} />
+          <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>Disponible</Text>
+        </View>
+        {Object.entries(RES_COLORS).filter(([k]) => k !== 'completed' && k !== 'cancelled').map(([k, color]) => (
+          <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <View style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: color }} />
+            <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>{statusLabel(k)}</Text>
+          </View>
+        ))}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <View style={{ width: 14, height: 14, borderRadius: 3, backgroundColor: '#EF4444', borderWidth: 2, borderColor: '#B91C1C' }} />
+          <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>Conflit</Text>
+        </View>
+      </ScrollView>
+
+      {/* ===== GANTT GRID ===== */}
       <ScrollView refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
         <ScrollView horizontal showsHorizontalScrollIndicator={true}>
           <View>
-            {/* Header row: days */}
+            {/* Header row */}
             <View style={{ flexDirection: 'row' }}>
-              <View style={[st.labelCell, { width: LABEL_W, backgroundColor: C.card, borderColor: C.border }]}>
-                <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700' }}>Vehicule</Text>
+              <View style={[g.labelCell, { width: LABEL_W, height: ROW_H, backgroundColor: '#1E3A5F', borderColor: '#2D4A6F' }]}>
+                <Text style={{ color: '#CBD5E1', fontSize: 11, fontWeight: '800' }}>VEHICULE</Text>
               </View>
-              {monthDays.map((day, i) => {
+              {days.map((day, i) => {
                 const isToday = isSameDay(day, today);
                 const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                 return (
-                  <View key={i} style={[st.dayHeaderCell, { width: CELL_W, backgroundColor: isToday ? C.accent + '20' : isWeekend ? C.card : C.bg, borderColor: C.border }]}>
-                    <Text style={{ color: isToday ? C.accent : C.textLight, fontSize: 8, fontWeight: '600' }}>{format(day, 'EEE', { locale: fr }).slice(0, 2)}</Text>
-                    <Text style={{ color: isToday ? C.accent : C.text, fontSize: 12, fontWeight: isToday ? '800' : '600' }}>{format(day, 'd')}</Text>
+                  <View key={i} style={[g.dayHeaderCell, {
+                    width: CELL_W, height: ROW_H,
+                    backgroundColor: isToday ? '#3B82F6' : isWeekend ? '#F1F5F9' : '#F8FAFC',
+                    borderColor: '#E2E8F0',
+                  }]}>
+                    <Text style={{ color: isToday ? '#fff' : '#94A3B8', fontSize: Math.max(7, 8 * zoom), fontWeight: '600' }}>
+                      {format(day, 'EEE', { locale: fr }).slice(0, 2).toUpperCase()}
+                    </Text>
+                    <Text style={{ color: isToday ? '#fff' : '#334155', fontSize: Math.max(10, 12 * zoom), fontWeight: isToday ? '900' : '700' }}>
+                      {format(day, 'd')}
+                    </Text>
                   </View>
                 );
               })}
             </View>
 
             {/* Vehicle rows */}
-            {schedule
-              .filter(v => showAllVehicles || v.reservations.length > 0)
-              .filter(v => !vehicleSearch || `${v.brand} ${v.model}`.toLowerCase().includes(vehicleSearch.toLowerCase()))
-              .map((vehicle, vi) => (
+            {filteredSchedule.map((vehicle, vi) => (
               <View key={vehicle.id} style={{ flexDirection: 'row' }}>
-                <View style={[st.labelCell, { width: LABEL_W, backgroundColor: vi % 2 === 0 ? C.card : C.bg, borderColor: C.border, height: ROW_H }]}>
-                  <Text style={{ color: C.text, fontSize: 11, fontWeight: '700' }} numberOfLines={1}>{vehicle.brand} {vehicle.model}</Text>
-                  <Text style={{ color: C.textLight, fontSize: 9 }}>CHF {vehicle.price_per_day}/j</Text>
+                {/* Vehicle label */}
+                <View style={[g.labelCell, {
+                  width: LABEL_W, height: ROW_H,
+                  backgroundColor: vi % 2 === 0 ? '#FFFFFF' : '#F8FAFC',
+                  borderColor: '#E2E8F0',
+                }]}>
+                  <Text style={{ color: '#1E293B', fontSize: Math.max(10, 11 * zoom), fontWeight: '800' }} numberOfLines={1}>
+                    {vehicle.brand} {vehicle.model}
+                  </Text>
+                  <Text style={{ color: '#94A3B8', fontSize: Math.max(8, 9 * zoom) }}>CHF {vehicle.price_per_day}/j</Text>
                 </View>
 
-                {monthDays.map((day, di) => {
+                {/* Day cells */}
+                {days.map((day, di) => {
                   const dayTs = day.getTime();
                   const isToday = isSameDay(day, today);
                   const isWeekend = day.getDay() === 0 || day.getDay() === 6;
 
-                  let resForDay: typeof vehicle.reservations[0] | null = null;
+                  let resForDay: Res | null = null;
                   let isStart = false;
                   let isEnd = false;
 
@@ -117,121 +315,169 @@ export const GanttChart = ({
                     } catch {}
                   }
 
-                  const color = resForDay ? (RES_COLORS[resForDay.status] || C.textLight) : 'transparent';
+                  const isConflict = resForDay && conflicts.has(resForDay.id);
+                  const isOverdue = resForDay && resForDay.status === 'active' && (() => { try { return parseISO(resForDay!.end).getTime() < today.getTime(); } catch { return false; } })();
+                  const barColor = isConflict ? '#EF4444' : isOverdue ? '#DC2626' : resForDay ? (RES_COLORS[resForDay.status] || '#6B7280') : 'transparent';
+
+                  // Available = no reservation, not weekend
+                  const isAvailable = !resForDay && !isWeekend;
 
                   return (
-                    <View key={di} style={[st.dayCell, {
-                      width: CELL_W,
-                      backgroundColor: isToday ? C.accent + '08' : isWeekend ? C.card + '60' : vi % 2 === 0 ? C.card + '30' : 'transparent',
-                      borderColor: C.border, height: ROW_H,
-                    }]}>
+                    <TouchableOpacity
+                      key={di}
+                      activeOpacity={0.6}
+                      onPress={() => handleCellPress(vehicle, day, resForDay)}
+                      style={[g.dayCell, {
+                        width: CELL_W, height: ROW_H,
+                        backgroundColor: isAvailable ? '#ECFDF5' : isWeekend && !resForDay ? '#F1F5F9' : vi % 2 === 0 ? '#FFFFFF' : '#F8FAFC',
+                        borderColor: '#E2E8F0',
+                      }]}
+                    >
+                      {/* Today vertical line */}
+                      {isToday && (
+                        <View style={{ position: 'absolute', left: CELL_W / 2 - 1, top: 0, bottom: 0, width: 2, backgroundColor: '#EF4444', zIndex: 10 }} />
+                      )}
+
+                      {/* Reservation bar */}
                       {resForDay && (
                         <Animated.View style={{
                           position: 'absolute', top: 3, bottom: 3, left: isStart ? 2 : 0, right: isEnd ? 2 : 0,
-                          backgroundColor: color,
+                          backgroundColor: barColor,
                           borderTopLeftRadius: isStart ? 6 : 0, borderBottomLeftRadius: isStart ? 6 : 0,
                           borderTopRightRadius: isEnd ? 6 : 0, borderBottomRightRadius: isEnd ? 6 : 0,
                           justifyContent: 'center', overflow: 'hidden',
+                          ...(isConflict ? { borderWidth: 2, borderColor: '#B91C1C' } : {}),
                           ...(highlightId && resForDay.id === highlightId ? { opacity: highlightAnim, borderWidth: 2, borderColor: '#fff' } : {}),
                         }}>
                           {isStart && (
-                            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '900', paddingLeft: 4, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }} numberOfLines={1}>
-                              {statusLabel(resForDay.status)}
+                            <Text style={{ color: '#fff', fontSize: Math.max(8, 10 * zoom), fontWeight: '900', paddingLeft: 3, textShadowColor: 'rgba(0,0,0,0.4)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 2 }} numberOfLines={1}>
+                              {resForDay.user_name?.split(' ')[0] || statusLabel(resForDay.status)}
                             </Text>
                           )}
                         </Animated.View>
                       )}
-                    </View>
+
+                      {/* Available dot */}
+                      {isAvailable && (
+                        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#34D399', opacity: 0.5 }} />
+                      )}
+                    </TouchableOpacity>
                   );
                 })}
               </View>
             ))}
           </View>
         </ScrollView>
-
-        {/* Planning cards below the Gantt */}
-        <View style={{ padding: 16, paddingTop: 12 }}>
-          <Text style={{ color: C.text, fontSize: 18, fontWeight: '800', marginBottom: 10 }}>
-            Reservations du mois ({schedule.reduce((sum, v) => sum + v.reservations.length, 0) + orphanReservations.length})
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {schedule.map(v => v.reservations.map(r => {
-              const color = RES_COLORS[r.status] || C.textLight;
-              const isHighlighted = highlightId === r.id;
-              return (
-                <Animated.View key={r.id} style={{
-                  width: '32%', backgroundColor: C.card, borderRadius: 10,
-                  borderWidth: isHighlighted ? 2 : 1, borderColor: isHighlighted ? '#fff' : C.border,
-                  borderLeftWidth: 4, borderLeftColor: color, padding: 12,
-                  ...(isHighlighted ? { opacity: highlightAnim } : {}),
-                }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <Text style={{ color: C.text, fontSize: 16, fontWeight: '800', flex: 1 }} numberOfLines={1}>{v.brand} {v.model}</Text>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: color + '25' }}>
-                      <Text style={{ color, fontSize: 14, fontWeight: '800' }}>{statusLabel(r.status)}</Text>
-                    </View>
-                  </View>
-                  <Text style={{ color: C.textLight, fontSize: 14 }}>{r.start?.slice(5, 10)} -> {r.end?.slice(5, 10)}</Text>
-                  {r.user_name ? <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2 }} numberOfLines={1}>{r.user_name}</Text> : null}
-                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                    {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
-                      <TouchableOpacity key={s} onPress={() => updateStatus(r.id, s)}
-                        style={{
-                          paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5,
-                          backgroundColor: r.status === s ? (RES_COLORS[s] || C.textLight) + '30' : 'transparent',
-                          borderWidth: 1, borderColor: r.status === s ? (RES_COLORS[s] || C.textLight) : C.border,
-                        }}>
-                        <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 13, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </Animated.View>
-              );
-            })).flat()}
-            {/* Orphan reservations (no matching vehicle) */}
-            {orphanReservations.map(r => {
-              const color = RES_COLORS[r.status] || C.textLight;
-              return (
-                <Animated.View key={r.id} style={{
-                  width: '32%', backgroundColor: C.card, borderRadius: 10,
-                  borderWidth: 1, borderColor: C.border,
-                  borderLeftWidth: 4, borderLeftColor: color, padding: 12,
-                }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <Text style={{ color: C.text, fontSize: 16, fontWeight: '800', flex: 1 }} numberOfLines={1}>Vehicule non assigne</Text>
-                    <View style={{ paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, backgroundColor: color + '25' }}>
-                      <Text style={{ color, fontSize: 14, fontWeight: '800' }}>{statusLabel(r.status)}</Text>
-                    </View>
-                  </View>
-                  <Text style={{ color: C.textLight, fontSize: 14 }}>{r.start?.slice(5, 10)} -> {r.end?.slice(5, 10)}</Text>
-                  {r.user_name ? <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2 }} numberOfLines={1}>{r.user_name}</Text> : null}
-                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-                    {['confirmed', 'active', 'completed', 'cancelled'].map(s => (
-                      <TouchableOpacity key={s} onPress={() => updateStatus(r.id, s)}
-                        style={{
-                          paddingHorizontal: 8, paddingVertical: 4, borderRadius: 5,
-                          backgroundColor: r.status === s ? (RES_COLORS[s] || C.textLight) + '30' : 'transparent',
-                          borderWidth: 1, borderColor: r.status === s ? (RES_COLORS[s] || C.textLight) : C.border,
-                        }}>
-                        <Text style={{ color: r.status === s ? (RES_COLORS[s] || C.textLight) : C.textLight, fontSize: 13, fontWeight: '700' }}>{statusLabel(s).slice(0, 5)}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </Animated.View>
-              );
-            })}
-          </View>
-        </View>
       </ScrollView>
+
+      {/* ===== RESERVATION POPUP ===== */}
+      {popup && (
+        <Modal transparent animationType="fade" visible={!!popup} onRequestClose={() => setPopup(null)}>
+          <Pressable style={g.popupOverlay} onPress={() => setPopup(null)}>
+            <Pressable style={[g.popupCard, { backgroundColor: C.card }]} onPress={e => e.stopPropagation()}>
+              {/* Header */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <View style={[g.popupIcon, { backgroundColor: (RES_COLORS[popup.res.status] || '#6B7280') + '20' }]}>
+                  <Ionicons name="car-sport" size={20} color={RES_COLORS[popup.res.status] || '#6B7280'} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontSize: 16, fontWeight: '800' }}>{popup.vehicle.brand} {popup.vehicle.model}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 13 }}>{popup.res.user_name || 'Client inconnu'}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setPopup(null)}>
+                  <Ionicons name="close" size={22} color={C.textLight} />
+                </TouchableOpacity>
+              </View>
+
+              {/* Status + Dates */}
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                <View style={[g.badge, { backgroundColor: RES_COLORS[popup.res.status] || '#6B7280' }]}>
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>{statusLabel(popup.res.status)}</Text>
+                </View>
+                {conflicts.has(popup.res.id) && (
+                  <View style={[g.badge, { backgroundColor: '#EF4444' }]}>
+                    <Text style={{ color: '#fff', fontSize: 12, fontWeight: '800' }}>CONFLIT</Text>
+                  </View>
+                )}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
+                <View>
+                  <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>DEBUT</Text>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{popup.res.start?.slice(0, 10)}</Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color={C.textLight} style={{ marginTop: 14 }} />
+                <View>
+                  <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>FIN</Text>
+                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{popup.res.end?.slice(0, 10)}</Text>
+                </View>
+              </View>
+
+              {/* Quick Actions */}
+              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 8 }}>ACTIONS RAPIDES</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {popup.res.status !== 'confirmed' && popup.res.status !== 'completed' && popup.res.status !== 'cancelled' && (
+                  <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#10B98115', borderColor: '#10B98140' }]} onPress={() => { updateStatus(popup.res.id, 'confirmed'); setPopup(null); }}>
+                    <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>Confirmer</Text>
+                  </TouchableOpacity>
+                )}
+                {popup.res.status !== 'active' && popup.res.status !== 'completed' && popup.res.status !== 'cancelled' && (
+                  <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#3B82F615', borderColor: '#3B82F640' }]} onPress={() => { updateStatus(popup.res.id, 'active'); setPopup(null); }}>
+                    <Ionicons name="play-circle" size={14} color="#3B82F6" />
+                    <Text style={{ color: '#3B82F6', fontSize: 12, fontWeight: '700' }}>Demarrer</Text>
+                  </TouchableOpacity>
+                )}
+                {popup.res.status !== 'completed' && popup.res.status !== 'cancelled' && (
+                  <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#6B728015', borderColor: '#6B728040' }]} onPress={() => { updateStatus(popup.res.id, 'completed'); setPopup(null); }}>
+                    <Ionicons name="checkmark-done" size={14} color="#6B7280" />
+                    <Text style={{ color: '#6B7280', fontSize: 12, fontWeight: '700' }}>Terminer</Text>
+                  </TouchableOpacity>
+                )}
+                {popup.res.status !== 'cancelled' && popup.res.status !== 'completed' && (
+                  <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#EF444415', borderColor: '#EF444440' }]} onPress={() => { updateStatus(popup.res.id, 'cancelled'); setPopup(null); }}>
+                    <Ionicons name="close-circle" size={14} color="#EF4444" />
+                    <Text style={{ color: '#EF4444', fontSize: 12, fontWeight: '700' }}>Annuler</Text>
+                  </TouchableOpacity>
+                )}
+                {onOpenReservation && (
+                  <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#8B5CF615', borderColor: '#8B5CF640' }]} onPress={() => { onOpenReservation(popup.res); setPopup(null); }}>
+                    <Ionicons name="open" size={14} color="#8B5CF6" />
+                    <Text style={{ color: '#8B5CF6', fontSize: 12, fontWeight: '700' }}>Details</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </Pressable>
+          </Pressable>
+        </Modal>
+      )}
     </>
   );
 };
 
-const st = StyleSheet.create({
-  searchBar: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, paddingHorizontal: 12, gap: 8, borderWidth: 1 },
-  searchInput: { flex: 1, fontSize: 14 },
-  filterTab: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
-  labelCell: { paddingHorizontal: 8, paddingVertical: 6, justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1 },
-  dayHeaderCell: { alignItems: 'center', justifyContent: 'center', paddingVertical: 4, borderRightWidth: 0.5, borderBottomWidth: 1 },
+const g = StyleSheet.create({
+  // Alert bar
+  alertBar: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8, flexWrap: 'wrap' },
+  alertChip: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1 },
+  // Toolbar
+  toolbar: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginBottom: 8, flexWrap: 'wrap' },
+  viewSwitch: { flexDirection: 'row', borderRadius: 8, overflow: 'hidden', borderWidth: 1, borderColor: '#E2E8F0' },
+  viewBtn: { paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#F8FAFC' },
+  todayBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, borderWidth: 1 },
+  zoomWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  zoomBtn: { width: 26, height: 26, borderRadius: 6, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
+  statusFilters: { flexDirection: 'row', gap: 2 },
+  sfBtn: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 8, paddingHorizontal: 8, borderWidth: 1, minWidth: 120 },
+  searchInput: { flex: 1, fontSize: 12, paddingVertical: 6 },
+  // Grid
+  labelCell: { paddingHorizontal: 8, paddingVertical: 4, justifyContent: 'center', borderRightWidth: 1, borderBottomWidth: 1 },
+  dayHeaderCell: { alignItems: 'center', justifyContent: 'center', paddingVertical: 2, borderRightWidth: 0.5, borderBottomWidth: 1 },
   dayCell: { justifyContent: 'center', alignItems: 'center', borderRightWidth: 0.5, borderBottomWidth: 0.5 },
+  // Popup
+  popupOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
+  popupCard: { width: 400, maxWidth: '90%', borderRadius: 16, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 8 },
+  popupIcon: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1 },
 });

@@ -533,15 +533,6 @@ export default function AgencyReservations() {
             </Animated.View>
           )}
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 8 }}>
-            {Object.entries(RES_COLORS).filter(([k]) => k !== 'completed' && k !== 'cancelled').map(([k, color]) => (
-              <View key={k} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <View style={{ width: 10, height: 10, borderRadius: 3, backgroundColor: color }} />
-                <Text style={{ color: C.textLight, fontSize: 10 }}>{statusLabel(k)}</Text>
-              </View>
-            ))}
-          </ScrollView>
-
           <GanttChart
             C={C} schedule={schedule} orphanReservations={orphanReservations} planningMonth={planningMonth}
             scheduleLoading={scheduleLoading} refreshing={refreshing} onRefresh={onRefresh}
@@ -549,6 +540,8 @@ export default function AgencyReservations() {
             showAllVehicles={showAllVehicles} setShowAllVehicles={setShowAllVehicles}
             highlightId={highlightId} highlightAnim={highlightAnim}
             updateStatus={updateStatus}
+            onOpenReservation={(res) => setActionModal(res as any)}
+            onNavigateMonth={() => setPlanningMonth(startOfMonth(new Date()))}
           />
         </View>
       )}
