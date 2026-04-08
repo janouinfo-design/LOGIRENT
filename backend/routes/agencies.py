@@ -484,6 +484,17 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
         return None
 
     # Group by vehicle and filter by date range
+    # Pre-fetch user names for all reservations
+    user_ids = list(set(r.get('user_id', '') for r in all_reservations if r.get('user_id')))
+    users_cursor = db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "first_name": 1, "last_name": 1, "email": 1, "name": 1})
+    users_map = {}
+    async for u in users_cursor:
+        uid = u.get('id', '')
+        name = u.get('name', '') or f"{u.get('first_name', '')} {u.get('last_name', '')}".strip()
+        if not name:
+            name = u.get('email', '').split('@')[0]
+        users_map[uid] = name
+
     vehicle_reservations: dict = {vid: [] for vid in vehicle_ids}
     orphan_reservations = []
     for r in all_reservations:
@@ -494,9 +505,10 @@ async def get_vehicle_schedule(start_date: str, end_date: str, user: dict = Depe
         # Overlap check: reservation overlaps [sd, ed] if start < ed AND end > sd
         if r_start < ed and r_end > sd:
             vid = r.get('vehicle_id', '')
+            user_name = r.get('user_name', '') or users_map.get(r.get('user_id', ''), '')
             entry = {
                 "id": r.get('id', ''),
-                "user_name": r.get('user_name', ''),
+                "user_name": user_name,
                 "start": r_start.isoformat(),
                 "end": r_end.isoformat(),
                 "status": r.get('status', ''),
