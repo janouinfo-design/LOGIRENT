@@ -52,6 +52,7 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 7. **Heures globales sur les reservations**: Ajout des horaires (HH:mm) dans "Dernieres Reservations" (colonne Heure avec badges vert/bleu + colonne Creee le), "Toutes les Reservations" (heure sous les dates debut/fin), et les cartes Planning (icone horloge + heures depart/retour).
 8. **Photos de documents cliquables**: Miniatures avec icone zoom, clic ouvre un modal plein ecran avec bouton fermer.
 9. **GPS - Adresse et lien Google Maps**: Cartes vehicules GPS affichent maintenant lat/lng + bouton cliquable "Google Maps" qui ouvre la position dans un nouvel onglet.
+10. **Calendrier de disponibilite vehicule**: Bouton "Voir la disponibilite" sur la page detail vehicule ouvre un modal calendrier style agenda eBooking. Vue mensuelle avec jours colores (vert=disponible, rouge=reserve), navigation mois par mois, details des reservations (heures, statut) au clic sur un jour reserve, bouton "Reserver cette date" au clic sur un jour disponible qui pre-remplit le formulaire de booking. Backend: GET /api/vehicles/{id}/availability retourne booked_dates + reservations avec heures.
 
 ## Prioritized Backlog
 
