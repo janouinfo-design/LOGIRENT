@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CardSkeleton } from '../../src/components/Skeleton';
 import { useThemeStore } from '../../src/store/themeStore';
 import { EditClientModal } from '../../src/components/agency/EditClientModal';
 import { NewClientModal } from '../../src/components/agency/NewClientModal';
@@ -39,8 +41,14 @@ export default function AgencyClients() {
 
   const fetchClients = async () => {
     try {
+      if (clients.length === 0) {
+        const cached = await AsyncStorage.getItem('cache_clients');
+        if (cached) { try { setClients(JSON.parse(cached)); } catch {} }
+      }
       const res = await api.get('/api/admin/users');
-      setClients(res.data.users || []);
+      const data = res.data.users || [];
+      setClients(data);
+      AsyncStorage.setItem('cache_clients', JSON.stringify(data)).catch(() => {});
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -64,7 +72,7 @@ export default function AgencyClients() {
     setShowEditModal(true);
   };
 
-  if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
+  if (loading && clients.length === 0) return <View style={[s.container, { backgroundColor: C.bg }]}><CardSkeleton count={5} /></View>;
 
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>

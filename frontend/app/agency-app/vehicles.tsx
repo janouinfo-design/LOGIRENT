@@ -2,6 +2,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CardSkeleton } from '../../src/components/Skeleton';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 import { Vehicle, STATUSES, getStatus } from '../../src/components/agency/vehicleTypes';
@@ -41,10 +43,15 @@ export default function AgencyVehicles() {
 
   const fetchVehicles = useCallback(async () => {
     try {
+      if (vehicles.length === 0) {
+        const cached = await AsyncStorage.getItem('cache_vehicles');
+        if (cached) { try { setVehicles(JSON.parse(cached)); } catch {} }
+      }
       const params: any = {};
       if (user?.agency_id) params.agency_id = user.agency_id;
       const res = await api.get('/api/vehicles', { params });
       setVehicles(res.data || []);
+      AsyncStorage.setItem('cache_vehicles', JSON.stringify(res.data || [])).catch(() => {});
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [user]);
@@ -69,9 +76,9 @@ export default function AgencyVehicles() {
     return counts;
   }, [vehicles]);
 
-  if (loading) return (
-    <View style={[st.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}>
-      <ActivityIndicator size="large" color="#7C3AED" />
+  if (loading && vehicles.length === 0) return (
+    <View style={[st.container, { backgroundColor: C.bg }]}>
+      <CardSkeleton count={4} />
     </View>
   );
 

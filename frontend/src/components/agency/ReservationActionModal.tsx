@@ -30,9 +30,10 @@ interface Props {
   updatePayment: (id: string, status: string) => void;
   sendPaymentLink: (id: string) => void;
   sendingLink: boolean;
+  onReturnVehicle?: (r: Reservation) => void;
 }
 
-export const ReservationActionModal = ({ actionModal, setActionModal, C, statusColor, updateStatus, updatePayment, sendPaymentLink, sendingLink }: Props) => {
+export const ReservationActionModal = ({ actionModal, setActionModal, C, statusColor, updateStatus, updatePayment, sendPaymentLink, sendingLink, onReturnVehicle }: Props) => {
   const router = useRouter();
   const [contractLoading, setContractLoading] = useState(false);
   const [docCheck, setDocCheck] = useState<any>(null);
@@ -252,6 +253,20 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                     );
                   })}
                 </View>
+              )}
+
+              {/* Gestion de retour */}
+              {actionModal && (actionModal.status === 'active' || actionModal.status === 'confirmed') && onReturnVehicle && (
+                <>
+                  <Text style={[st.modalSection, { color: C.textLight }]}>Gestion de retour</Text>
+                  <TouchableOpacity style={[st.actionBtn, { borderColor: '#10B98140', backgroundColor: '#F0FDF4' }]}
+                    onPress={() => { setActionModal(null); onReturnVehicle(actionModal); }}
+                    data-testid="modal-return-vehicle-btn">
+                    <Ionicons name="car" size={18} color="#059669" />
+                    <Text style={{ color: '#059669', fontSize: 14, fontWeight: '700', flex: 1 }}>Retour vehicule</Text>
+                    <Text style={{ color: '#059669', fontSize: 11 }}>km, carburant, penalites</Text>
+                  </TouchableOpacity>
+                </>
               )}
 
               {/* Statut reservation */}

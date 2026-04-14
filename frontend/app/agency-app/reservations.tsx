@@ -781,6 +781,7 @@ export default function AgencyReservations() {
         C={C} statusColor={statusColor}
         updateStatus={updateStatus} updatePayment={updatePayment}
         sendPaymentLink={sendPaymentLink} sendingLink={sendingLink}
+        onReturnVehicle={(r) => setReturnModal(r)}
       />
 
       <ReturnVehicleModal

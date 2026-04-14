@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, TextInput, Modal, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CardSkeleton } from '../../src/components/Skeleton';
 import { useThemeStore } from '../../src/store/themeStore';
 
 type Position = {
@@ -59,13 +61,18 @@ export default function AgencyTracking() {
   const fetchPositions = useCallback(async () => {
     try {
       setError('');
+      if (positions.length === 0) {
+        const cached = await AsyncStorage.getItem('cache_gps');
+        if (cached) { try { setPositions(JSON.parse(cached)); } catch {} }
+      }
       const resp = await api.get('/api/navixy/positions');
       setPositions(resp.data);
       setLastRefresh(new Date().toLocaleTimeString('fr-CH'));
+      AsyncStorage.setItem('cache_gps', JSON.stringify(resp.data)).catch(() => {});
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Erreur de connexion GPS';
       setError(msg);
-      setPositions([]);
+      if (positions.length === 0) setPositions([]);
     } finally {
       setLoading(false);
     }
