@@ -38,7 +38,7 @@ export default function AgencyAppHome() {
       ]);
       setStats(statsResp.data);
       setRecentReservations(resResp.data.reservations || []);
-      setTodayReservations(todayResp.data.reservations || []);
+      setTodayReservations((todayResp.data.reservations || []).sort((a: any, b: any) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()));
       const agencies = agenciesResp.data;
       if (agencies?.length > 0) setAgency(agencies[0]);
       setDocAlerts(alertsResp.data.alerts || []);

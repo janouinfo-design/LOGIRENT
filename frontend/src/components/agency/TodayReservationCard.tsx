@@ -48,6 +48,14 @@ export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, o
     catch { return d; }
   };
 
+  const formatTime = (d: string) => {
+    try { return format(new Date(d), 'HH:mm'); }
+    catch { return ''; }
+  };
+
+  const startTime = formatTime(item.start_date);
+  const endTime = formatTime(item.end_date);
+
   return (
     <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: s.color }]} data-testid={`today-res-${item.id}`}>
       {/* Header: Name + Status badge */}
@@ -61,10 +69,25 @@ export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, o
       {/* Vehicle */}
       <Text style={[st.vehicle, { color: C.textLight }]} numberOfLines={1}>{item.vehicle_name}</Text>
 
-      {/* Dates */}
-      <Text style={[st.dates, { color: C.textLight }]}>
-        {formatDate(item.start_date)} - {formatDate(item.end_date)}
-      </Text>
+      {/* Dates with time */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+        <Ionicons name="calendar-outline" size={13} color={C.textLight} />
+        <Text style={[st.dates, { marginBottom: 0 }]}>
+          {formatDate(item.start_date)} - {formatDate(item.end_date)}
+        </Text>
+      </View>
+
+      {/* Pickup & Return times */}
+      <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+        <View style={[st.timeChip, { backgroundColor: '#10B98110', borderColor: '#10B98130' }]}>
+          <Ionicons name="log-in-outline" size={12} color="#10B981" />
+          <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '700' }}>Depart {startTime}</Text>
+        </View>
+        <View style={[st.timeChip, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
+          <Ionicons name="log-out-outline" size={12} color="#3B82F6" />
+          <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Retour {endTime}</Text>
+        </View>
+      </View>
 
       {/* Price + Payment */}
       <View style={st.priceRow}>
@@ -124,4 +147,5 @@ const st = StyleSheet.create({
   statusBtn: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: 6, borderWidth: 1 },
   actionsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 8, borderTopWidth: 1 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  timeChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
 });
