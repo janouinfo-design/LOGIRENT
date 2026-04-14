@@ -9,6 +9,8 @@ import { useThemeStore } from '../../src/store/themeStore';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { TodayReservationCard } from '../../src/components/agency/TodayReservationCard';
+import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
+import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -23,6 +25,8 @@ export default function AgencyAppHome() {
   const [docAlerts, setDocAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [actionModal, setActionModal] = useState<any>(null);
+  const [returnModal, setReturnModal] = useState<any>(null);
 
   const screenW = Dimensions.get('window').width;
   const cardW = screenW > 1000 ? (screenW - 80) / 3 : screenW > 700 ? (screenW - 60) / 2 : screenW - 40;
@@ -94,9 +98,30 @@ export default function AgencyAppHome() {
     }
   };
 
+  const updatePayment = async (id: string, status: string) => {
+    try {
+      await api.put(`/api/admin/reservations/${id}/payment-status?payment_status=${status}`);
+      fetchData();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
+  const sendPaymentLink = async (id: string) => {
+    try {
+      await api.post(`/api/admin/reservations/${id}/send-payment-link`);
+      Platform.OS === 'web' ? window.alert('Lien de paiement envoyé') : Alert.alert('Succès', 'Lien envoyé');
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
   if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
+    <>
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
       {/* New reservation button */}
       <TouchableOpacity activeOpacity={0.85} onPress={() => router.push('/agency-app/book')} data-testid="quick-book-btn" style={{ marginBottom: 20 }}>
@@ -197,7 +222,7 @@ export default function AgencyAppHome() {
                   item={r}
                   C={C}
                   onStatusChange={updateStatus}
-                  onActionPress={(item) => router.push(`/agency-app/reservations?highlight=${item.id}` as any)}
+                  onActionPress={(item) => setActionModal(item)}
                   onViewContract={handleViewContract}
                 />
               </View>
@@ -224,7 +249,7 @@ export default function AgencyAppHome() {
                   item={r}
                   C={C}
                   onStatusChange={updateStatus}
-                  onActionPress={(item) => router.push(`/agency-app/reservations?highlight=${item.id}` as any)}
+                  onActionPress={(item) => setActionModal(item)}
                   onViewContract={handleViewContract}
                 />
               </View>
@@ -233,6 +258,24 @@ export default function AgencyAppHome() {
         )}
       </View>
     </ScrollView>
+
+      <ReservationActionModal
+        actionModal={actionModal} setActionModal={setActionModal}
+        C={C} statusColor={statusColor}
+        updateStatus={updateStatus} updatePayment={updatePayment}
+        sendPaymentLink={sendPaymentLink} sendingLink={false}
+        onReturnVehicle={(r) => setReturnModal(r)}
+      />
+
+      <ReturnVehicleModal
+        visible={!!returnModal}
+        reservation={returnModal}
+        vehicle={returnModal ? { brand: returnModal.vehicle_brand || 'Vehicule', model: returnModal.vehicle_model || '' } : null}
+        onClose={() => setReturnModal(null)}
+        onSuccess={fetchData}
+        colors={C}
+      />
+    </>
   );
 }
 
