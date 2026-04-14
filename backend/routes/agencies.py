@@ -475,14 +475,29 @@ async def send_payment_link_to_client(reservation_id: str, body: SendPaymentLink
 async def search_clients(q: str = "", user: dict = Depends(get_agency_admin)):
     if not q or len(q) < 2:
         return {"clients": []}
-    query = {
-        "role": "client",
-        "$or": [
-            {"name": {"$regex": q, "$options": "i"}},
-            {"email": {"$regex": q, "$options": "i"}},
-            {"phone": {"$regex": q, "$options": "i"}},
-        ]
-    }
+    # Split query into words and search each word
+    words = q.strip().split()
+    if len(words) > 1:
+        # Multi-word: all words must match in name, email or phone
+        conditions = []
+        for word in words:
+            conditions.append({
+                "$or": [
+                    {"name": {"$regex": word, "$options": "i"}},
+                    {"email": {"$regex": word, "$options": "i"}},
+                    {"phone": {"$regex": word, "$options": "i"}},
+                ]
+            })
+        query = {"role": "client", "$and": conditions}
+    else:
+        query = {
+            "role": "client",
+            "$or": [
+                {"name": {"$regex": q, "$options": "i"}},
+                {"email": {"$regex": q, "$options": "i"}},
+                {"phone": {"$regex": q, "$options": "i"}},
+            ]
+        }
     clients = await db.users.find(query, {"password_hash": 0, "_id": 0, "id_photo": 0, "license_photo": 0}).limit(10).to_list(10)
     return {"clients": clients}
 
