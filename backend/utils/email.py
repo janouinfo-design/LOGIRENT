@@ -1,18 +1,84 @@
 import asyncio
 import logging
 import os
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
+import base64
 import resend
 from datetime import datetime
-from database import RESEND_API_KEY, SENDER_EMAIL
+from database import RESEND_API_KEY, SENDER_EMAIL, db
 
 resend.api_key = RESEND_API_KEY
 logger = logging.getLogger(__name__)
 
 
-async def send_email(recipient: str, subject: str, html_content: str, attachments: list = None):
-    """Send email via Resend. Optionally attach files.
-    attachments: list of dicts with keys: filename, content (base64 string), type (mime type)
-    """
+async def _send_via_smtp(smtp_config: dict, recipient: str, subject: str, html_content: str, attachments: list = None):
+    """Send email via custom SMTP server."""
+    host = smtp_config.get('host')
+    port = int(smtp_config.get('port', 587))
+    email = smtp_config.get('email')
+    password = smtp_config.get('password')
+    use_tls = smtp_config.get('use_tls', True)
+    sender_name = smtp_config.get('sender_name', '')
+
+    sender = f"{sender_name} <{email}>" if sender_name else email
+
+    msg = MIMEMultipart('alternative')
+    msg['From'] = sender
+    msg['To'] = recipient
+    msg['Subject'] = subject
+    msg.attach(MIMEText(html_content, 'html'))
+
+    if attachments:
+        for att in attachments:
+            part = MIMEBase('application', 'octet-stream')
+            content = att.get('content', '')
+            if isinstance(content, str):
+                content = base64.b64decode(content)
+            part.set_payload(content)
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', f'attachment; filename="{att.get("filename", "file")}"')
+            msg.attach(part)
+
+    def _do_send():
+        if use_tls:
+            server = smtplib.SMTP(host, port, timeout=15)
+            server.starttls()
+        else:
+            if port == 465:
+                server = smtplib.SMTP_SSL(host, port, timeout=15)
+            else:
+                server = smtplib.SMTP(host, port, timeout=15)
+        server.login(email, password)
+        server.sendmail(email, [recipient], msg.as_string())
+        server.quit()
+
+    await asyncio.to_thread(_do_send)
+    logger.info(f"SMTP email sent to {recipient} via {host}")
+    return True
+
+
+async def send_email(recipient: str, subject: str, html_content: str, attachments: list = None, agency_id: str = None):
+    """Send email. Uses agency SMTP if configured, otherwise falls back to Resend."""
+
+    # Try agency SMTP first
+    if agency_id:
+        try:
+            agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "smtp_config": 1})
+            smtp = agency.get('smtp_config') if agency else None
+            if smtp and smtp.get('host') and smtp.get('email') and smtp.get('password'):
+                try:
+                    await _send_via_smtp(smtp, recipient, subject, html_content, attachments)
+                    return "smtp_sent"
+                except Exception as e:
+                    logger.error(f"Agency SMTP failed for {agency_id}, falling back to Resend: {e}")
+        except Exception as e:
+            logger.error(f"Error fetching agency SMTP config: {e}")
+
+    # Fallback to Resend
     if not RESEND_API_KEY or RESEND_API_KEY == 're_placeholder':
         logger.info(f"Email would be sent to {recipient}: {subject}")
         return None

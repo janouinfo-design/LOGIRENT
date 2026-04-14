@@ -50,6 +50,7 @@ const MENU_ITEMS: MenuItem[] = [
       { key: 'documents', label: 'Scan documents', icon: 'scan', iconO: 'scan-outline' },
       { key: 'tracking', label: 'GPS / Tracking', icon: 'navigate', iconO: 'navigate-outline' },
       { key: 'contract-template', label: 'Modele contrat', icon: 'document-text', iconO: 'document-text-outline' },
+      { key: 'email-settings', label: 'Configuration Email', icon: 'mail', iconO: 'mail-outline' },
     ],
   },
   { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
@@ -259,6 +260,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="documents" options={{ title: 'Documents' }} />
           <Tabs.Screen name="billing-settings" options={{ title: 'Facturation' }} />
           <Tabs.Screen name="contract-template" options={{ title: 'Modele' }} />
+          <Tabs.Screen name="email-settings" options={{ title: 'Email' }} />
           <Tabs.Screen name="profile" options={{ title: 'Profil' }} />
           <Tabs.Screen name="vehicle-detail" options={{ title: 'Detail', href: null }} />
           <Tabs.Screen name="complete-contract" options={{ title: 'Contrat', href: null }} />

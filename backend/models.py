@@ -16,6 +16,7 @@ class Agency(BaseModel):
     logo: Optional[str] = None
     navixy_api_url: Optional[str] = None
     navixy_hash: Optional[str] = None
+    smtp_config: Optional[dict] = None  # {host, port, email, password, use_tls, sender_name}
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 

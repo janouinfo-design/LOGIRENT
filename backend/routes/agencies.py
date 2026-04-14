@@ -107,6 +107,93 @@ async def delete_agency(agency_id: str, user: dict = Depends(get_super_admin)):
     return {"message": "Agence supprimée"}
 
 
+# ===== SMTP Configuration =====
+
+@router.get("/admin/smtp-config")
+async def get_smtp_config(user: dict = Depends(get_agency_admin)):
+    agency_id = user.get('agency_id')
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="Pas d'agence associee")
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "smtp_config": 1, "name": 1})
+    if not agency:
+        raise HTTPException(status_code=404, detail="Agence non trouvee")
+    smtp = agency.get('smtp_config') or {}
+    # Never return password in clear
+    if smtp.get('password'):
+        smtp['password_set'] = True
+        smtp['password'] = ''
+    return {"smtp_config": smtp, "agency_name": agency.get('name', '')}
+
+
+@router.put("/admin/smtp-config")
+async def update_smtp_config(data: dict, user: dict = Depends(get_agency_admin)):
+    agency_id = user.get('agency_id')
+    if not agency_id:
+        raise HTTPException(status_code=400, detail="Pas d'agence associee")
+
+    smtp_config = {
+        "host": data.get('host', '').strip(),
+        "port": int(data.get('port', 587)),
+        "email": data.get('email', '').strip(),
+        "use_tls": data.get('use_tls', True),
+        "sender_name": data.get('sender_name', '').strip(),
+    }
+
+    # Only update password if provided (non-empty)
+    if data.get('password'):
+        smtp_config['password'] = data['password']
+    else:
+        # Keep existing password
+        existing = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "smtp_config": 1})
+        if existing and existing.get('smtp_config', {}).get('password'):
+            smtp_config['password'] = existing['smtp_config']['password']
+
+    await db.agencies.update_one({"id": agency_id}, {"$set": {"smtp_config": smtp_config}})
+    return {"message": "Configuration SMTP sauvegardee"}
+
+
+@router.post("/admin/smtp-test")
+async def test_smtp_config(data: dict, user: dict = Depends(get_agency_admin)):
+    agency_id = user.get('agency_id')
+    test_recipient = data.get('test_email', user.get('email'))
+
+    smtp_config = {
+        "host": data.get('host', '').strip(),
+        "port": int(data.get('port', 587)),
+        "email": data.get('email', '').strip(),
+        "password": data.get('password', ''),
+        "use_tls": data.get('use_tls', True),
+        "sender_name": data.get('sender_name', ''),
+    }
+
+    # If no password provided, use existing
+    if not smtp_config['password'] and agency_id:
+        existing = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "smtp_config": 1})
+        if existing and existing.get('smtp_config', {}).get('password'):
+            smtp_config['password'] = existing['smtp_config']['password']
+
+    if not all([smtp_config['host'], smtp_config['email'], smtp_config['password']]):
+        raise HTTPException(status_code=400, detail="Veuillez remplir tous les champs SMTP")
+
+    from utils.email import _send_via_smtp
+    try:
+        html = f"""
+        <div style='font-family:Arial;padding:20px;'>
+            <h2 style='color:#1E3A5F;'>Test SMTP LogiRent</h2>
+            <p>Ce mail confirme que votre configuration SMTP fonctionne correctement.</p>
+            <p><b>Serveur:</b> {smtp_config['host']}:{smtp_config['port']}</p>
+            <p><b>Email:</b> {smtp_config['email']}</p>
+            <p style='color:#10B981;font-weight:bold;'>Configuration validee !</p>
+        </div>
+        """
+        await _send_via_smtp(smtp_config, test_recipient, "Test SMTP - LogiRent", html)
+        return {"message": f"Email de test envoye a {test_recipient}", "success": True}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Echec SMTP: {str(e)}")
+
+
+
+
 @router.post("/agencies/{agency_id}/admins")
 async def add_admin_to_agency(agency_id: str, user_email: str, user: dict = Depends(get_super_admin)):
     target = await db.users.find_one({"email": user_email.lower()})
