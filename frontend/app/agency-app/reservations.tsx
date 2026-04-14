@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
 import { GanttChart } from '../../src/components/agency/GanttChart';
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
+import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -63,6 +64,7 @@ export default function AgencyReservations() {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [sortCol, setSortCol] = useState<'start' | 'end' | 'price'>('start');
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
+  const [returnModal, setReturnModal] = useState<any>(null);
   const highlightAnim = useRef(new Animated.Value(1)).current;
   const tableRef = useRef<View>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -617,6 +619,11 @@ export default function AgencyReservations() {
                   <TouchableOpacity style={s.actionBtn} onPress={() => setActionModal(r)}>
                     <Text style={s.actionBtnText}>Voir</Text>
                   </TouchableOpacity>
+                  {(r.status === 'active' || r.status === 'confirmed') && (
+                    <TouchableOpacity style={[s.actionBtn, { borderColor: '#10B98140', backgroundColor: '#F0FDF4' }]} onPress={() => setReturnModal(r)} data-testid={`return-btn-${r.id}`}>
+                      <Text style={[s.actionBtnText, { color: '#059669' }]}>Retour</Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity style={[s.actionBtn, { borderColor: '#F59E0B40' }]} onPress={() => setActionModal(r)}>
                     <Text style={[s.actionBtnText, { color: '#D97706' }]}>Modifier</Text>
                   </TouchableOpacity>
@@ -753,6 +760,15 @@ export default function AgencyReservations() {
         C={C} statusColor={statusColor}
         updateStatus={updateStatus} updatePayment={updatePayment}
         sendPaymentLink={sendPaymentLink} sendingLink={sendingLink}
+      />
+
+      <ReturnVehicleModal
+        visible={!!returnModal}
+        reservation={returnModal}
+        vehicle={returnModal ? { brand: returnModal.vehicle_brand || 'Vehicule', model: returnModal.vehicle_model || '' } : null}
+        onClose={() => setReturnModal(null)}
+        onSuccess={fetchData}
+        colors={C}
       />
     </View>
   );

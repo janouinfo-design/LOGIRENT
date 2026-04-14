@@ -379,6 +379,21 @@ class InspectionCreate(BaseModel):
     signature_data: Optional[str] = None
 
 
+
+class VehicleReturnData(BaseModel):
+    km_departure: int = 0
+    km_return: int = 0
+    fuel_level_departure: str = "full"
+    fuel_level_return: str = "full"
+    late_hours: float = 0
+    notes: str = ""
+    km_limit_per_day: int = 200
+    price_per_extra_km: float = 0.50
+    fuel_penalty: float = 50.0
+    late_penalty_per_hour: float = 30.0
+
+
+
 # ==================== INVOICE MODELS ====================
 
 InvoiceStatus = str  # draft, pending, partially_paid, paid, overdue, cancelled, refunded

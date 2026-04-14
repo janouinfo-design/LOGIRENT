@@ -717,6 +717,115 @@ async def update_reservation_status(reservation_id: str, status: str, user: dict
     return {"message": f"Reservation status updated to {status}"}
 
 
+from models import VehicleReturnData
+
+@router.post("/admin/reservations/{reservation_id}/return")
+async def process_vehicle_return(reservation_id: str, data: VehicleReturnData, user: dict = Depends(get_admin_user)):
+    reservation = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    if reservation.get('status') not in ('active', 'confirmed'):
+        raise HTTPException(status_code=400, detail="Only active/confirmed reservations can be returned")
+
+    vehicle = await db.vehicles.find_one({"id": reservation['vehicle_id']}, {"_id": 0})
+    client = await db.users.find_one({"id": reservation.get('user_id')}, {"_id": 0})
+    vname = f"{vehicle['brand']} {vehicle['model']}" if vehicle else "Vehicule"
+    cname = client.get('name', 'Client') if client else 'Client'
+
+    total_days = reservation.get('total_days', 1)
+    surcharges = []
+    total_surcharge = 0.0
+
+    # 1. Kilometrage
+    km_driven = max(0, data.km_return - data.km_departure)
+    km_allowed = data.km_limit_per_day * total_days
+    km_excess = max(0, km_driven - km_allowed)
+    if km_excess > 0:
+        km_cost = round(km_excess * data.price_per_extra_km, 2)
+        surcharges.append({"type": "km_excess", "label": f"Depassement km ({km_excess} km x CHF {data.price_per_extra_km})", "amount": km_cost})
+        total_surcharge += km_cost
+
+    # 2. Carburant
+    fuel_levels = {"full": 1.0, "3/4": 0.75, "1/2": 0.5, "1/4": 0.25, "empty": 0.0}
+    fuel_dep = fuel_levels.get(data.fuel_level_departure, 1.0)
+    fuel_ret = fuel_levels.get(data.fuel_level_return, 1.0)
+    if fuel_ret < fuel_dep:
+        fuel_diff = fuel_dep - fuel_ret
+        fuel_cost = round(data.fuel_penalty * fuel_diff, 2)
+        surcharges.append({"type": "fuel", "label": f"Carburant manquant ({data.fuel_level_departure} -> {data.fuel_level_return})", "amount": fuel_cost})
+        total_surcharge += fuel_cost
+
+    # 3. Retard
+    if data.late_hours > 0:
+        late_cost = round(data.late_hours * data.late_penalty_per_hour, 2)
+        surcharges.append({"type": "late", "label": f"Retard ({data.late_hours}h x CHF {data.late_penalty_per_hour})", "amount": late_cost})
+        total_surcharge += late_cost
+
+    # Save return data
+    return_record = {
+        "id": str(uuid.uuid4()),
+        "reservation_id": reservation_id,
+        "vehicle_id": reservation['vehicle_id'],
+        "km_departure": data.km_departure,
+        "km_return": data.km_return,
+        "km_driven": km_driven,
+        "km_allowed": km_allowed,
+        "km_excess": km_excess,
+        "fuel_departure": data.fuel_level_departure,
+        "fuel_return": data.fuel_level_return,
+        "late_hours": data.late_hours,
+        "surcharges": surcharges,
+        "total_surcharge": total_surcharge,
+        "notes": data.notes,
+        "processed_by": user.get('id'),
+        "processed_at": datetime.utcnow().isoformat(),
+    }
+    await db.vehicle_returns.insert_one(return_record)
+
+    # Update reservation: completed + add surcharge
+    update_data = {
+        "status": "completed",
+        "updated_at": datetime.utcnow(),
+        "return_data": {
+            "km_driven": km_driven,
+            "km_excess": km_excess,
+            "fuel_return": data.fuel_level_return,
+            "late_hours": data.late_hours,
+            "surcharges": surcharges,
+            "total_surcharge": total_surcharge,
+            "processed_at": datetime.utcnow().isoformat(),
+        },
+        "actual_return_date": datetime.utcnow(),
+    }
+    if total_surcharge > 0:
+        update_data["total_price"] = reservation.get('total_price', 0) + total_surcharge
+
+    await db.reservations.update_one({"id": reservation_id}, {"$set": update_data})
+
+    # Update vehicle status back to available
+    await db.vehicles.update_one({"id": reservation['vehicle_id']}, {"$set": {"status": "available"}})
+
+    # Notify client
+    msg = f"Votre location de {vname} est terminee. "
+    if total_surcharge > 0:
+        msg += f"Supplements: CHF {total_surcharge:.2f}."
+    else:
+        msg += "Aucun supplement."
+    if client:
+        await create_notification(client['id'], 'reservation_completed', msg, reservation_id)
+
+    return {
+        "message": "Retour enregistre",
+        "km_driven": km_driven,
+        "km_excess": km_excess,
+        "surcharges": surcharges,
+        "total_surcharge": total_surcharge,
+        "new_total": reservation.get('total_price', 0) + total_surcharge,
+    }
+
+
+
 @router.put("/admin/reservations/{reservation_id}/payment-status")
 async def update_payment_status(reservation_id: str, payment_status: str, user: dict = Depends(get_admin_user)):
     valid_statuses = ["unpaid", "pending", "paid", "refunded"]
