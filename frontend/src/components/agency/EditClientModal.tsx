@@ -37,6 +37,8 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editAddress, setEditAddress] = useState('');
@@ -59,6 +61,8 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   React.useEffect(() => {
     if (visible && client) {
       setEditName(client.name || '');
+      setEditFirstName(client.first_name || '');
+      setEditLastName(client.last_name || '');
       setEditEmail(client.email || '');
       setEditPhone(client.phone || '');
       setEditAddress(client.address || '');
@@ -76,6 +80,8 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       api.get(`/api/admin/users/${client.id}`).then(res => {
         const d = res.data;
         setEditAddress(d.address || '');
+        setEditFirstName(d.first_name || '');
+        setEditLastName(d.last_name || '');
         setEditNotes(d.admin_notes || '');
         setEditBirthPlace(d.birth_place || '');
         setEditBirthDate(d.date_of_birth || '');
@@ -123,7 +129,11 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
     try {
       const payload: any = {};
       const ref = fullClient || client;
-      if (editName !== ref.name) payload.name = editName;
+      // Auto-compose name from first_name + last_name
+      const composedName = [editFirstName, editLastName].filter(Boolean).join(' ') || editName;
+      payload.name = composedName;
+      payload.first_name = editFirstName;
+      payload.last_name = editLastName;
       if (editEmail !== ref.email) payload.email = editEmail;
       if (editPhone !== (ref.phone || '')) payload.phone = editPhone;
       if (editAddress !== (ref.address || '')) payload.address = editAddress;
@@ -167,14 +177,22 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                     {fullClient.profile_photo ? <Image source={{ uri: fullClient.profile_photo }} style={st.editAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
                   </View>
                   <View>
-                    <Text style={[st.editHeaderName, { color: C.text }]}>{fullClient.name}</Text>
+                    <Text style={[st.editHeaderName, { color: C.text }]}>{fullClient.first_name || ''} {fullClient.last_name || fullClient.name}</Text>
                     <Text style={{ color: C.textLight, fontSize: 12 }}>{fullClient.total_reservations || fullClient.reservation_count || 0} reservations</Text>
                   </View>
                 </View>
               )}
 
-              <Text style={[st.label, { color: C.textLight }]}>Nom</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editName} onChangeText={setEditName} placeholder="Nom complet" placeholderTextColor={C.textLight} data-testid="edit-client-name" />
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.label, { color: C.textLight }]}>Nom</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editLastName} onChangeText={setEditLastName} placeholder="Nom de famille" placeholderTextColor={C.textLight} data-testid="edit-client-lastname" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.label, { color: C.textLight }]}>Prenom</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editFirstName} onChangeText={setEditFirstName} placeholder="Prenom" placeholderTextColor={C.textLight} data-testid="edit-client-firstname" />
+                </View>
+              </View>
 
               <Text style={[st.label, { color: C.textLight }]}>Email</Text>
               <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editEmail} onChangeText={setEditEmail} placeholder="email@example.com" placeholderTextColor={C.textLight} keyboardType="email-address" autoCapitalize="none" data-testid="edit-client-email" />

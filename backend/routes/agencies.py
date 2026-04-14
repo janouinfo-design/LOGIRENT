@@ -478,12 +478,14 @@ async def search_clients(q: str = "", user: dict = Depends(get_agency_admin)):
     # Split query into words and search each word
     words = q.strip().split()
     if len(words) > 1:
-        # Multi-word: all words must match in name, email or phone
+        # Multi-word: all words must match in name, first_name, last_name, email or phone
         conditions = []
         for word in words:
             conditions.append({
                 "$or": [
                     {"name": {"$regex": word, "$options": "i"}},
+                    {"first_name": {"$regex": word, "$options": "i"}},
+                    {"last_name": {"$regex": word, "$options": "i"}},
                     {"email": {"$regex": word, "$options": "i"}},
                     {"phone": {"$regex": word, "$options": "i"}},
                 ]
@@ -494,6 +496,8 @@ async def search_clients(q: str = "", user: dict = Depends(get_agency_admin)):
             "role": "client",
             "$or": [
                 {"name": {"$regex": q, "$options": "i"}},
+                {"first_name": {"$regex": q, "$options": "i"}},
+                {"last_name": {"$regex": q, "$options": "i"}},
                 {"email": {"$regex": q, "$options": "i"}},
                 {"phone": {"$regex": q, "$options": "i"}},
             ]

@@ -59,6 +59,8 @@ class UserProfile(BaseModel):
     id: str
     email: str
     name: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     phone: Optional[str] = None
     address: Optional[str] = None
     id_photo: Optional[str] = None
