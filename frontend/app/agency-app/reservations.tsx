@@ -349,17 +349,18 @@ export default function AgencyReservations() {
                 onChangeText={setSearch}
               />
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 2 }}>
+            <View style={{ flexDirection: 'row', gap: 2 }}>
               {QUICK_FILTERS.map(f => (
                 <TouchableOpacity
                   key={f.label}
                   style={[s.qfBtn, quickFilter === f.value && s.qfBtnActive]}
                   onPress={() => setQuickFilter(f.value)}
+                  data-testid={`filter-${f.value || 'today'}`}
                 >
                   <Text style={[s.qfLabel, quickFilter === f.value && s.qfLabelActive]}>{f.label}</Text>
                 </TouchableOpacity>
               ))}
-            </ScrollView>
+            </View>
             <TouchableOpacity style={s.createBtn} onPress={() => router.push('/agency-app/book' as any)}>
               <Text style={s.createBtnText}>Creer Reservation</Text>
             </TouchableOpacity>
