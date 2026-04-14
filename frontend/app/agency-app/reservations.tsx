@@ -767,7 +767,7 @@ export default function AgencyReservations() {
         reservation={returnModal}
         vehicle={returnModal ? { brand: returnModal.vehicle_brand || 'Vehicule', model: returnModal.vehicle_model || '' } : null}
         onClose={() => setReturnModal(null)}
-        onSuccess={fetchData}
+        onSuccess={fetchReservations}
         colors={C}
       />
     </View>
