@@ -450,6 +450,11 @@ export default function AgencyReservations() {
                   <TouchableOpacity style={s.actionBtn} onPress={() => setActionModal(r)}>
                     <Text style={s.actionBtnText}>Voir</Text>
                   </TouchableOpacity>
+                  {(r.status === 'active' || r.status === 'confirmed') && (
+                    <TouchableOpacity style={[s.actionBtn, { borderColor: '#10B98140', backgroundColor: '#F0FDF4' }]} onPress={() => setReturnModal(r)} data-testid={`return-recent-${r.id}`}>
+                      <Text style={[s.actionBtnText, { color: '#059669' }]}>Retour</Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity style={[s.actionBtn, { borderColor: '#F59E0B40' }]} onPress={() => setActionModal(r)}>
                     <Text style={[s.actionBtnText, { color: '#D97706' }]}>Modifier</Text>
                   </TouchableOpacity>
