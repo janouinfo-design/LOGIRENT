@@ -68,6 +68,10 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPre
 
       {/* CTA */}
       <View style={[s.cta, { borderTopColor: C.border }]}>
+        <TouchableOpacity onPress={() => onEdit(item)} style={[s.btnEdit, { borderColor: '#F59E0B40', backgroundColor: '#F59E0B10' }]} data-testid={`edit-btn-${item.id}`} activeOpacity={0.7}>
+          <Ionicons name="create-outline" size={15} color="#D97706" />
+          <Text style={{ color: '#D97706', fontSize: 12, fontWeight: '700' }}>Modifier</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={goDetail} style={[s.btnSec, { borderColor: C.border }]} data-testid={`details-btn-${item.id}`} activeOpacity={0.7}>
           <Ionicons name="information-circle-outline" size={15} color={C.textLight} />
           <Text style={[s.btnSecText, { color: C.text }]}>Details</Text>
@@ -105,7 +109,8 @@ const s = StyleSheet.create({
   price: { fontSize: 20, fontWeight: '900' },
   priceUnit: { fontSize: 12, fontWeight: '500' },
 
-  cta: { flexDirection: 'row', gap: 8, padding: 12, paddingTop: 12, borderTopWidth: 1 },
+  cta: { flexDirection: 'row', gap: 6, padding: 12, paddingTop: 12, borderTopWidth: 1 },
+  btnEdit: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, paddingHorizontal: 10, borderRadius: 10, borderWidth: 1 },
   btnSec: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: 10, borderWidth: 1.5 },
   btnSecText: { fontSize: 13, fontWeight: '700' },
   btnPrim: { flex: 1.4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 9, borderRadius: 10, backgroundColor: '#7C3AED' },
