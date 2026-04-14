@@ -571,6 +571,14 @@ export default function AgenciesPage() {
                     gps_tracking: 'navigate',
                     e_signature: 'create',
                     analytics: 'bar-chart',
+                    vehicle_return: 'car',
+                    availability_calendar: 'today',
+                    smtp_custom: 'at',
+                    qr_invoicing: 'qr-code',
+                    gantt_planning: 'grid',
+                    document_scan: 'document-text',
+                    predictive_maintenance: 'build',
+                    dynamic_pricing: 'trending-up',
                   };
                   return (
                     <TouchableOpacity

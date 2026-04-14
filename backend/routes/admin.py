@@ -1147,6 +1147,14 @@ DEFAULT_MODULES = {
     "gps_tracking": True,
     "e_signature": True,
     "analytics": True,
+    "vehicle_return": True,
+    "availability_calendar": True,
+    "smtp_custom": True,
+    "qr_invoicing": True,
+    "gantt_planning": True,
+    "document_scan": True,
+    "predictive_maintenance": False,
+    "dynamic_pricing": False,
 }
 
 MODULE_LABELS = {
@@ -1159,6 +1167,14 @@ MODULE_LABELS = {
     "gps_tracking": "GPS / Tracking",
     "e_signature": "E-Signature contrats",
     "analytics": "Analytics Dashboard",
+    "vehicle_return": "Gestion de retour vehicule",
+    "availability_calendar": "Calendrier de disponibilite",
+    "smtp_custom": "Email SMTP personnalise",
+    "qr_invoicing": "Facturation QR Swiss",
+    "gantt_planning": "Planning Gantt interactif",
+    "document_scan": "Scan documents IA (OCR)",
+    "predictive_maintenance": "Maintenance predictive",
+    "dynamic_pricing": "Tarification dynamique IA",
 }
 
 
