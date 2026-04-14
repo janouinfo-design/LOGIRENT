@@ -368,16 +368,16 @@ export default function AgencyReservations() {
           {/* KPI Cards */}
           <View style={s.kpiRow}>
             {[
-              { icon: 'car-sport', label: "Reservations aujourd'hui", value: kpiToday, color: '#1E3A5F', bg: '#F0F4F8' },
-              { icon: 'play-circle', label: 'En cours', value: kpiActive, color: '#10B981', bg: '#ECFDF5' },
-              { icon: 'calendar', label: 'A venir', value: kpiUpcoming, color: '#3B82F6', bg: '#EFF6FF' },
-              { icon: 'warning', label: 'Problemes / Retards', value: kpiOverdue, color: '#EF4444', bg: '#FEF2F2' },
+              { icon: 'car-sport', label: "Reservations aujourd'hui", value: kpiToday, color: '#1E3A5F', bg: '#F0F4F8', filter: null as string | null },
+              { icon: 'play-circle', label: 'En cours', value: kpiActive, color: '#10B981', bg: '#ECFDF5', filter: 'active' },
+              { icon: 'calendar', label: 'A venir', value: kpiUpcoming, color: '#3B82F6', bg: '#EFF6FF', filter: 'upcoming' },
+              { icon: 'warning', label: 'Problemes / Retards', value: kpiOverdue, color: '#EF4444', bg: '#FEF2F2', filter: 'overdue' },
             ].map((k, i) => (
-              <View key={i} style={[s.kpiCard, { backgroundColor: k.bg }]}>
+              <TouchableOpacity key={i} style={[s.kpiCard, { backgroundColor: k.bg }, quickFilter === k.filter && { borderWidth: 2, borderColor: k.color }]} onPress={() => setQuickFilter(k.filter)} activeOpacity={0.7} data-testid={`kpi-${k.filter || 'today'}`}>
                 <Ionicons name={k.icon as any} size={20} color={k.color} />
                 <Text style={[s.kpiLabel, { color: '#475569' }]}>{k.label}</Text>
                 <Text style={[s.kpiValue, { color: k.color }]}>{k.value}</Text>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
 
