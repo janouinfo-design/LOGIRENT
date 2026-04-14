@@ -360,7 +360,7 @@ export default function AgencyReservations() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <TouchableOpacity style={s.createBtn} onPress={() => router.push('/agency-app/create-reservation' as any)}>
+            <TouchableOpacity style={s.createBtn} onPress={() => router.push('/agency-app/book' as any)}>
               <Text style={s.createBtnText}>Creer Reservation</Text>
             </TouchableOpacity>
           </View>
@@ -670,7 +670,7 @@ export default function AgencyReservations() {
               const full = reservations.find((r: any) => r.id === res.id);
               setActionModal(full || res as any);
             }}
-            onCreateReservation={(vehicleId, date) => router.push(`/agency-app/create-reservation?vehicle_id=${vehicleId}&date=${date}` as any)}
+            onCreateReservation={(vehicleId, date) => router.push(`/agency-app/book?vehicle_id=${vehicleId}&date=${date}` as any)}
             onNavigateMonth={() => setPlanningMonth(startOfMonth(new Date()))}
             onFilterChange={(sf, vt) => { setGanttStatusFilter(sf); setGanttViewType(vt); }}
           />

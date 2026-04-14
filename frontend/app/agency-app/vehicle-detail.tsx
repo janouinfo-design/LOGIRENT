@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import { getPhotoUrl } from '../../src/components/agency/vehicleTypes';
+import AvailabilityCalendarModal from '../../src/components/AvailabilityCalendarModal';
 
 const ACCENT = '#7C3AED';
 
@@ -18,6 +19,7 @@ export default function VehicleDetail() {
   const [loading, setLoading] = useState(true);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -254,7 +256,7 @@ export default function VehicleDetail() {
                 <Text style={p.ctaPrimaryText}>Reserver maintenant</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
-              <TouchableOpacity style={[p.ctaSecondary, { borderColor: C.border }]} data-testid="check-availability-btn" activeOpacity={0.7} onPress={() => router.push({ pathname: '/booking/[id]', params: { id: vehicle.id } })}>
+              <TouchableOpacity style={[p.ctaSecondary, { borderColor: C.border }]} data-testid="check-availability-btn" activeOpacity={0.7} onPress={() => setAvailabilityOpen(true)}>
                 <Ionicons name="calendar-outline" size={18} color={ACCENT} />
                 <Text style={[p.ctaSecondaryText, { color: ACCENT }]}>Voir la disponibilite</Text>
               </TouchableOpacity>
@@ -278,6 +280,19 @@ export default function VehicleDetail() {
           </View>
         </View>
       </ScrollView>
+
+      {/* === AVAILABILITY CALENDAR === */}
+      <AvailabilityCalendarModal
+        visible={availabilityOpen}
+        vehicleId={vehicle.id}
+        vehicleName={`${vehicle.brand} ${vehicle.model}`}
+        onClose={() => setAvailabilityOpen(false)}
+        onSelectDate={(date) => {
+          setAvailabilityOpen(false);
+          router.push({ pathname: '/booking/[id]', params: { id: vehicle.id } });
+        }}
+        colors={C}
+      />
 
       {/* === FULLSCREEN GALLERY MODAL === */}
       <Modal visible={galleryOpen} transparent animationType="fade" onRequestClose={() => setGalleryOpen(false)}>
