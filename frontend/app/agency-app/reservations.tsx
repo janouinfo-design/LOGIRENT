@@ -408,7 +408,9 @@ export default function AgencyReservations() {
             <View style={[s.tRow, { backgroundColor: '#F1F5F9' }]}>
               <Text style={[s.tH, { flex: 1.2 }]}>Client</Text>
               <Text style={[s.tH, { flex: 1.2 }]}>Vehicule</Text>
-              <Text style={[s.tH, { flex: 0.8 }]}>Debut</Text>
+              <Text style={[s.tH, { flex: 0.7 }]}>Debut</Text>
+              <Text style={[s.tH, { flex: 0.5 }]}>Heure</Text>
+              <Text style={[s.tH, { flex: 0.6 }]}>Creee le</Text>
               <Text style={[s.tH, { flex: 0.8 }]}>Statut</Text>
               <Text style={[s.tH, { flex: 1.6 }]}>Actions</Text>
             </View>
@@ -416,8 +418,20 @@ export default function AgencyReservations() {
               <View key={r.id} style={[s.tRow, i % 2 === 0 ? {} : { backgroundColor: '#F8FAFC' }]}>
                 <Text style={[s.tC, { flex: 1.2, fontWeight: '700', color: C.text }]} numberOfLines={1}>{r.user_name}</Text>
                 <Text style={[s.tC, { flex: 1.2, color: C.text }]} numberOfLines={1}>{r.vehicle_name}</Text>
-                <Text style={[s.tC, { flex: 0.8, color: C.textLight }]}>
+                <Text style={[s.tC, { flex: 0.7, color: C.textLight }]}>
                   {format(new Date(r.start_date), 'dd/MM/yy')}
+                </Text>
+                <View style={{ flex: 0.5, flexDirection: 'row', gap: 3, alignItems: 'center', paddingVertical: 8, paddingHorizontal: 2 }}>
+                  <View style={{ backgroundColor: '#10B98112', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>{format(new Date(r.start_date), 'HH:mm')}</Text>
+                  </View>
+                  <Text style={{ color: C.textLight, fontSize: 9 }}>-</Text>
+                  <View style={{ backgroundColor: '#3B82F612', paddingHorizontal: 4, paddingVertical: 2, borderRadius: 4 }}>
+                    <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>{format(new Date(r.end_date), 'HH:mm')}</Text>
+                  </View>
+                </View>
+                <Text style={[s.tC, { flex: 0.6, color: C.textLight, fontSize: 11 }]}>
+                  {r.created_at ? format(new Date(r.created_at), 'dd/MM HH:mm') : '-'}
                 </Text>
                 <View style={{ flex: 0.8, paddingVertical: 8, paddingHorizontal: 4 }}>
                   <View style={[s.badge, { backgroundColor: statusColor(r.status) }]}>
@@ -579,8 +593,14 @@ export default function AgencyReservations() {
                   <Text style={{ color: C.text, fontSize: 12, fontWeight: '700' }} numberOfLines={1}>{r.vehicle_name}</Text>
                 </View>
                 <Text style={[s.tC, { flex: 1, color: C.text }]} numberOfLines={1}>{r.user_name}</Text>
-                <Text style={[s.tC, { flex: 0.9, color: C.textLight }]}>{format(new Date(r.start_date), 'dd/MM/yyyy')}</Text>
-                <Text style={[s.tC, { flex: 0.9, color: C.textLight }]}>{format(new Date(r.end_date), 'dd/MM/yyyy')}</Text>
+                <View style={{ flex: 0.9, paddingVertical: 8, paddingHorizontal: 4 }}>
+                  <Text style={{ color: C.textLight, fontSize: 12 }}>{format(new Date(r.start_date), 'dd/MM/yyyy')}</Text>
+                  <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>{format(new Date(r.start_date), 'HH:mm')}</Text>
+                </View>
+                <View style={{ flex: 0.9, paddingVertical: 8, paddingHorizontal: 4 }}>
+                  <Text style={{ color: C.textLight, fontSize: 12 }}>{format(new Date(r.end_date), 'dd/MM/yyyy')}</Text>
+                  <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>{format(new Date(r.end_date), 'HH:mm')}</Text>
+                </View>
                 <View style={{ flex: 0.7, paddingVertical: 8, paddingHorizontal: 4 }}>
                   <View style={[s.badge, { backgroundColor: statusColor(r.status) }]}>
                     <Text style={s.badgeText}>{statusLabel(r.status)}</Text>
@@ -706,6 +726,12 @@ export default function AgencyReservations() {
                         <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>
                           {format(new Date(r.start_date), 'dd/MM')} - {format(new Date(r.end_date), 'dd/MM')}
                         </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <Ionicons name="time-outline" size={11} color={C.textLight} />
+                        <Text style={{ color: '#10B981', fontSize: 9, fontWeight: '700' }}>{format(new Date(r.start_date), 'HH:mm')}</Text>
+                        <Text style={{ color: C.textLight, fontSize: 9 }}>-</Text>
+                        <Text style={{ color: '#3B82F6', fontSize: 9, fontWeight: '700' }}>{format(new Date(r.end_date), 'HH:mm')}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}

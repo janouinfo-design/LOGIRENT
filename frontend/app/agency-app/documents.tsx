@@ -249,6 +249,9 @@ export default function DocumentScanScreen() {
                             <View key={doc.id} style={[s.docCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid={`doc-${doc.id}`}>
                               <TouchableOpacity onPress={() => setShowPreview(doc.url)} style={s.docImageWrap}>
                                 <Image source={{ uri: doc.url }} style={s.docImage} resizeMode="cover" />
+                                <View style={{ position: 'absolute', top: 6, left: 6, width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                                  <Ionicons name="expand" size={12} color="#fff" />
+                                </View>
                                 <View style={[s.docStatusBadge, { backgroundColor: sc.bg }]}>
                                   <Text style={{ color: sc.text, fontSize: 10, fontWeight: '700' }}>{sc.label}</Text>
                                 </View>
@@ -376,11 +379,19 @@ export default function DocumentScanScreen() {
         </View>
       </Modal>
 
-      {/* Image Preview Modal */}
+      {/* Image Preview Modal - Enhanced */}
       <Modal visible={!!showPreview} transparent animationType="fade" onRequestClose={() => setShowPreview(null)}>
-        <TouchableOpacity style={s.previewOverlay} onPress={() => setShowPreview(null)} activeOpacity={1}>
-          {showPreview && <Image source={{ uri: showPreview }} style={s.previewImage} resizeMode="contain" />}
-        </TouchableOpacity>
+        <View style={s.previewOverlay}>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', padding: 16, paddingTop: Platform.OS === 'web' ? 16 : 40 }}>
+            <TouchableOpacity onPress={() => setShowPreview(null)} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }} data-testid="close-preview">
+              <Ionicons name="close" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            {showPreview && <Image source={{ uri: showPreview }} style={s.previewImage} resizeMode="contain" />}
+          </View>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', paddingBottom: 20 }}>Appuyez X pour fermer</Text>
+        </View>
       </Modal>
     </View>
   );

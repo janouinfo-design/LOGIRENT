@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, TextInput, Modal, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -344,7 +344,24 @@ export default function AgencyTracking() {
                       <Text style={[s.badgeText, { color: getStatusColor(p), fontSize: 12 }]}>{getStatusLabel(p)}</Text>
                     </View>
                     {p.lat && p.lng ? (
-                      <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', marginTop: 4, fontSize: 11 }]}>{p.speed} km/h</Text>
+                      <>
+                        <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', marginTop: 4, fontSize: 11 }]}>{p.speed} km/h</Text>
+                        <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', fontSize: 10, marginTop: 2 }]} numberOfLines={1}>
+                          {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
+                        </Text>
+                        <TouchableOpacity
+                          onPress={() => {
+                            const url = `https://maps.google.com/?q=${p.lat},${p.lng}`;
+                            if (Platform.OS === 'web') { window.open(url, '_blank'); }
+                            else { Linking.openURL(url); }
+                          }}
+                          style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 3, marginTop: 4, backgroundColor: '#3B82F610', paddingHorizontal: 6, paddingVertical: 3, borderRadius: 6 }}
+                          data-testid={`maps-link-${p.tracker_id}`}
+                        >
+                          <Ionicons name="navigate" size={10} color="#3B82F6" />
+                          <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>Google Maps</Text>
+                        </TouchableOpacity>
+                      </>
                     ) : null}
                     <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', fontSize: 11, marginTop: 2 }]}>
                       {p.ignition ? 'Moteur ON' : 'Moteur OFF'}
