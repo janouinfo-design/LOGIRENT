@@ -79,9 +79,9 @@ export const GanttChart = ({
   const gridLayoutRef = useRef({ x: 0, y: 0, width: 0 });
 
   const today = new Date();
-  const CELL_W = Math.round(32 * zoom);
-  const LABEL_W = Math.round(130 * zoom);
-  const ROW_H = Math.round(42 * zoom);
+  const CELL_W = Math.round(34 * zoom);
+  const LABEL_W = Math.round(180 * zoom);
+  const ROW_H = Math.round(38 * zoom);
 
   const days = useMemo(() => {
     if (viewType === 'day') return [today];
@@ -341,54 +341,55 @@ export const GanttChart = ({
       </ScrollView>
 
       {/* ===== GANTT GRID ===== */}
-      <View style={{ maxHeight: 350, overflow: 'scroll' } as any}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={true}>
-          <View
-            ref={gridRef}
-            {...(Platform.OS === 'web' ? {
-              onMouseMove: handleDragMove,
-              onMouseUp: handleDragEnd,
-              onMouseLeave: handleDragCancel,
-            } : {})}
-          >
-            {/* Header row */}
-            <View style={{ flexDirection: 'row' }}>
-              <View style={[g.labelCell, { width: LABEL_W, height: ROW_H, backgroundColor: '#1E3A5F', borderColor: '#2D4A6F' }]}>
-                <Text style={{ color: '#CBD5E1', fontSize: 11, fontWeight: '800' }}>VEHICULE</Text>
-              </View>
-              {days.map((day, i) => {
-                const isToday = isSameDay(day, today);
-                const isWeekend = day.getDay() === 0 || day.getDay() === 6;
-                return (
-                  <View key={i} style={[g.dayHeaderCell, {
-                    width: CELL_W, height: ROW_H,
-                    backgroundColor: isToday ? '#3B82F6' : isWeekend ? '#F1F5F9' : '#F8FAFC',
-                    borderColor: '#E2E8F0',
-                  }]}>
-                    <Text style={{ color: isToday ? '#fff' : '#94A3B8', fontSize: Math.max(7, 8 * zoom), fontWeight: '600' }}>
-                      {format(day, 'EEE', { locale: fr }).slice(0, 2).toUpperCase()}
-                    </Text>
-                    <Text style={{ color: isToday ? '#fff' : '#334155', fontSize: Math.max(10, 12 * zoom), fontWeight: isToday ? '900' : '700' }}>
-                      {format(day, 'd')}
-                    </Text>
-                  </View>
-                );
-              })}
+      <View style={{ maxHeight: 600, overflow: 'scroll', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 8, marginHorizontal: 0 } as any}>
+        <View
+          ref={gridRef}
+          style={{ minWidth: LABEL_W + CELL_W * days.length } as any}
+          {...(Platform.OS === 'web' ? {
+            onMouseMove: handleDragMove,
+            onMouseUp: handleDragEnd,
+            onMouseLeave: handleDragCancel,
+          } : {})}
+        >
+          {/* Header row - sticky */}
+          <View style={{ flexDirection: 'row', position: 'sticky' as any, top: 0, zIndex: 20, backgroundColor: '#F8FAFC' } as any}>
+            <View style={[g.labelCell, { width: LABEL_W, height: ROW_H, backgroundColor: '#1E3A5F', borderColor: '#2D4A6F', position: 'sticky' as any, left: 0, zIndex: 30 }] as any}>
+              <Text style={{ color: '#CBD5E1', fontSize: 11, fontWeight: '800' }}>VEHICULE</Text>
             </View>
-
-            {/* Vehicle rows */}
-            {filteredSchedule.map((vehicle, vi) => (
-              <View key={vehicle.id} style={{ flexDirection: 'row' }}>
-                <View style={[g.labelCell, {
-                  width: LABEL_W, height: ROW_H,
-                  backgroundColor: vi % 2 === 0 ? '#FFFFFF' : '#F8FAFC',
+            {days.map((day, i) => {
+              const isToday = isSameDay(day, today);
+              const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+              return (
+                <View key={i} style={[g.dayHeaderCell, {
+                  width: CELL_W, height: ROW_H,
+                  backgroundColor: isToday ? '#3B82F6' : isWeekend ? '#F1F5F9' : '#F8FAFC',
                   borderColor: '#E2E8F0',
                 }]}>
-                  <Text style={{ color: '#1E293B', fontSize: Math.max(10, 11 * zoom), fontWeight: '800' }} numberOfLines={1}>
-                    {vehicle.brand} {vehicle.model}
+                  <Text style={{ color: isToday ? '#fff' : '#94A3B8', fontSize: Math.max(7, 8 * zoom), fontWeight: '600' }}>
+                    {format(day, 'EEE', { locale: fr }).slice(0, 2).toUpperCase()}
                   </Text>
-                  <Text style={{ color: '#94A3B8', fontSize: Math.max(8, 9 * zoom) }}>CHF {vehicle.price_per_day}/j</Text>
+                  <Text style={{ color: isToday ? '#fff' : '#334155', fontSize: Math.max(10, 12 * zoom), fontWeight: isToday ? '900' : '700' }}>
+                    {format(day, 'd')}
+                  </Text>
                 </View>
+              );
+            })}
+          </View>
+
+          {/* Vehicle rows */}
+          {filteredSchedule.map((vehicle, vi) => (
+            <View key={vehicle.id} style={{ flexDirection: 'row' }}>
+              <View style={[g.labelCell, {
+                width: LABEL_W, height: ROW_H,
+                backgroundColor: vi % 2 === 0 ? '#FFFFFF' : '#F8FAFC',
+                borderColor: '#E2E8F0',
+                position: 'sticky' as any, left: 0, zIndex: 10,
+              }] as any}>
+                <Text style={{ color: '#1E293B', fontSize: Math.max(10, 11 * zoom), fontWeight: '800' }} numberOfLines={1}>
+                  {vehicle.brand} {vehicle.model}
+                </Text>
+                <Text style={{ color: '#94A3B8', fontSize: Math.max(8, 9 * zoom) }}>CHF {vehicle.price_per_day}/j</Text>
+              </View>
 
                 {days.map((day, di) => {
                   const dayTs = day.getTime();
@@ -493,8 +494,7 @@ export const GanttChart = ({
               </View>
             ))}
           </View>
-        </ScrollView>
-      </View>
+        </View>
 
       {/* ===== RESERVATION POPUP ===== */}
       {popup && (
