@@ -6,6 +6,8 @@ import api from '../../src/api/axios';
 import { format, addMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { KpiSkeleton, TableSkeleton } from '../../src/components/Skeleton';
 import { GanttChart } from '../../src/components/agency/GanttChart';
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
@@ -117,8 +119,15 @@ export default function AgencyReservations() {
 
   const fetchReservations = async () => {
     try {
+      // Load from cache first for instant display
+      if (reservations.length === 0) {
+        const cached = await AsyncStorage.getItem('cache_reservations');
+        if (cached) { try { setReservations(JSON.parse(cached)); } catch {} }
+      }
       const res = await api.get('/api/admin/reservations?limit=200');
-      setReservations(res.data.reservations || []);
+      const data = res.data.reservations || [];
+      setReservations(data);
+      AsyncStorage.setItem('cache_reservations', JSON.stringify(data)).catch(() => {});
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -137,6 +146,11 @@ export default function AgencyReservations() {
 
   const fetchStats = async () => {
     try {
+      // Load from cache first
+      if (!statsData) {
+        const cached = await AsyncStorage.getItem('cache_stats');
+        if (cached) { try { const c = JSON.parse(cached); setStatsData(c.stats); setTodayData(c.today); setOverdueData(c.overdue); } catch {} }
+      }
       const [todayRes, overdueRes, statsRes] = await Promise.all([
         api.get('/api/admin/reservations/today'),
         api.get('/api/admin/overdue'),
@@ -145,6 +159,7 @@ export default function AgencyReservations() {
       setTodayData(todayRes.data);
       setOverdueData(overdueRes.data);
       setStatsData(statsRes.data);
+      AsyncStorage.setItem('cache_stats', JSON.stringify({ stats: statsRes.data, today: todayRes.data, overdue: overdueRes.data })).catch(() => {});
     } catch (e) { console.error(e); }
   };
 
@@ -312,9 +327,10 @@ export default function AgencyReservations() {
     else { setSortCol(col); setSortDir('desc'); }
   };
 
-  if (loading) return (
-    <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}>
-      <ActivityIndicator size="large" color={C.accent} />
+  if (loading && reservations.length === 0) return (
+    <View style={[s.container, { backgroundColor: C.bg }]}>
+      <KpiSkeleton />
+      <TableSkeleton rows={6} />
     </View>
   );
 
