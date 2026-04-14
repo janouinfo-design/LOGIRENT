@@ -50,6 +50,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   const [editNationality, setEditNationality] = useState('');
   const [fullClient, setFullClient] = useState<Client | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
   const idFrontRef = useRef<HTMLInputElement | null>(null);
   const idBackRef = useRef<HTMLInputElement | null>(null);
   const licenseFrontRef = useRef<HTMLInputElement | null>(null);
@@ -146,6 +147,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   };
 
   return (
+  <>
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={st.modalOverlay}>
         <View style={[st.modal, { backgroundColor: C.card }]}>
@@ -236,7 +238,12 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <View style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Recto</Text>
                     {fullClient?.id_photo ? (
-                      <Image source={{ uri: fullClient.id_photo }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.id_photo!)} activeOpacity={0.8}>
+                        <Image source={{ uri: fullClient.id_photo }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="expand" size={10} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
                     ) : (
                       <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
                         <Ionicons name="card-outline" size={24} color="#9CA3AF" />
@@ -251,7 +258,12 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <View style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Verso</Text>
                     {fullClient?.id_photo_back ? (
-                      <Image source={{ uri: fullClient.id_photo_back }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.id_photo_back!)} activeOpacity={0.8}>
+                        <Image source={{ uri: fullClient.id_photo_back }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="expand" size={10} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
                     ) : (
                       <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
                         <Ionicons name="card-outline" size={24} color="#9CA3AF" />
@@ -270,7 +282,12 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <View style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Recto</Text>
                     {fullClient?.license_photo ? (
-                      <Image source={{ uri: fullClient.license_photo }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.license_photo!)} activeOpacity={0.8}>
+                        <Image source={{ uri: fullClient.license_photo }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="expand" size={10} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
                     ) : (
                       <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
                         <Ionicons name="id-card-outline" size={24} color="#9CA3AF" />
@@ -285,7 +302,12 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <View style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Verso</Text>
                     {fullClient?.license_photo_back ? (
-                      <Image source={{ uri: fullClient.license_photo_back }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.license_photo_back!)} activeOpacity={0.8}>
+                        <Image source={{ uri: fullClient.license_photo_back }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="expand" size={10} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
                     ) : (
                       <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
                         <Ionicons name="id-card-outline" size={24} color="#9CA3AF" />
@@ -326,6 +348,21 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
         </View>
       </View>
     </Modal>
+
+    {/* Photo Preview Modal */}
+    <Modal visible={!!previewPhoto} transparent animationType="fade" onRequestClose={() => setPreviewPhoto(null)}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.9)' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-end', padding: 16, paddingTop: Platform.OS === 'web' ? 16 : 40 }}>
+          <TouchableOpacity onPress={() => setPreviewPhoto(null)} style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }} data-testid="close-doc-preview">
+            <Ionicons name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          {previewPhoto && <Image source={{ uri: previewPhoto }} style={{ width: '90%', height: '80%' }} resizeMode="contain" />}
+        </View>
+      </View>
+    </Modal>
+  </>
   );
 };
 
