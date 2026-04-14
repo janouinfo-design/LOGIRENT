@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import { getPhotoUrl } from '../../src/utils/photoUrl';
+import AvailabilityCalendarModal from '../../src/components/AvailabilityCalendarModal';
 
 const ACCENT = '#7C3AED';
 
@@ -18,6 +19,7 @@ export default function ClientVehicleDetail() {
   const [loading, setLoading] = useState(true);
   const [photoIdx, setPhotoIdx] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -64,7 +66,10 @@ export default function ClientVehicleDetail() {
   ];
 
   const goPhoto = (dir: number) => { const n = photoIdx + dir; if (n >= 0 && n < photos.length) setPhotoIdx(n); };
-  const goBook = () => router.push(`/booking/${vehicle.id}`);
+  const goBook = (prefillDate?: string) => {
+    const params = prefillDate ? `?date=${prefillDate}` : '';
+    router.push(`/booking/${vehicle.id}${params}` as any);
+  };
 
   return (
     <View style={[st.container, { backgroundColor: C.bg }]}>
@@ -173,11 +178,11 @@ export default function ClientVehicleDetail() {
                 <Text style={{ fontSize: 32, fontWeight: '900', letterSpacing: -0.5, color: C.text }}>CHF {vehicle.price_per_day}</Text>
                 <Text style={{ fontSize: 16, fontWeight: '500', color: C.textLight }}> /jour</Text>
               </View>
-              <TouchableOpacity style={st.ctaPrim} onPress={goBook} data-testid="reserve-now-btn" activeOpacity={0.85}>
+              <TouchableOpacity style={st.ctaPrim} onPress={() => goBook()} data-testid="reserve-now-btn" activeOpacity={0.85}>
                 <Text style={st.ctaPrimText}>Reserver maintenant</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
-              <TouchableOpacity style={[st.ctaSec, { borderColor: C.border }]} onPress={goBook} data-testid="check-availability-btn" activeOpacity={0.7}>
+              <TouchableOpacity style={[st.ctaSec, { borderColor: C.border }]} onPress={() => setAvailabilityOpen(true)} data-testid="check-availability-btn" activeOpacity={0.7}>
                 <Ionicons name="calendar-outline" size={18} color={ACCENT} />
                 <Text style={{ fontSize: 14, fontWeight: '700', color: ACCENT }}>Voir la disponibilite</Text>
               </TouchableOpacity>
@@ -190,6 +195,16 @@ export default function ClientVehicleDetail() {
           </View>
         </View>
       </ScrollView>
+
+      {/* AVAILABILITY CALENDAR */}
+      <AvailabilityCalendarModal
+        visible={availabilityOpen}
+        vehicleId={vehicle.id}
+        vehicleName={`${vehicle.brand} ${vehicle.model}`}
+        onClose={() => setAvailabilityOpen(false)}
+        onSelectDate={(date) => goBook(date)}
+        colors={C}
+      />
 
       {/* FULLSCREEN GALLERY */}
       <Modal visible={galleryOpen} transparent animationType="fade" onRequestClose={() => setGalleryOpen(false)}>

@@ -91,17 +91,23 @@ async def get_vehicle_availability(vehicle_id: str, month: int = None, year: int
         "status": {"$in": ["confirmed", "active", "pending", "pending_cash"]},
         "start_date": {"$lt": end_of_month},
         "end_date": {"$gt": start_of_month}
-    }).to_list(100)
+    }, {"_id": 0}).to_list(100)
 
     booked_dates = []
+    reservations_detail = []
     for res in reservations:
         current = max(res['start_date'], start_of_month)
         end = min(res['end_date'], end_of_month)
         while current < end:
             booked_dates.append(current.strftime("%Y-%m-%d"))
             current += timedelta(days=1)
+        reservations_detail.append({
+            "start_date": res['start_date'].isoformat(),
+            "end_date": res['end_date'].isoformat(),
+            "status": res.get('status', ''),
+        })
 
-    return {"booked_dates": booked_dates}
+    return {"booked_dates": booked_dates, "reservations": reservations_detail}
 
 
 # Admin vehicle routes
