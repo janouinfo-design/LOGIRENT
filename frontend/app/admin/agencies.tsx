@@ -559,6 +559,7 @@ export default function AgenciesPage() {
             {loadingModules ? (
               <ActivityIndicator size="large" color={COLORS.accent} style={{ marginVertical: 30 }} />
             ) : (
+              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={true}>
               <View style={{ gap: 8 }}>
                 {Object.keys(modules).map((key) => {
                   const moduleIcons: Record<string, string> = {
@@ -620,6 +621,7 @@ export default function AgenciesPage() {
                   );
                 })}
               </View>
+              </ScrollView>
             )}
             <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
               <TouchableOpacity
