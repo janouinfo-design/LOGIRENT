@@ -174,13 +174,16 @@ export default function DocumentScanScreen() {
     try {
       const res = await api.post(`/api/documents/${docId}/ocr`);
       if (res.data.extracted_data) {
-        Alert.alert('OCR termine', `Confiance: ${res.data.confidence}%`);
+        const msg = `OCR termine - Confiance: ${res.data.confidence}%`;
+        Platform.OS === 'web' ? window.alert(msg) : Alert.alert('OCR termine', msg);
       } else {
-        Alert.alert('OCR', res.data.message || 'Extraction terminee');
+        const msg = res.data.message || 'Extraction terminee';
+        Platform.OS === 'web' ? window.alert(msg) : Alert.alert('OCR', msg);
       }
       if (selectedClient) fetchDocs(selectedClient.id);
     } catch (e: any) {
-      Alert.alert('Erreur OCR', e.response?.data?.detail || 'Erreur');
+      const msg = e.response?.data?.detail || 'Erreur OCR';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur OCR', msg);
     }
     setOcrRunning(null);
   };
