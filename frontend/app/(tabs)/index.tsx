@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore } from '../../src/store/vehicleStore';
+import { useAuthStore } from '../../src/store/authStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import { useI18n } from '../../src/i18n';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -43,11 +44,11 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
 
-  useEffect(() => { fetchVehicles({}); }, []);
+  useEffect(() => { const f: any = {}; if (agencyId) f.agency_id = agencyId; fetchVehicles(f); }, [agencyId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchVehicles({});
+    await fetchVehicles(agencyId ? { agency_id: agencyId } : {});
     setRefreshing(false);
   };
 
@@ -56,6 +57,7 @@ export default function HomeScreen() {
     const type = typeId === 'all' ? undefined : typeId;
     const filters: any = { type };
     setFilters(filters);
+    if (agencyId) filters.agency_id = agencyId;
     fetchVehicles(filters);
   };
 

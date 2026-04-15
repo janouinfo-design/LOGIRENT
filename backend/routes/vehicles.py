@@ -44,6 +44,15 @@ async def get_vehicles(
 
     vehicles = await db.vehicles.find(query).to_list(100)
 
+    # If no agency_id filter and vehicles from multiple agencies, use default agency
+    if not agency_id and vehicles:
+        agency_ids = set(v.get('agency_id') for v in vehicles if v.get('agency_id'))
+        if len(agency_ids) > 1:
+            # Return only the first agency's vehicles (default behavior for single-tenant)
+            default_agency = await db.agencies.find_one({}, {"_id": 0, "id": 1})
+            if default_agency:
+                vehicles = [v for v in vehicles if v.get('agency_id') == default_agency['id']]
+
     if start_date and end_date:
         vehicle_ids = [v['id'] for v in vehicles]
         overlapping = await db.reservations.find({
