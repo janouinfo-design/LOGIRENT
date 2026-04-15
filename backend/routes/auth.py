@@ -159,7 +159,7 @@ async def forgot_password(request: ForgotPasswordRequest):
                 <p>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.</p>
             </div>
             """
-            await send_email(user['email'], "LogiRent - Réinitialisation du mot de passe", reset_html)
+            await send_email(user['email'], "LogiRent - Réinitialisation du mot de passe", reset_html, agency_id=user.get('agency_id'))
         except Exception as e:
             logger.error(f"Failed to send reset email: {e}")
     return {"message": "Si l'email existe, un code de réinitialisation a été envoyé"}

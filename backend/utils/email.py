@@ -65,18 +65,32 @@ async def send_email(recipient: str, subject: str, html_content: str, attachment
     """Send email. Uses agency SMTP if configured, otherwise falls back to Resend."""
 
     # Try agency SMTP first
+    smtp = None
     if agency_id:
         try:
             agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "smtp_config": 1})
             smtp = agency.get('smtp_config') if agency else None
-            if smtp and smtp.get('host') and smtp.get('email') and smtp.get('password'):
-                try:
-                    await _send_via_smtp(smtp, recipient, subject, html_content, attachments)
-                    return "smtp_sent"
-                except Exception as e:
-                    logger.error(f"Agency SMTP failed for {agency_id}, falling back to Resend: {e}")
         except Exception as e:
             logger.error(f"Error fetching agency SMTP config: {e}")
+
+    # If no agency_id or no SMTP config, try any agency with SMTP configured
+    if not smtp or not smtp.get('host'):
+        try:
+            any_agency = await db.agencies.find_one(
+                {"smtp_config.host": {"$exists": True, "$ne": ""}},
+                {"_id": 0, "smtp_config": 1}
+            )
+            if any_agency:
+                smtp = any_agency.get('smtp_config')
+        except Exception as e:
+            logger.error(f"Error finding any agency SMTP: {e}")
+
+    if smtp and smtp.get('host') and smtp.get('email') and smtp.get('password'):
+        try:
+            await _send_via_smtp(smtp, recipient, subject, html_content, attachments)
+            return "smtp_sent"
+        except Exception as e:
+            logger.error(f"Agency SMTP failed, falling back to Resend: {e}")
 
     # Fallback to Resend
     if not RESEND_API_KEY or RESEND_API_KEY == 're_placeholder':

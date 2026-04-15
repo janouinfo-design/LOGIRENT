@@ -726,7 +726,7 @@ async def update_reservation_status(reservation_id: str, status: str, user: dict
                     'completed': f"Location terminée - {vname}",
                     'cancelled': f"Réservation annulée - {vname}",
                 }
-                await send_email(client['email'], email_subjects.get(status, f"Mise à jour réservation - {vname}"), email_html)
+                await send_email(client['email'], email_subjects.get(status, f"Mise à jour réservation - {vname}"), email_html, agency_id=user.get('agency_id'))
             except Exception as e:
                 logger.error(f"Failed to send status change email: {e}")
 

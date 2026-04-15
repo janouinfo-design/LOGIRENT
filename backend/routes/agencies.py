@@ -464,7 +464,7 @@ async def send_payment_link_to_client(reservation_id: str, body: SendPaymentLink
     '''
 
     try:
-        await send_email(client['email'], f"Lien de paiement - {vehicle['brand']} {vehicle['model']}", html)
+        await send_email(client['email'], f"Lien de paiement - {vehicle['brand']} {vehicle['model']}", html, agency_id=user.get('agency_id'))
     except Exception as e:
         logger.error(f"Failed to send payment link email: {e}")
 
