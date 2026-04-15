@@ -46,7 +46,7 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
 
-  useEffect(() => { const f: any = {}; if (agencyId) f.agency_id = agencyId; fetchVehicles(f); }, [agencyId]);
+  useEffect(() => { fetchVehicles({}); }, []);
 
   const onRefresh = async () => {
     setRefreshing(true);

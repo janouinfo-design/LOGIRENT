@@ -27,11 +27,7 @@ export default function VehiclesScreen() {
   const { user } = useAuthStore();
   const agencyId = user?.agency_id;
 
-  useEffect(() => {
-    const filters: any = {};
-    if (agencyId) filters.agency_id = agencyId;
-    fetchVehicles(filters);
-  }, [agencyId]);
+  useEffect(() => { fetchVehicles({}); }, []);
 
   const onRefresh = async () => { setRefreshing(true); await fetchVehicles(); setRefreshing(false); };
 
