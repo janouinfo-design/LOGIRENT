@@ -169,6 +169,7 @@ class Vehicle(BaseModel):
     color: Optional[str] = None
     documents: List[dict] = []
     agency_id: Optional[str] = None
+    fleet_count: int = 1  # Number of identical vehicles in stock
     pricing_tiers: List[dict] = []
     seasonal_pricing: List[dict] = []
     created_at: datetime = Field(default_factory=datetime.utcnow)

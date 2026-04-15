@@ -59,23 +59,15 @@ export default function VehiclesScreen() {
     return filtered;
   }, [vehicles, search]);
 
-  // Group vehicles by brand+model+type → show one card per model with availability count
+  // Use fleet_count for availability display (no grouping needed with fleet_count)
   const groupedVehicles = useMemo(() => {
-    const groups: Record<string, { representative: any; count: number; availableCount: number; ids: string[]; minPrice: number }> = {};
-    filteredVehicles.forEach(v => {
-      const key = `${v.brand}_${v.model}_${v.type || ''}`.toLowerCase();
-      if (!groups[key]) {
-        groups[key] = { representative: v, count: 0, availableCount: 0, ids: [], minPrice: v.price_per_day || 999999 };
-      }
-      groups[key].count++;
-      groups[key].ids.push(v.id);
-      if (v.status === 'available') groups[key].availableCount++;
-      if (v.price_per_day < groups[key].minPrice) {
-        groups[key].minPrice = v.price_per_day;
-        groups[key].representative = v;
-      }
-    });
-    return Object.values(groups).sort((a, b) => a.representative.brand.localeCompare(b.representative.brand));
+    return filteredVehicles.map(v => ({
+      representative: v,
+      count: v.fleet_count || 1,
+      availableCount: v.fleet_count || 1, // Will be dynamically calculated if needed
+      ids: [v.id],
+      minPrice: v.price_per_day,
+    }));
   }, [filteredVehicles]);
 
   const activeFiltersCount = [selectedType, selectedTransmission].filter(f => f !== 'Tous' && f !== 'Toutes').length;

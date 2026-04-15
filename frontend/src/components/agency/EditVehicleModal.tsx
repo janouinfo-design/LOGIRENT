@@ -32,7 +32,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
         transmission: vehicle.transmission, fuel_type: vehicle.fuel_type, status: vehicle.status,
         location: vehicle.location || '', description: vehicle.description || '',
         plate_number: vehicle.plate_number || '', chassis_number: vehicle.chassis_number || '',
-        color: vehicle.color || '',
+        color: vehicle.color || '', fleet_count: String(vehicle.fleet_count || 1),
       });
     }
   }, [vehicle]);
@@ -50,6 +50,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
         plate_number: editForm.plate_number || null,
         chassis_number: editForm.chassis_number || null,
         color: editForm.color || null,
+        fleet_count: parseInt(editForm.fleet_count) || 1,
       });
       onClose();
       onSaved();
@@ -267,6 +268,23 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
               <View style={{ marginBottom: 12 }}>
                 <Text style={[vst.fieldLabel, { color: C.textLight }]}>Numero de chassis</Text>
                 <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.chassis_number} onChangeText={v => setEditForm({ ...editForm, chassis_number: v })} placeholder="WBA1234567890" placeholderTextColor={C.textLight + '80'} data-testid="edit-chassis-number" />
+              </View>
+
+              <View style={{ marginBottom: 12, padding: 12, borderRadius: 10, backgroundColor: '#F0F4FF', borderWidth: 1, borderColor: '#C7D2FE' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="layers" size={18} color="#7C3AED" />
+                  <Text style={{ color: '#1E293B', fontSize: 14, fontWeight: '800', flex: 1 }}>Stock / Quantite</Text>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <TouchableOpacity onPress={() => setEditForm({ ...editForm, fleet_count: String(Math.max(1, parseInt(editForm.fleet_count || '1') - 1)) })} style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 18, fontWeight: '800', color: '#475569' }}>-</Text>
+                    </TouchableOpacity>
+                    <TextInput value={editForm.fleet_count} onChangeText={v => setEditForm({ ...editForm, fleet_count: v.replace(/[^0-9]/g, '') })} keyboardType="numeric" style={{ width: 50, textAlign: 'center', fontSize: 18, fontWeight: '900', color: '#7C3AED', borderWidth: 1, borderColor: '#C7D2FE', borderRadius: 8, padding: 4 }} data-testid="edit-fleet-count" />
+                    <TouchableOpacity onPress={() => setEditForm({ ...editForm, fleet_count: String(parseInt(editForm.fleet_count || '1') + 1) })} style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#7C3AED', justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 18, fontWeight: '800', color: '#fff' }}>+</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <Text style={{ color: '#64748B', fontSize: 11, marginTop: 4 }}>Nombre de vehicules identiques en stock. Le client verra une seule fiche mais pourra reserver tant qu'il y a du stock disponible.</Text>
               </View>
 
               {/* Type */}
