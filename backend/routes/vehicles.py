@@ -42,16 +42,19 @@ async def get_vehicles(
     if agency_id:
         query["agency_id"] = agency_id
 
-    vehicles = await db.vehicles.find(query).to_list(100)
+    vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(100)
 
-    # If no agency_id filter and vehicles from multiple agencies, use default agency
+    # If no agency_id filter, show vehicles from the agency that has the most vehicles
     if not agency_id and vehicles:
-        agency_ids = set(v.get('agency_id') for v in vehicles if v.get('agency_id'))
-        if len(agency_ids) > 1:
-            # Return only the first agency's vehicles (default behavior for single-tenant)
-            default_agency = await db.agencies.find_one({}, {"_id": 0, "id": 1})
-            if default_agency:
-                vehicles = [v for v in vehicles if v.get('agency_id') == default_agency['id']]
+        agency_counts: dict = {}
+        for v in vehicles:
+            aid = v.get('agency_id', '')
+            if aid:
+                agency_counts[aid] = agency_counts.get(aid, 0) + 1
+        if len(agency_counts) > 1:
+            # Return only the agency with most vehicles
+            top_agency = max(agency_counts, key=agency_counts.get)
+            vehicles = [v for v in vehicles if v.get('agency_id') == top_agency]
 
     if start_date and end_date:
         vehicle_ids = [v['id'] for v in vehicles]

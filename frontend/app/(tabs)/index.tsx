@@ -38,6 +38,8 @@ export default function HomeScreen() {
   const { colors: C } = useThemeStore();
   const router = useRouter();
   const { vehicles, fetchVehicles, setFilters } = useVehicleStore();
+  const { user } = useAuthStore();
+  const agencyId = user?.agency_id || undefined;
   const { lang, t } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
   const [refreshing, setRefreshing] = React.useState(false);
