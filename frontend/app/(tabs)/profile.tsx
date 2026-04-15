@@ -607,6 +607,12 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Change Password */}
+        <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginHorizontal: 20, marginBottom: 12, padding: 14, borderRadius: 14, gap: 8, borderWidth: 1, borderColor: '#7C3AED40', backgroundColor: '#F5F3FF' }} onPress={() => router.push('/forgot-password' as any)} data-testid="reset-password-btn">
+          <Ionicons name="key" size={20} color="#7C3AED" />
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#7C3AED' }}>Reinitialiser le mot de passe</Text>
+        </TouchableOpacity>
+
         {/* Logout */}
         <TouchableOpacity style={[styles.logoutBtn, { backgroundColor: C.error }]} onPress={handleLogout} data-testid="logout-btn">
           <Ionicons name="log-out" size={20} color={C.error} />
