@@ -36,7 +36,7 @@ export const DOC_TYPES = [
   { v: 'autre', l: 'Autre', icon: 'attach' },
 ];
 
-export const TYPES = ['Berline', 'SUV', 'Citadine', 'Utilitaire', 'Luxe', 'Van', 'Electrique'];
+export const TYPES = ['Berline', 'SUV', 'Grand SUV', 'Citadine', 'Compact', 'Utilitaire', 'Luxe', 'Van', 'Monospace', 'Cabriolet', 'Electrique'];
 export const TRANSMISSIONS = [{ v: 'automatic', l: 'Automatique' }, { v: 'manual', l: 'Manuel' }];
 export const FUELS = ['Essence', 'Diesel', 'Electrique', 'Hybride'];
 export const STATUSES = [{ v: 'available', l: 'Disponible' }, { v: 'rented', l: 'Loue' }, { v: 'maintenance', l: 'Maintenance' }];

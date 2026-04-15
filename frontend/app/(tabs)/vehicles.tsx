@@ -7,7 +7,7 @@ import VehicleCard from '../../src/components/VehicleCard';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 
-const vehicleTypes = ['Tous', 'SUV', 'Berline', 'Citadine', 'Utilitaire'];
+const vehicleTypes = ['Tous', 'SUV', 'Grand SUV', 'Berline', 'Citadine', 'Compact', 'Utilitaire', 'Luxe', 'Van', 'Monospace', 'Cabriolet', 'Electrique'];
 const transmissions = ['Toutes', 'Automatique', 'Manuel'];
 
 export default function VehiclesScreen() {
