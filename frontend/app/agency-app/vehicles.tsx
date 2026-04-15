@@ -59,6 +59,21 @@ export default function AgencyVehicles() {
   useEffect(() => { fetchVehicles(); }, [fetchVehicles]);
   const onRefresh = async () => { setRefreshing(true); await fetchVehicles(); setRefreshing(false); };
 
+  const deleteVehicle = async (v: any) => {
+    const confirm = Platform.OS === 'web'
+      ? window.confirm(`Supprimer ${v.brand} ${v.model} ? Cette action est irreversible.`)
+      : true;
+    if (!confirm) return;
+    try {
+      await api.delete(`/api/vehicles/${v.id}`);
+      Platform.OS === 'web' ? window.alert('Vehicule supprime') : Alert.alert('Succes', 'Vehicule supprime');
+      fetchVehicles();
+    } catch (e: any) {
+      const msg = e?.response?.data?.detail || 'Erreur';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
   const filtered = useMemo(() => {
     let list = vehicles;
     if (statusFilter !== 'all') list = list.filter(v => v.status === statusFilter);
