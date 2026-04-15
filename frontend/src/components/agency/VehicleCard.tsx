@@ -9,10 +9,11 @@ interface Props {
   cardW: number;
   colors: any;
   onEdit: (v: Vehicle) => void;
+  onDelete?: (v: Vehicle) => void;
   onPhotoPress: (v: Vehicle) => void;
 }
 
-export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPress }: Props) {
+export default function VehicleCard({ item, cardW, colors: C, onEdit, onDelete, onPhotoPress }: Props) {
   const router = useRouter();
   const sc = getStatus(item.status);
   const photo = item.photos?.[0] ? getPhotoUrl(item.photos[0]) : null;
@@ -72,6 +73,11 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onPhotoPre
           <Ionicons name="create-outline" size={15} color="#D97706" />
           <Text style={{ color: '#D97706', fontSize: 12, fontWeight: '700' }}>Modifier</Text>
         </TouchableOpacity>
+        {onDelete && (
+          <TouchableOpacity onPress={() => onDelete(item)} style={[s.btnEdit, { borderColor: '#EF444440', backgroundColor: '#EF444410' }]} data-testid={`delete-btn-${item.id}`} activeOpacity={0.7}>
+            <Ionicons name="trash-outline" size={15} color="#EF4444" />
+          </TouchableOpacity>
+        )}
         <TouchableOpacity onPress={goDetail} style={[s.btnSec, { borderColor: C.border }]} data-testid={`details-btn-${item.id}`} activeOpacity={0.7}>
           <Ionicons name="information-circle-outline" size={15} color={C.textLight} />
           <Text style={[s.btnSecText, { color: C.text }]}>Details</Text>

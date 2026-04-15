@@ -391,6 +391,22 @@ async def update_user_admin(user_id: str, update_data: AdminUserUpdate, user: di
     return {"message": "User updated successfully", "user": updated_user}
 
 
+@router.delete("/admin/users/{user_id}")
+async def delete_user_admin(user_id: str, user: dict = Depends(get_admin_user)):
+    target = await db.users.find_one({"id": user_id}, {"_id": 0, "role": 1, "name": 1})
+    if not target:
+        raise HTTPException(status_code=404, detail="Client non trouve")
+    if target.get('role') in ('admin', 'super_admin'):
+        raise HTTPException(status_code=403, detail="Impossible de supprimer un admin")
+    # Check active reservations
+    active = await db.reservations.count_documents({"user_id": user_id, "status": {"$in": ["active", "confirmed", "pending"]}})
+    if active > 0:
+        raise HTTPException(status_code=400, detail=f"Ce client a {active} reservation(s) active(s). Terminez-les avant de supprimer.")
+    await db.users.delete_one({"id": user_id})
+    return {"message": f"Client {target.get('name','')} supprime"}
+
+
+
 class AdminDocUpload(PydanticBaseModel):
     image_data: str
     doc_type: str  # id, id_back, license, license_back

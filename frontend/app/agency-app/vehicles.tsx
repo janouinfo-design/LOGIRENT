@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, useWindowDimensions, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -160,7 +160,7 @@ export default function AgencyVehicles() {
       >
         <View style={[st.grid, { gap: GAP }]}>
           {filtered.map(item => (
-            <VehicleCard key={item.id} item={item} cardW={cardW} colors={C} onEdit={openEdit} onPhotoPress={openGallery} />
+            <VehicleCard key={item.id} item={item} cardW={cardW} colors={C} onEdit={openEdit} onDelete={deleteVehicle} onPhotoPress={openGallery} />
           ))}
         </View>
 
@@ -209,6 +209,23 @@ const st = StyleSheet.create({
     borderRadius: 12, paddingHorizontal: 14, gap: 10, borderWidth: 1,
   },
   searchInput: { flex: 1, fontSize: 14, paddingVertical: 12 },
+
+  filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 18, paddingTop: 4, flexDirection: 'row', flexWrap: 'wrap' },
+  filterTab: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 10,
+    borderRadius: 10, borderWidth: 1.5,
+  },
+  countBadge: {
+    paddingHorizontal: 7, paddingVertical: 2,
+    borderRadius: 10, minWidth: 22, alignItems: 'center',
+  },
+
+  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+
+  empty: { alignItems: 'center', paddingTop: 80 },
+});
+ize: 14, paddingVertical: 12 },
 
   filterRow: { paddingHorizontal: PAD, gap: 8, paddingBottom: 18, paddingTop: 4, flexDirection: 'row', flexWrap: 'wrap' },
   filterTab: {

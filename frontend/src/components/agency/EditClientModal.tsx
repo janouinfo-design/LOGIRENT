@@ -181,6 +181,23 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
     } finally { setSaving(false); }
   };
 
+  const deleteClient = async () => {
+    if (!client) return;
+    const confirm = Platform.OS === 'web'
+      ? window.confirm(`Supprimer definitivement ${client.name} ? Cette action est irreversible.`)
+      : true;
+    if (!confirm) return;
+    try {
+      await api.delete(`/api/admin/users/${client.id}`);
+      Platform.OS === 'web' ? window.alert('Client supprime') : Alert.alert('Succes', 'Client supprime');
+      onClose();
+      onSaved();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur lors de la suppression';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    }
+  };
+
   return (
   <>
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -385,6 +402,11 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               <TouchableOpacity style={[st.saveBtn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]} onPress={saveEdit} disabled={saving} data-testid="save-edit-client-btn">
                 <Ionicons name="checkmark-circle" size={18} color="#fff" />
                 <Text style={st.saveBtnText}>{saving ? 'Enregistrement...' : 'Enregistrer'}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, marginTop: 8, borderRadius: 10, borderWidth: 1, borderColor: '#EF444440' }} onPress={deleteClient} data-testid="delete-client-btn">
+                <Ionicons name="trash" size={16} color="#EF4444" />
+                <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>Supprimer ce client</Text>
               </TouchableOpacity>
             </ScrollView>
           )}
