@@ -62,41 +62,89 @@ export default function DocumentScanScreen() {
   };
 
   const handleCapture = async (docType: string) => {
-    try {
-      const { status } = await ImagePicker.requestCameraPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission requise', 'Autorisez la camera pour scanner les documents.');
-        return;
+    if (Platform.OS === 'web') {
+      // Web: use file input with capture attribute
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = async (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(docType);
+        try {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64 = (reader.result as string).split(',')[1];
+            await uploadBase64(base64, docType, file.name || 'capture.jpg');
+          };
+          reader.readAsDataURL(file);
+        } catch (err: any) {
+          window.alert(err.message || 'Erreur camera');
+          setUploading(null);
+        }
+      };
+      input.click();
+    } else {
+      try {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission requise', 'Autorisez la camera pour scanner les documents.');
+          return;
+        }
+        const result = await ImagePicker.launchCameraAsync({
+          mediaTypes: ['images'],
+          quality: 0.8,
+          base64: true,
+          allowsEditing: true,
+          aspect: [3, 2],
+        });
+        if (!result.canceled && result.assets[0]?.base64) {
+          await uploadBase64(result.assets[0].base64, docType, 'capture.jpg');
+        }
+      } catch (e: any) {
+        Alert.alert('Erreur', e.message || 'Erreur camera');
       }
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-        base64: true,
-        allowsEditing: true,
-        aspect: [3, 2],
-      });
-      if (!result.canceled && result.assets[0]?.base64) {
-        await uploadBase64(result.assets[0].base64, docType, 'capture.jpg');
-      }
-    } catch (e: any) {
-      Alert.alert('Erreur', e.message || 'Erreur camera');
     }
   };
 
   const handleGallery = async (docType: string) => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        quality: 0.8,
-        base64: true,
-        allowsEditing: true,
-        aspect: [3, 2],
-      });
-      if (!result.canceled && result.assets[0]?.base64) {
-        await uploadBase64(result.assets[0].base64, docType, result.assets[0].fileName || 'photo.jpg');
+    if (Platform.OS === 'web') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (e: any) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setUploading(docType);
+        try {
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            const base64 = (reader.result as string).split(',')[1];
+            await uploadBase64(base64, docType, file.name || 'photo.jpg');
+          };
+          reader.readAsDataURL(file);
+        } catch (err: any) {
+          window.alert(err.message || 'Erreur galerie');
+          setUploading(null);
+        }
+      };
+      input.click();
+    } else {
+      try {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          quality: 0.8,
+          base64: true,
+          allowsEditing: true,
+          aspect: [3, 2],
+        });
+        if (!result.canceled && result.assets[0]?.base64) {
+          await uploadBase64(result.assets[0].base64, docType, result.assets[0].fileName || 'photo.jpg');
+        }
+      } catch (e: any) {
+        Alert.alert('Erreur', e.message || 'Erreur galerie');
       }
-    } catch (e: any) {
-      Alert.alert('Erreur', e.message || 'Erreur galerie');
     }
   };
 
