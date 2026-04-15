@@ -59,6 +59,25 @@ export default function VehiclesScreen() {
     return filtered;
   }, [vehicles, search]);
 
+  // Group vehicles by brand+model+type → show one card per model with availability count
+  const groupedVehicles = useMemo(() => {
+    const groups: Record<string, { representative: any; count: number; availableCount: number; ids: string[]; minPrice: number }> = {};
+    filteredVehicles.forEach(v => {
+      const key = `${v.brand}_${v.model}_${v.type || ''}`.toLowerCase();
+      if (!groups[key]) {
+        groups[key] = { representative: v, count: 0, availableCount: 0, ids: [], minPrice: v.price_per_day || 999999 };
+      }
+      groups[key].count++;
+      groups[key].ids.push(v.id);
+      if (v.status === 'available') groups[key].availableCount++;
+      if (v.price_per_day < groups[key].minPrice) {
+        groups[key].minPrice = v.price_per_day;
+        groups[key].representative = v;
+      }
+    });
+    return Object.values(groups).sort((a, b) => a.representative.brand.localeCompare(b.representative.brand));
+  }, [filteredVehicles]);
+
   const activeFiltersCount = [selectedType, selectedTransmission].filter(f => f !== 'Tous' && f !== 'Toutes').length;
   const gap = 14;
   const pad = 16;
@@ -73,7 +92,7 @@ export default function VehiclesScreen() {
           <View style={st.leftSection}>
             <View style={st.titleRow}>
               <Text style={[st.title, { color: C.text }]}>Notre Flotte</Text>
-              <Text style={[st.count, { color: C.textLight }]}>{filteredVehicles.length} véhicules</Text>
+              <Text style={[st.count, { color: C.textLight }]}>{groupedVehicles.length} modeles ({filteredVehicles.length} vehicules)</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.catRow}>
               {vehicleTypes.map(type => {
@@ -125,7 +144,7 @@ export default function VehiclesScreen() {
         contentContainerStyle={{ padding: pad, paddingBottom: 80 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        {filteredVehicles.length === 0 ? (
+        {groupedVehicles.length === 0 ? (
           <View style={st.empty}>
             <Ionicons name="car-outline" size={48} color={C.textLight} />
             <Text style={[st.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
@@ -133,9 +152,18 @@ export default function VehiclesScreen() {
           </View>
         ) : (
           <View style={[st.grid, { gap }]}>
-            {filteredVehicles.map((vehicle, index) => (
-              <View key={vehicle.id} style={cardW ? { width: cardW } : { width: '100%' }}>
-                <VehicleCard vehicle={vehicle} onPress={() => router.push(`/booking/${vehicle.id}`)} index={index} />
+            {groupedVehicles.map((group, index) => (
+              <View key={`${group.representative.id}-grp`} style={cardW ? { width: cardW } : { width: '100%' }}>
+                <View style={{ position: 'relative' }}>
+                  <VehicleCard vehicle={group.representative} onPress={() => router.push(`/vehicle/${group.representative.id}`)} index={index} />
+                  {group.count > 1 && (
+                    <View style={{ position: 'absolute', top: 8, left: 8, flexDirection: 'row', gap: 4 }}>
+                      <View style={{ backgroundColor: '#7C3AED', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>{group.availableCount} dispo / {group.count}</Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
               </View>
             ))}
           </View>

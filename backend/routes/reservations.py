@@ -22,8 +22,34 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     if vehicle['status'] == 'maintenance':
         raise HTTPException(status_code=400, detail="Vehicle is under maintenance")
 
-    # Category-based booking: overlap check removed
-    # The agency guarantees the booked vehicle OR an equivalent in the same category
+    # Auto-assign: find an available vehicle of the same model for the requested dates
+    start = reservation_data.start_date
+    end = reservation_data.end_date
+    # Find all vehicles of same brand+model+type
+    siblings = await db.vehicles.find({
+        "brand": vehicle['brand'],
+        "model": vehicle['model'],
+        "status": {"$ne": "maintenance"},
+        "agency_id": vehicle.get('agency_id'),
+    }, {"_id": 0}).to_list(100)
+
+    assigned_vehicle = None
+    for sib in siblings:
+        # Check if this sibling has a conflicting reservation
+        conflict = await db.reservations.count_documents({
+            "vehicle_id": sib['id'],
+            "status": {"$in": ["confirmed", "active", "pending", "pending_cash"]},
+            "start_date": {"$lt": end},
+            "end_date": {"$gt": start},
+        })
+        if conflict == 0:
+            assigned_vehicle = sib
+            break
+
+    if not assigned_vehicle:
+        raise HTTPException(status_code=400, detail=f"Aucun {vehicle['brand']} {vehicle['model']} disponible pour ces dates")
+
+    vehicle = assigned_vehicle
 
     total_days = (reservation_data.end_date - reservation_data.start_date).days
     if total_days <= 0:
@@ -68,7 +94,7 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
 
     reservation = Reservation(
         user_id=user['id'],
-        vehicle_id=reservation_data.vehicle_id,
+        vehicle_id=vehicle['id'],
         agency_id=vehicle.get('agency_id'),
         start_date=reservation_data.start_date,
         end_date=reservation_data.end_date,
