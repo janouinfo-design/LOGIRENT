@@ -61,8 +61,22 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   React.useEffect(() => {
     if (visible && client) {
       setEditName(client.name || '');
-      setEditFirstName(client.first_name || '');
-      setEditLastName(client.last_name || '');
+      // Auto-split name into first/last if not set
+      const fn = client.first_name || '';
+      const ln = client.last_name || '';
+      if (!fn && !ln && client.name) {
+        const parts = client.name.trim().split(' ');
+        if (parts.length >= 2) {
+          setEditFirstName(parts.slice(0, -1).join(' '));
+          setEditLastName(parts[parts.length - 1]);
+        } else {
+          setEditLastName(parts[0] || '');
+          setEditFirstName('');
+        }
+      } else {
+        setEditFirstName(fn);
+        setEditLastName(ln);
+      }
       setEditEmail(client.email || '');
       setEditPhone(client.phone || '');
       setEditAddress(client.address || '');
@@ -80,8 +94,19 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       api.get(`/api/admin/users/${client.id}`).then(res => {
         const d = res.data;
         setEditAddress(d.address || '');
-        setEditFirstName(d.first_name || '');
-        setEditLastName(d.last_name || '');
+        // Auto-split from name if first_name/last_name not set
+        if (d.first_name || d.last_name) {
+          setEditFirstName(d.first_name || '');
+          setEditLastName(d.last_name || '');
+        } else if (d.name) {
+          const parts = d.name.trim().split(' ');
+          if (parts.length >= 2) {
+            setEditFirstName(parts.slice(0, -1).join(' '));
+            setEditLastName(parts[parts.length - 1]);
+          } else {
+            setEditLastName(parts[0] || '');
+          }
+        }
         setEditNotes(d.admin_notes || '');
         setEditBirthPlace(d.birth_place || '');
         setEditBirthDate(d.date_of_birth || '');

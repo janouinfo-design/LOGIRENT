@@ -502,7 +502,15 @@ async def search_clients(q: str = "", user: dict = Depends(get_agency_admin)):
                 {"phone": {"$regex": q, "$options": "i"}},
             ]
         }
-    clients = await db.users.find(query, {"password_hash": 0, "_id": 0, "id_photo": 0, "license_photo": 0}).limit(10).to_list(10)
+    clients = await db.users.find(query, {"password_hash": 0, "_id": 0, "id_photo": 0, "id_photo_back": 0, "license_photo": 0, "license_photo_back": 0}).limit(20).to_list(20)
+    # Compose display_name from first_name + last_name if available
+    for c in clients:
+        fn = c.get('first_name', '') or ''
+        ln = c.get('last_name', '') or ''
+        if fn or ln:
+            c['display_name'] = f"{fn} {ln}".strip()
+        else:
+            c['display_name'] = c.get('name', '')
     return {"clients": clients}
 
 

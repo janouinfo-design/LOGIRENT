@@ -291,7 +291,7 @@ export default function BookingFlow() {
               {searchResults.map(c => (
                 <TouchableOpacity key={c.id} style={[s.clientCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { setSelectedClient(c); setStep('calendar'); }}>
                   <Ionicons name="person-circle" size={30} color={C.accent} />
-                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '600', fontSize: 14 }}>{c.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{c.email}</Text></View>
+                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '600', fontSize: 14 }}>{c.display_name || c.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{c.email}</Text></View>
                   <Ionicons name="chevron-forward" size={18} color={C.textLight} />
                 </TouchableOpacity>
               ))}
