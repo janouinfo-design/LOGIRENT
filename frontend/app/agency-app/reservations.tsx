@@ -179,22 +179,22 @@ export default function AgencyReservations() {
   const filtered = useMemo(() => {
     let list = reservations;
 
-    // Quick filter
-    if (quickFilter === 'active') list = list.filter(r => r.status === 'active');
-    else if (quickFilter === 'upcoming') list = list.filter(r => ['confirmed', 'pending', 'pending_cash'].includes(r.status));
-    else if (quickFilter === 'overdue') list = list.filter(r => r.status === 'active' && new Date(r.end_date) < now);
-    else if (quickFilter === 'cancelled') list = list.filter(r => r.status === 'cancelled');
-    // null = today: show today's reservations
-    else list = list.filter(r => {
-      const sd = r.start_date?.substring(0, 10);
-      const ed = r.end_date?.substring(0, 10);
-      return sd <= todayStr && ed >= todayStr;
-    });
-
-    // Search
-    if (search) {
+    // If searching, show ALL reservations (no quick filter)
+    if (search && search.length >= 2) {
       const q = search.toLowerCase();
-      list = list.filter(r => r.user_name?.toLowerCase().includes(q) || r.vehicle_name?.toLowerCase().includes(q));
+      list = list.filter(r => r.user_name?.toLowerCase().includes(q) || r.vehicle_name?.toLowerCase().includes(q) || r.user_email?.toLowerCase().includes(q));
+    } else {
+      // Quick filter
+      if (quickFilter === 'active') list = list.filter(r => r.status === 'active');
+      else if (quickFilter === 'upcoming') list = list.filter(r => ['confirmed', 'pending', 'pending_cash'].includes(r.status));
+      else if (quickFilter === 'overdue') list = list.filter(r => r.status === 'active' && new Date(r.end_date) < now);
+      else if (quickFilter === 'cancelled') list = list.filter(r => r.status === 'cancelled');
+      // null = today: show today's reservations
+      else list = list.filter(r => {
+        const sd = r.start_date?.substring(0, 10);
+        const ed = r.end_date?.substring(0, 10);
+        return sd <= todayStr && ed >= todayStr;
+      });
     }
 
     // Sort
