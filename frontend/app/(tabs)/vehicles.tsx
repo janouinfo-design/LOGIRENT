@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, M
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore } from '../../src/store/vehicleStore';
+import { useAuthStore } from '../../src/store/authStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
@@ -23,7 +24,14 @@ export default function VehiclesScreen() {
   const isDesktop = width >= 1024;
   const numCols = width >= 1200 ? 3 : width >= 768 ? 2 : 1;
 
-  useEffect(() => { fetchVehicles(); }, []);
+  const { user } = useAuthStore();
+  const agencyId = user?.agency_id;
+
+  useEffect(() => {
+    const filters: any = {};
+    if (agencyId) filters.agency_id = agencyId;
+    fetchVehicles(filters);
+  }, [agencyId]);
 
   const onRefresh = async () => { setRefreshing(true); await fetchVehicles(); setRefreshing(false); };
 
@@ -47,7 +55,7 @@ export default function VehiclesScreen() {
 
   const resetFilters = () => {
     setSelectedType('Tous'); setSelectedTransmission('Toutes'); setSearch('');
-    clearFilters(); fetchVehicles({}); setShowFilters(false);
+    clearFilters(); const f: any = {}; if (agencyId) f.agency_id = agencyId; fetchVehicles(f); setShowFilters(false);
   };
 
   const filteredVehicles = useMemo(() => {
