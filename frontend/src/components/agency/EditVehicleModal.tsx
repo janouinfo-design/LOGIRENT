@@ -289,16 +289,14 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
 
               {/* Type */}
               <Text style={[vst.fieldLabel, { color: C.textLight }]}>Type</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {TYPES.map(t => (
-                    <TouchableOpacity key={t} onPress={() => setEditForm({ ...editForm, type: t })}
-                      style={[vst.chip, { backgroundColor: editForm.type === t ? C.accent + '20' : 'transparent', borderColor: editForm.type === t ? C.accent : C.border }]}>
-                      <Text style={{ color: editForm.type === t ? C.accent : C.textLight, fontSize: 12, fontWeight: editForm.type === t ? '700' : '500' }}>{t}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </ScrollView>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                {TYPES.map(t => (
+                  <TouchableOpacity key={t} onPress={() => setEditForm({ ...editForm, type: t })}
+                    style={[vst.chip, { backgroundColor: editForm.type === t ? C.accent + '20' : 'transparent', borderColor: editForm.type === t ? C.accent : C.border }]}>
+                    <Text style={{ color: editForm.type === t ? C.accent : C.textLight, fontSize: 12, fontWeight: editForm.type === t ? '700' : '500' }}>{t}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               {/* Transmission */}
               <Text style={[vst.fieldLabel, { color: C.textLight }]}>Transmission</Text>
