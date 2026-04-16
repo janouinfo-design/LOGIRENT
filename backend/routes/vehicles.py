@@ -30,7 +30,7 @@ async def get_vehicles(
 
     # Filtres optionnels
     if type:
-        query["type"] = type
+        query["type"] = {"$regex": f"^{type}$", "$options": "i"}
     if min_price is not None:
         query["price_per_day"] = {"$gte": min_price}
     if max_price is not None:

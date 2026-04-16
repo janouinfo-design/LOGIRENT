@@ -65,8 +65,8 @@ export default function HomeScreen() {
     setSelectedType(typeId);
     const type = typeId === 'all' ? undefined : typeId;
     const filters: any = { type };
-    setFilters(filters);
     if (agencyId) filters.agency_id = agencyId;
+    setFilters(filters);
     fetchVehicles(filters);
   };
 
