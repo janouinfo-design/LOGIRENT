@@ -186,9 +186,13 @@ export default function HomeScreen() {
 
         {/* ===== Categories Scroller - Desktop & Mobile ===== */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 10 }}>
-          {vehicleTypes.map(type => {
+          {vehicleTypes.filter(type => {
+            if (type.id === 'all') return true;
+            return vehicles.some(v => (v.type || '').toLowerCase() === type.id.toLowerCase());
+          }).map(type => {
             const active = selectedType === type.id;
             const label = typeNameMap[lang]?.[type.id] || type.id;
+            const count = type.id === 'all' ? vehicles.length : vehicles.filter(v => (v.type || '').toLowerCase() === type.id.toLowerCase()).length;
             return (
               <TouchableOpacity
                 key={type.id}
@@ -204,6 +208,9 @@ export default function HomeScreen() {
               >
                 <Ionicons name={type.icon as any} size={18} color={active ? '#fff' : '#7C3AED'} />
                 <Text style={{ fontSize: 13, fontWeight: '700', color: active ? '#fff' : C.text }}>{label}</Text>
+                <View style={{ backgroundColor: active ? 'rgba(255,255,255,0.25)' : '#7C3AED15', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 8 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: active ? '#fff' : '#7C3AED' }}>{count}</Text>
+                </View>
               </TouchableOpacity>
             );
           })}
