@@ -28,7 +28,7 @@ export default function AgencyVehicles() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [galleryVehicle, setGalleryVehicle] = useState<Vehicle | null>(null);
 
-  const numCols = width >= 960 ? 3 : width >= 600 ? 2 : 1;
+  const numCols = width >= 1400 ? 5 : width >= 1100 ? 4 : width >= 768 ? 3 : width >= 500 ? 2 : 1;
   const cardW = (width - PAD * 2 - GAP * (numCols - 1)) / numCols;
 
   const openGallery = async (v: Vehicle) => {
