@@ -92,14 +92,14 @@ export default function AgencyClients() {
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        numColumns={3}
+        numColumns={5}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         ListEmptyComponent={<View style={s.empty}><Ionicons name="people-outline" size={40} color={C.textLight} /><Text style={[s.emptyText, { color: C.textLight }]}>Aucun client</Text></View>}
         renderItem={({ item }) => {
           const rating = ratingInfo(item.client_rating);
-          const cardW = (SCREEN_W - 32 - 24) / 3;
+          const cardW = (SCREEN_W - 32 - 40) / 5;
           return (
             <TouchableOpacity style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]} onPress={() => openEditModal(item)} data-testid={`client-${item.id}`}>
               <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>

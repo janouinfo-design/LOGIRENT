@@ -149,7 +149,7 @@ export default function VehiclesScreen() {
         ) : (
           <View style={[st.grid, { gap }]}>
             {groupedVehicles.map((group, index) => (
-              <View key={`${group.representative.id}-grp`} style={cardW ? { width: cardW } : { width: '100%' }}>
+              <View key={`${group.representative.id}-grp`} style={{ width: '19%', minWidth: 180 }}>
                 <View style={{ position: 'relative' }}>
                   <VehicleCard vehicle={group.representative} onPress={() => router.push(`/vehicle/${group.representative.id}`)} index={index} />
                   {group.count > 1 && (

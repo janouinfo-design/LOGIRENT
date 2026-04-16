@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, useWindowDimensions, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Dimensions, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -28,9 +28,10 @@ export default function AgencyVehicles() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [galleryVehicle, setGalleryVehicle] = useState<Vehicle | null>(null);
 
-  const contentWidth = width - 240;
+  const screenW = Dimensions.get('window').width;
+  const containerW = Math.max(screenW - 280, 600); // account for sidebar
   const numCols = 5;
-  const cardW = (contentWidth - PAD * 2 - GAP * (numCols - 1)) / numCols;
+  const cardW = Math.floor((containerW - PAD * 2 - GAP * (numCols - 1)) / numCols);
 
   const openGallery = async (v: Vehicle) => {
     try { const res = await api.get(`/api/vehicles/${v.id}`); setGalleryVehicle(res.data); }
@@ -237,7 +238,7 @@ const st = StyleSheet.create({
     borderRadius: 10, minWidth: 22, alignItems: 'center',
   },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
 
   empty: { alignItems: 'center', paddingTop: 80 },
 });
