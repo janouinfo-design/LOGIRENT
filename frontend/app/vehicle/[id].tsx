@@ -83,7 +83,7 @@ export default function ClientVehicleDetail() {
         <View style={isWide ? { paddingHorizontal: width * 0.08 } : { paddingHorizontal: 16 }}>
           <TouchableOpacity onPress={() => setGalleryOpen(true)} activeOpacity={0.9} style={st.mainPhoto}>
             {photoUrl ? (
-              <Image source={{ uri: photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+              <Image source={{ uri: photoUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             ) : (
               <View style={[st.mainPhotoPlaceholder, { backgroundColor: C.card }]}>
                 <Ionicons name="car-sport-outline" size={64} color={C.textLight + '40'} />
@@ -238,7 +238,7 @@ const st = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, alignSelf: 'flex-start', margin: 16 },
-  mainPhoto: { width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#F8FAFC' },
+  mainPhoto: { width: '100%', aspectRatio: 16/9, borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#1a1a2e' },
   mainPhotoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 16 },
   counter: { position: 'absolute', bottom: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
   counterText: { color: '#fff', fontSize: 13, fontWeight: '700' },

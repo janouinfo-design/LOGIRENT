@@ -344,7 +344,7 @@ const p = StyleSheet.create({
 
   // Gallery
   galleryWrap: { paddingHorizontal: 16 },
-  mainPhoto: { width: '100%', height: 380, borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#111' },
+  mainPhoto: { width: '100%', aspectRatio: 16/9, borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#1a1a2e' },
   mainPhotoImg: { width: '100%', height: '100%' },
   mainPhotoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center', borderRadius: 16 },
   photoCounter: { position: 'absolute', bottom: 14, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },

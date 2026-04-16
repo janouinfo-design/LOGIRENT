@@ -31,11 +31,9 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
   return (
     <View style={[s.card]} data-testid={`vehicle-card-${vehicle.id}`}>
       {/* Photo */}
-      <TouchableOpacity onPress={goDetail} activeOpacity={0.9} style={[s.photoZone, isMobile && { height: 200 }]}>
+      <TouchableOpacity onPress={goDetail} activeOpacity={0.9} style={[s.photoZone, isMobile && { aspectRatio: 16/9 }]}>
         {hasPhoto ? (
-          <View style={{ flex: 1, backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
-            <Image source={{ uri: getPhotoUrl(vehicle.photos[0]) }} style={s.photo} resizeMode="contain" />
-          </View>
+          <Image source={{ uri: getPhotoUrl(vehicle.photos[0]) }} style={s.photo} resizeMode="cover" />
         ) : (
           <View style={s.placeholder}><Ionicons name="car-sport-outline" size={40} color="#D1D5DB" /></View>
         )}
@@ -80,7 +78,7 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
 
 const s = StyleSheet.create({
   card: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' } as any,
-  photoZone: { position: 'relative', height: 200, overflow: 'hidden', backgroundColor: '#F8FAFC' },
+  photoZone: { position: 'relative', aspectRatio: 16/9, overflow: 'hidden', backgroundColor: '#1a1a2e' },
   photo: { width: '100%', height: '100%' },
   placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6' },
   statusBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
