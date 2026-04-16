@@ -45,8 +45,7 @@ export default function TabLayout() {
         tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />,
       }} />
       <Tabs.Screen name="vehicles" options={{
-        title: 'Vehicules',
-        tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'car' : 'car-outline'} size={24} color={color} />,
+        href: null,
       }} />
       <Tabs.Screen name="reservations" options={{
         title: 'Locations',
