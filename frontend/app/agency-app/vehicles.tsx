@@ -238,7 +238,7 @@ const st = StyleSheet.create({
     borderRadius: 10, minWidth: 22, alignItems: 'center',
   },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
 
   empty: { alignItems: 'center', paddingTop: 80 },
 });
