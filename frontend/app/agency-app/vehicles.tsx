@@ -18,7 +18,7 @@ const PAD = 16;
 export default function AgencyVehicles() {
   const { user } = useAuthStore();
   const { colors: C } = useThemeStore();
-  const { width } = useWindowDimensions();
+  const width = Dimensions.get('window').width;
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
