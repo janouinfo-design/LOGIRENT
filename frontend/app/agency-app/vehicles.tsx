@@ -65,7 +65,7 @@ export default function AgencyVehicles() {
       : true;
     if (!confirm) return;
     try {
-      await api.delete(`/api/vehicles/${v.id}`);
+      await api.delete(`/api/admin/vehicles/${v.id}`);
       Platform.OS === 'web' ? window.alert('Vehicule supprime') : Alert.alert('Succes', 'Vehicule supprime');
       fetchVehicles();
     } catch (e: any) {

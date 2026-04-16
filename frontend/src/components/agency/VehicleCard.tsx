@@ -34,7 +34,9 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onDelete, 
         data-testid={`photo-zone-${item.id}`}
       >
         {photo ? (
-          <Image source={{ uri: photo }} style={s.photo} resizeMode="cover" />
+          <View style={{ flex: 1, backgroundColor: C.bg || '#F8FAFC', justifyContent: 'center', alignItems: 'center' }}>
+            <Image source={{ uri: photo }} style={s.photo} resizeMode="contain" />
+          </View>
         ) : (
           <View style={[s.photoPlaceholder, { backgroundColor: C.bg }]}>
             <Ionicons name="car-sport-outline" size={40} color={C.textLight + '50'} />
@@ -97,7 +99,7 @@ const s = StyleSheet.create({
     boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
   } as any,
 
-  photoZone: { position: 'relative', height: 160, overflow: 'hidden' },
+  photoZone: { position: 'relative', height: 180, overflow: 'hidden' },
   photo: { width: '100%', height: '100%' },
   photoPlaceholder: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   badge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
