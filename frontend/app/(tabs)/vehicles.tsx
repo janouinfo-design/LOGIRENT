@@ -22,7 +22,7 @@ export default function VehiclesScreen() {
   const [search, setSearch] = useState('');
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
-  const numCols = width >= 1200 ? 3 : width >= 768 ? 2 : 1;
+  const numCols = width >= 1400 ? 5 : width >= 1100 ? 4 : width >= 768 ? 3 : width >= 500 ? 2 : 1;
 
   const { user } = useAuthStore();
   const agencyId = user?.agency_id;

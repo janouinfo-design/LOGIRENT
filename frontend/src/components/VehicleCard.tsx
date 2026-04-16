@@ -78,7 +78,7 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
 
 const s = StyleSheet.create({
   card: { backgroundColor: '#fff', borderRadius: 14, borderWidth: 1, borderColor: '#E5E7EB', overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,0.06)' } as any,
-  photoZone: { position: 'relative', aspectRatio: 16/9, overflow: 'hidden', backgroundColor: '#1a1a2e' },
+  photoZone: { position: 'relative', height: 140, overflow: 'hidden', backgroundColor: '#1a1a2e' },
   photo: { width: '100%', height: '100%' },
   placeholder: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F3F4F6' },
   statusBadge: { position: 'absolute', top: 8, left: 8, flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
