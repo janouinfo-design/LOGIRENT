@@ -49,25 +49,38 @@ export default function HomeScreen() {
   const agencyId = user?.agency_id || undefined;
   const { lang, t } = useI18n();
   const [selectedType, setSelectedType] = React.useState('all');
+  const [allVehicles, setAllVehicles] = React.useState<any[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 1024;
 
   useEffect(() => { fetchVehicles({}); }, []);
 
+  // Keep a copy of ALL vehicles for category counts
+  useEffect(() => {
+    if (vehicles.length > 0 && selectedType === 'all') {
+      setAllVehicles(vehicles);
+    }
+  }, [vehicles, selectedType]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchVehicles(agencyId ? { agency_id: agencyId } : {});
+    await fetchVehicles({});
     setRefreshing(false);
   };
 
+  // Filter locally instead of calling backend
+  const displayedVehicles = React.useMemo(() => {
+    if (selectedType === 'all') return vehicles;
+    return allVehicles.filter(v => (v.type || '').toLowerCase() === selectedType.toLowerCase());
+  }, [selectedType, vehicles, allVehicles]);
+
   const handleTypeSelect = (typeId: string) => {
     setSelectedType(typeId);
-    const type = typeId === 'all' ? undefined : typeId;
-    const filters: any = { type };
-    if (agencyId) filters.agency_id = agencyId;
-    setFilters(filters);
-    fetchVehicles(filters);
+    if (typeId === 'all') {
+      fetchVehicles({});
+    }
+    // No backend call for category filter — just filter locally
   };
 
   // ==================== SEARCH SIDEBAR (Desktop) ====================
@@ -188,11 +201,12 @@ export default function HomeScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 10 }}>
           {vehicleTypes.filter(type => {
             if (type.id === 'all') return true;
-            return vehicles.some(v => (v.type || '').toLowerCase() === type.id.toLowerCase());
+            return (allVehicles.length > 0 ? allVehicles : vehicles).some(v => (v.type || '').toLowerCase() === type.id.toLowerCase());
           }).map(type => {
             const active = selectedType === type.id;
             const label = typeNameMap[lang]?.[type.id] || type.id;
-            const count = type.id === 'all' ? vehicles.length : vehicles.filter(v => (v.type || '').toLowerCase() === type.id.toLowerCase()).length;
+            const source = allVehicles.length > 0 ? allVehicles : vehicles;
+            const count = type.id === 'all' ? source.length : source.filter(v => (v.type || '').toLowerCase() === type.id.toLowerCase()).length;
             return (
               <TouchableOpacity
                 key={type.id}
@@ -221,14 +235,14 @@ export default function HomeScreen() {
           {/* Vehicle Grid - LEFT / PRIMARY */}
           <View style={[st.vehicleCol, isDesktop && { flex: 1 }]}>
             <View style={st.resultsRow}>
-              <Text style={[st.resultsText, { color: C.text }]}>{vehicles.length} {t('vehiclesCount')}</Text>
+              <Text style={[st.resultsText, { color: C.text }]}>{displayedVehicles.length} {t('vehiclesCount')}</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/vehicles')}>
                 <Text style={st.viewAll}>{t('viewAll')}</Text>
               </TouchableOpacity>
             </View>
 
             <View style={[st.grid, isDesktop ? st.gridDesktop : st.gridMobile]}>
-              {vehicles.map((vehicle, index) => (
+              {displayedVehicles.map((vehicle, index) => (
                 <View key={vehicle.id} style={isDesktop ? { width: '31.5%', minWidth: 260 } : { width: '100%' }}>
                   <AnimatedCard index={index}>
                     <VehicleCard
@@ -241,7 +255,7 @@ export default function HomeScreen() {
               ))}
             </View>
 
-            {vehicles.length === 0 && (
+            {displayedVehicles.length === 0 && (
               <View style={st.empty}>
                 <Ionicons name="car-outline" size={48} color={C.textLight} />
                 <Text style={[st.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
