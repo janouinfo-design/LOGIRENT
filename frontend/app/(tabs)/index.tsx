@@ -12,14 +12,21 @@ import { useThemeStore } from '../../src/store/themeStore';
 const vehicleTypes = [
   { id: 'all', icon: 'grid-outline' },
   { id: 'SUV', icon: 'car-sport-outline' },
-  { id: 'berline', icon: 'car-outline' },
-  { id: 'citadine', icon: 'car' },
-  { id: 'utilitaire', icon: 'cube-outline' },
+  { id: 'Grand SUV', icon: 'car-sport' },
+  { id: 'Berline', icon: 'car-outline' },
+  { id: 'Citadine', icon: 'car' },
+  { id: 'Compact', icon: 'speedometer-outline' },
+  { id: 'Utilitaire', icon: 'cube-outline' },
+  { id: 'Luxe', icon: 'diamond-outline' },
+  { id: 'Van', icon: 'bus-outline' },
+  { id: 'Monospace', icon: 'people-outline' },
+  { id: 'Cabriolet', icon: 'sunny-outline' },
+  { id: 'Electrique', icon: 'flash-outline' },
 ];
 
 const typeNameMap: Record<string, Record<string, string>> = {
-  fr: { all: 'Tous', SUV: 'SUV', berline: 'Berline', citadine: 'Citadine', utilitaire: 'Utilitaire' },
-  en: { all: 'All', SUV: 'SUV', berline: 'Sedan', citadine: 'City Car', utilitaire: 'Utility' },
+  fr: { all: 'Tous', SUV: 'SUV', 'Grand SUV': 'Grand SUV', Berline: 'Berline', Citadine: 'Citadine', Compact: 'Compact', Utilitaire: 'Utilitaire', Luxe: 'Luxe', Van: 'Van', Monospace: 'Monospace', Cabriolet: 'Cabriolet', Electrique: 'Electrique' },
+  en: { all: 'All', SUV: 'SUV', 'Grand SUV': 'Grand SUV', Berline: 'Sedan', Citadine: 'City Car', Compact: 'Compact', Utilitaire: 'Utility', Luxe: 'Luxury', Van: 'Van', Monospace: 'Minivan', Cabriolet: 'Convertible', Electrique: 'Electric' },
 };
 
 function AnimatedCard({ children, index }: { children: React.ReactNode; index: number }) {
@@ -177,6 +184,31 @@ export default function HomeScreen() {
           </>
         )}
 
+        {/* ===== Categories Scroller - Desktop & Mobile ===== */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 14, gap: 10 }}>
+          {vehicleTypes.map(type => {
+            const active = selectedType === type.id;
+            const label = typeNameMap[lang]?.[type.id] || type.id;
+            return (
+              <TouchableOpacity
+                key={type.id}
+                onPress={() => handleTypeSelect(type.id)}
+                style={{
+                  flexDirection: 'row', alignItems: 'center', gap: 8,
+                  paddingHorizontal: 16, paddingVertical: 10,
+                  borderRadius: 12, borderWidth: 1.5,
+                  backgroundColor: active ? '#7C3AED' : C.card,
+                  borderColor: active ? '#7C3AED' : C.border,
+                }}
+                data-testid={`cat-scroll-${type.id}`}
+              >
+                <Ionicons name={type.icon as any} size={18} color={active ? '#fff' : '#7C3AED'} />
+                <Text style={{ fontSize: 13, fontWeight: '700', color: active ? '#fff' : C.text }}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
         {/* Main Content */}
         <View style={[st.main, isDesktop && st.mainDesktop]}>
           {/* Vehicle Grid - LEFT / PRIMARY */}
@@ -194,7 +226,7 @@ export default function HomeScreen() {
                   <AnimatedCard index={index}>
                     <VehicleCard
                       vehicle={vehicle}
-                      onPress={() => router.push(`/booking/${vehicle.id}`)}
+                      onPress={() => router.push(`/vehicle/${vehicle.id}`)}
                       index={index}
                     />
                   </AnimatedCard>
