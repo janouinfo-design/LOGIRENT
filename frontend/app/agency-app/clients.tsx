@@ -99,6 +99,70 @@ export default function AgencyClients() {
 
   if (loading && clients.length === 0) return <View style={[s.container, { backgroundColor: C.bg }]}><CardSkeleton count={5} /></View>;
 
+  const renderClientCard = ({ item }: { item: Client }) => {
+    const rating = ratingInfo(item.client_rating);
+    const cardW = (SCREEN_W - 32 - 40) / 5;
+
+    if (Platform.OS !== 'web') {
+      return (
+        <View style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]}>
+          <TouchableOpacity onPress={() => openEditModal(item)} activeOpacity={0.7}>
+            <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
+              {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
+            </View>
+            <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
+              <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
+              <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
+            </View>
+          </TouchableOpacity>
+          <View style={s.cardFooter}>
+            <TouchableOpacity onPress={() => handleDeleteClient(item)}>
+              <Ionicons name="trash-outline" size={16} color="#EF4444" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      <div style={{ width: cardW, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderStyle: 'solid', borderRadius: 12, overflow: 'hidden' }}>
+        <div onClick={() => openEditModal(item)} style={{ cursor: 'pointer' }} data-testid={`client-${item.id}`}>
+          <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
+            {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
+            {rating && (
+              <View style={[s.ratingOverlay, { backgroundColor: rating.color }]}>
+                <Ionicons name={rating.icon} size={10} color="#fff" />
+              </View>
+            )}
+          </View>
+          <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
+            <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
+            <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
+            {item.phone ? <Text style={{ color: C.textLight, fontSize: 14, marginTop: 1 }} numberOfLines={1}>{item.phone}</Text> : null}
+          </View>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 8, paddingRight: 8, paddingBottom: 8, marginTop: 4 }}>
+          {item.reservation_count !== undefined && item.reservation_count > 0 ? (
+            <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
+              <Text style={{ color: C.accent, fontSize: 15, fontWeight: '700' }}>{item.reservation_count} res.</Text>
+            </View>
+          ) : (
+            <View style={[s.resCountBadge, { backgroundColor: C.border + '30' }]}>
+              <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
+            </View>
+          )}
+          <div
+            onClick={(e: any) => { e.stopPropagation(); handleDeleteClient(item); }}
+            style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            data-testid={`delete-client-${item.id}`}
+          >
+            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>
       <View style={s.topRow}>
@@ -122,64 +186,7 @@ export default function AgencyClients() {
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         ListEmptyComponent={<View style={s.empty}><Ionicons name="people-outline" size={40} color={C.textLight} /><Text style={[s.emptyText, { color: C.textLight }]}>Aucun client</Text></View>}
-        renderItem={({ item }) => {
-          const rating = ratingInfo(item.client_rating);
-          const cardW = (SCREEN_W - 32 - 40) / 5;
-          return Platform.OS === 'web' ? (
-            <div style={{ width: cardW, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderStyle: 'solid', borderRadius: 12, overflow: 'hidden' }}>
-              <div onClick={() => openEditModal(item)} style={{ cursor: 'pointer' }} data-testid={`client-${item.id}`}>
-                <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
-                  {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
-                  {rating && (
-                    <View style={[s.ratingOverlay, { backgroundColor: rating.color }]}>
-                      <Ionicons name={rating.icon} size={10} color="#fff" />
-                    </View>
-                  )}
-                </View>
-                <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
-                  <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
-                  <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
-                  {item.phone ? <Text style={{ color: C.textLight, fontSize: 14, marginTop: 1 }} numberOfLines={1}>{item.phone}</Text> : null}
-                </View>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 8, paddingRight: 8, paddingBottom: 8, marginTop: 4 }}>
-                {item.reservation_count !== undefined && item.reservation_count > 0 ? (
-                  <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
-                    <Text style={{ color: C.accent, fontSize: 15, fontWeight: '700' }}>{item.reservation_count} res.</Text>
-                  </View>
-                ) : (
-                  <View style={[s.resCountBadge, { backgroundColor: C.border + '30' }]}>
-                    <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
-                  </View>
-                )}
-                <div
-                  onClick={(e: any) => { e.stopPropagation(); handleDeleteClient(item); }}
-                  style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  data-testid={`delete-client-${item.id}`}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <View style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]}>
-              <TouchableOpacity onPress={() => openEditModal(item)} activeOpacity={0.7}>
-                <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
-                  {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
-                </View>
-                <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
-                  <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
-                  <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
-                </View>
-              </TouchableOpacity>
-              <View style={s.cardFooter}>
-                <TouchableOpacity onPress={() => handleDeleteClient(item)}>
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          );
-        }}
+        renderItem={renderClientCard}
       />
 
       <EditClientModal visible={showEditModal} onClose={() => setShowEditModal(false)} client={editClient} C={C} onSaved={fetchClients} />
