@@ -45,7 +45,7 @@ export default function AgencyClients() {
         const cached = await AsyncStorage.getItem('cache_clients');
         if (cached) { try { setClients(JSON.parse(cached)); } catch {} }
       }
-      const res = await api.get('/api/admin/users');
+      const res = await api.get('/api/admin/users?limit=200');
       const data = res.data.users || [];
       setClients(data);
       AsyncStorage.setItem('cache_clients', JSON.stringify(data)).catch(() => {});
@@ -70,6 +70,18 @@ export default function AgencyClients() {
   const openEditModal = (client: Client) => {
     setEditClient(client);
     setShowEditModal(true);
+  };
+
+  const handleDeleteClient = async (client: Client) => {
+    const confirm = window.confirm(`Supprimer definitivement ${client.name} ?\nCette action est irreversible.`);
+    if (!confirm) return;
+    try {
+      await api.delete(`/api/admin/users/${client.id}`);
+      window.alert('Client supprime');
+      fetchClients();
+    } catch (e: any) {
+      window.alert(e?.response?.data?.detail || 'Erreur lors de la suppression');
+    }
   };
 
   if (loading && clients.length === 0) return <View style={[s.container, { backgroundColor: C.bg }]}><CardSkeleton count={5} /></View>;
@@ -124,6 +136,13 @@ export default function AgencyClients() {
                       <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
                     </View>
                   )}
+                  <TouchableOpacity
+                    style={{ padding: 4 }}
+                    onPress={(e) => { e.stopPropagation(); handleDeleteClient(item); }}
+                    data-testid={`delete-client-${item.id}`}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  </TouchableOpacity>
                 </View>
               </View>
             </TouchableOpacity>
@@ -153,6 +172,6 @@ const s = StyleSheet.create({
   ratingOverlay: { position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   cardBody: { padding: 8 },
   cardName: { fontSize: 18, fontWeight: '800' },
-  cardFooter: { marginTop: 4 },
+  cardFooter: { marginTop: 4, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   resCountBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start' },
 });
