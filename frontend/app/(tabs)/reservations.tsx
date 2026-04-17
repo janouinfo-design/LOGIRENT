@@ -434,14 +434,14 @@ function ReservationsScreen() {
 
       {/* Filters - only show in list mode */}
       {viewMode === 'list' && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}>
+        <View style={{ height: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, gap: 8 }}>
           {filters.map(f => (
-            <TouchableOpacity key={f.id} style={[styles.filterChip, filter === f.id && styles.filterChipActive]}
+            <TouchableOpacity key={f.id} style={[styles.filterChip, { height: 36 }, filter === f.id && styles.filterChipActive]}
               onPress={() => setFilter(f.id)} data-testid={`filter-${f.id}`}>
               <Text style={[styles.filterText, filter === f.id && styles.filterTextActive]}>{f.label}</Text>
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       )}
 
       {/* Content */}
