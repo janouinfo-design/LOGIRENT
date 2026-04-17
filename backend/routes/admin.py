@@ -392,7 +392,7 @@ async def update_user_admin(user_id: str, update_data: AdminUserUpdate, user: di
 
 
 @router.delete("/admin/users/{user_id}")
-async def delete_user_admin(user_id: str, user: dict = Depends(get_admin_user)):
+async def delete_user_admin(user_id: str, force: bool = False, user: dict = Depends(get_admin_user)):
     target = await db.users.find_one({"id": user_id}, {"_id": 0, "role": 1, "name": 1})
     if not target:
         raise HTTPException(status_code=404, detail="Client non trouve")
@@ -400,8 +400,13 @@ async def delete_user_admin(user_id: str, user: dict = Depends(get_admin_user)):
         raise HTTPException(status_code=403, detail="Impossible de supprimer un admin")
     # Check active reservations
     active = await db.reservations.count_documents({"user_id": user_id, "status": {"$in": ["active", "confirmed", "pending"]}})
-    if active > 0:
-        raise HTTPException(status_code=400, detail=f"Ce client a {active} reservation(s) active(s). Terminez-les avant de supprimer.")
+    if active > 0 and not force:
+        raise HTTPException(status_code=400, detail=f"Ce client a {active} reservation(s) active(s). Utilisez force=true pour supprimer et annuler ses reservations.")
+    if active > 0 and force:
+        await db.reservations.update_many(
+            {"user_id": user_id, "status": {"$in": ["active", "confirmed", "pending"]}},
+            {"$set": {"status": "cancelled"}}
+        )
     await db.users.delete_one({"id": user_id})
     return {"message": f"Client {target.get('name','')} supprime"}
 

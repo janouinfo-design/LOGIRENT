@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, TextInput, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Pressable, RefreshControl, ActivityIndicator, TextInput, Image, Dimensions, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -73,14 +73,27 @@ export default function AgencyClients() {
   };
 
   const handleDeleteClient = async (client: Client) => {
-    const confirm = window.confirm(`Supprimer definitivement ${client.name} ?\nCette action est irreversible.`);
-    if (!confirm) return;
+    const confirm1 = window.confirm(`Supprimer definitivement ${client.name} ?\nCette action est irreversible.`);
+    if (!confirm1) return;
     try {
       await api.delete(`/api/admin/users/${client.id}`);
       window.alert('Client supprime');
       fetchClients();
     } catch (e: any) {
-      window.alert(e?.response?.data?.detail || 'Erreur lors de la suppression');
+      const detail = e?.response?.data?.detail || '';
+      if (e?.response?.status === 400 && detail.includes('reservation')) {
+        const confirm2 = window.confirm(`${detail}\n\nVoulez-vous quand meme supprimer ce client et annuler ses reservations ?`);
+        if (!confirm2) return;
+        try {
+          await api.delete(`/api/admin/users/${client.id}?force=true`);
+          window.alert('Client supprime (reservations annulees)');
+          fetchClients();
+        } catch (e2: any) {
+          window.alert(e2?.response?.data?.detail || 'Erreur lors de la suppression');
+        }
+      } else {
+        window.alert(detail || 'Erreur lors de la suppression');
+      }
     }
   };
 
@@ -139,13 +152,23 @@ export default function AgencyClients() {
                     <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
                   </View>
                 )}
-                <TouchableOpacity
-                  style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2' }}
-                  onPress={() => handleDeleteClient(item)}
-                  data-testid={`delete-client-${item.id}`}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                </TouchableOpacity>
+                {Platform.OS === 'web' ? (
+                  <div
+                    onClick={(e: any) => { e.stopPropagation(); e.preventDefault(); handleDeleteClient(item); }}
+                    style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    data-testid={`delete-client-${item.id}`}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  </div>
+                ) : (
+                  <TouchableOpacity
+                    style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2' }}
+                    onPress={() => handleDeleteClient(item)}
+                    data-testid={`delete-client-${item.id}`}
+                  >
+                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           );
