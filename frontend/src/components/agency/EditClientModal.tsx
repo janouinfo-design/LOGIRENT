@@ -61,7 +61,6 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   React.useEffect(() => {
     if (visible && client) {
       setEditName(client.name || '');
-      // Auto-split name into first/last if not set
       const fn = client.first_name || '';
       const ln = client.last_name || '';
       if (!fn && !ln && client.name) {
@@ -89,12 +88,10 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       setEditLicenseExpiry(client.license_expiry_date || '');
       setEditNationality(client.nationality || '');
       setFullClient(client);
-      // Fetch full details
       setLoadingDetail(true);
       api.get(`/api/admin/users/${client.id}`).then(res => {
         const d = res.data;
         setEditAddress(d.address || '');
-        // Auto-split from name if first_name/last_name not set
         if (d.first_name || d.last_name) {
           setEditFirstName(d.first_name || '');
           setEditLastName(d.last_name || '');
@@ -124,16 +121,15 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
     const file = e.target?.files?.[0];
     if (!file) return;
     const accepted = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!accepted.includes(file.type)) { window.alert('Format non accepté. JPG, PNG ou WebP.'); e.target.value = ''; return; }
+    if (!accepted.includes(file.type)) { window.alert('Format non accepte. JPG, PNG ou WebP.'); e.target.value = ''; return; }
     if (file.size > 10 * 1024 * 1024) { window.alert('Fichier trop volumineux (max 10 MB).'); e.target.value = ''; return; }
     setUploadingDoc(type);
     try {
       const reader = new FileReader();
       const dataUri: string = await new Promise((res, rej) => { reader.onload = () => res(reader.result as string); reader.onerror = () => rej(new Error('Read error')); reader.readAsDataURL(file); });
-      const endpointMap: Record<string, string> = { id: 'upload-id-b64', id_back: 'upload-id-back-b64', license: 'upload-license-b64', license_back: 'upload-license-back-b64' };
       const resp = await api.post(`/api/admin/client/${client.id}/document`, { image_data: dataUri, doc_type: type });
       const v = resp.data.verification || {};
-      const msg = v.is_valid === false ? `Document rejeté: ${v.reason || 'Invalide'}` : `Document uploadé (${v.confidence || 0}% confiance)${v.reason ? '\n' + v.reason : ''}`;
+      const msg = v.is_valid === false ? `Document rejete: ${v.reason || 'Invalide'}` : `Document uploade (${v.confidence || 0}% confiance)${v.reason ? '\n' + v.reason : ''}`;
       window.alert(msg);
       if (fullClient) {
         const field = type === 'id' ? 'id_photo' : type === 'id_back' ? 'id_photo_back' : type === 'license' ? 'license_photo' : 'license_photo_back';
@@ -154,7 +150,6 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
     try {
       const payload: any = {};
       const ref = fullClient || client;
-      // Auto-compose name from first_name + last_name
       const composedName = [editFirstName, editLastName].filter(Boolean).join(' ') || editName;
       payload.name = composedName;
       payload.first_name = editFirstName;
@@ -201,210 +196,199 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   return (
   <>
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={st.modalOverlay}>
+      <View style={st.overlay}>
         <View style={[st.modal, { backgroundColor: C.card }]}>
-          <View style={st.modalHeader}>
-            <Text style={[st.modalTitle, { color: C.text }]}>Modifier le client</Text>
+          {/* Header - like vehicle modal */}
+          <View style={st.header}>
+            <Text style={[st.title, { color: C.text }]}>Modifier le client</Text>
             <TouchableOpacity onPress={onClose} data-testid="close-edit-modal">
               <Ionicons name="close" size={24} color={C.text} />
             </TouchableOpacity>
           </View>
+
           {loadingDetail ? (
             <View style={{ padding: 20, alignItems: 'center' }}><ActivityIndicator size="small" color={C.accent} /></View>
           ) : (
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {fullClient && (
-                <View style={[st.editHeader, { backgroundColor: C.bg, borderColor: C.border }]}>
-                  <View style={[st.editAvatar, { backgroundColor: C.accent + '20' }]}>
-                    {fullClient.profile_photo ? <Image source={{ uri: fullClient.profile_photo }} style={st.editAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
-                  </View>
-                  <View>
-                    <Text style={[st.editHeaderName, { color: C.text }]}>{fullClient.first_name || ''} {fullClient.last_name || fullClient.name}</Text>
-                    <Text style={{ color: C.textLight, fontSize: 12 }}>{fullClient.total_reservations || fullClient.reservation_count || 0} reservations</Text>
-                  </View>
-                </View>
-              )}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 30 }}>
 
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Nom</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editLastName} onChangeText={setEditLastName} placeholder="Nom de famille" placeholderTextColor={C.textLight} data-testid="edit-client-lastname" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Prenom</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editFirstName} onChangeText={setEditFirstName} placeholder="Prenom" placeholderTextColor={C.textLight} data-testid="edit-client-firstname" />
-                </View>
-              </View>
-
-              <Text style={[st.label, { color: C.textLight }]}>Email</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editEmail} onChangeText={setEditEmail} placeholder="email@example.com" placeholderTextColor={C.textLight} keyboardType="email-address" autoCapitalize="none" data-testid="edit-client-email" />
-
-              <Text style={[st.label, { color: C.textLight }]}>Telephone</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editPhone} onChangeText={setEditPhone} placeholder="+41 XX XXX XX XX" placeholderTextColor={C.textLight} keyboardType="phone-pad" data-testid="edit-client-phone" />
-
-              <Text style={[st.label, { color: C.textLight }]}>Adresse</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editAddress} onChangeText={setEditAddress} placeholder="Adresse du client" placeholderTextColor={C.textLight} data-testid="edit-client-address" />
-
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 8, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }}>
-                <Ionicons name="id-card" size={16} color={C.accent} />
-                <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Identite & Permis *</Text>
-              </View>
-
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Lieu de naissance *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthPlace ? '#EF444450' : C.border }]} value={editBirthPlace} onChangeText={setEditBirthPlace} placeholder="Geneve" placeholderTextColor={C.textLight} data-testid="edit-birth-place" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Date de naissance *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={(v) => setEditBirthDate(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-birth-date" />
-                </View>
-              </View>
-
-              <Text style={[st.label, { color: C.textLight, marginTop: 10 }]}>Nationalite *</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editNationality ? '#EF444450' : C.border }]} value={editNationality} onChangeText={setEditNationality} placeholder="Suisse" placeholderTextColor={C.textLight} data-testid="edit-nationality" />
-
-              <Text style={[st.label, { color: C.textLight, marginTop: 10 }]}>Permis No *</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseNumber ? '#EF444450' : C.border }]} value={editLicenseNumber} onChangeText={setEditLicenseNumber} placeholder="GE-123456" placeholderTextColor={C.textLight} data-testid="edit-license-number" />
-
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 4 }}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Date d'emission *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={(v) => setEditLicenseIssue(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-license-issue" />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={[st.label, { color: C.textLight }]}>Date d'expiration *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={(v) => setEditLicenseExpiry(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} data-testid="edit-license-expiry" />
-                </View>
-              </View>
-
-              {/* Document Upload Section */}
-              <View style={{ marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Ionicons name="document-attach" size={16} color={C.accent} />
-                  <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>Documents (Photos)</Text>
-                </View>
-                {Platform.OS === 'web' && (
-                  <>
-                    <input ref={(el: any) => { idFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id')} />
-                    <input ref={(el: any) => { idBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id_back')} />
-                    <input ref={(el: any) => { licenseFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license')} />
-                    <input ref={(el: any) => { licenseBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license_back')} />
-                  </>
-                )}
-
-                <Text style={[st.label, { color: C.textLight }]}>Piece d'Identite</Text>
-                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Recto</Text>
-                    {fullClient?.id_photo ? (
-                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.id_photo!)} activeOpacity={0.8} style={{ width: '100%', height: 120, borderRadius: 8, overflow: 'hidden' }}>
-                        <Image source={{ uri: fullClient.id_photo }} style={{ width: '100%', height: 120, borderRadius: 8 }} resizeMode="cover" />
-                        <View style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                          <Ionicons name="expand" size={11} color="#fff" />
-                        </View>
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={{ width: '100%', height: 120, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
-                        <Ionicons name="card-outline" size={24} color="#9CA3AF" />
-                      </View>
-                    )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.id_photo ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => idFrontRef.current?.click()} data-testid="admin-upload-id-front">
-                      {uploadingDoc === 'id' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: fullClient?.id_photo ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.id_photo ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Verso</Text>
-                    {fullClient?.id_photo_back ? (
-                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.id_photo_back!)} activeOpacity={0.8} style={{ width: '100%', height: 120, borderRadius: 8, overflow: 'hidden' }}>
-                        <Image source={{ uri: fullClient.id_photo_back }} style={{ width: '100%', height: 120, borderRadius: 8 }} resizeMode="cover" />
-                        <View style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                          <Ionicons name="expand" size={11} color="#fff" />
-                        </View>
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={{ width: '100%', height: 120, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
-                        <Ionicons name="card-outline" size={24} color="#9CA3AF" />
-                      </View>
-                    )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.id_photo_back ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => idBackRef.current?.click()} data-testid="admin-upload-id-back">
-                      {uploadingDoc === 'id_back' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: fullClient?.id_photo_back ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.id_photo_back ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <Text style={[st.label, { color: C.textLight }]}>Permis de Conduire</Text>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Recto</Text>
-                    {fullClient?.license_photo ? (
-                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.license_photo!)} activeOpacity={0.8} style={{ width: '100%', height: 120, borderRadius: 8, overflow: 'hidden' }}>
-                        <Image source={{ uri: fullClient.license_photo }} style={{ width: '100%', height: 120, borderRadius: 8 }} resizeMode="cover" />
-                        <View style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                          <Ionicons name="expand" size={11} color="#fff" />
-                        </View>
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={{ width: '100%', height: 120, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
-                        <Ionicons name="id-card-outline" size={24} color="#9CA3AF" />
-                      </View>
-                    )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.license_photo ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => licenseFrontRef.current?.click()} data-testid="admin-upload-license-front">
-                      {uploadingDoc === 'license' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: fullClient?.license_photo ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.license_photo ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                  <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>Verso</Text>
-                    {fullClient?.license_photo_back ? (
-                      <TouchableOpacity onPress={() => setPreviewPhoto(fullClient.license_photo_back!)} activeOpacity={0.8} style={{ width: '100%', height: 120, borderRadius: 8, overflow: 'hidden' }}>
-                        <Image source={{ uri: fullClient.license_photo_back }} style={{ width: '100%', height: 120, borderRadius: 8 }} resizeMode="cover" />
-                        <View style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 11, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-                          <Ionicons name="expand" size={11} color="#fff" />
-                        </View>
-                      </TouchableOpacity>
-                    ) : (
-                      <View style={{ width: '100%', height: 120, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
-                        <Ionicons name="id-card-outline" size={24} color="#9CA3AF" />
-                      </View>
-                    )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: fullClient?.license_photo_back ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => licenseBackRef.current?.click()} data-testid="admin-upload-license-back">
-                      {uploadingDoc === 'license_back' ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: fullClient?.license_photo_back ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{fullClient?.license_photo_back ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 8 }}>Formats acceptés: JPG, PNG, WebP (max 10 MB). Vérification IA automatique.</Text>
-              </View>
-
-              <Text style={[st.label, { color: C.textLight, marginTop: 12 }]}>Classement</Text>
-              <View style={st.ratingRow}>
+              {/* Classement - like vehicle Status selector */}
+              <Text style={[st.upperLabel, { color: C.textLight }]}>CLASSEMENT</Text>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
                 {RATINGS.map((r) => (
                   <TouchableOpacity key={r.value}
-                    style={[st.ratingOption, { borderColor: editRating === r.value ? r.color : C.border, backgroundColor: editRating === r.value ? r.color + '15' : C.bg }]}
+                    style={[st.ratingBtn, { borderColor: editRating === r.value ? r.color : C.border, backgroundColor: editRating === r.value ? r.color + '15' : C.bg }]}
                     onPress={() => setEditRating(editRating === r.value ? '' : r.value)}
                     data-testid={`rating-${r.value}`}>
                     <Ionicons name={r.icon} size={14} color={editRating === r.value ? r.color : C.textLight} />
-                    <Text style={{ color: editRating === r.value ? r.color : C.textLight, fontSize: 11, fontWeight: '600' }}>{r.label}</Text>
+                    <Text style={{ color: editRating === r.value ? r.color : C.textLight, fontSize: 12, fontWeight: '700' }}>{r.label}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={[st.label, { color: C.textLight }]}>Notes admin</Text>
-              <TextInput style={[st.input, st.textArea, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editNotes} onChangeText={setEditNotes} placeholder="Notes internes..." placeholderTextColor={C.textLight} multiline numberOfLines={3} data-testid="edit-client-notes" />
+              {/* NOM / PRENOM - two columns */}
+              <View style={st.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>NOM</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editLastName} onChangeText={setEditLastName} placeholder="Nom de famille" placeholderTextColor={C.textLight + '80'} data-testid="edit-client-lastname" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>PRENOM</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editFirstName} onChangeText={setEditFirstName} placeholder="Prenom" placeholderTextColor={C.textLight + '80'} data-testid="edit-client-firstname" />
+                </View>
+              </View>
 
-              <TouchableOpacity style={[st.saveBtn, { backgroundColor: C.primary }, saving && { opacity: 0.6 }]} onPress={saveEdit} disabled={saving} data-testid="save-edit-client-btn">
-                <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                <Text style={st.saveBtnText}>{saving ? 'Enregistrement...' : 'Enregistrer'}</Text>
-              </TouchableOpacity>
+              {/* EMAIL / TELEPHONE - two columns */}
+              <View style={st.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>EMAIL</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editEmail} onChangeText={setEditEmail} placeholder="email@example.com" placeholderTextColor={C.textLight + '80'} keyboardType="email-address" autoCapitalize="none" data-testid="edit-client-email" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>TELEPHONE</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editPhone} onChangeText={setEditPhone} placeholder="+41 XX XXX XX XX" placeholderTextColor={C.textLight + '80'} keyboardType="phone-pad" data-testid="edit-client-phone" />
+                </View>
+              </View>
 
-              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, marginTop: 8, borderRadius: 10, borderWidth: 1, borderColor: '#EF444440' }} onPress={deleteClient} data-testid="delete-client-btn">
+              {/* ADRESSE - full width */}
+              <Text style={[st.upperLabel, { color: C.textLight }]}>ADRESSE</Text>
+              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editAddress} onChangeText={setEditAddress} placeholder="Adresse du client" placeholderTextColor={C.textLight + '80'} data-testid="edit-client-address" />
+
+              {/* ===== Section: Identite & Permis ===== */}
+              <View style={[st.sectionDivider, { borderTopColor: C.border }]}>
+                <Ionicons name="id-card" size={16} color={C.accent} />
+                <Text style={[st.sectionTitle, { color: C.text }]}>Identite & Permis</Text>
+              </View>
+
+              <View style={st.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>LIEU DE NAISSANCE *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthPlace ? '#EF444450' : C.border }]} value={editBirthPlace} onChangeText={setEditBirthPlace} placeholder="Geneve" placeholderTextColor={C.textLight + '80'} data-testid="edit-birth-place" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>DATE DE NAISSANCE *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={(v) => setEditBirthDate(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'} data-testid="edit-birth-date" />
+                </View>
+              </View>
+
+              <View style={st.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>NATIONALITE *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editNationality ? '#EF444450' : C.border }]} value={editNationality} onChangeText={setEditNationality} placeholder="Suisse" placeholderTextColor={C.textLight + '80'} data-testid="edit-nationality" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>NUMERO DE PERMIS *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseNumber ? '#EF444450' : C.border }]} value={editLicenseNumber} onChangeText={setEditLicenseNumber} placeholder="GE-123456" placeholderTextColor={C.textLight + '80'} data-testid="edit-license-number" />
+                </View>
+              </View>
+
+              <View style={st.row}>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>DATE D'EMISSION *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={(v) => setEditLicenseIssue(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'} data-testid="edit-license-issue" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>DATE D'EXPIRATION *</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={(v) => setEditLicenseExpiry(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'} data-testid="edit-license-expiry" />
+                </View>
+              </View>
+
+              {/* ===== Section: Documents ===== */}
+              <View style={[st.sectionDivider, { borderTopColor: C.border }]}>
+                <Ionicons name="document-attach" size={16} color={C.accent} />
+                <Text style={[st.sectionTitle, { color: C.text }]}>Documents (Photos)</Text>
+              </View>
+              {Platform.OS === 'web' && (
+                <>
+                  <input ref={(el: any) => { idFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id')} />
+                  <input ref={(el: any) => { idBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id_back')} />
+                  <input ref={(el: any) => { licenseFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license')} />
+                  <input ref={(el: any) => { licenseBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license_back')} />
+                </>
+              )}
+
+              <Text style={[st.upperLabel, { color: C.textLight }]}>PIECE D'IDENTITE</Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                {[
+                  { label: 'Recto', field: 'id_photo', ref: idFrontRef, type: 'id' as const, testid: 'admin-upload-id-front' },
+                  { label: 'Verso', field: 'id_photo_back', ref: idBackRef, type: 'id_back' as const, testid: 'admin-upload-id-back' },
+                ].map(doc => (
+                  <View key={doc.field} style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    {(fullClient as any)?.[doc.field] ? (
+                      <TouchableOpacity onPress={() => setPreviewPhoto((fullClient as any)[doc.field]!)} activeOpacity={0.8} style={{ width: '100%', height: 100, borderRadius: 8, overflow: 'hidden' }}>
+                        <Image source={{ uri: (fullClient as any)[doc.field] }} style={{ width: '100%', height: 100, borderRadius: 8 }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="expand" size={10} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={{ width: '100%', height: 100, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="card-outline" size={22} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: (fullClient as any)?.[doc.field] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => doc.ref.current?.click()} data-testid={doc.testid}>
+                      {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: (fullClient as any)?.[doc.field] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{(fullClient as any)?.[doc.field] ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={[st.upperLabel, { color: C.textLight }]}>PERMIS DE CONDUIRE</Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                {[
+                  { label: 'Recto', field: 'license_photo', ref: licenseFrontRef, type: 'license' as const, testid: 'admin-upload-license-front' },
+                  { label: 'Verso', field: 'license_photo_back', ref: licenseBackRef, type: 'license_back' as const, testid: 'admin-upload-license-back' },
+                ].map(doc => (
+                  <View key={doc.field} style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    {(fullClient as any)?.[doc.field] ? (
+                      <TouchableOpacity onPress={() => setPreviewPhoto((fullClient as any)[doc.field]!)} activeOpacity={0.8} style={{ width: '100%', height: 100, borderRadius: 8, overflow: 'hidden' }}>
+                        <Image source={{ uri: (fullClient as any)[doc.field] }} style={{ width: '100%', height: 100, borderRadius: 8 }} resizeMode="cover" />
+                        <View style={{ position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+                          <Ionicons name="expand" size={10} color="#fff" />
+                        </View>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={{ width: '100%', height: 100, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="id-card-outline" size={22} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: (fullClient as any)?.[doc.field] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => doc.ref.current?.click()} data-testid={doc.testid}>
+                      {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: (fullClient as any)?.[doc.field] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{(fullClient as any)?.[doc.field] ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 8 }}>Formats acceptes: JPG, PNG, WebP (max 10 MB). Verification IA automatique.</Text>
+
+              {/* ===== Section: Notes ===== */}
+              <View style={[st.sectionDivider, { borderTopColor: C.border }]}>
+                <Ionicons name="chatbox-ellipses" size={16} color={C.accent} />
+                <Text style={[st.sectionTitle, { color: C.text }]}>Notes admin</Text>
+              </View>
+              <TextInput style={[st.input, st.textArea, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editNotes} onChangeText={setEditNotes} placeholder="Notes internes..." placeholderTextColor={C.textLight + '80'} multiline numberOfLines={3} data-testid="edit-client-notes" />
+
+              {/* ===== Bottom Buttons - like vehicle modal ===== */}
+              <View style={st.bottomBtns}>
+                <TouchableOpacity style={[st.cancelBtn, { borderColor: C.border }]} onPress={onClose}>
+                  <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>Annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[st.saveBtn, { backgroundColor: C.primary || C.accent }, saving && { opacity: 0.6 }]} onPress={saveEdit} disabled={saving} data-testid="save-edit-client-btn">
+                  {saving ? <ActivityIndicator size="small" color="#fff" /> : (
+                    <>
+                      <Ionicons name="checkmark" size={18} color="#fff" />
+                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Sauvegarder</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Delete */}
+              <TouchableOpacity style={st.deleteBtn} onPress={deleteClient} data-testid="delete-client-btn">
                 <Ionicons name="trash" size={16} color="#EF4444" />
                 <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>Supprimer ce client</Text>
               </TouchableOpacity>
@@ -432,19 +416,19 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
 };
 
 const st = StyleSheet.create({
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
-  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: '85%' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  modalTitle: { fontSize: 18, fontWeight: '800' },
-  editHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 14, borderRadius: 12, borderWidth: 1, marginBottom: 12 },
-  editAvatar: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  editAvatarImg: { width: 50, height: 50, borderRadius: 25 },
-  editHeaderName: { fontSize: 17, fontWeight: '800' },
-  label: { fontSize: 12, fontWeight: '600', marginBottom: 6, marginTop: 12 },
+  overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modal: { borderTopLeftRadius: 20, borderTopRightRadius: 20, maxHeight: '90%', overflow: 'hidden' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
+  title: { fontSize: 18, fontWeight: '800' },
+  upperLabel: { fontSize: 11, fontWeight: '700', marginBottom: 4, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, borderWidth: 1 },
   textArea: { minHeight: 70, textAlignVertical: 'top' },
-  ratingRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  ratingOption: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5 },
-  saveBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, paddingVertical: 14, marginTop: 20, marginBottom: 10 },
-  saveBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  row: { flexDirection: 'row', gap: 10 },
+  sectionDivider: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 4, paddingTop: 14, borderTopWidth: 1 },
+  sectionTitle: { fontSize: 14, fontWeight: '700' },
+  ratingBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1.5 },
+  bottomBtns: { flexDirection: 'row', gap: 10, marginTop: 24 },
+  cancelBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
+  saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },
+  deleteBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, marginTop: 12, borderRadius: 10, borderWidth: 1, borderColor: '#EF444440' },
 });
