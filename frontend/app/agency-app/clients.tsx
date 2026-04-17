@@ -113,39 +113,41 @@ export default function AgencyClients() {
           const rating = ratingInfo(item.client_rating);
           const cardW = (SCREEN_W - 32 - 40) / 5;
           return (
-            <TouchableOpacity style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]} onPress={() => openEditModal(item)} data-testid={`client-${item.id}`}>
-              <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
-                {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
-                {rating && (
-                  <View style={[s.ratingOverlay, { backgroundColor: rating.color }]}>
-                    <Ionicons name={rating.icon} size={10} color="#fff" />
-                  </View>
-                )}
-              </View>
-              <View style={s.cardBody}>
-                <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
-                <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
-                {item.phone ? <Text style={{ color: C.textLight, fontSize: 14, marginTop: 1 }} numberOfLines={1}>{item.phone}</Text> : null}
-                <View style={s.cardFooter}>
-                  {item.reservation_count !== undefined && item.reservation_count > 0 ? (
-                    <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
-                      <Text style={{ color: C.accent, fontSize: 15, fontWeight: '700' }}>{item.reservation_count} res.</Text>
-                    </View>
-                  ) : (
-                    <View style={[s.resCountBadge, { backgroundColor: C.border + '30' }]}>
-                      <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
+            <View style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]}>
+              <TouchableOpacity onPress={() => openEditModal(item)} data-testid={`client-${item.id}`} activeOpacity={0.7}>
+                <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
+                  {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
+                  {rating && (
+                    <View style={[s.ratingOverlay, { backgroundColor: rating.color }]}>
+                      <Ionicons name={rating.icon} size={10} color="#fff" />
                     </View>
                   )}
-                  <TouchableOpacity
-                    style={{ padding: 4 }}
-                    onPress={(e) => { e.stopPropagation(); handleDeleteClient(item); }}
-                    data-testid={`delete-client-${item.id}`}
-                  >
-                    <Ionicons name="trash-outline" size={16} color="#EF4444" />
-                  </TouchableOpacity>
                 </View>
+                <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
+                  <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
+                  {item.phone ? <Text style={{ color: C.textLight, fontSize: 14, marginTop: 1 }} numberOfLines={1}>{item.phone}</Text> : null}
+                </View>
+              </TouchableOpacity>
+              <View style={s.cardFooter}>
+                {item.reservation_count !== undefined && item.reservation_count > 0 ? (
+                  <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
+                    <Text style={{ color: C.accent, fontSize: 15, fontWeight: '700' }}>{item.reservation_count} res.</Text>
+                  </View>
+                ) : (
+                  <View style={[s.resCountBadge, { backgroundColor: C.border + '30' }]}>
+                    <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
+                  </View>
+                )}
+                <TouchableOpacity
+                  style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2' }}
+                  onPress={() => handleDeleteClient(item)}
+                  data-testid={`delete-client-${item.id}`}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#EF4444" />
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </View>
           );
         }}
       />
@@ -172,6 +174,6 @@ const s = StyleSheet.create({
   ratingOverlay: { position: 'absolute', top: 4, right: 4, width: 20, height: 20, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
   cardBody: { padding: 8 },
   cardName: { fontSize: 18, fontWeight: '800' },
-  cardFooter: { marginTop: 4, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  cardFooter: { marginTop: 4, paddingHorizontal: 8, paddingBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   resCountBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, alignSelf: 'flex-start' },
 });
