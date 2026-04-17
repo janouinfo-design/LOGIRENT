@@ -57,6 +57,10 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 12. **Workflow Retour Vehicule**: Bouton "Retour" vert dans la table des reservations (actives/confirmees). Ouvre un modal checklist complet: saisie km depart/retour avec calcul auto des km excedentaires, selecteur niveau carburant (Plein/3-4/1-2/1-4/Vide), detection auto retard, penalites configurables (CHF/km, CHF carburant, CHF/h retard), recapitulatif en temps reel des supplements. Backend: POST /api/admin/reservations/{id}/return calcule et sauvegarde les supplements, passe la reservation en "completed", remet le vehicule en "available", notifie le client.
 13. **SMTP personnalise par agence**: Chaque agence peut configurer son propre serveur SMTP pour envoyer les emails (confirmations, rappels, factures) depuis sa propre adresse. Page "Configuration Email" dans Outils avec preselections (Gmail, Outlook, Infomaniak, OVH), test d'envoi. Le systeme tente d'abord le SMTP de l'agence, puis fallback sur Resend. Le mot de passe SMTP n'est jamais expose dans l'API. Backend: GET/PUT /api/admin/smtp-config, POST /api/admin/smtp-test.
 
+### Session 2026-04-17 - Completed
+1. **Simplification des statuts de reservation**: Labels courts et coherents sur toute l'interface (admin, client, modal d'action): Attente, Especes, Confirmee, Active, Terminee, Annulee. Correction du bug paymentLabels (pending: 'En attente' au lieu de 'Confirmee'). Correction de la legende calendrier client (Active, Attente, Confirmee).
+2. **Creation client admin avec mot de passe + email de bienvenue**: Le modal "Nouveau client" permet desormais de definir un mot de passe manuellement (ou laisser vide pour auto-generation). Le formulaire a ete redesigne dans le style du modal vehicule (2 colonnes, sections avec icones, boutons Annuler/Creer). Le backend accepte le champ `password` optionnel via POST /api/admin/quick-client. L'email de bienvenue est envoye via le SMTP de l'agence (agency_id transmis). Le client recoit ses identifiants (email + mot de passe) avec QR code de l'app.
+
 ## Prioritized Backlog
 
 ### P1 - Next
