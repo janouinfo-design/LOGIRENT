@@ -179,7 +179,7 @@ export default function AgencyClients() {
               </View>
             </View>
           );
-        }}}
+        }}
       />
 
       <EditClientModal visible={showEditModal} onClose={() => setShowEditModal(false)} client={editClient} C={C} onSaved={fetchClients} />
