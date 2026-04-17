@@ -172,7 +172,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
             })}
           </View>
 
-          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingBottom: 30 }}>
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: 20 }}>
             {/* ===== STEP 1: FORM ===== */}
             {step === 'form' && (
               <>
@@ -198,7 +198,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                   </View>
                 </View>
 
-                {/* Email / Telephone Row */}
+                {/* Email / Mot de passe Row */}
                 <View style={s.row}>
                   <View style={{ flex: 1 }}>
                     <Text style={[s.label, { color: C.textLight }]}>EMAIL *</Text>
@@ -211,6 +211,29 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     />
                   </View>
                   <View style={{ flex: 1 }}>
+                    <Text style={[s.label, { color: C.textLight }]}>MOT DE PASSE</Text>
+                    <View style={{ position: 'relative' }}>
+                      <TextInput
+                        style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, paddingRight: 40 }]}
+                        value={password} onChangeText={setPassword}
+                        placeholder="Auto-genere si vide" placeholderTextColor={C.textLight + '80'}
+                        secureTextEntry={!showPassword}
+                        data-testid="new-client-password"
+                      />
+                      <TouchableOpacity
+                        style={{ position: 'absolute', right: 10, top: 10 }}
+                        onPress={() => setShowPassword(!showPassword)}
+                        data-testid="toggle-password-visibility"
+                      >
+                        <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={18} color={C.textLight} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+
+                {/* Telephone / Adresse Row */}
+                <View style={s.row}>
+                  <View style={{ flex: 1 }}>
                     <Text style={[s.label, { color: C.textLight }]}>TELEPHONE</Text>
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
@@ -220,37 +243,16 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                       data-testid="new-client-phone"
                     />
                   </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.label, { color: C.textLight }]}>ADRESSE</Text>
+                    <TextInput
+                      style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
+                      value={address} onChangeText={setAddress}
+                      placeholder="Lausanne" placeholderTextColor={C.textLight + '80'}
+                      data-testid="new-client-address"
+                    />
+                  </View>
                 </View>
-
-                {/* Password */}
-                <Text style={[s.label, { color: C.textLight }]}>MOT DE PASSE</Text>
-                <View style={{ position: 'relative' }}>
-                  <TextInput
-                    style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, paddingRight: 44 }]}
-                    value={password} onChangeText={setPassword}
-                    placeholder="Laisser vide = auto-genere" placeholderTextColor={C.textLight + '80'}
-                    secureTextEntry={!showPassword}
-                    data-testid="new-client-password"
-                  />
-                  <TouchableOpacity
-                    style={{ position: 'absolute', right: 10, top: 10 }}
-                    onPress={() => setShowPassword(!showPassword)}
-                    data-testid="toggle-password-visibility"
-                  >
-                    <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={20} color={C.textLight} />
-                  </TouchableOpacity>
-                </View>
-                <Text style={{ color: C.textLight, fontSize: 10, marginTop: 2, marginBottom: 4 }}>
-                  Si vide, un mot de passe sera genere automatiquement
-                </Text>
-
-                <Text style={[s.label, { color: C.textLight }]}>ADRESSE</Text>
-                <TextInput
-                  style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
-                  value={address} onChangeText={setAddress}
-                  placeholder="Rue de l'Exemple 10, 1000 Lausanne" placeholderTextColor={C.textLight + '80'}
-                  data-testid="new-client-address"
-                />
 
                 {/* Section Identite */}
                 <View style={[s.sectionDivider, { borderTopColor: C.border }]}>
@@ -417,14 +419,14 @@ const s = StyleSheet.create({
   steps: { flexDirection: 'row', justifyContent: 'center', gap: 20, paddingVertical: 12, paddingHorizontal: 16 },
   stepItem: { alignItems: 'center', gap: 4 },
   stepDot: { width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
-  label: { fontSize: 11, fontWeight: '700', marginBottom: 4, marginTop: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
-  input: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, borderWidth: 1 },
+  label: { fontSize: 11, fontWeight: '700', marginBottom: 3, marginTop: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+  input: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 13, borderWidth: 1 },
   row: { flexDirection: 'row', gap: 10 },
-  sectionDivider: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16, marginBottom: 4, paddingTop: 14, borderTopWidth: 1 },
-  sectionTitle: { fontSize: 14, fontWeight: '700' },
-  bottomBtns: { flexDirection: 'row', gap: 10, marginTop: 24 },
-  cancelBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: 12, borderWidth: 1 },
-  saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },
+  sectionDivider: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10, marginBottom: 2, paddingTop: 10, borderTopWidth: 1 },
+  sectionTitle: { fontSize: 13, fontWeight: '700' },
+  bottomBtns: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  cancelBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: 1 },
+  saveBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, borderRadius: 12 },
   passwordBox: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 12, borderWidth: 2, backgroundColor: '#F0FDF4' },
   docGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   docCard: { width: '47%', flexGrow: 1, flexBasis: '47%', aspectRatio: 1.5, borderWidth: 2, borderRadius: 12, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', overflow: 'hidden', position: 'relative' },
