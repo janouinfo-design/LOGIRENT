@@ -797,6 +797,7 @@ async def sign_contract(contract_id: str, data: ContractSign, user: dict = Depen
                 subject=f"Contrat signe - {vehicle_name} (N. {contract_number})",
                 html_content=email_html,
                 attachments=attachments,
+                agency_id=contract.get("agency_id"),
             )
             email_sent = True
 

@@ -291,16 +291,18 @@ export default function AgencyReservations() {
       await api.put(`/api/admin/reservations/${id}/status?status=${status}`);
       setActionModal(null);
       fetchReservations(); fetchStats();
-      if (status === 'confirmed') {
+      // Generate contract when activating (client takes the vehicle)
+      if (status === 'active') {
         try {
           const cr = await api.get(`/api/contracts/by-reservation/${id}`);
-          if (cr.data) router.push(`/contract/${cr.data.id}` as any);
-          else {
+          if (cr.data) {
+            router.push(`/contract/${cr.data.id}` as any);
+          } else {
             const gen = await api.post('/api/admin/contracts/generate', { reservation_id: id, language: 'fr' });
             router.push(`/contract/${gen.data.contract_id}` as any);
           }
         } catch (err: any) {
-          const m = err.response?.data?.detail || 'Confirmee, erreur contrat';
+          const m = err.response?.data?.detail || 'Activee, erreur contrat';
           Platform.OS === 'web' ? window.alert(m) : Alert.alert('Info', m);
         }
       }
