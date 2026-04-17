@@ -73,26 +73,29 @@ export default function AgencyClients() {
   };
 
   const handleDeleteClient = async (client: Client) => {
-    const confirm1 = window.confirm(`Supprimer definitivement ${client.name} ?\nCette action est irreversible.`);
+    const msg1 = `Supprimer definitivement ${client.name} ?\nCette action est irreversible.`;
+    const confirm1 = Platform.OS === 'web' ? window.confirm(msg1) : true;
     if (!confirm1) return;
     try {
       await api.delete(`/api/admin/users/${client.id}`);
-      window.alert('Client supprime');
+      Platform.OS === 'web' ? window.alert('Client supprime') : null;
       fetchClients();
     } catch (e: any) {
       const detail = e?.response?.data?.detail || '';
       if (e?.response?.status === 400 && detail.includes('reservation')) {
-        const confirm2 = window.confirm(`${detail}\n\nVoulez-vous quand meme supprimer ce client et annuler ses reservations ?`);
+        const msg2 = `${detail}\n\nVoulez-vous quand meme supprimer ce client et annuler ses reservations ?`;
+        const confirm2 = Platform.OS === 'web' ? window.confirm(msg2) : true;
         if (!confirm2) return;
         try {
           await api.delete(`/api/admin/users/${client.id}?force=true`);
-          window.alert('Client supprime (reservations annulees)');
+          Platform.OS === 'web' ? window.alert('Client supprime (reservations annulees)') : null;
           fetchClients();
         } catch (e2: any) {
-          window.alert(e2?.response?.data?.detail || 'Erreur lors de la suppression');
+          const errMsg = e2?.response?.data?.detail || 'Erreur lors de la suppression';
+          Platform.OS === 'web' ? window.alert(errMsg) : null;
         }
       } else {
-        window.alert(detail || 'Erreur lors de la suppression');
+        Platform.OS === 'web' ? window.alert(detail || 'Erreur lors de la suppression') : null;
       }
     }
   };
@@ -103,30 +106,9 @@ export default function AgencyClients() {
     const rating = ratingInfo(item.client_rating);
     const cardW = (SCREEN_W - 32 - 40) / 5;
 
-    if (Platform.OS !== 'web') {
-      return (
-        <View style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]}>
-          <TouchableOpacity onPress={() => openEditModal(item)} activeOpacity={0.7}>
-            <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
-              {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
-            </View>
-            <View style={{ paddingHorizontal: 8, paddingTop: 8 }}>
-              <Text style={[s.cardName, { color: C.text }]} numberOfLines={1}>{item.name}</Text>
-              <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
-            </View>
-          </TouchableOpacity>
-          <View style={s.cardFooter}>
-            <TouchableOpacity onPress={() => handleDeleteClient(item)}>
-              <Ionicons name="trash-outline" size={16} color="#EF4444" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    }
-
     return (
-      <div style={{ width: cardW, backgroundColor: C.card, borderColor: C.border, borderWidth: 1, borderStyle: 'solid', borderRadius: 12, overflow: 'hidden' }}>
-        <div onClick={() => openEditModal(item)} style={{ cursor: 'pointer' }} data-testid={`client-${item.id}`}>
+      <View style={[s.card, { backgroundColor: C.card, borderColor: C.border, width: cardW }]}>
+        <Pressable onPress={() => openEditModal(item)} data-testid={`client-${item.id}`}>
           <View style={[s.cardAvatar, { backgroundColor: C.accent + '15' }]}>
             {item.profile_photo ? <Image source={{ uri: item.profile_photo }} style={s.cardAvatarImg} /> : <Ionicons name="person" size={28} color={C.accent} />}
             {rating && (
@@ -140,8 +122,8 @@ export default function AgencyClients() {
             <Text style={{ color: C.textLight, fontSize: 15, marginTop: 2 }} numberOfLines={1}>{item.email || '-'}</Text>
             {item.phone ? <Text style={{ color: C.textLight, fontSize: 14, marginTop: 1 }} numberOfLines={1}>{item.phone}</Text> : null}
           </View>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 8, paddingRight: 8, paddingBottom: 8, marginTop: 4 }}>
+        </Pressable>
+        <View style={s.cardFooter}>
           {item.reservation_count !== undefined && item.reservation_count > 0 ? (
             <View style={[s.resCountBadge, { backgroundColor: C.accent + '15' }]}>
               <Text style={{ color: C.accent, fontSize: 15, fontWeight: '700' }}>{item.reservation_count} res.</Text>
@@ -151,15 +133,15 @@ export default function AgencyClients() {
               <Text style={{ color: C.textLight, fontSize: 15 }}>0 res.</Text>
             </View>
           )}
-          <div
-            onClick={(e: any) => { e.stopPropagation(); handleDeleteClient(item); }}
-            style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          <Pressable
+            onPress={() => handleDeleteClient(item)}
+            style={{ padding: 6, borderRadius: 6, backgroundColor: '#FEE2E2' }}
             data-testid={`delete-client-${item.id}`}
           >
             <Ionicons name="trash-outline" size={16} color="#EF4444" />
-          </div>
-        </div>
-      </div>
+          </Pressable>
+        </View>
+      </View>
     );
   };
 
