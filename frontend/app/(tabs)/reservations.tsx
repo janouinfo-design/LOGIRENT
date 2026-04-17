@@ -26,9 +26,9 @@ const _C = {
 };
 
 const statusLabels: Record<string, string> = {
-  confirmed: 'Confirmée',
-  active: 'En cours',
-  pending: 'Confirmee',
+  confirmed: 'Confirmee',
+  active: 'Active',
+  pending: 'Attente',
   pending_cash: 'Especes',
   cancelled: 'Annulée',
   completed: 'Terminée',
@@ -396,10 +396,10 @@ function ReservationsScreen() {
 
   const filters = [
     { id: 'all', label: 'Toutes' },
-    { id: 'pending', label: 'Confirmee' },
-    { id: 'confirmed', label: 'Confirmées' },
-    { id: 'active', label: 'En cours' },
-    { id: 'completed', label: 'Terminées' },
+    { id: 'pending', label: 'Attente' },
+    { id: 'confirmed', label: 'Confirmee' },
+    { id: 'active', label: 'Active' },
+    { id: 'completed', label: 'Terminee' },
   ];
 
   return (

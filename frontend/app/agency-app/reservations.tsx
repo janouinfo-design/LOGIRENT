@@ -28,7 +28,7 @@ interface VehicleSchedule {
 
 const QUICK_FILTERS = [
   { value: null, label: "Aujourd'hui" },
-  { value: 'active', label: 'En cours' },
+  { value: 'active', label: 'Active' },
   { value: 'upcoming', label: 'A venir' },
   { value: 'overdue', label: 'Retards' },
   { value: 'cancelled', label: 'Annules' },
@@ -40,8 +40,8 @@ const RES_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: 'En attente', pending_cash: 'Especes', confirmed: 'Confirmee',
-  active: 'En cours', completed: 'Terminee', cancelled: 'Annulee',
+  pending: 'Attente', pending_cash: 'Especes', confirmed: 'Confirmee',
+  active: 'Active', completed: 'Terminee', cancelled: 'Annulee',
 };
 
 type ViewMode = 'gestion' | 'planning';
@@ -393,7 +393,7 @@ export default function AgencyReservations() {
           <View style={s.kpiRow}>
             {[
               { icon: 'car-sport', label: "Reservations aujourd'hui", value: kpiToday, color: '#1E3A5F', bg: '#F0F4F8', filter: null as string | null },
-              { icon: 'play-circle', label: 'En cours', value: kpiActive, color: '#10B981', bg: '#ECFDF5', filter: 'active' },
+              { icon: 'play-circle', label: 'Active', value: kpiActive, color: '#10B981', bg: '#ECFDF5', filter: 'active' },
               { icon: 'calendar', label: 'A venir', value: kpiUpcoming, color: '#3B82F6', bg: '#EFF6FF', filter: 'upcoming' },
               { icon: 'warning', label: 'Problemes / Retards', value: kpiOverdue, color: '#EF4444', bg: '#FEF2F2', filter: 'overdue' },
             ].map((k, i) => (
