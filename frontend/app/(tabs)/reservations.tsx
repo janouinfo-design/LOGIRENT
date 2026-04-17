@@ -36,7 +36,7 @@ const statusLabels: Record<string, string> = {
 
 const paymentLabels: Record<string, string> = {
   paid: 'Payé',
-  pending: 'Confirmee',
+  pending: 'En attente',
   unpaid: 'Non payé',
 };
 
@@ -285,15 +285,15 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
       <View style={calStyles.legend}>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.purple }]} />
-          <Text style={calStyles.legendText}>En cours</Text>
+          <Text style={calStyles.legendText}>Active</Text>
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.warning }]} />
-          <Text style={calStyles.legendText}>Confirmee</Text>
+          <Text style={calStyles.legendText}>Attente</Text>
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.success }]} />
-          <Text style={calStyles.legendText}>Confirmée</Text>
+          <Text style={calStyles.legendText}>Confirmee</Text>
         </View>
       </View>
 

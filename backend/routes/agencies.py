@@ -242,15 +242,25 @@ async def create_quick_client(data: QuickClientCreate, user: dict = Depends(get_
             existing['_id'] = str(existing['_id'])
             return {"message": "Client existant trouvé", "client": existing, "is_new": False}
 
-    # Auto-generate password
-    chars = string.ascii_letters + string.digits
-    plain_password = ''.join(random.choices(chars, k=8))
+    # Use admin-provided password or auto-generate
+    if data.password and data.password.strip():
+        plain_password = data.password.strip()
+    else:
+        chars = string.ascii_letters + string.digits
+        plain_password = ''.join(random.choices(chars, k=8))
+
+    # Auto-split name into first_name / last_name
+    name_parts = data.name.strip().split(' ', 1)
+    first_name = name_parts[0] if len(name_parts) >= 1 else ''
+    last_name = name_parts[1] if len(name_parts) >= 2 else ''
 
     client = {
         "id": str(uuid.uuid4()),
         "email": data.email.lower() if data.email else f"tel_{data.phone or uuid.uuid4().hex[:8]}@logirent.local",
         "password_hash": hash_password(plain_password),
         "name": data.name,
+        "first_name": first_name,
+        "last_name": last_name,
         "phone": data.phone,
         "address": data.address,
         "id_photo": None, "id_photo_back": None,
@@ -279,6 +289,7 @@ async def create_quick_client(data: QuickClientCreate, user: dict = Depends(get_
                 client_name=data.name,
                 password=plain_password,
                 agency_name=agency_name,
+                agency_id=agency_id,
             )
             logger.info(f"Welcome email sent to {client['email']}")
         except Exception as e:

@@ -329,7 +329,7 @@ def generate_status_change_email(user_name: str, vehicle_name: str, status: str,
 </div></body></html>'''
 
 
-async def send_welcome_email(recipient: str, client_name: str, password: str, agency_name: str):
+async def send_welcome_email(recipient: str, client_name: str, password: str, agency_name: str, agency_id: str = None):
     """Send welcome email with credentials and QR code for mobile app"""
     import qrcode
     import io
@@ -406,7 +406,7 @@ async def send_welcome_email(recipient: str, client_name: str, password: str, ag
   </div>
 </div></body></html>'''
 
-    return await send_email(recipient, subject, html)
+    return await send_email(recipient, subject, html, agency_id=agency_id)
 
 
 
