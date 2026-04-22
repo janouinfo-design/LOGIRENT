@@ -53,6 +53,36 @@ export default function CompleteContract() {
   const [signing, setSigning] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
+
+  const handleDocUpload = (docType: string, useCamera: boolean = false) => {
+    if (Platform.OS !== 'web') return;
+    const userId = contract?.contract_data?.user_id;
+    if (!userId) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = useCamera ? 'image/*' : 'image/jpeg,image/png,image/webp';
+    if (useCamera) input.setAttribute('capture', 'environment');
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploadingDoc(docType);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUri = ev.target?.result as string;
+        setDocPreviews(p => ({ ...p, [docType]: dataUri }));
+        try {
+          await api.post(`/api/admin/client/${userId}/document`, { image_data: dataUri, doc_type: docType });
+        } catch (err: any) {
+          window.alert(err?.response?.data?.detail || "Echec de l'upload");
+          setDocPreviews(p => { const n = { ...p }; delete n[docType]; return n; });
+        } finally { setUploadingDoc(null); }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
 
   const fetchContract = useCallback(async () => {
     try {
@@ -261,6 +291,71 @@ export default function CompleteContract() {
             })}
           </View>
         ))}
+
+        {/* Documents section */}
+        <View style={[st.sectionCard, { backgroundColor: C.card, borderColor: C.border }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <Ionicons name="document-attach" size={18} color={C.accent} />
+            <Text style={[st.sectionTitle, { color: C.text, marginBottom: 0 }]}>Documents (Photos)</Text>
+          </View>
+
+          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PIECE D'IDENTITE</Text>
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+            {[{ key: 'id', label: 'Recto' }, { key: 'id_back', label: 'Verso' }].map(doc => (
+              <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                {docPreviews[doc.key] ? (
+                  <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 90, borderRadius: 8 }} resizeMode="cover" />
+                ) : (
+                  <View style={{ width: '100%', height: 90, borderRadius: 8, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: C.border, borderStyle: 'dashed' }}>
+                    <Ionicons name="card-outline" size={26} color={C.textLight} />
+                  </View>
+                )}
+                {uploadingDoc === doc.key ? <ActivityIndicator size="small" color={C.accent} style={{ marginTop: 6 }} /> : (
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                    <TouchableOpacity style={{ backgroundColor: C.accent, borderRadius: 6, paddingVertical: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocUpload(doc.key, true)}>
+                      <Ionicons name="camera" size={14} color="#FFF" />
+                      <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '600' }}>Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ backgroundColor: C.accent + '15', borderRadius: 6, paddingVertical: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocUpload(doc.key, false)}>
+                      <Ionicons name="folder-open" size={14} color={C.accent} />
+                      <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Fichier</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+
+          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PERMIS DE CONDUIRE</Text>
+          <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+            {[{ key: 'license', label: 'Recto' }, { key: 'license_back', label: 'Verso' }].map(doc => (
+              <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                {docPreviews[doc.key] ? (
+                  <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 90, borderRadius: 8 }} resizeMode="cover" />
+                ) : (
+                  <View style={{ width: '100%', height: 90, borderRadius: 8, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: C.border, borderStyle: 'dashed' }}>
+                    <Ionicons name="id-card-outline" size={26} color={C.textLight} />
+                  </View>
+                )}
+                {uploadingDoc === doc.key ? <ActivityIndicator size="small" color={C.accent} style={{ marginTop: 6 }} /> : (
+                  <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                    <TouchableOpacity style={{ backgroundColor: C.accent, borderRadius: 6, paddingVertical: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocUpload(doc.key, true)}>
+                      <Ionicons name="camera" size={14} color="#FFF" />
+                      <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '600' }}>Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={{ backgroundColor: C.accent + '15', borderRadius: 6, paddingVertical: 5, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocUpload(doc.key, false)}>
+                      <Ionicons name="folder-open" size={14} color={C.accent} />
+                      <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Fichier</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+          <Text style={{ color: C.textLight, fontSize: 10 }}>Formats: JPG, PNG, WebP (max 10 MB)</Text>
+        </View>
 
         {/* Save button */}
         {hasChanges && (
