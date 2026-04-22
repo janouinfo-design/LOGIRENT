@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Dimensions } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Alert, Platform, Dimensions, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '../../src/api/axios';
@@ -124,6 +124,8 @@ export default function BookingFlow() {
   const [detLicenseIssue, setDetLicenseIssue] = useState('');
   const [detLicenseExpiry, setDetLicenseExpiry] = useState('');
   const [detAddress, setDetAddress] = useState('');
+  const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
+  const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
 
   // Calendar & Schedule
   const [calendarMonth, setCalendarMonth] = useState(new Date());
@@ -196,6 +198,32 @@ export default function BookingFlow() {
       setClientSubStep('ready');
     } catch (e: any) { showAlert('Erreur', e.response?.data?.detail || 'Erreur sauvegarde'); }
     finally { setSavingDetails(false); }
+  };
+
+  const handleDocUpload = (docType: string) => {
+    if (!selectedClient || Platform.OS !== 'web') return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/jpeg,image/png,image/webp';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > 10 * 1024 * 1024) { window.alert('Fichier trop volumineux (max 10 MB)'); return; }
+      setUploadingDoc(docType);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUri = ev.target?.result as string;
+        setDocPreviews(p => ({ ...p, [docType]: dataUri }));
+        try {
+          await api.post(`/api/admin/client/${selectedClient.id}/document`, { image_data: dataUri, doc_type: docType });
+        } catch (err: any) {
+          window.alert(err?.response?.data?.detail || "Echec de l'upload");
+          setDocPreviews(p => { const n = { ...p }; delete n[docType]; return n; });
+        } finally { setUploadingDoc(null); }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
   };
 
   // Fetch schedule when dates change
@@ -372,22 +400,95 @@ export default function BookingFlow() {
                 </View>
               </View>
 
-              <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>Etape 2 : Completer la fiche client</Text>
-              <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 10 }}>Identite et permis de conduire</Text>
+              {/* Section: Identite & Permis */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border }}>
+                <Ionicons name="id-card" size={16} color={C.accent} />
+                <Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Identite & Permis</Text>
+              </View>
 
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Lieu de naissance" placeholderTextColor={C.textLight} value={detBirthPlace} onChangeText={setDetBirthPlace} />
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Date naissance (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detBirthDate} onChangeText={setDetBirthDate} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>LIEU DE NAISSANCE *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Geneve" placeholderTextColor={C.textLight} value={detBirthPlace} onChangeText={setDetBirthPlace} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>DATE DE NAISSANCE *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={detBirthDate} onChangeText={setDetBirthDate} />
+                </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nationalite" placeholderTextColor={C.textLight} value={detNationality} onChangeText={setDetNationality} />
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Adresse" placeholderTextColor={C.textLight} value={detAddress} onChangeText={setDetAddress} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>NATIONALITE *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Suisse" placeholderTextColor={C.textLight} value={detNationality} onChangeText={setDetNationality} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>NUMERO DE PERMIS *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="GE-123456" placeholderTextColor={C.textLight} value={detLicenseNum} onChangeText={setDetLicenseNum} />
+                </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="N. de permis" placeholderTextColor={C.textLight} value={detLicenseNum} onChangeText={setDetLicenseNum} />
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Date emission (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detLicenseIssue} onChangeText={setDetLicenseIssue} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>DATE D'EMISSION *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={detLicenseIssue} onChangeText={setDetLicenseIssue} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>DATE D'EXPIRATION *</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={detLicenseExpiry} onChangeText={setDetLicenseExpiry} />
+                </View>
               </View>
-              <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Date expiration permis (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detLicenseExpiry} onChangeText={setDetLicenseExpiry} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>ADRESSE</Text>
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Rue de l'Exemple 10, Lausanne" placeholderTextColor={C.textLight} value={detAddress} onChangeText={setDetAddress} />
+              </View>
+
+              {/* Section: Documents (Photos) */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border }}>
+                <Ionicons name="document-attach" size={16} color={C.accent} />
+                <Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Documents (Photos)</Text>
+              </View>
+
+              <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PIECE D'IDENTITE</Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                {[{ key: 'id', label: 'Recto' }, { key: 'id_back', label: 'Verso' }].map(doc => (
+                  <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    {docPreviews[doc.key] ? (
+                      <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="card-outline" size={22} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: docPreviews[doc.key] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => handleDocUpload(doc.key)}>
+                      {uploadingDoc === doc.key ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: docPreviews[doc.key] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{docPreviews[doc.key] ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+
+              <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PERMIS DE CONDUIRE</Text>
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                {[{ key: 'license', label: 'Recto' }, { key: 'license_back', label: 'Verso' }].map(doc => (
+                  <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    {docPreviews[doc.key] ? (
+                      <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
+                    ) : (
+                      <View style={{ width: '100%', height: 80, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' }}>
+                        <Ionicons name="id-card-outline" size={22} color="#9CA3AF" />
+                      </View>
+                    )}
+                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: docPreviews[doc.key] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => handleDocUpload(doc.key)}>
+                      {uploadingDoc === doc.key ? <ActivityIndicator size="small" color="#7C3AED" /> : (
+                        <Text style={{ color: docPreviews[doc.key] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{docPreviews[doc.key] ? 'Modifier' : 'Ajouter'}</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 8 }}>Formats acceptes: JPG, PNG, WebP (max 10 MB). Verification IA automatique.</Text>
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                 <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.border, flex: 1 }]} onPress={() => setClientSubStep('ready')}>
