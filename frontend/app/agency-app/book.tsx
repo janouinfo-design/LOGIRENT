@@ -109,8 +109,10 @@ export default function BookingFlow() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showNewClient, setShowNewClient] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newFirstName, setNewFirstName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [creatingClient, setCreatingClient] = useState(false);
 
   // Calendar & Schedule
@@ -148,7 +150,16 @@ export default function BookingFlow() {
     if (!newName) { showAlert('Erreur', 'Le nom est obligatoire'); return; }
     setCreatingClient(true);
     try {
-      const r = await api.post('/api/admin/quick-client', { name: newName, phone: newPhone || null, email: newEmail || null });
+      const fullName = [newFirstName.trim(), newName.trim()].filter(Boolean).join(' ');
+      const r = await api.post('/api/admin/quick-client', {
+        name: fullName,
+        phone: newPhone || null,
+        email: newEmail || null,
+        password: newPassword || null,
+      });
+      if (r.data.is_new && newEmail) {
+        showAlert('Succes', `Client cree! Email de bienvenue envoye a ${newEmail}`);
+      }
       setSelectedClient(r.data.client); setShowNewClient(false); setStep('calendar');
     } catch (e: any) { showAlert('Erreur', e.response?.data?.detail || 'Erreur'); }
     finally { setCreatingClient(false); }
@@ -301,11 +312,18 @@ export default function BookingFlow() {
               </TouchableOpacity>
               {showNewClient && (
                 <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} />
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Téléphone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} />
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Email" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" />
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="book-new-name" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Prenom" placeholderTextColor={C.textLight} value={newFirstName} onChangeText={setNewFirstName} data-testid="book-new-firstname" />
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Email" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" keyboardType="email-address" data-testid="book-new-email" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Mot de passe" placeholderTextColor={C.textLight} value={newPassword} onChangeText={setNewPassword} secureTextEntry data-testid="book-new-password" />
+                  </View>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Telephone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="book-new-phone" />
+                  <Text style={{ color: C.textLight, fontSize: 11, marginTop: -4, marginBottom: 4 }}>Le client recevra un email avec ses identifiants de connexion</Text>
                   <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={createClient} disabled={creatingClient}>
-                    <Text style={s.btnText}>{creatingClient ? 'Création...' : 'Créer et continuer'}</Text>
+                    <Text style={s.btnText}>{creatingClient ? 'Creation...' : 'Creer et continuer'}</Text>
                   </TouchableOpacity>
                 </View>
               )}
