@@ -226,6 +226,32 @@ export default function BookingFlow() {
     input.click();
   };
 
+  const handleDocCamera = (docType: string) => {
+    if (!selectedClient || Platform.OS !== 'web') return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.setAttribute('capture', 'environment');
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploadingDoc(docType);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUri = ev.target?.result as string;
+        setDocPreviews(p => ({ ...p, [docType]: dataUri }));
+        try {
+          await api.post(`/api/admin/client/${selectedClient.id}/document`, { image_data: dataUri, doc_type: docType });
+        } catch (err: any) {
+          window.alert(err?.response?.data?.detail || "Echec de l'upload");
+          setDocPreviews(p => { const n = { ...p }; delete n[docType]; return n; });
+        } finally { setUploadingDoc(null); }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
   // Fetch schedule when dates change
   const fetchSchedule = useCallback(async () => {
     if (!startDate || !endDate) return;
@@ -459,11 +485,18 @@ export default function BookingFlow() {
                         <Ionicons name="card-outline" size={22} color="#9CA3AF" />
                       </View>
                     )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: docPreviews[doc.key] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => handleDocUpload(doc.key)}>
-                      {uploadingDoc === doc.key ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: docPreviews[doc.key] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{docPreviews[doc.key] ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
+                    {uploadingDoc === doc.key ? <ActivityIndicator size="small" color="#7C3AED" style={{ marginTop: 6 }} /> : (
+                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocCamera(doc.key)}>
+                          <Ionicons name="camera" size={12} color="#FFF" />
+                          <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '600' }}>Photo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{ backgroundColor: '#EDE9FE', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocUpload(doc.key)}>
+                          <Ionicons name="folder-open" size={12} color="#7C3AED" />
+                          <Text style={{ color: '#7C3AED', fontSize: 10, fontWeight: '600' }}>Fichier</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
@@ -480,11 +513,18 @@ export default function BookingFlow() {
                         <Ionicons name="id-card-outline" size={22} color="#9CA3AF" />
                       </View>
                     )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: docPreviews[doc.key] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => handleDocUpload(doc.key)}>
-                      {uploadingDoc === doc.key ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: docPreviews[doc.key] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{docPreviews[doc.key] ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
+                    {uploadingDoc === doc.key ? <ActivityIndicator size="small" color="#7C3AED" style={{ marginTop: 6 }} /> : (
+                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocCamera(doc.key)}>
+                          <Ionicons name="camera" size={12} color="#FFF" />
+                          <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '600' }}>Photo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{ backgroundColor: '#EDE9FE', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => handleDocUpload(doc.key)}>
+                          <Ionicons name="folder-open" size={12} color="#7C3AED" />
+                          <Text style={{ color: '#7C3AED', fontSize: 10, fontWeight: '600' }}>Fichier</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
