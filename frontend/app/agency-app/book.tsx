@@ -318,121 +318,107 @@ export default function BookingFlow() {
       {/* ─── STEP 1: Client ─── */}
       {step === 'client' && (
         <View>
-          <Text style={[s.title, { color: C.text }]}>Sélectionner un client</Text>
-          {selectedClient ? (
-            <View style={[s.selectedBox, { backgroundColor: C.accent + '12', borderColor: C.accent + '30' }]}>
-              <Ionicons name="person-circle" size={32} color={C.accent} />
-              <View style={{ flex: 1 }}><Text style={[s.selName, { color: C.text }]}>{selectedClient.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{selectedClient.email}</Text></View>
-              <TouchableOpacity onPress={() => setSelectedClient(null)}><Ionicons name="close-circle" size={22} color={C.error} /></TouchableOpacity>
-            </View>
-          ) : (
+          <Text style={[s.title, { color: C.text }]}>Selectionner un client</Text>
+
+          {/* Sub-step: Search or Create */}
+          {clientSubStep === 'search' && !selectedClient && (
             <>
-              {/* Sub-step: Search or Create */}
-              {clientSubStep === 'search' && (
-                <>
-                  <View style={[s.searchRow, { backgroundColor: C.card, borderColor: C.border }]}>
-                    <Ionicons name="search" size={18} color={C.textLight} />
-                    <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher nom, email, tel..." placeholderTextColor={C.textLight} value={searchQuery} onChangeText={setSearchQuery} />
-                    {searching && <ActivityIndicator size="small" color={C.accent} />}
-                  </View>
-                  {searchResults.map(c => (
-                    <TouchableOpacity key={c.id} style={[s.clientCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { setSelectedClient(c); setClientSubStep('ready'); }}>
-                      <Ionicons name="person-circle" size={30} color={C.accent} />
-                      <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '600', fontSize: 14 }}>{c.display_name || c.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{c.email}</Text></View>
-                      <Ionicons name="chevron-forward" size={18} color={C.textLight} />
-                    </TouchableOpacity>
-                  ))}
-                  <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }} onPress={() => setShowNewClient(!showNewClient)}>
-                    <Ionicons name={showNewClient ? 'chevron-up' : 'person-add'} size={18} color={C.accent} />
-                    <Text style={{ color: C.accent, fontWeight: '600' }}>{showNewClient ? 'Masquer' : 'Nouveau client'}</Text>
-                  </TouchableOpacity>
-                  {showNewClient && (
-                    <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
-                      <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>Etape 1 : Informations de base</Text>
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="book-new-name" />
-                        <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Prenom" placeholderTextColor={C.textLight} value={newFirstName} onChangeText={setNewFirstName} data-testid="book-new-firstname" />
-                      </View>
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Email *" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" keyboardType="email-address" data-testid="book-new-email" />
-                        <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Telephone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="book-new-phone" />
-                      </View>
-                      <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8 }}>Un email de bienvenue avec les identifiants sera envoye automatiquement</Text>
-                      <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={createClient} disabled={creatingClient}>
-                        <Text style={s.btnText}>{creatingClient ? 'Creation...' : 'Creer et continuer'}</Text>
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </>
-              )}
-
-              {/* Sub-step: Complete client details */}
-              {clientSubStep === 'details' && selectedClient && (
+              <View style={[s.searchRow, { backgroundColor: C.card, borderColor: C.border }]}>
+                <Ionicons name="search" size={18} color={C.textLight} />
+                <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher nom, email, tel..." placeholderTextColor={C.textLight} value={searchQuery} onChangeText={setSearchQuery} />
+                {searching && <ActivityIndicator size="small" color={C.accent} />}
+              </View>
+              {searchResults.map(c => (
+                <TouchableOpacity key={c.id} style={[s.clientCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => { setSelectedClient(c); setClientSubStep('ready'); }}>
+                  <Ionicons name="person-circle" size={30} color={C.accent} />
+                  <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '600', fontSize: 14 }}>{c.display_name || c.name}</Text><Text style={{ color: C.textLight, fontSize: 12 }}>{c.email}</Text></View>
+                  <Ionicons name="chevron-forward" size={18} color={C.textLight} />
+                </TouchableOpacity>
+              ))}
+              <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }} onPress={() => setShowNewClient(!showNewClient)}>
+                <Ionicons name={showNewClient ? 'chevron-up' : 'person-add'} size={18} color={C.accent} />
+                <Text style={{ color: C.accent, fontWeight: '600' }}>{showNewClient ? 'Masquer' : 'Nouveau client'}</Text>
+              </TouchableOpacity>
+              {showNewClient && (
                 <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center' }}>
-                      <Ionicons name="checkmark" size={18} color="#fff" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 14 }}>Client cree - Email de bienvenue envoye</Text>
-                      <Text style={{ color: C.textLight, fontSize: 12 }}>{selectedClient.name} ({newEmail})</Text>
-                    </View>
-                  </View>
-
-                  <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>Etape 2 : Completer la fiche client</Text>
-                  <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 10 }}>Identite et permis de conduire</Text>
-
+                  <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>Etape 1 : Informations de base</Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Lieu de naissance" placeholderTextColor={C.textLight} value={detBirthPlace} onChangeText={setDetBirthPlace} data-testid="book-det-birthplace" />
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Date de naissance (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detBirthDate} onChangeText={setDetBirthDate} data-testid="book-det-birthdate" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="book-new-name" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Prenom" placeholderTextColor={C.textLight} value={newFirstName} onChangeText={setNewFirstName} data-testid="book-new-firstname" />
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nationalite" placeholderTextColor={C.textLight} value={detNationality} onChangeText={setDetNationality} data-testid="book-det-nationality" />
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Adresse" placeholderTextColor={C.textLight} value={detAddress} onChangeText={setDetAddress} data-testid="book-det-address" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Email *" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" keyboardType="email-address" data-testid="book-new-email" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Telephone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="book-new-phone" />
                   </View>
-                  <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="N. de permis" placeholderTextColor={C.textLight} value={detLicenseNum} onChangeText={setDetLicenseNum} data-testid="book-det-license" />
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Date emission (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detLicenseIssue} onChangeText={setDetLicenseIssue} data-testid="book-det-license-issue" />
-                  </View>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Date expiration permis (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detLicenseExpiry} onChangeText={setDetLicenseExpiry} data-testid="book-det-license-expiry" />
-
-                  <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
-                    <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.border, flex: 1 }]} onPress={() => setClientSubStep('ready')}>
-                      <Text style={[s.btnText, { color: C.text }]}>Passer</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, flex: 1 }]} onPress={saveClientDetails} disabled={savingDetails}>
-                      <Text style={s.btnText}>{savingDetails ? 'Sauvegarde...' : 'Valider et continuer'}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-
-              {/* Sub-step: Client ready - proceed to calendar */}
-              {clientSubStep === 'ready' && selectedClient && (
-                <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.accent + '15', justifyContent: 'center', alignItems: 'center' }}>
-                      <Ionicons name="person" size={22} color={C.accent} />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.text, fontWeight: '700', fontSize: 16 }}>{selectedClient.name}</Text>
-                      <Text style={{ color: C.textLight, fontSize: 13 }}>{selectedClient.email}</Text>
-                    </View>
-                    <TouchableOpacity onPress={() => { setSelectedClient(null); setClientSubStep('search'); setShowNewClient(false); }}>
-                      <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>Changer</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 12 }]} onPress={() => setStep('calendar')}>
-                    <Text style={s.btnText}>Suivant : Choisir les dates</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8 }}>Un email de bienvenue avec les identifiants sera envoye automatiquement</Text>
+                  <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={createClient} disabled={creatingClient}>
+                    <Text style={s.btnText}>{creatingClient ? 'Creation...' : 'Creer et continuer'}</Text>
                   </TouchableOpacity>
                 </View>
               )}
             </>
           )}
-          {selectedClient && clientSubStep !== 'ready' && clientSubStep !== 'details' && (
-            <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('calendar')}>
-              <Text style={s.btnText}>Suivant</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
-            </TouchableOpacity>
+
+          {/* Sub-step: Complete client details */}
+          {clientSubStep === 'details' && selectedClient && (
+            <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <View style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="checkmark" size={18} color="#fff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 14 }}>Client cree - Email de bienvenue envoye</Text>
+                  <Text style={{ color: C.textLight, fontSize: 12 }}>{selectedClient.name} ({newEmail})</Text>
+                </View>
+              </View>
+
+              <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>Etape 2 : Completer la fiche client</Text>
+              <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 10 }}>Identite et permis de conduire</Text>
+
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Lieu de naissance" placeholderTextColor={C.textLight} value={detBirthPlace} onChangeText={setDetBirthPlace} />
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Date naissance (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detBirthDate} onChangeText={setDetBirthDate} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nationalite" placeholderTextColor={C.textLight} value={detNationality} onChangeText={setDetNationality} />
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Adresse" placeholderTextColor={C.textLight} value={detAddress} onChangeText={setDetAddress} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="N. de permis" placeholderTextColor={C.textLight} value={detLicenseNum} onChangeText={setDetLicenseNum} />
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Date emission (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detLicenseIssue} onChangeText={setDetLicenseIssue} />
+              </View>
+              <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Date expiration permis (JJ-MM-AAAA)" placeholderTextColor={C.textLight} value={detLicenseExpiry} onChangeText={setDetLicenseExpiry} />
+
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.border, flex: 1 }]} onPress={() => setClientSubStep('ready')}>
+                  <Text style={[s.btnText, { color: C.text }]}>Passer</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, flex: 1 }]} onPress={saveClientDetails} disabled={savingDetails}>
+                  <Text style={s.btnText}>{savingDetails ? 'Sauvegarde...' : 'Valider et continuer'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {/* Sub-step: Client ready - proceed */}
+          {clientSubStep === 'ready' && selectedClient && (
+            <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: C.accent + '15', justifyContent: 'center', alignItems: 'center' }}>
+                  <Ionicons name="person" size={22} color={C.accent} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ color: C.text, fontWeight: '700', fontSize: 16 }}>{selectedClient.name}</Text>
+                  <Text style={{ color: C.textLight, fontSize: 13 }}>{selectedClient.email}</Text>
+                </View>
+                <TouchableOpacity onPress={() => { setSelectedClient(null); setClientSubStep('search'); setShowNewClient(false); }}>
+                  <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>Changer</Text>
+                </TouchableOpacity>
+              </View>
+              <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 12 }]} onPress={() => setStep('calendar')}>
+                <Text style={s.btnText}>Suivant : Choisir les dates</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+              </TouchableOpacity>
+            </View>
           )}
         </View>
       )}
