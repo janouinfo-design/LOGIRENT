@@ -450,26 +450,6 @@ export default function ProfileScreen() {
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Text style={{ color: C.accent, fontSize: 15, fontWeight: '800' }}>CHF {r.total_price?.toFixed(2)}</Text>
-                    {r.contract_id && (
-                      <View style={{ flexDirection: 'row', gap: 8 }}>
-                        <TouchableOpacity
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.accent + '15', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
-                          onPress={() => viewContract(r.contract_id)}
-                          data-testid={`view-contract-${r.id}`}
-                        >
-                          <Ionicons name="eye-outline" size={14} color={C.accent} />
-                          <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Voir contrat</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#10B98115', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
-                          onPress={() => downloadContractPdf(r.contract_id)}
-                          data-testid={`download-pdf-${r.id}`}
-                        >
-                          <Ionicons name="download-outline" size={14} color="#10B981" />
-                          <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '600' }}>PDF</Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
                   </View>
                 </View>
               );

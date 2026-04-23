@@ -67,19 +67,6 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
   const canCancel = ['pending', 'confirmed'].includes(item.status) && item.payment_status !== 'paid';
   const statusColor = getStatusColor(item.status);
   const paymentColor = getPaymentColor(item.payment_status);
-  const router = useRouter();
-  const [contractId, setContractId] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    const checkContract = async () => {
-      try {
-        const api = (await import('../../src/api/axios')).default;
-        const resp = await api.get(`/api/contracts/by-reservation/${item.id}`);
-        if (resp.data) setContractId(resp.data.id);
-      } catch {}
-    };
-    checkContract();
-  }, [item.id]);
 
   return (
     <View style={[styles.card, { backgroundColor: _C.card, borderColor: _C.border }]} data-testid={`reservation-${item.id}`}>
@@ -92,7 +79,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
           </View>
         )}
         <View style={styles.cardHeaderInfo}>
-          <Text style={[styles.vehicleName, { color: _C.text }]}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Véhicule'}</Text>
+          <Text style={[styles.vehicleName, { color: _C.text }]}>{vehicle ? `${vehicle.brand} ${vehicle.model}` : 'Vehicule'}</Text>
           <Text style={styles.vehicleYear}>{vehicle?.year}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: statusColor + '18' }]}>
@@ -103,7 +90,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
 
       <View style={styles.datesRow}>
         <View style={styles.dateBox}>
-          <Text style={styles.dateLabel}>Début</Text>
+          <Text style={styles.dateLabel}>Debut</Text>
           <Text style={styles.dateValue}>{format(new Date(item.start_date), 'd MMM yyyy', { locale: fr })}</Text>
           <Text style={styles.dateTime}>{format(new Date(item.start_date), 'HH:mm')}</Text>
         </View>
@@ -129,16 +116,6 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
         </View>
       </View>
 
-      {contractId && (
-        <TouchableOpacity
-          style={[styles.cancelBtn, { borderColor: _C.purple + '30' }]}
-          onPress={() => router.push(`/contract/${contractId}` as any)}
-          data-testid={`contract-link-${item.id}`}
-        >
-          <Ionicons name="document-text-outline" size={16} color={_C.purple} />
-          <Text style={[styles.cancelText, { color: _C.purple }]}>Voir le contrat</Text>
-        </TouchableOpacity>
-      )}
       {canCancel && (
         <TouchableOpacity style={styles.cancelBtn} onPress={() => onCancel(item.id)} data-testid={`cancel-${item.id}`}>
           <Ionicons name="close-circle-outline" size={16} color={_C.error} />
