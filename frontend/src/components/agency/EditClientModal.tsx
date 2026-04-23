@@ -57,6 +57,10 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   const idBackRef = useRef<HTMLInputElement | null>(null);
   const licenseFrontRef = useRef<HTMLInputElement | null>(null);
   const licenseBackRef = useRef<HTMLInputElement | null>(null);
+  const idFrontCamRef = useRef<HTMLInputElement | null>(null);
+  const idBackCamRef = useRef<HTMLInputElement | null>(null);
+  const licenseFrontCamRef = useRef<HTMLInputElement | null>(null);
+  const licenseBackCamRef = useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
     if (visible && client) {
@@ -303,14 +307,18 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   <input ref={(el: any) => { idBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id_back')} />
                   <input ref={(el: any) => { licenseFrontRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license')} />
                   <input ref={(el: any) => { licenseBackRef.current = el; }} type="file" accept="image/jpeg,image/png,image/webp" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license_back')} />
+                  <input ref={(el: any) => { idFrontCamRef.current = el; }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id')} />
+                  <input ref={(el: any) => { idBackCamRef.current = el; }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'id_back')} />
+                  <input ref={(el: any) => { licenseFrontCamRef.current = el; }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license')} />
+                  <input ref={(el: any) => { licenseBackCamRef.current = el; }} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e: any) => handleDocUpload(e, 'license_back')} />
                 </>
               )}
 
               <Text style={[st.upperLabel, { color: C.textLight }]}>PIECE D'IDENTITE</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                 {[
-                  { label: 'Recto', field: 'id_photo', ref: idFrontRef, type: 'id' as const, testid: 'admin-upload-id-front' },
-                  { label: 'Verso', field: 'id_photo_back', ref: idBackRef, type: 'id_back' as const, testid: 'admin-upload-id-back' },
+                  { label: 'Recto', field: 'id_photo', ref: idFrontRef, camRef: idFrontCamRef, type: 'id' as const },
+                  { label: 'Verso', field: 'id_photo_back', ref: idBackRef, camRef: idBackCamRef, type: 'id_back' as const },
                 ].map(doc => (
                   <View key={doc.field} style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
@@ -326,11 +334,18 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                         <Ionicons name="card-outline" size={22} color="#9CA3AF" />
                       </View>
                     )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: (fullClient as any)?.[doc.field] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => doc.ref.current?.click()} data-testid={doc.testid}>
-                      {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: (fullClient as any)?.[doc.field] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{(fullClient as any)?.[doc.field] ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
+                    {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" style={{ marginTop: 6 }} /> : (
+                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => doc.camRef.current?.click()}>
+                          <Ionicons name="camera" size={12} color="#FFF" />
+                          <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '600' }}>Photo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{ backgroundColor: '#EDE9FE', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => doc.ref.current?.click()}>
+                          <Ionicons name="folder-open" size={12} color="#7C3AED" />
+                          <Text style={{ color: '#7C3AED', fontSize: 10, fontWeight: '600' }}>Fichier</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
@@ -338,8 +353,8 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               <Text style={[st.upperLabel, { color: C.textLight }]}>PERMIS DE CONDUIRE</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
                 {[
-                  { label: 'Recto', field: 'license_photo', ref: licenseFrontRef, type: 'license' as const, testid: 'admin-upload-license-front' },
-                  { label: 'Verso', field: 'license_photo_back', ref: licenseBackRef, type: 'license_back' as const, testid: 'admin-upload-license-back' },
+                  { label: 'Recto', field: 'license_photo', ref: licenseFrontRef, camRef: licenseFrontCamRef, type: 'license' as const },
+                  { label: 'Verso', field: 'license_photo_back', ref: licenseBackRef, camRef: licenseBackCamRef, type: 'license_back' as const },
                 ].map(doc => (
                   <View key={doc.field} style={{ flex: 1, alignItems: 'center' }}>
                     <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
@@ -355,11 +370,18 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                         <Ionicons name="id-card-outline" size={22} color="#9CA3AF" />
                       </View>
                     )}
-                    <TouchableOpacity style={{ marginTop: 6, backgroundColor: (fullClient as any)?.[doc.field] ? '#EDE9FE' : '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10 }} onPress={() => doc.ref.current?.click()} data-testid={doc.testid}>
-                      {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                        <Text style={{ color: (fullClient as any)?.[doc.field] ? '#7C3AED' : '#FFF', fontSize: 11, fontWeight: '600' }}>{(fullClient as any)?.[doc.field] ? 'Modifier' : 'Ajouter'}</Text>
-                      )}
-                    </TouchableOpacity>
+                    {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" style={{ marginTop: 6 }} /> : (
+                      <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => doc.camRef.current?.click()}>
+                          <Ionicons name="camera" size={12} color="#FFF" />
+                          <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '600' }}>Photo</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={{ backgroundColor: '#EDE9FE', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => doc.ref.current?.click()}>
+                          <Ionicons name="folder-open" size={12} color="#7C3AED" />
+                          <Text style={{ color: '#7C3AED', fontSize: 10, fontWeight: '600' }}>Fichier</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
