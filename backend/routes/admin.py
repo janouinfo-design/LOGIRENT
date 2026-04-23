@@ -453,6 +453,87 @@ async def admin_upload_client_document(client_id: str, body: AdminDocUpload, use
     return {"message": "Document uploadé", "verification": verification}
 
 
+@router.post("/admin/vehicle-inspection/ai-zone")
+async def ai_inspect_zone(request: Request, user: dict = Depends(get_admin_user)):
+    """AI analyzes a single zone photo for damages"""
+    body = await request.json()
+    image_data = body.get('image_data', '')
+    zone_name = body.get('zone_name', 'zone')
+    if not image_data:
+        raise HTTPException(status_code=400, detail="Image requise")
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not api_key:
+            return {"damages": [], "description": "IA non configuree", "severity": "unknown"}
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"inspect-zone-{uuid.uuid4().hex[:8]}",
+            system_message="Tu es un expert en inspection de vehicules. Tu analyses des photos de zones de vehicules pour detecter les dommages. Reponds UNIQUEMENT en JSON valide."
+        ).with_model("openai", "gpt-5.2")
+        prompt = f"""Analyse cette photo de la zone "{zone_name}" d'un vehicule de location.
+Detecte tous les dommages visibles (rayures, bosses, eclats, fissures, usure, etc.).
+Reponds UNIQUEMENT en JSON:
+{{
+  "has_damage": true/false,
+  "description": "description courte en francais des dommages detectes",
+  "damages": ["rayure 5cm", "bosse legere"],
+  "severity": "none" | "light" | "medium" | "severe",
+  "confidence": 0-100
+}}"""
+        user_msg = UserMessage(text=prompt, image_url=image_data)
+        response = await chat.send_message(user_msg)
+        result = json.loads(response.text.strip().replace("```json", "").replace("```", ""))
+        return result
+    except json.JSONDecodeError:
+        return {"has_damage": False, "description": "Analyse non concluante", "severity": "unknown", "confidence": 0}
+    except Exception as e:
+        logger.error(f"AI zone inspection error: {e}")
+        return {"has_damage": False, "description": f"Erreur IA: {str(e)[:100]}", "severity": "unknown", "confidence": 0}
+
+
+@router.post("/admin/vehicle-inspection/ai-global")
+async def ai_inspect_global(request: Request, user: dict = Depends(get_admin_user)):
+    """AI analyzes a global vehicle photo to detect all damaged zones"""
+    body = await request.json()
+    image_data = body.get('image_data', '')
+    if not image_data:
+        raise HTTPException(status_code=400, detail="Image requise")
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not api_key:
+            return {"zones": [], "summary": "IA non configuree"}
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"inspect-global-{uuid.uuid4().hex[:8]}",
+            system_message="Tu es un expert en inspection de vehicules. Tu analyses des photos de vehicules pour detecter les dommages sur chaque zone. Reponds UNIQUEMENT en JSON valide."
+        ).with_model("openai", "gpt-5.2")
+        zones_list = "pare_chocs_avant, ailiere_gauche_avant, toit, ailiere_droit_avant, porte_avant_gauche, porte_avant_droite, porte_arriere_gauche, coffre, porte_arriere_droite, ailiere_gauche_arriere, pare_chocs_arriere, ailier_droit_arriere"
+        prompt = f"""Analyse cette photo globale d'un vehicule de location.
+Identifie TOUTES les zones endommagees parmi: {zones_list}
+Pour chaque zone avec dommage, decris le dommage et sa severite.
+Reponds UNIQUEMENT en JSON:
+{{
+  "zones": [
+    {{"zone_key": "pare_chocs_avant", "description": "Rayure profonde 15cm", "severity": "medium"}},
+  ],
+  "summary": "Resume global en francais",
+  "overall_condition": "excellent" | "good" | "fair" | "poor",
+  "confidence": 0-100
+}}
+Si aucun dommage: {{"zones": [], "summary": "Aucun dommage detecte", "overall_condition": "excellent", "confidence": 85}}"""
+        user_msg = UserMessage(text=prompt, image_url=image_data)
+        response = await chat.send_message(user_msg)
+        result = json.loads(response.text.strip().replace("```json", "").replace("```", ""))
+        return result
+    except json.JSONDecodeError:
+        return {"zones": [], "summary": "Analyse non concluante", "overall_condition": "unknown", "confidence": 0}
+    except Exception as e:
+        logger.error(f"AI global inspection error: {e}")
+        return {"zones": [], "summary": f"Erreur IA: {str(e)[:100]}", "overall_condition": "unknown", "confidence": 0}
+
+
 @router.put("/admin/users/{user_id}/rating")
 async def update_user_rating(user_id: str, rating: str, user: dict = Depends(get_admin_user)):
     valid_ratings = ["good", "bad", "neutral", "vip", "blocked"]

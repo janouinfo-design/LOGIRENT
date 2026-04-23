@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import api from '../../src/api/axios';
 
 const ZONES = [
   { key: 'pare_chocs_avant', label: 'Pare-chocs avant', icon: 'car-outline' },
@@ -49,6 +50,9 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
   const [noteText, setNoteText] = useState('');
   const [zonePhotos, setZonePhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiGlobalAnalyzing, setAiGlobalAnalyzing] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
 
   const openZone = (zone: { key: string; label: string }) => {
     if (!editable) return;
@@ -105,6 +109,61 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
     setZonePhotos(prev => prev.filter((_, i) => i !== idx));
   };
 
+  // AI: Analyze a single zone photo
+  const aiAnalyzeZone = async () => {
+    if (zonePhotos.length === 0 || !selectedZone) return;
+    setAiAnalyzing(true);
+    setAiResult(null);
+    try {
+      const res = await api.post('/api/admin/vehicle-inspection/ai-zone', {
+        image_data: zonePhotos[zonePhotos.length - 1],
+        zone_name: selectedZone.label,
+      });
+      const data = res.data;
+      if (data.has_damage && data.description) {
+        setNoteText(prev => prev ? `${prev}\n[IA] ${data.description}` : `[IA] ${data.description}`);
+        setAiResult(`${data.severity === 'severe' ? 'SEVERE' : data.severity === 'medium' ? 'MOYEN' : 'LEGER'} - ${data.description} (${data.confidence}% confiance)`);
+      } else {
+        setAiResult('Aucun dommage detecte par l\'IA');
+      }
+    } catch { setAiResult('Erreur analyse IA'); }
+    finally { setAiAnalyzing(false); }
+  };
+
+  // AI: Global scan from a full vehicle photo
+  const aiGlobalScan = () => {
+    if (Platform.OS !== 'web') return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = async (e: any) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setAiGlobalAnalyzing(true);
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const dataUri = ev.target?.result as string;
+        try {
+          const res = await api.post('/api/admin/vehicle-inspection/ai-global', { image_data: dataUri });
+          const data = res.data;
+          if (data.zones && data.zones.length > 0) {
+            data.zones.forEach((z: any) => {
+              const existingInfo = getDamageInfo(damages[z.zone_key]);
+              const newNote = existingInfo.note ? `${existingInfo.note}\n[IA] ${z.description}` : `[IA] ${z.description}`;
+              onUpdateDamage(z.zone_key, JSON.stringify({ note: newNote, photos: existingInfo.photos }));
+            });
+            Platform.OS === 'web' && window.alert(`IA: ${data.zones.length} zone(s) avec dommages detectees.\nEtat general: ${data.overall_condition}\n\n${data.summary}`);
+          } else {
+            Platform.OS === 'web' && window.alert(`IA: Aucun dommage detecte.\n${data.summary || 'Vehicule en bon etat.'}`);
+          }
+        } catch { Platform.OS === 'web' && window.alert('Erreur lors de l\'analyse IA globale'); }
+        finally { setAiGlobalAnalyzing(false); }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
   const hasDamageCheck = (key: string) => {
     const info = getDamageInfo(damages[key]);
     return (info.note && info.note.trim()) || (info.photos && info.photos.length > 0);
@@ -134,8 +193,21 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
       {/* Zone buttons grid */}
       {editable && (
         <View style={s.zoneGrid}>
-          <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8, textAlign: 'center' }}>
-            Touchez une zone pour signaler un dommage et ajouter des photos
+          {/* AI Global Scan Button */}
+          <TouchableOpacity
+            style={[s.aiGlobalBtn, { borderColor: '#7C3AED' }]}
+            onPress={aiGlobalScan}
+            disabled={aiGlobalAnalyzing}
+          >
+            {aiGlobalAnalyzing ? (
+              <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '700' }}>Analyse IA en cours...</Text></>
+            ) : (
+              <><Ionicons name="scan" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '700' }}>Scan IA global (photo vehicule)</Text></>
+            )}
+          </TouchableOpacity>
+
+          <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8, marginTop: 10, textAlign: 'center' }}>
+            Ou touchez une zone pour signaler manuellement
           </Text>
           <View style={s.gridWrap}>
             {ZONES.map(zone => {
@@ -253,6 +325,26 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
               </TouchableOpacity>
             </View>
 
+            {/* AI Zone Analysis */}
+            {zonePhotos.length > 0 && (
+              <TouchableOpacity
+                style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#F0FDF4', paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#10B98130', marginBottom: 8 }}
+                onPress={aiAnalyzeZone}
+                disabled={aiAnalyzing}
+              >
+                {aiAnalyzing ? (
+                  <><ActivityIndicator size="small" color="#10B981" /><Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>Analyse IA en cours...</Text></>
+                ) : (
+                  <><Ionicons name="sparkles" size={16} color="#10B981" /><Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>Analyser avec IA</Text></>
+                )}
+              </TouchableOpacity>
+            )}
+            {aiResult && (
+              <View style={{ backgroundColor: '#F0FDF4', padding: 8, borderRadius: 8, marginBottom: 8, borderWidth: 1, borderColor: '#10B98130' }}>
+                <Text style={{ color: '#065F46', fontSize: 11, fontWeight: '600' }}>Resultat IA : {aiResult}</Text>
+              </View>
+            )}
+
             <View style={s.modalActions}>
               {(getDamageInfo(damages[selectedZone?.key || '']).note || getDamageInfo(damages[selectedZone?.key || '']).photos?.length) ? (
                 <TouchableOpacity
@@ -290,6 +382,11 @@ const s = StyleSheet.create({
     backgroundColor: '#EF444410', marginTop: 8,
   },
   zoneGrid: { marginTop: 10 },
+  aiGlobalBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 12, borderRadius: 10, borderWidth: 2, borderStyle: 'dashed',
+    backgroundColor: '#7C3AED08',
+  },
   gridWrap: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 6,
   },
