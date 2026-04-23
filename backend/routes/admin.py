@@ -763,23 +763,35 @@ async def process_vehicle_return(reservation_id: str, data: VehicleReturnData, u
     planned_end = reservation.get('end_date')
     actual_return = datetime.utcnow()
     extra_days = 0
+    extra_hours = 0
     extra_days_cost = 0.0
     if planned_end:
         if isinstance(planned_end, str):
             planned_end = datetime.fromisoformat(planned_end.replace('Z', '+00:00').replace('+00:00', ''))
         diff_hours = (actual_return - planned_end).total_seconds() / 3600
         if diff_hours > 0:
-            # Every started 24h block beyond the planned end = 1 extra day
-            extra_days = max(1, int(diff_hours // 24) + (1 if diff_hours % 24 > 0 else 0))
+            # Full 24h blocks = extra days, remaining = extra hours
+            extra_days = int(diff_hours // 24)
+            extra_hours = round(diff_hours % 24, 1)
             price_per_day = vehicle.get('price_per_day', 0) if vehicle else 0
-            extra_days_cost = round(extra_days * price_per_day, 2)
-            surcharges.append({
-                "type": "extra_days",
-                "label": f"Jours supplementaires ({extra_days}j x CHF {price_per_day})",
-                "amount": extra_days_cost,
-                "editable": True
-            })
-            total_surcharge += extra_days_cost
+            if extra_days > 0:
+                extra_days_cost = round(extra_days * price_per_day, 2)
+                surcharges.append({
+                    "type": "extra_days",
+                    "label": f"Jours supplementaires ({extra_days}j x CHF {price_per_day})",
+                    "amount": extra_days_cost,
+                    "editable": True
+                })
+                total_surcharge += extra_days_cost
+            if extra_hours > 0:
+                extra_hours_cost = round(extra_hours * data.late_penalty_per_hour, 2)
+                surcharges.append({
+                    "type": "extra_hours",
+                    "label": f"Retard ({extra_hours}h x CHF {data.late_penalty_per_hour}/h)",
+                    "amount": extra_hours_cost,
+                    "editable": True
+                })
+                total_surcharge += extra_hours_cost
 
     # 1. Kilometrage
     km_driven = max(0, data.km_return - data.km_departure)

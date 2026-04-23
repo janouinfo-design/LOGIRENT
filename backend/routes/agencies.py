@@ -356,14 +356,11 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     if overlap_count > 0:
         raise HTTPException(status_code=400, detail="Ce vehicule est deja reserve pour ces dates. Choisissez un autre vehicule ou d'autres dates.")
 
-    # Calculate days: 1 day = 24 hours. Any extra hours = +1 day
+    # Calculate days: 1 day = 24 hours exactly. Extra hours are NOT rounded up to a full day.
     duration = data.end_date - data.start_date
     total_seconds = duration.total_seconds()
     total_hours = total_seconds / 3600
     total_days = max(1, int(total_hours // 24))
-    if total_hours % 24 > 0:
-        total_days += 1 if total_hours > 24 else 0  # First 24h = 1 day, anything beyond adds a day
-    total_days = max(1, total_days)
     if total_days <= 0:
         raise HTTPException(status_code=400, detail="Date de fin doit etre apres la date de debut")
 
