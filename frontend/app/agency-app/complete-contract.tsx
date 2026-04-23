@@ -55,11 +55,29 @@ export default function CompleteContract() {
   const [signed, setSigned] = useState(false);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
+  const [clientUserId, setClientUserId] = useState<string | null>(null);
+
+  // Resolve user_id from contract or reservation
+  useEffect(() => {
+    const resolveUserId = async () => {
+      // Try from contract data
+      const uid = contract?.contract_data?.user_id || contract?.user_id;
+      if (uid) { setClientUserId(uid); return; }
+      // Try from reservation
+      if (reservation_id) {
+        try {
+          const res = await api.get(`/api/admin/reservations`);
+          const found = res.data.reservations?.find((r: any) => r.id === reservation_id);
+          if (found?.user_id) { setClientUserId(found.user_id); return; }
+        } catch {}
+      }
+    };
+    if (contract) resolveUserId();
+  }, [contract, reservation_id]);
 
   const handleDocUpload = (docType: string, useCamera: boolean = false) => {
     if (Platform.OS !== 'web') return;
-    const userId = contract?.contract_data?.user_id;
-    if (!userId) return;
+    if (!clientUserId) { window.alert('Client non identifie. Sauvegardez le contrat d\'abord.'); return; }
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = useCamera ? 'image/*' : 'image/jpeg,image/png,image/webp';
@@ -73,7 +91,7 @@ export default function CompleteContract() {
         const dataUri = ev.target?.result as string;
         setDocPreviews(p => ({ ...p, [docType]: dataUri }));
         try {
-          await api.post(`/api/admin/client/${userId}/document`, { image_data: dataUri, doc_type: docType });
+          await api.post(`/api/admin/client/${clientUserId}/document`, { image_data: dataUri, doc_type: docType });
         } catch (err: any) {
           window.alert(err?.response?.data?.detail || "Echec de l'upload");
           setDocPreviews(p => { const n = { ...p }; delete n[docType]; return n; });
