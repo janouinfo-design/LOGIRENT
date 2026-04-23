@@ -200,13 +200,14 @@ def generate_reservation_confirmation_email(user_name: str, vehicle: dict, reser
     return _email_wrapper('Confirmation de reservation', '#10B981', body)
 
 
-async def send_reservation_confirmation(user: dict, vehicle: dict, reservation: dict):
+async def send_reservation_confirmation(user: dict, vehicle: dict, reservation: dict, agency_id: str = None):
     html = generate_reservation_confirmation_email(user['name'], vehicle, reservation)
     vname = f"{vehicle['brand']} {vehicle['model']}"
     await send_email(
         user['email'],
         f"Reservation confirmee - {vname} | LogiRent",
-        html
+        html,
+        agency_id=agency_id
     )
 
 

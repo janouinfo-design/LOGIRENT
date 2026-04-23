@@ -346,8 +346,15 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     if vehicle.get('status') == 'maintenance':
         raise HTTPException(status_code=400, detail="Véhicule en maintenance")
 
-    # Category-based booking: overlap check removed
-    # The agency guarantees the booked vehicle OR an equivalent in the same category
+    # Category-based booking: check overlap for this specific vehicle
+    overlap_count = await db.reservations.count_documents({
+        "vehicle_id": data.vehicle_id,
+        "status": {"$in": ["pending", "pending_cash", "confirmed", "active"]},
+        "start_date": {"$lt": data.end_date},
+        "end_date": {"$gt": data.start_date},
+    })
+    if overlap_count > 0:
+        raise HTTPException(status_code=400, detail="Ce vehicule est deja reserve pour ces dates. Choisissez un autre vehicule ou d'autres dates.")
 
     total_days = (data.end_date - data.start_date).days
     if total_days <= 0:
@@ -396,7 +403,7 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     )
 
     try:
-        await send_reservation_confirmation(client, vehicle, reservation)
+        await send_reservation_confirmation(client, vehicle, reservation, agency_id=agency_id)
     except Exception as e:
         logger.error(f"Failed to send confirmation email: {e}")
 

@@ -6,6 +6,7 @@ import api from '../../src/api/axios';
 import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSameDay, isBefore, isAfter, parseISO, differenceInDays, isWithinInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
+import { WebcamCapture } from '../../src/components/WebcamCapture';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -126,6 +127,7 @@ export default function BookingFlow() {
   const [detAddress, setDetAddress] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [docPreviews, setDocPreviews] = useState<Record<string, string>>({});
+  const [webcamDocType, setWebcamDocType] = useState<string | null>(null);
 
   // Calendar & Schedule
   const [calendarMonth, setCalendarMonth] = useState(new Date());
@@ -143,7 +145,6 @@ export default function BookingFlow() {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'send_link'>('cash');
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const showAlert = (t: string, m: string) => Platform.OS === 'web' ? window.alert(m) : Alert.alert(t, m);
 
@@ -227,29 +228,19 @@ export default function BookingFlow() {
   };
 
   const handleDocCamera = (docType: string) => {
-    if (!selectedClient || Platform.OS !== 'web') return;
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.setAttribute('capture', 'environment');
-    input.onchange = async (e: any) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      setUploadingDoc(docType);
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const dataUri = ev.target?.result as string;
-        setDocPreviews(p => ({ ...p, [docType]: dataUri }));
-        try {
-          await api.post(`/api/admin/client/${selectedClient.id}/document`, { image_data: dataUri, doc_type: docType });
-        } catch (err: any) {
-          window.alert(err?.response?.data?.detail || "Echec de l'upload");
-          setDocPreviews(p => { const n = { ...p }; delete n[docType]; return n; });
-        } finally { setUploadingDoc(null); }
-      };
-      reader.readAsDataURL(file);
-    };
-    input.click();
+    setWebcamDocType(docType);
+  };
+
+  const handleWebcamCapture = async (dataUri: string) => {
+    if (!selectedClient || !webcamDocType) return;
+    setUploadingDoc(webcamDocType);
+    setDocPreviews(p => ({ ...p, [webcamDocType]: dataUri }));
+    try {
+      await api.post(`/api/admin/client/${selectedClient.id}/document`, { image_data: dataUri, doc_type: webcamDocType });
+    } catch (err: any) {
+      window.alert(err?.response?.data?.detail || "Echec de l'upload");
+      setDocPreviews(p => { const n = { ...p }; delete n[webcamDocType!]; return n; });
+    } finally { setUploadingDoc(null); setWebcamDocType(null); }
   };
 
   // Fetch schedule when dates change
@@ -329,26 +320,15 @@ export default function BookingFlow() {
   const resetFlow = () => {
     setStep('client'); setSelectedClient(null); setStartDate(null); setEndDate(null);
     setSelectedVehicle(null); setSelectedOptions([]); setPaymentMethod('cash');
-    setSuccess(false); setSearchQuery(''); setSearchResults([]);
+    setSubmitting(false); setSearchQuery(''); setSearchResults([]);
     setStartHour(8); setEndHour(18);
   };
 
   const month2 = addMonths(calendarMonth, 1);
 
   // ─── SUCCESS ───
-  if (success) {
-    return (
-      <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={[s.content, { alignItems: 'center', paddingTop: 60 }]}>
-        <Ionicons name="checkmark-circle" size={64} color={C.success} />
-        <Text style={[s.successTitle, { color: C.text }]}>Réservation créée !</Text>
-        <Text style={{ color: C.textLight, fontSize: 15, marginBottom: 4 }}>{selectedVehicle?.brand} {selectedVehicle?.model} pour {selectedClient?.name}</Text>
-        <Text style={{ color: C.accent, fontSize: 28, fontWeight: '800', marginVertical: 12 }}>CHF {totalPrice.toFixed(2)}</Text>
-        <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={resetFlow}><Text style={s.btnText}>Nouvelle réservation</Text></TouchableOpacity>
-      </ScrollView>
-    );
-  }
-
   return (
+    <>
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content}>
       {/* Steps */}
       <View style={[s.stepsBar, { backgroundColor: C.card, borderColor: C.border }]}>
@@ -656,6 +636,14 @@ export default function BookingFlow() {
               {schedule.map(v => {
                 const selected = selectedVehicle?.id === v.id;
                 const cardWidth = (Dimensions.get('window').width - 32 - 30) / 4;
+                // Check if vehicle has overlapping reservation with selected dates
+                const isBooked = startDate && endDate && v.reservations?.some((r: any) => {
+                  try {
+                    const rs = parseISO(r.start);
+                    const re = parseISO(r.end);
+                    return rs < endDate && re > startDate && ['pending', 'pending_cash', 'confirmed', 'active'].includes(r.status);
+                  } catch { return false; }
+                });
                 return (
                   <TouchableOpacity
                     key={v.id}
@@ -664,21 +652,26 @@ export default function BookingFlow() {
                         width: cardWidth,
                         borderRadius: 10,
                         borderWidth: selected ? 2 : 1,
-                        borderColor: selected ? C.accent : C.border,
-                        backgroundColor: C.card,
+                        borderColor: isBooked ? '#EF4444' + '60' : selected ? C.accent : C.border,
+                        backgroundColor: isBooked ? '#FEE2E2' + '30' : C.card,
                         overflow: 'hidden',
+                        opacity: isBooked ? 0.6 : 1,
                       },
                     ]}
-                    onPress={() => setSelectedVehicle(v)}
+                    onPress={() => { if (!isBooked) setSelectedVehicle(v); else { Platform.OS === 'web' ? window.alert('Ce vehicule est deja reserve pour ces dates') : Alert.alert('Indisponible', 'Ce vehicule est deja reserve pour ces dates'); } }}
                     data-testid={`vehicle-${v.id}`}
                   >
                     {/* Photo placeholder */}
                     <View style={{ width: '100%', height: 70, backgroundColor: C.border + '30', justifyContent: 'center', alignItems: 'center' }}>
-                      <Ionicons name="car-sport" size={26} color={C.accent} />
-                      {/* Selected check */}
+                      <Ionicons name="car-sport" size={26} color={isBooked ? '#EF4444' : C.accent} />
                       {selected && (
                         <View style={{ position: 'absolute', top: 3, right: 3, width: 20, height: 20, borderRadius: 10, backgroundColor: C.accent, justifyContent: 'center', alignItems: 'center' }}>
                           <Ionicons name="checkmark" size={14} color="#fff" />
+                        </View>
+                      )}
+                      {isBooked && (
+                        <View style={{ position: 'absolute', top: 3, left: 3, backgroundColor: '#EF4444', borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                          <Text style={{ color: '#fff', fontSize: 8, fontWeight: '800' }}>RESERVE</Text>
                         </View>
                       )}
                     </View>
@@ -777,6 +770,14 @@ export default function BookingFlow() {
         </View>
       )}
     </ScrollView>
+
+    <WebcamCapture
+      visible={!!webcamDocType}
+      onClose={() => setWebcamDocType(null)}
+      onCapture={handleWebcamCapture}
+      title={webcamDocType?.includes('id') ? "Photographier la piece d'identite" : "Photographier le permis de conduire"}
+    />
+    </>
   );
 }
 
