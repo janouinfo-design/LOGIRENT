@@ -556,6 +556,10 @@ export default function BookingFlow() {
       {/* ─── STEP 2: Calendar ─── */}
       {step === 'calendar' && (
         <View>
+          <TouchableOpacity onPress={() => setStep('client')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="arrow-back" size={20} color={C.accent} />
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour au client</Text>
+          </TouchableOpacity>
           <Text style={[s.title, { color: C.text }]}>Choisissez vos dates</Text>
 
           {/* Date summary bar */}
@@ -629,15 +633,21 @@ export default function BookingFlow() {
       {/* ─── STEP 3: Vehicle Selection ─── */}
       {step === 'vehicle' && (
         <View>
-          <Text style={[s.title, { color: C.text }]}>Choisir un véhicule</Text>
+          <TouchableOpacity onPress={() => setStep('calendar')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="arrow-back" size={20} color={C.accent} />
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour aux dates</Text>
+          </TouchableOpacity>
+          <Text style={[s.title, { color: C.text }]}>Choisir un vehicule</Text>
 
           {/* Date recap */}
           <View style={[s.dateRecap, { backgroundColor: C.accent + '10', borderColor: C.accent + '30' }]}>
             <Ionicons name="calendar" size={16} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>
+            <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600', flex: 1 }}>
               {startDate && format(startDate, 'd MMM', { locale: fr })} - {endDate && format(endDate, 'd MMM yyyy', { locale: fr })} ({totalDays}j)
             </Text>
-            <TouchableOpacity onPress={() => setStep('calendar')}><Text style={{ color: C.textLight, fontSize: 11, textDecorationLine: 'underline' }}>Modifier</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => setStep('calendar')} style={{ backgroundColor: C.accent, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6 }}>
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Modifier</Text>
+            </TouchableOpacity>
           </View>
 
           {loadingSchedule ? <ActivityIndicator size="large" color={C.accent} style={{ marginTop: 20 }} /> : (
@@ -726,6 +736,10 @@ export default function BookingFlow() {
       {/* ─── STEP 4: Options & Payment ─── */}
       {step === 'options' && selectedVehicle && (
         <View>
+          <TouchableOpacity onPress={() => setStep('vehicle')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="arrow-back" size={20} color={C.accent} />
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour aux vehicules</Text>
+          </TouchableOpacity>
           <Text style={[s.title, { color: C.text }]}>Options & Paiement</Text>
           {(selectedVehicle.options || []).length > 0 && (
             <>
@@ -759,7 +773,11 @@ export default function BookingFlow() {
       {/* ─── STEP 5: Confirm ─── */}
       {step === 'confirm' && selectedClient && selectedVehicle && startDate && endDate && (
         <View>
-          <Text style={[s.title, { color: C.text }]}>Récapitulatif</Text>
+          <TouchableOpacity onPress={() => setStep('options')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+            <Ionicons name="arrow-back" size={20} color={C.accent} />
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour aux options</Text>
+          </TouchableOpacity>
+          <Text style={[s.title, { color: C.text }]}>Recapitulatif</Text>
           <View style={[s.summaryCard, { backgroundColor: C.card, borderColor: C.border }]}>
             <SummaryRow label="Client" value={selectedClient.name} C={C} />
             <SummaryRow label="Véhicule" value={`${selectedVehicle.brand} ${selectedVehicle.model}`} C={C} />
