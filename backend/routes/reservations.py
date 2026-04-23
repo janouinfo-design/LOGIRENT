@@ -75,8 +75,8 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     if payment_method not in ["card", "cash"]:
         payment_method = "card"
 
-    # Auto-confirmation: all reservations are confirmed immediately
-    status = "confirmed"
+    # Client reservation = request (pending), admin must confirm
+    status = "pending"
 
     reservation = Reservation(
         user_id=user['id'],
@@ -99,28 +99,29 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     vname = f"{vehicle['brand']} {vehicle['model']}"
     category = vehicle.get('type', 'Standard')
 
-    # Send confirmation email (card or cash)
+    # Send "request received" email to client
     try:
-        await send_reservation_confirmation(user, vehicle, reservation.dict())
+        from utils.email import send_reservation_request_email
+        await send_reservation_request_email(user, vehicle, reservation.dict(), agency_id=vehicle.get('agency_id'))
     except Exception as email_error:
-        logger.error(f"Failed to send confirmation email: {email_error}")
+        logger.error(f"Failed to send request email: {email_error}")
 
-    # Notify client: reservation confirmed
+    # Notify client: reservation request received
     try:
         await create_notification(
-            user['id'], 'reservation_confirmed',
-            f"Votre reservation pour {vname} (categorie {category}) du {reservation.start_date.strftime('%d/%m/%Y')} au {reservation.end_date.strftime('%d/%m/%Y')} est confirmee. N'oubliez pas votre carte d'identite et votre permis de conduire.",
+            user['id'], 'reservation_pending',
+            f"Votre demande de reservation pour {vname} (categorie {category}) du {reservation.start_date.strftime('%d/%m/%Y')} au {reservation.end_date.strftime('%d/%m/%Y')} a bien ete recue. Elle sera traitee dans les plus brefs delais.",
             reservation.id
         )
     except Exception as e:
         logger.error(f"Failed to create client notification: {e}")
 
-    # Notify agency admins: new confirmed reservation
+    # Notify agency admins: new reservation request
     if vehicle.get('agency_id'):
         try:
             await notify_admins_of_agency(
                 vehicle['agency_id'], 'new_reservation',
-                f"Nouvelle reservation confirmee de {user['name']} pour {vname} ({reservation.start_date.strftime('%d/%m/%Y')} - {reservation.end_date.strftime('%d/%m/%Y')}). Paiement: {'especes' if payment_method == 'cash' else 'carte'}.",
+                f"Nouvelle demande de reservation de {user['name']} pour {vname} ({reservation.start_date.strftime('%d/%m/%Y')} - {reservation.end_date.strftime('%d/%m/%Y')}). Paiement: {'especes' if payment_method == 'cash' else 'carte'}. En attente de confirmation.",
                 reservation.id
             )
         except Exception as e:

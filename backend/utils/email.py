@@ -211,6 +211,33 @@ async def send_reservation_confirmation(user: dict, vehicle: dict, reservation: 
     )
 
 
+def generate_reservation_request_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+    body = f'''
+    <div style="text-align:center;padding:16px;background-color:#F59E0B15;border-radius:8px;margin-bottom:20px;">
+      <h2 style="color:#F59E0B;margin:0;font-size:20px;">Demande de reservation recue</h2>
+    </div>
+    <p>Bonjour <strong>{user_name}</strong>,</p>
+    <p>Nous avons bien recu votre demande de reservation. Notre equipe va l'analyser et vous envoyer une confirmation dans les plus brefs delais.</p>
+    {_reservation_details_block(vehicle, reservation)}
+    <div style="background-color:#FEF3C715;padding:12px;border-radius:8px;margin:16px 0;border:1px solid #F59E0B30;">
+      <p style="margin:0;color:#92400E;font-size:13px;">Votre reservation est en attente de confirmation par notre equipe. Vous recevrez un e-mail des qu'elle sera validee.</p>
+    </div>
+    {_documents_reminder_block()}'''
+
+    return _email_wrapper('Demande de reservation', '#F59E0B', body)
+
+
+async def send_reservation_request_email(user: dict, vehicle: dict, reservation: dict, agency_id: str = None):
+    html = generate_reservation_request_email(user['name'], vehicle, reservation)
+    vname = f"{vehicle['brand']} {vehicle['model']}"
+    await send_email(
+        user['email'],
+        f"Demande de reservation recue - {vname} | LogiRent",
+        html,
+        agency_id=agency_id
+    )
+
+
 def generate_payment_confirmation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">
