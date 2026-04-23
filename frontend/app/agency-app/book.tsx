@@ -282,15 +282,13 @@ export default function BookingFlow() {
 
   // Check vehicle availability
   // Pricing
-  // 1 day = 24h. Extra hours beyond 24h = +1 day (26h=2j, 48h=2j, 50h=3j)
+  // 1 day = 24h. Any extra hours = +1 day (24h=1j, 26h=2j, 48h=2j, 50h=3j)
   const totalDays = useMemo(() => {
     if (!startDate || !endDate) return 0;
     const diffMs = endDate.getTime() - startDate.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
     if (diffHours <= 0) return 0;
-    const fullDays = Math.max(1, Math.floor(diffHours / 24));
-    const extraHours = diffHours % 24;
-    return (extraHours > 0 && diffHours > 24) ? fullDays + 1 : fullDays;
+    return Math.max(1, Math.ceil(diffHours / 24));
   }, [startDate, endDate]);
   const basePrice = selectedVehicle ? selectedVehicle.price_per_day * totalDays : 0;
   const optionsPrice = selectedVehicle?.options?.filter(o => selectedOptions.includes(o.name)).reduce((s, o) => s + o.price_per_day * totalDays, 0) || 0;

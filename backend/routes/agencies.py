@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from datetime import datetime
 import uuid
 import logging
+import math
 
 from database import db, STRIPE_API_KEY
 from models import (
@@ -356,16 +357,14 @@ async def create_reservation_for_client(data: AdminReservationCreate, user: dict
     if overlap_count > 0:
         raise HTTPException(status_code=400, detail="Ce vehicule est deja reserve pour ces dates. Choisissez un autre vehicule ou d'autres dates.")
 
-    # Calculate days: 1 day = 24 hours. Any extra hours beyond = +1 day
+    # Calculate days: 1 day = 24 hours. Any extra hours beyond a 24h block = +1 day
+    # 24h = 1j, 26h = 2j, 48h = 2j, 50h = 3j, 72h = 3j, 74h = 4j
     duration = data.end_date - data.start_date
     total_seconds = duration.total_seconds()
     total_hours = total_seconds / 3600
     if total_hours <= 0:
         raise HTTPException(status_code=400, detail="Date de fin doit etre apres la date de debut")
-    total_days = max(1, int(total_hours // 24))
-    extra_hours = total_hours % 24
-    if extra_hours > 0 and total_hours > 24:
-        total_days += 1
+    total_days = max(1, math.ceil(total_hours / 24))
 
     base_price = vehicle['price_per_day'] * total_days
     vehicle_options = {opt['name']: opt for opt in vehicle.get('options', [])}
