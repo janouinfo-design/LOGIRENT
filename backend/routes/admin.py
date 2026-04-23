@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Request
 from typing import Optional
 from datetime import datetime, timedelta
 import uuid
@@ -759,6 +759,28 @@ async def process_vehicle_return(reservation_id: str, data: VehicleReturnData, u
     surcharges = []
     total_surcharge = 0.0
 
+    # 0. Auto-calculate extra days: compare actual return (now) vs planned end_date
+    planned_end = reservation.get('end_date')
+    actual_return = datetime.utcnow()
+    extra_days = 0
+    extra_days_cost = 0.0
+    if planned_end:
+        if isinstance(planned_end, str):
+            planned_end = datetime.fromisoformat(planned_end.replace('Z', '+00:00').replace('+00:00', ''))
+        diff_hours = (actual_return - planned_end).total_seconds() / 3600
+        if diff_hours > 0:
+            # Every started 24h block beyond the planned end = 1 extra day
+            extra_days = max(1, int(diff_hours // 24) + (1 if diff_hours % 24 > 0 else 0))
+            price_per_day = vehicle.get('price_per_day', 0) if vehicle else 0
+            extra_days_cost = round(extra_days * price_per_day, 2)
+            surcharges.append({
+                "type": "extra_days",
+                "label": f"Jours supplementaires ({extra_days}j x CHF {price_per_day})",
+                "amount": extra_days_cost,
+                "editable": True
+            })
+            total_surcharge += extra_days_cost
+
     # 1. Kilometrage
     km_driven = max(0, data.km_return - data.km_departure)
     km_allowed = data.km_limit_per_day * total_days
@@ -797,6 +819,8 @@ async def process_vehicle_return(reservation_id: str, data: VehicleReturnData, u
         "fuel_departure": data.fuel_level_departure,
         "fuel_return": data.fuel_level_return,
         "late_hours": data.late_hours,
+        "extra_days": extra_days,
+        "extra_days_cost": extra_days_cost,
         "surcharges": surcharges,
         "total_surcharge": total_surcharge,
         "notes": data.notes,
@@ -814,6 +838,8 @@ async def process_vehicle_return(reservation_id: str, data: VehicleReturnData, u
             "km_excess": km_excess,
             "fuel_return": data.fuel_level_return,
             "late_hours": data.late_hours,
+            "extra_days": extra_days,
+            "extra_days_cost": extra_days_cost,
             "surcharges": surcharges,
             "total_surcharge": total_surcharge,
             "processed_at": datetime.utcnow().isoformat(),
@@ -841,10 +867,39 @@ async def process_vehicle_return(reservation_id: str, data: VehicleReturnData, u
         "message": "Retour enregistre",
         "km_driven": km_driven,
         "km_excess": km_excess,
+        "extra_days": extra_days,
+        "extra_days_cost": extra_days_cost,
         "surcharges": surcharges,
         "total_surcharge": total_surcharge,
         "new_total": reservation.get('total_price', 0) + total_surcharge,
     }
+
+
+@router.put("/admin/reservations/{reservation_id}/adjust-price")
+async def adjust_reservation_price(reservation_id: str, request: Request, user: dict = Depends(get_admin_user)):
+    """Admin manually adjusts the total price of a reservation"""
+    body = await request.json()
+    new_total = body.get('total_price')
+    reason = body.get('reason', '')
+    if new_total is None or new_total < 0:
+        raise HTTPException(status_code=400, detail="Prix invalide")
+    res = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Reservation non trouvee")
+    old_total = res.get('total_price', 0)
+    await db.reservations.update_one({"id": reservation_id}, {"$set": {
+        "total_price": float(new_total),
+        "updated_at": datetime.utcnow(),
+    }, "$push": {
+        "price_adjustments": {
+            "old_price": old_total,
+            "new_price": float(new_total),
+            "reason": reason,
+            "adjusted_by": user.get('id'),
+            "adjusted_at": datetime.utcnow().isoformat(),
+        }
+    }})
+    return {"message": f"Prix ajuste de CHF {old_total:.2f} a CHF {float(new_total):.2f}", "old_total": old_total, "new_total": float(new_total)}
 
 
 
