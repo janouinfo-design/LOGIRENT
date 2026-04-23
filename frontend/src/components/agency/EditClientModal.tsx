@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, TextInput,
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { formatDateInput } from '../../../src/utils/dateMask';
+import { WebcamCapture } from '../../../src/components/WebcamCapture';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -53,6 +54,24 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
   const [fullClient, setFullClient] = useState<Client | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState<string | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+  const [webcamDocType, setWebcamDocType] = useState<string | null>(null);
+
+  const handleWebcamCapture = async (dataUri: string) => {
+    if (!client || !webcamDocType) return;
+    const type = webcamDocType as 'id' | 'id_back' | 'license' | 'license_back';
+    setUploadingDoc(type);
+    try {
+      const resp = await api.post(`/api/admin/client/${client.id}/document`, { image_data: dataUri, doc_type: type });
+      const v = resp.data.verification || {};
+      const msg = v.is_valid === false ? `Document rejete: ${v.reason || 'Invalide'}` : `Document uploade (${v.confidence || 0}% confiance)`;
+      window.alert(msg);
+      if (fullClient) {
+        const field = type === 'id' ? 'id_photo' : type === 'id_back' ? 'id_photo_back' : type === 'license' ? 'license_photo' : 'license_photo_back';
+        setFullClient({ ...fullClient, [field]: dataUri });
+      }
+    } catch (err: any) { window.alert(err?.response?.data?.detail || 'Erreur upload'); }
+    finally { setUploadingDoc(null); setWebcamDocType(null); }
+  };
   const idFrontRef = useRef<HTMLInputElement | null>(null);
   const idBackRef = useRef<HTMLInputElement | null>(null);
   const licenseFrontRef = useRef<HTMLInputElement | null>(null);
@@ -336,7 +355,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                     )}
                     {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" style={{ marginTop: 6 }} /> : (
                       <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => doc.camRef.current?.click()}>
+                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => setWebcamDocType(doc.type)}>
                           <Ionicons name="camera" size={12} color="#FFF" />
                           <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '600' }}>Photo</Text>
                         </TouchableOpacity>
@@ -372,7 +391,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                     )}
                     {uploadingDoc === doc.type ? <ActivityIndicator size="small" color="#7C3AED" style={{ marginTop: 6 }} /> : (
                       <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => doc.camRef.current?.click()}>
+                        <TouchableOpacity style={{ backgroundColor: '#7C3AED', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 8, flexDirection: 'row', alignItems: 'center', gap: 4 }} onPress={() => setWebcamDocType(doc.type)}>
                           <Ionicons name="camera" size={12} color="#FFF" />
                           <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '600' }}>Photo</Text>
                         </TouchableOpacity>
@@ -419,6 +438,14 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
         </View>
       </View>
     </Modal>
+
+    {/* Webcam Capture Modal */}
+    <WebcamCapture
+      visible={!!webcamDocType}
+      onClose={() => setWebcamDocType(null)}
+      onCapture={handleWebcamCapture}
+      title={webcamDocType?.includes('id') ? "Photographier la piece d'identite" : "Photographier le permis de conduire"}
+    />
 
     {/* Photo Preview Modal */}
     <Modal visible={!!previewPhoto} transparent animationType="fade" onRequestClose={() => setPreviewPhoto(null)}>
