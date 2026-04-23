@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, TextInput, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
+import { WebcamCapture } from '../../src/components/WebcamCapture';
 
 const ZONES = [
   { key: 'pare_chocs_avant', label: 'Pare-chocs avant', icon: 'car-outline' },
@@ -53,6 +54,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
   const [aiGlobalAnalyzing, setAiGlobalAnalyzing] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
+  const [showGlobalWebcam, setShowGlobalWebcam] = useState(false);
 
   const openZone = (zone: { key: string; label: string }) => {
     if (!editable) return;
@@ -130,7 +132,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
     finally { setAiAnalyzing(false); }
   };
 
-  // AI: Global scan from a full vehicle photo
+  // AI: Global scan from a full vehicle photo (file picker)
   const aiGlobalScan = () => {
     if (Platform.OS !== 'web') return;
     const input = document.createElement('input');
@@ -139,29 +141,45 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
     input.onchange = async (e: any) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      setAiGlobalAnalyzing(true);
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const dataUri = ev.target?.result as string;
-        try {
-          const res = await api.post('/api/admin/vehicle-inspection/ai-global', { image_data: dataUri });
-          const data = res.data;
-          if (data.zones && data.zones.length > 0) {
-            data.zones.forEach((z: any) => {
-              const existingInfo = getDamageInfo(damages[z.zone_key]);
-              const newNote = existingInfo.note ? `${existingInfo.note}\n[IA] ${z.description}` : `[IA] ${z.description}`;
-              onUpdateDamage(z.zone_key, JSON.stringify({ note: newNote, photos: existingInfo.photos }));
-            });
-            Platform.OS === 'web' && window.alert(`IA: ${data.zones.length} zone(s) avec dommages detectees.\nEtat general: ${data.overall_condition}\n\n${data.summary}`);
-          } else {
-            Platform.OS === 'web' && window.alert(`IA: Aucun dommage detecte.\n${data.summary || 'Vehicule en bon etat.'}`);
-          }
-        } catch { Platform.OS === 'web' && window.alert('Erreur lors de l\'analyse IA globale'); }
-        finally { setAiGlobalAnalyzing(false); }
-      };
-      reader.readAsDataURL(file);
+      processGlobalImage(file);
     };
     input.click();
+  };
+
+  // AI: Global scan with camera
+  const aiGlobalScanWithCamera = () => {
+    setShowGlobalWebcam(true);
+  };
+
+  const handleGlobalWebcamCapture = (dataUri: string) => {
+    setShowGlobalWebcam(false);
+    processGlobalDataUri(dataUri);
+  };
+
+  const processGlobalImage = (file: File) => {
+    setAiGlobalAnalyzing(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => processGlobalDataUri(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const processGlobalDataUri = async (dataUri: string) => {
+    setAiGlobalAnalyzing(true);
+    try {
+      const res = await api.post('/api/admin/vehicle-inspection/ai-global', { image_data: dataUri });
+      const data = res.data;
+      if (data.zones && data.zones.length > 0) {
+        data.zones.forEach((z: any) => {
+          const existingInfo = getDamageInfo(damages[z.zone_key]);
+          const newNote = existingInfo.note ? `${existingInfo.note}\n[IA] ${z.description}` : `[IA] ${z.description}`;
+          onUpdateDamage(z.zone_key, JSON.stringify({ note: newNote, photos: existingInfo.photos }));
+        });
+        Platform.OS === 'web' && window.alert(`IA: ${data.zones.length} zone(s) avec dommages detectees.\nEtat general: ${data.overall_condition}\n\n${data.summary}`);
+      } else {
+        Platform.OS === 'web' && window.alert(`IA: Aucun dommage detecte.\n${data.summary || 'Vehicule en bon etat.'}`);
+      }
+    } catch { Platform.OS === 'web' && window.alert('Erreur lors de l\'analyse IA globale'); }
+    finally { setAiGlobalAnalyzing(false); }
   };
 
   const hasDamageCheck = (key: string) => {
@@ -193,18 +211,31 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
       {/* Zone buttons grid */}
       {editable && (
         <View style={s.zoneGrid}>
-          {/* AI Global Scan Button */}
-          <TouchableOpacity
-            style={[s.aiGlobalBtn, { borderColor: '#7C3AED' }]}
-            onPress={aiGlobalScan}
-            disabled={aiGlobalAnalyzing}
-          >
-            {aiGlobalAnalyzing ? (
-              <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '700' }}>Analyse IA en cours...</Text></>
-            ) : (
-              <><Ionicons name="scan" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 13, fontWeight: '700' }}>Scan IA global (photo vehicule)</Text></>
-            )}
-          </TouchableOpacity>
+          {/* AI Global Scan Buttons */}
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <TouchableOpacity
+              style={[s.aiGlobalBtn, { borderColor: '#7C3AED', flex: 1 }]}
+              onPress={() => aiGlobalScanWithCamera()}
+              disabled={aiGlobalAnalyzing}
+            >
+              {aiGlobalAnalyzing ? (
+                <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Analyse IA...</Text></>
+              ) : (
+                <><Ionicons name="camera" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Scan IA (Camera)</Text></>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.aiGlobalBtn, { borderColor: '#7C3AED', flex: 1 }]}
+              onPress={() => aiGlobalScan()}
+              disabled={aiGlobalAnalyzing}
+            >
+              {aiGlobalAnalyzing ? (
+                <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Analyse IA...</Text></>
+              ) : (
+                <><Ionicons name="folder-open" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Scan IA (Fichier)</Text></>
+              )}
+            </TouchableOpacity>
+          </View>
 
           <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8, marginTop: 10, textAlign: 'center' }}>
             Ou touchez une zone pour signaler manuellement
@@ -370,6 +401,14 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
           </View>
         </View>
       </Modal>
+
+      {/* Global Webcam for AI scan */}
+      <WebcamCapture
+        visible={showGlobalWebcam}
+        onClose={() => setShowGlobalWebcam(false)}
+        onCapture={handleGlobalWebcamCapture}
+        title="Scan IA - Photographier le vehicule"
+      />
     </View>
   );
 }
