@@ -59,7 +59,7 @@ export default function LoginScreen() {
       } else if (role === 'admin') {
         router.replace('/agency-app');
       } else {
-        router.replace('/(tabs)/reservations');
+        router.replace('/(tabs)');
       }
     } catch (error: any) {
       const errorMessage = error.message || 'Identifiants incorrects';
