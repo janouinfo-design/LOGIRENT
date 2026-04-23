@@ -11,6 +11,7 @@ import { fr } from 'date-fns/locale';
 import { TodayReservationCard } from '../../src/components/agency/TodayReservationCard';
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
+import { EditClientModal } from '../../src/components/agency/EditClientModal';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -27,6 +28,13 @@ export default function AgencyAppHome() {
   const [refreshing, setRefreshing] = useState(false);
   const [actionModal, setActionModal] = useState<any>(null);
   const [returnModal, setReturnModal] = useState<any>(null);
+  const [editClientModal, setEditClientModal] = useState<any>(null);
+  const openClientProfile = async (userId: string) => {
+    try {
+      const res = await api.get(`/api/admin/users/${userId}`);
+      setEditClientModal(res.data);
+    } catch { }
+  };
 
   const screenW = Dimensions.get('window').width;
   const cardW = screenW > 1000 ? (screenW - 80) / 3 : screenW > 700 ? (screenW - 60) / 2 : screenW - 40;
@@ -224,6 +232,7 @@ export default function AgencyAppHome() {
                   onStatusChange={updateStatus}
                   onActionPress={(item) => setActionModal(item)}
                   onViewContract={handleViewContract}
+                  onClientPress={openClientProfile}
                 />
               </View>
             ))}
@@ -251,6 +260,7 @@ export default function AgencyAppHome() {
                   onStatusChange={updateStatus}
                   onActionPress={(item) => setActionModal(item)}
                   onViewContract={handleViewContract}
+                  onClientPress={openClientProfile}
                 />
               </View>
             ))}
@@ -274,6 +284,14 @@ export default function AgencyAppHome() {
         onClose={() => setReturnModal(null)}
         onSuccess={fetchData}
         colors={C}
+      />
+
+      <EditClientModal
+        visible={!!editClientModal}
+        onClose={() => setEditClientModal(null)}
+        client={editClientModal}
+        C={C}
+        onSaved={() => { setEditClientModal(null); fetchData(); }}
       />
     </>
   );

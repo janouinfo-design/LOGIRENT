@@ -675,7 +675,7 @@ async def get_admin_reservations(skip: int = 0, limit: int = 20, status: Optiona
     # Batch fetch users and vehicles
     user_ids = list(set(r.get('user_id') for r in reservations if r.get('user_id')))
     vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
-    users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(len(user_ids))
+    users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "id_photo": 1, "license_photo": 1}).to_list(len(user_ids))
     vehicles_list = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(vehicle_ids))
     users_map = {u['id']: u for u in users_list}
     vehicles_map = {v['id']: v for v in vehicles_list}
@@ -687,6 +687,7 @@ async def get_admin_reservations(skip: int = 0, limit: int = 20, status: Optiona
         res['user_name'] = u['name'] if u else 'Unknown'
         res['user_email'] = u['email'] if u else 'Unknown'
         res['vehicle_name'] = f"{v['brand']} {v['model']}" if v else 'Unknown'
+        res['docs_missing'] = not (u.get('id_photo') and u.get('license_photo')) if u else True
 
     return {"reservations": reservations, "total": total}
 
@@ -1699,7 +1700,7 @@ async def get_today_reservations(user: dict = Depends(get_admin_user)):
 
     user_ids = list(set(r.get('user_id') for r in reservations if r.get('user_id')))
     vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
-    users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "phone": 1}).to_list(len(user_ids)) if user_ids else []
+    users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "phone": 1, "id_photo": 1, "license_photo": 1}).to_list(len(user_ids)) if user_ids else []
     vehicles_list = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(vehicle_ids)) if vehicle_ids else []
     users_map = {u['id']: u for u in users_list}
     vehicles_map = {v['id']: v for v in vehicles_list}
@@ -1712,6 +1713,7 @@ async def get_today_reservations(user: dict = Depends(get_admin_user)):
         res['user_email'] = u.get('email', '') if u else ''
         res['user_phone'] = u.get('phone', '') if u else ''
         res['vehicle_name'] = f"{v['brand']} {v['model']}" if v else 'Inconnu'
+        res['docs_missing'] = not (u.get('id_photo') and u.get('license_photo')) if u else True
 
     return {"reservations": reservations, "total": len(reservations)}
 

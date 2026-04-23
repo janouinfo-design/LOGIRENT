@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  pending: { label: 'Confirmee', color: '#10B981' },
+  pending: { label: 'Attente', color: '#F59E0B' },
   pending_cash: { label: 'Especes', color: '#A855F7' },
   confirmed: { label: 'Confirmee', color: '#10B981' },
   active: { label: 'Active', color: '#3B82F6' },
@@ -22,6 +22,7 @@ const PAYMENT_MAP: Record<string, { label: string; color: string }> = {
 
 interface TodayReservation {
   id: string;
+  user_id?: string;
   user_name: string;
   vehicle_name: string;
   start_date: string;
@@ -29,6 +30,7 @@ interface TodayReservation {
   total_price: number;
   status: string;
   payment_status: string;
+  docs_missing?: boolean;
 }
 
 interface Props {
@@ -37,9 +39,10 @@ interface Props {
   onStatusChange: (id: string, status: string) => void;
   onActionPress: (item: TodayReservation) => void;
   onViewContract: (id: string) => void;
+  onClientPress?: (userId: string) => void;
 }
 
-export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, onViewContract }: Props) => {
+export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, onViewContract, onClientPress }: Props) => {
   const s = STATUS_MAP[item.status] || { label: item.status, color: '#6B7280' };
   const p = PAYMENT_MAP[item.payment_status] || { label: item.payment_status || 'N/A', color: '#6B7280' };
 
@@ -60,7 +63,17 @@ export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, o
     <View style={[st.card, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: s.color }]} data-testid={`today-res-${item.id}`}>
       {/* Header: Name + Status badge */}
       <View style={st.header}>
-        <Text style={[st.name, { color: C.text }]} numberOfLines={1}>{item.user_name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
+          <TouchableOpacity onPress={() => item.user_id && onClientPress?.(item.user_id)} style={{ flex: 1 }}>
+            <Text style={[st.name, { color: C.accent, textDecorationLine: 'underline' }]} numberOfLines={1}>{item.user_name}</Text>
+          </TouchableOpacity>
+          {item.docs_missing && (
+            <TouchableOpacity onPress={() => item.user_id && onClientPress?.(item.user_id)} style={st.docsBadge}>
+              <Ionicons name="alert-circle" size={12} color="#EF4444" />
+              <Text style={{ color: '#EF4444', fontSize: 9, fontWeight: '800' }}>DOCS</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={[st.badge, { backgroundColor: s.color + '20' }]}>
           <Text style={[st.badgeText, { color: s.color }]}>{s.label}</Text>
         </View>
@@ -138,6 +151,7 @@ const st = StyleSheet.create({
   name: { fontSize: 15, fontWeight: '800', flex: 1, marginRight: 8 },
   badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   badgeText: { fontSize: 11, fontWeight: '700' },
+  docsBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
   vehicle: { fontSize: 13, fontWeight: '600', marginBottom: 2 },
   dates: { fontSize: 12, marginBottom: 6 },
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },

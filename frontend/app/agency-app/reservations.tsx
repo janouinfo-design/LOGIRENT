@@ -11,14 +11,16 @@ import { KpiSkeleton, TableSkeleton } from '../../src/components/Skeleton';
 import { GanttChart } from '../../src/components/agency/GanttChart';
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
+import { EditClientModal } from '../../src/components/agency/EditClientModal';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 interface Reservation {
-  id: string; user_name: string; user_email: string; vehicle_name: string;
+  id: string; user_id?: string; user_name: string; user_email: string; vehicle_name: string;
   start_date: string; end_date: string; total_days: number; total_price: number;
   status: string; payment_status: string; payment_method?: string;
   created_at?: string; user_phone?: string; days_overdue?: number;
+  docs_missing?: boolean;
 }
 
 interface VehicleSchedule {
@@ -67,6 +69,13 @@ export default function AgencyReservations() {
   const [sortCol, setSortCol] = useState<'start' | 'end' | 'price'>('start');
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc');
   const [returnModal, setReturnModal] = useState<any>(null);
+  const [editClientModal, setEditClientModal] = useState<any>(null);
+  const openClientProfile = async (userId: string) => {
+    try {
+      const res = await api.get(`/api/admin/users/${userId}`);
+      setEditClientModal(res.data);
+    } catch { }
+  };
   const highlightAnim = useRef(new Animated.Value(1)).current;
   const tableRef = useRef<View>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -442,7 +451,10 @@ export default function AgencyReservations() {
             </View>
             {recent.map((r, i) => (
               <View key={r.id} style={[s.tRow, i % 2 === 0 ? {} : { backgroundColor: '#F8FAFC' }]}>
-                <Text style={[s.tC, { flex: 1.2, fontWeight: '700', color: C.text }]} numberOfLines={1}>{r.user_name}</Text>
+                <TouchableOpacity onPress={() => r.user_id && openClientProfile(r.user_id)} style={{ flex: 1.2, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[s.tC, { fontWeight: '700', color: C.accent, textDecorationLine: 'underline' }]} numberOfLines={1}>{r.user_name}</Text>
+                  {r.docs_missing && <Ionicons name="alert-circle" size={12} color="#EF4444" />}
+                </TouchableOpacity>
                 <Text style={[s.tC, { flex: 1.2, color: C.text }]} numberOfLines={1}>{r.vehicle_name}</Text>
                 <Text style={[s.tC, { flex: 0.7, color: C.textLight }]}>
                   {format(new Date(r.start_date), 'dd/MM/yy')}
@@ -623,7 +635,10 @@ export default function AgencyReservations() {
                   <Ionicons name="car-sport-outline" size={14} color={C.textLight} />
                   <Text style={{ color: C.text, fontSize: 12, fontWeight: '700' }} numberOfLines={1}>{r.vehicle_name}</Text>
                 </View>
-                <Text style={[s.tC, { flex: 1, color: C.text }]} numberOfLines={1}>{r.user_name}</Text>
+                <TouchableOpacity onPress={() => r.user_id && openClientProfile(r.user_id)} style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Text style={[s.tC, { color: C.accent, textDecorationLine: 'underline' }]} numberOfLines={1}>{r.user_name}</Text>
+                  {r.docs_missing && <Ionicons name="alert-circle" size={12} color="#EF4444" />}
+                </TouchableOpacity>
                 <View style={{ flex: 0.9, paddingVertical: 8, paddingHorizontal: 4 }}>
                   <Text style={{ color: C.textLight, fontSize: 12 }}>{format(new Date(r.start_date), 'dd/MM/yyyy')}</Text>
                   <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>{format(new Date(r.start_date), 'HH:mm')}</Text>
@@ -756,7 +771,15 @@ export default function AgencyReservations() {
                         <Text style={{ color: C.textLight, fontSize: 10 }}>{r.total_days}j</Text>
                       </View>
                       <Text style={{ color: C.text, fontSize: 12, fontWeight: '800', marginBottom: 2 }} numberOfLines={1}>{r.vehicle_name}</Text>
-                      <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700', marginBottom: 4 }} numberOfLines={1}>{r.user_name || 'Client inconnu'}</Text>
+                      <TouchableOpacity onPress={() => r.user_id && openClientProfile(r.user_id)}>
+                        <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700', marginBottom: 4, textDecorationLine: 'underline' }} numberOfLines={1}>{r.user_name || 'Client inconnu'}</Text>
+                      </TouchableOpacity>
+                      {r.docs_missing && (
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 }}>
+                          <Ionicons name="alert-circle" size={10} color="#EF4444" />
+                          <Text style={{ color: '#EF4444', fontSize: 8, fontWeight: '800' }}>DOCS MANQUANTS</Text>
+                        </View>
+                      )}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                         <Ionicons name="calendar-outline" size={11} color={C.textLight} />
                         <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>
@@ -793,6 +816,14 @@ export default function AgencyReservations() {
         onClose={() => setReturnModal(null)}
         onSuccess={fetchReservations}
         colors={C}
+      />
+
+      <EditClientModal
+        visible={!!editClientModal}
+        onClose={() => setEditClientModal(null)}
+        client={editClientModal}
+        C={C}
+        onSaved={() => { setEditClientModal(null); fetchReservations(); }}
       />
     </View>
   );
