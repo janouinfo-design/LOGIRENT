@@ -7,6 +7,7 @@ import { format, addMonths, startOfMonth, endOfMonth, startOfWeek, addDays, isSa
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
 import { WebcamCapture } from '../../src/components/WebcamCapture';
+import VehicleInspection from '../../src/components/VehicleInspection';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -145,6 +146,7 @@ export default function BookingFlow() {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'send_link'>('cash');
   const [submitting, setSubmitting] = useState(false);
+  const [inspectionDamages, setInspectionDamages] = useState<Record<string, string>>({});
 
   const showAlert = (t: string, m: string) => Platform.OS === 'web' ? window.alert(m) : Alert.alert(t, m);
 
@@ -778,15 +780,30 @@ export default function BookingFlow() {
           <Text style={[s.title, { color: C.text }]}>Recapitulatif</Text>
           <View style={[s.summaryCard, { backgroundColor: C.card, borderColor: C.border }]}>
             <SummaryRow label="Client" value={selectedClient.name} C={C} />
-            <SummaryRow label="Véhicule" value={`${selectedVehicle.brand} ${selectedVehicle.model}`} C={C} />
-            <SummaryRow label="Début" value={`${format(startDate, 'd MMM yyyy', { locale: fr })} à ${String(startHour).padStart(2, '0')}:00`} C={C} />
-            <SummaryRow label="Fin" value={`${format(endDate, 'd MMM yyyy', { locale: fr })} à ${String(endHour).padStart(2, '0')}:00`} C={C} />
-            <SummaryRow label="Durée" value={`${totalDays} jour(s)`} C={C} />
+            <SummaryRow label="Vehicule" value={`${selectedVehicle.brand} ${selectedVehicle.model}`} C={C} />
+            <SummaryRow label="Debut" value={`${format(startDate, 'd MMM yyyy', { locale: fr })} a ${String(startHour).padStart(2, '0')}:00`} C={C} />
+            <SummaryRow label="Fin" value={`${format(endDate, 'd MMM yyyy', { locale: fr })} a ${String(endHour).padStart(2, '0')}:00`} C={C} />
+            <SummaryRow label="Duree" value={`${totalDays} jour(s)`} C={C} />
             <SummaryRow label="Prix base" value={`CHF ${basePrice.toFixed(2)}`} C={C} />
             {optionsPrice > 0 && <SummaryRow label="Options" value={`CHF ${optionsPrice.toFixed(2)}`} C={C} />}
             <View style={[s.divider, { backgroundColor: C.border }]} />
             <View style={s.summaryRow}><Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Total</Text><Text style={{ color: C.accent, fontSize: 22, fontWeight: '800' }}>CHF {totalPrice.toFixed(2)}</Text></View>
-            <SummaryRow label="Paiement" value={paymentMethod === 'cash' ? 'Espèces' : 'Lien Stripe'} C={C} />
+            <SummaryRow label="Paiement" value={paymentMethod === 'cash' ? 'Especes' : 'Lien Stripe'} C={C} />
+          </View>
+
+          {/* Inspection vehicule */}
+          <View style={[s.summaryCard, { backgroundColor: C.card, borderColor: C.border, marginTop: 12 }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <Ionicons name="search" size={18} color={C.accent} />
+              <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Inspection du vehicule</Text>
+            </View>
+            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>Documentez l'etat du vehicule avant la remise au client</Text>
+            <VehicleInspection
+              damages={inspectionDamages}
+              onUpdateDamage={(key, val) => setInspectionDamages(prev => ({ ...prev, [key]: val }))}
+              editable={true}
+              colors={C}
+            />
           </View>
           <TouchableOpacity style={[s.confirmBtn, { backgroundColor: C.success }, submitting && { opacity: 0.6 }]} onPress={submitReservation} disabled={submitting} data-testid="confirm-btn">
             {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="checkmark-circle" size={22} color="#fff" />}
