@@ -61,6 +61,14 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 1. **Simplification des statuts de reservation**: Labels courts et coherents sur toute l'interface (admin, client, modal d'action): Attente, Especes, Confirmee, Active, Terminee, Annulee. Correction du bug paymentLabels (pending: 'En attente' au lieu de 'Confirmee'). Correction de la legende calendrier client (Active, Attente, Confirmee).
 2. **Creation client admin avec mot de passe + email de bienvenue**: Le modal "Nouveau client" permet desormais de definir un mot de passe manuellement (ou laisser vide pour auto-generation). Le formulaire a ete redesigne dans le style du modal vehicule (2 colonnes, sections avec icones, boutons Annuler/Creer). Le backend accepte le champ `password` optionnel via POST /api/admin/quick-client. L'email de bienvenue est envoye via le SMTP de l'agence (agency_id transmis). Le client recoit ses identifiants (email + mot de passe) avec QR code de l'app.
 
+### Session 2026-04-24 - Completed
+1. **Flux "Demande de reservation"**: Toute nouvelle reservation est creee en statut `pending` (demande). Email "Demande recue" envoye automatiquement au client. Admin confirme manuellement plus tard. Filtre et KPI "En attente" ajoutes.
+2. **Logique de prix 24h**: `Math.ceil((end-start)/3600/24)` = nombre de jours. 24h=1j, 26h=2j, 48h=2j, 50h=3j. Retours tardifs auto-calcules. Admin peut ajuster manuellement le prix.
+3. **Inspection vehicule avec IA (GPT-5.2)**: Scan global + par zone (avant/arriere/cotes/interieur) pour detecter les dommages automatiquement via Emergent LLM Key.
+4. **Creation client multi-etapes dans la reservation**: Base info -> details -> validation, avec WebcamCapture pour photos ID/permis.
+5. **Contrat retire cote client**: Les clients ne peuvent plus generer ni voir le contrat. Genere par l'admin a l'activation, envoye par email apres signature.
+6. **Page confirmation client mise a jour**: "Demande de reservation envoyee !" avec icone sablier, bouton "Telecharger le contrat" retire, message email d'attente, accents francais corriges.
+
 ## Prioritized Backlog
 
 ### P1 - Next

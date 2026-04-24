@@ -515,11 +515,11 @@ export default function BookingScreen() {
     <View style={s.section}>
       <View style={s.confirmCenter} data-testid="confirmation-screen">
         <View style={s.confirmIcon}>
-          <Ionicons name="checkmark-circle" size={80} color={C.success} />
+          <Ionicons name="hourglass-outline" size={80} color="#F59E0B" />
         </View>
-        <Text style={s.confirmTitle}>Réservation confirmée !</Text>
+        <Text style={s.confirmTitle}>Demande de réservation envoyée !</Text>
         <Text style={s.confirmSub}>
-          Votre réservation pour le {vehicle.brand} {vehicle.model} a été enregistrée avec succès.
+          Votre demande de réservation pour le {vehicle.brand} {vehicle.model} a bien été reçue. Notre équipe va l'analyser et vous envoyer une confirmation dans les plus brefs délais.
         </Text>
 
         {/* Reservation Details */}
@@ -546,18 +546,10 @@ export default function BookingScreen() {
           </View>
         </View>
 
-        {/* Contract Download */}
-        {contractId ? (
-          <TouchableOpacity style={s.contractBtn} onPress={handleDownloadContract} data-testid="download-contract-btn">
-            <Ionicons name="document-text" size={22} color="#fff" />
-            <Text style={s.contractBtnText}>Télécharger le contrat</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={s.contractPending}>
-            <Ionicons name="document-text-outline" size={18} color={C.textLight} />
-            <Text style={s.contractPendingText}>Le contrat sera disponible prochainement</Text>
-          </View>
-        )}
+        <View style={s.contractPending}>
+          <Ionicons name="mail-outline" size={18} color="#F59E0B" />
+          <Text style={[s.contractPendingText, { color: '#92400E' }]}>Un e-mail de confirmation vous sera envoyé une fois la réservation validée par notre équipe</Text>
+        </View>
 
         {/* Actions */}
         <TouchableOpacity style={s.backToResBtn} onPress={() => router.push('/(tabs)/reservations')} data-testid="back-to-reservations-btn">
