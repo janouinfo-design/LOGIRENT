@@ -231,149 +231,6 @@ export default function AgencyAppHome() {
         </LinearGradient>
       </TouchableOpacity>
 
-      {/* Demandes à traiter - pending reservation requests */}
-      {pendingRequests.length > 0 && (
-        <View style={{ marginBottom: 24 }} data-testid="pending-requests-section">
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Ionicons name="hourglass" size={18} color="#F59E0B" />
-              <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Demandes à traiter</Text>
-              <View style={s.pendingBadge}>
-                <Text style={s.pendingBadgeText}>{pendingRequests.length}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
-              data-testid="pending-see-all"
-            >
-              <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-            {pendingRequests.map((r: any) => {
-              const isProcessing = processingId === r.id;
-              const start = new Date(r.start_date);
-              const end = new Date(r.end_date);
-              const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-              const startTime = (() => { try { return format(start, 'HH:mm'); } catch { return ''; } })();
-              const endTime = (() => { try { return format(end, 'HH:mm'); } catch { return ''; } })();
-              return (
-                <View key={r.id} style={{ width: cardW }}>
-                  <View
-                    style={[s.pendingCardV2, { backgroundColor: C.card, borderColor: C.border }]}
-                    data-testid={`pending-card-${r.id}`}
-                  >
-                    {/* Header: Client name + status badge */}
-                    <View style={s.pendingV2Header}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
-                        <TouchableOpacity onPress={() => r.user_id && openClientProfile(r.user_id)} style={{ flex: 1 }} data-testid={`pending-client-${r.id}`}>
-                          <Text style={[s.pendingV2Name, { color: C.accent, textDecorationLine: 'underline' }]} numberOfLines={1}>
-                            {r.user_name || r.user_email || 'Client'}
-                          </Text>
-                        </TouchableOpacity>
-                        {r.docs_missing && (
-                          <View style={s.pendingV2DocsBadge}>
-                            <Ionicons name="alert-circle" size={12} color="#EF4444" />
-                            <Text style={{ color: '#EF4444', fontSize: 9, fontWeight: '800' }}>DOCS</Text>
-                          </View>
-                        )}
-                      </View>
-                      <View style={[s.pendingV2Badge, { backgroundColor: '#F59E0B20' }]}>
-                        <Text style={[s.pendingV2BadgeText, { color: '#F59E0B' }]}>Attente</Text>
-                      </View>
-                    </View>
-
-                    {/* Time since request */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                      <Ionicons name="time-outline" size={12} color={C.textLight} />
-                      <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '500' }}>{formatRequestedAt(r.created_at)}</Text>
-                    </View>
-
-                    {/* Vehicle */}
-                    <Text style={[s.pendingV2Vehicle, { color: C.textLight }]} numberOfLines={1}>
-                      {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`.trim() || 'Véhicule'}
-                    </Text>
-
-                    {/* Dates */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <Ionicons name="calendar-outline" size={13} color={C.textLight} />
-                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }}>
-                        {format(start, 'dd MMM', { locale: fr })} - {format(end, 'dd MMM', { locale: fr })}
-                      </Text>
-                      <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>· {days}j</Text>
-                    </View>
-
-                    {/* Pickup & Return times */}
-                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
-                      <View style={[s.pendingV2TimeChip, { backgroundColor: '#10B98110', borderColor: '#10B98130' }]}>
-                        <Ionicons name="log-in-outline" size={11} color="#10B981" />
-                        <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>Depart {startTime}</Text>
-                      </View>
-                      <View style={[s.pendingV2TimeChip, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
-                        <Ionicons name="log-out-outline" size={11} color="#3B82F6" />
-                        <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>Retour {endTime}</Text>
-                      </View>
-                    </View>
-
-                    {/* Price + payment method */}
-                    <View style={s.pendingV2PriceRow}>
-                      <TouchableOpacity onPress={() => openOfferModal(r)} data-testid={`pending-amount-${r.id}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                        <Text style={[s.pendingV2Price, { color: C.accent }]}>CHF {Number(r.total_price || 0).toFixed(0)}</Text>
-                        <Ionicons name="create-outline" size={13} color={C.accent} />
-                      </TouchableOpacity>
-                      <View style={[s.pendingV2PayBadge, { backgroundColor: (r.payment_method === 'cash' ? '#A855F7' : '#3B82F6') + '18' }]}>
-                        <Ionicons name={r.payment_method === 'cash' ? 'cash-outline' : 'card-outline'} size={11} color={r.payment_method === 'cash' ? '#A855F7' : '#3B82F6'} />
-                        <Text style={{ color: r.payment_method === 'cash' ? '#A855F7' : '#3B82F6', fontSize: 10, fontWeight: '700' }}>
-                          {r.payment_method === 'cash' ? 'Especes' : 'Carte'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    {/* Actions row - 3 quick action buttons */}
-                    <View style={[s.pendingV2Actions, { borderTopColor: C.border }]}>
-                      <TouchableOpacity
-                        style={[s.pendingV2Btn, { backgroundColor: '#FEE2E2' }]}
-                        onPress={() => rejectRequest(r.id)}
-                        disabled={isProcessing}
-                        data-testid={`pending-reject-${r.id}`}
-                      >
-                        <Ionicons name="close" size={14} color="#EF4444" />
-                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>Refuser</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[s.pendingV2Btn, { backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F640' }]}
-                        onPress={() => openOfferModal(r)}
-                        disabled={isProcessing}
-                        data-testid={`pending-offer-${r.id}`}
-                      >
-                        <Ionicons name="pricetag" size={13} color="#3B82F6" />
-                        <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Modifier</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[s.pendingV2Btn, { backgroundColor: '#10B981' }, isProcessing && { opacity: 0.6 }]}
-                        onPress={() => confirmRequest(r.id)}
-                        disabled={isProcessing}
-                        data-testid={`pending-confirm-${r.id}`}
-                      >
-                        {isProcessing ? (
-                          <ActivityIndicator size="small" color="#fff" />
-                        ) : (
-                          <>
-                            <Ionicons name="checkmark" size={14} color="#fff" />
-                            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Confirmer</Text>
-                          </>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      )}
-
       {/* Stats cards */}
       <View style={s.statsRow}>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/vehicles')} data-testid="stat-vehicles">
@@ -426,6 +283,142 @@ export default function AgencyAppHome() {
               <Text style={{ color: C.textLight, fontSize: 11, marginTop: 2 }}>{alert.doc_type_label} - {alert.expiry_date?.slice(0, 10)}</Text>
             </TouchableOpacity>
           ))}
+        </View>
+      )}
+
+      {/* Demandes à traiter - pending reservation requests (above today's reservations for priority) */}
+      {pendingRequests.length > 0 && (
+        <View style={{ marginBottom: 24 }} data-testid="pending-requests-section">
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="hourglass" size={18} color="#F59E0B" />
+              <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Demandes à traiter</Text>
+              <View style={s.pendingBadge}>
+                <Text style={s.pendingBadgeText}>{pendingRequests.length}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
+              data-testid="pending-see-all"
+            >
+              <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {pendingRequests.map((r: any) => {
+              const isProcessing = processingId === r.id;
+              const start = new Date(r.start_date);
+              const end = new Date(r.end_date);
+              const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+              const startTime = (() => { try { return format(start, 'HH:mm'); } catch { return ''; } })();
+              const endTime = (() => { try { return format(end, 'HH:mm'); } catch { return ''; } })();
+              return (
+                <View key={r.id} style={{ width: cardW }}>
+                  <View
+                    style={[s.pendingCardV2, { backgroundColor: C.card, borderColor: C.border }]}
+                    data-testid={`pending-card-${r.id}`}
+                  >
+                    <View style={s.pendingV2Header}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
+                        <TouchableOpacity onPress={() => r.user_id && openClientProfile(r.user_id)} style={{ flex: 1 }} data-testid={`pending-client-${r.id}`}>
+                          <Text style={[s.pendingV2Name, { color: C.accent, textDecorationLine: 'underline' }]} numberOfLines={1}>
+                            {r.user_name || r.user_email || 'Client'}
+                          </Text>
+                        </TouchableOpacity>
+                        {r.docs_missing && (
+                          <View style={s.pendingV2DocsBadge}>
+                            <Ionicons name="alert-circle" size={12} color="#EF4444" />
+                            <Text style={{ color: '#EF4444', fontSize: 9, fontWeight: '800' }}>DOCS</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={[s.pendingV2Badge, { backgroundColor: '#F59E0B20' }]}>
+                        <Text style={[s.pendingV2BadgeText, { color: '#F59E0B' }]}>Attente</Text>
+                      </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                      <Ionicons name="time-outline" size={12} color={C.textLight} />
+                      <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '500' }}>{formatRequestedAt(r.created_at)}</Text>
+                    </View>
+
+                    <Text style={[s.pendingV2Vehicle, { color: C.textLight }]} numberOfLines={1}>
+                      {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`.trim() || 'Véhicule'}
+                    </Text>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <Ionicons name="calendar-outline" size={13} color={C.textLight} />
+                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }}>
+                        {format(start, 'dd MMM', { locale: fr })} - {format(end, 'dd MMM', { locale: fr })}
+                      </Text>
+                      <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>· {days}j</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                      <View style={[s.pendingV2TimeChip, { backgroundColor: '#10B98110', borderColor: '#10B98130' }]}>
+                        <Ionicons name="log-in-outline" size={11} color="#10B981" />
+                        <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>Depart {startTime}</Text>
+                      </View>
+                      <View style={[s.pendingV2TimeChip, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
+                        <Ionicons name="log-out-outline" size={11} color="#3B82F6" />
+                        <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>Retour {endTime}</Text>
+                      </View>
+                    </View>
+
+                    <View style={s.pendingV2PriceRow}>
+                      <TouchableOpacity onPress={() => openOfferModal(r)} data-testid={`pending-amount-${r.id}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={[s.pendingV2Price, { color: C.accent }]}>CHF {Number(r.total_price || 0).toFixed(0)}</Text>
+                        <Ionicons name="create-outline" size={13} color={C.accent} />
+                      </TouchableOpacity>
+                      <View style={[s.pendingV2PayBadge, { backgroundColor: (r.payment_method === 'cash' ? '#A855F7' : '#3B82F6') + '18' }]}>
+                        <Ionicons name={r.payment_method === 'cash' ? 'cash-outline' : 'card-outline'} size={11} color={r.payment_method === 'cash' ? '#A855F7' : '#3B82F6'} />
+                        <Text style={{ color: r.payment_method === 'cash' ? '#A855F7' : '#3B82F6', fontSize: 10, fontWeight: '700' }}>
+                          {r.payment_method === 'cash' ? 'Especes' : 'Carte'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={[s.pendingV2Actions, { borderTopColor: C.border }]}>
+                      <TouchableOpacity
+                        style={[s.pendingV2Btn, { backgroundColor: '#FEE2E2' }]}
+                        onPress={() => rejectRequest(r.id)}
+                        disabled={isProcessing}
+                        data-testid={`pending-reject-${r.id}`}
+                      >
+                        <Ionicons name="close" size={14} color="#EF4444" />
+                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>Refuser</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[s.pendingV2Btn, { backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F640' }]}
+                        onPress={() => openOfferModal(r)}
+                        disabled={isProcessing}
+                        data-testid={`pending-offer-${r.id}`}
+                      >
+                        <Ionicons name="pricetag" size={13} color="#3B82F6" />
+                        <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Modifier</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[s.pendingV2Btn, { backgroundColor: '#10B981' }, isProcessing && { opacity: 0.6 }]}
+                        onPress={() => confirmRequest(r.id)}
+                        disabled={isProcessing}
+                        data-testid={`pending-confirm-${r.id}`}
+                      >
+                        {isProcessing ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark" size={14} color="#fff" />
+                            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Confirmer</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
         </View>
       )}
 

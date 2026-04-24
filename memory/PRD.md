@@ -83,7 +83,7 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 
 10. **Cartes "Demandes a traiter" harmonisees avec "Reservations du jour"**:
   - Meme modele visuel que `TodayReservationCard`: grille 3 colonnes, bordure gauche orange 4px, header (nom client cliquable souligne + badge DOCS + badge "Attente"), timestamp relatif, vehicule, dates + nombre de jours, chips Depart/Retour avec heures, prix cliquable (edit icon), badge paiement (Especes/Carte), 3 boutons d'action (Refuser / Modifier / Confirmer).
-  - Position: directement au-dessus de "Reservations du jour" pour priorite visuelle maximale.
+  - Position: au-dessus de "Reservations du jour", apres les KPIs (entre KPIs et Reservations du jour) pour priorite visuelle sans masquer les stats.
   - Section cachee automatiquement si aucune demande en attente.
 
 ## Prioritized Backlog
