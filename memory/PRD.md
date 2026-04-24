@@ -75,6 +75,12 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
   - **Notifications push mobile**: Hook `usePushNotifications` (`src/hooks/usePushNotifications.ts`) qui enregistre automatiquement le token Expo Push du device mobile dans `/api/notifications/register-token`. Active sur iOS/Android uniquement (no-op sur web). Necessite `expo.extra.eas.projectId` configure dans `app.json`. Les notifications push sont deja cablees cote backend (fonction `send_expo_push` dans `utils/notifications.py`).
   - **Notification in-app**: Deja en place via `notify_admins_of_agency` (lors de creation de reservation).
 
+9. **Modifier le prix et envoyer une contre-offre au client**:
+  - **Nouvel endpoint**: `POST /api/admin/reservations/{id}/send-offer` dans `routes/admin.py`. Accepte `total_price` et `message` optionnels. Met a jour le prix + enregistre une `price_adjustments` entry + envoie email au client + cree notification in-app.
+  - **Email de proposition**: Nouvelle fonction `send_price_offer_email` + template `generate_price_offer_email` dans `utils/email.py`. Affiche ancien prix barre + nouveau prix + message optionnel de l'agence. Inclut bouton CTA pour que le client se connecte.
+  - **UI**: Bouton "Modifier prix" (bleu) remplace "Details" dans les cartes "Demandes a traiter". Clic sur le badge prix ou le bouton ouvre un modal avec: prix actuel affiche, input editable pour le nouveau prix, textarea message optionnel, tooltip explicatif. Action "Envoyer l'offre" (bouton bleu avec paper-plane icon).
+  - **Validee**: pytest `test_offer_email.py` (2 cas: prix change / prix identique) + test endpoint live (360 CHF -> 299 CHF + message).
+
 ## Prioritized Backlog
 
 ### P1 - Next

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator, Dimensions, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, ActivityIndicator, Dimensions, Platform, Alert, Modal, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +31,10 @@ export default function AgencyAppHome() {
   const [returnModal, setReturnModal] = useState<any>(null);
   const [editClientModal, setEditClientModal] = useState<any>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [offerModal, setOfferModal] = useState<any>(null);
+  const [offerPrice, setOfferPrice] = useState<string>('');
+  const [offerMessage, setOfferMessage] = useState<string>('');
+  const [sendingOffer, setSendingOffer] = useState(false);
   const openClientProfile = async (userId: string) => {
     try {
       const res = await api.get(`/api/admin/users/${userId}`);
@@ -174,6 +178,40 @@ export default function AgencyAppHome() {
     } catch { return ''; }
   };
 
+  const openOfferModal = (r: any) => {
+    setOfferModal(r);
+    setOfferPrice(String(r.total_price ?? ''));
+    setOfferMessage('');
+  };
+
+  const sendOffer = async () => {
+    if (!offerModal) return;
+    const priceNum = parseFloat(offerPrice);
+    if (isNaN(priceNum) || priceNum < 0) {
+      Platform.OS === 'web' ? window.alert('Prix invalide') : Alert.alert('Erreur', 'Prix invalide');
+      return;
+    }
+    setSendingOffer(true);
+    try {
+      await api.post(`/api/admin/reservations/${offerModal.id}/send-offer`, {
+        total_price: priceNum,
+        message: offerMessage.trim(),
+      });
+      Platform.OS === 'web'
+        ? window.alert('Offre envoyée au client par e-mail')
+        : Alert.alert('Succès', 'Offre envoyée au client par e-mail');
+      setOfferModal(null);
+      setOfferPrice('');
+      setOfferMessage('');
+      fetchData();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Erreur lors de l\'envoi';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    } finally {
+      setSendingOffer(false);
+    }
+  };
+
   if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
@@ -253,11 +291,16 @@ export default function AgencyAppHome() {
                         </Text>
                       </View>
                     </TouchableOpacity>
-                    <View style={[s.pendingAmount, { backgroundColor: C.accent + '10' }]}>
+                    <TouchableOpacity
+                      style={[s.pendingAmount, { backgroundColor: C.accent + '10', borderWidth: 1, borderColor: C.accent + '30' }]}
+                      onPress={() => openOfferModal(r)}
+                      data-testid={`pending-amount-${r.id}`}
+                    >
                       <Text style={[s.pendingAmountText, { color: C.accent }]}>
                         CHF {Number(r.total_price || 0).toFixed(0)}
                       </Text>
-                    </View>
+                      <Ionicons name="create-outline" size={12} color={C.accent} style={{ marginLeft: 3 }} />
+                    </TouchableOpacity>
                   </View>
 
                   <View style={[s.pendingInfo, { borderColor: C.border }]}>
@@ -287,13 +330,13 @@ export default function AgencyAppHome() {
                       <Text style={s.pendingBtnRejectText}>Refuser</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      style={[s.pendingBtn, s.pendingBtnDetails, { borderColor: C.border }]}
-                      onPress={() => setActionModal(r)}
+                      style={[s.pendingBtn, s.pendingBtnOffer]}
+                      onPress={() => openOfferModal(r)}
                       disabled={isProcessing}
-                      data-testid={`pending-details-${r.id}`}
+                      data-testid={`pending-offer-${r.id}`}
                     >
-                      <Ionicons name="eye-outline" size={16} color={C.text} />
-                      <Text style={[s.pendingBtnDetailsText, { color: C.text }]}>Détails</Text>
+                      <Ionicons name="pricetag" size={15} color="#3B82F6" />
+                      <Text style={s.pendingBtnOfferText}>Modifier prix</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[s.pendingBtn, s.pendingBtnConfirm, isProcessing && { opacity: 0.6 }]}
@@ -478,6 +521,104 @@ export default function AgencyAppHome() {
         C={C}
         onSaved={() => { setEditClientModal(null); fetchData(); }}
       />
+
+      {/* Offer modal - modify price and send to client */}
+      <Modal visible={!!offerModal} transparent animationType="fade" onRequestClose={() => !sendingOffer && setOfferModal(null)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.offerModal, { backgroundColor: C.card }]} data-testid="offer-modal">
+            <View style={[s.offerHeader, { borderBottomColor: C.border }]}>
+              <View style={s.offerHeaderIcon}>
+                <Ionicons name="pricetag" size={22} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.offerTitle, { color: C.text }]}>Modifier et envoyer l'offre</Text>
+                <Text style={[s.offerSub, { color: C.textLight }]} numberOfLines={1}>
+                  {offerModal?.vehicle_name || `${offerModal?.vehicle_brand || ''} ${offerModal?.vehicle_model || ''}`.trim()} • {offerModal?.user_name}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => !sendingOffer && setOfferModal(null)} style={s.offerClose} data-testid="offer-close">
+                <Ionicons name="close" size={22} color={C.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 500 }} contentContainerStyle={{ padding: 20 }}>
+              <View style={[s.offerInfoBox, { backgroundColor: C.background, borderColor: C.border }]}>
+                <View style={s.offerInfoRow}>
+                  <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Prix actuel</Text>
+                  <Text style={[s.offerInfoValue, { color: C.text }]}>CHF {Number(offerModal?.total_price || 0).toFixed(2)}</Text>
+                </View>
+                <View style={s.offerInfoRow}>
+                  <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Période</Text>
+                  <Text style={[s.offerInfoValue, { color: C.text }]}>
+                    {offerModal && format(new Date(offerModal.start_date), 'dd MMM', { locale: fr })} → {offerModal && format(new Date(offerModal.end_date), 'dd MMM yyyy', { locale: fr })}
+                  </Text>
+                </View>
+              </View>
+
+              <Text style={[s.offerFieldLabel, { color: C.text }]}>Nouveau prix total (CHF)</Text>
+              <View style={[s.offerPriceBox, { backgroundColor: C.background, borderColor: C.border }]}>
+                <Text style={[s.offerCurrency, { color: C.textLight }]}>CHF</Text>
+                <TextInput
+                  value={offerPrice}
+                  onChangeText={setOfferPrice}
+                  keyboardType="decimal-pad"
+                  placeholder="0.00"
+                  placeholderTextColor={C.textLight}
+                  style={[s.offerPriceInput, { color: C.text }]}
+                  data-testid="offer-price-input"
+                />
+              </View>
+
+              <Text style={[s.offerFieldLabel, { color: C.text, marginTop: 16 }]}>
+                Message au client <Text style={{ color: C.textLight, fontWeight: '400' }}>(optionnel)</Text>
+              </Text>
+              <TextInput
+                value={offerMessage}
+                onChangeText={setOfferMessage}
+                placeholder="Ex: Remise appliquée pour fidélité, supplément kilométrage..."
+                placeholderTextColor={C.textLight}
+                multiline
+                numberOfLines={3}
+                style={[s.offerMessageInput, { color: C.text, backgroundColor: C.background, borderColor: C.border }]}
+                data-testid="offer-message-input"
+              />
+
+              <View style={[s.offerTipBox, { backgroundColor: '#3B82F610', borderColor: '#3B82F640' }]}>
+                <Ionicons name="mail" size={16} color="#3B82F6" />
+                <Text style={[s.offerTipText, { color: C.text }]}>
+                  Le client recevra un e-mail avec le nouveau prix et pourra accepter ou refuser l'offre depuis son espace.
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View style={[s.offerFooter, { borderTopColor: C.border }]}>
+              <TouchableOpacity
+                style={[s.offerBtn, s.offerBtnCancel, { borderColor: C.border }]}
+                onPress={() => !sendingOffer && setOfferModal(null)}
+                disabled={sendingOffer}
+                data-testid="offer-cancel"
+              >
+                <Text style={[s.offerBtnCancelText, { color: C.text }]}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[s.offerBtn, s.offerBtnSend, sendingOffer && { opacity: 0.6 }]}
+                onPress={sendOffer}
+                disabled={sendingOffer}
+                data-testid="offer-send"
+              >
+                {sendingOffer ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="paper-plane" size={15} color="#fff" />
+                    <Text style={s.offerBtnSendText}>Envoyer l'offre</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -518,7 +659,7 @@ const s = StyleSheet.create({
   pendingAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   pendingClientName: { fontSize: 14, fontWeight: '700' },
   pendingMeta: { fontSize: 11, marginTop: 2, fontWeight: '500' },
-  pendingAmount: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  pendingAmount: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
   pendingAmountText: { fontSize: 13, fontWeight: '800' },
   pendingInfo: { gap: 5, paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1 },
   pendingInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -530,7 +671,35 @@ const s = StyleSheet.create({
   pendingBtnRejectText: { color: '#EF4444', fontSize: 12, fontWeight: '700' },
   pendingBtnDetails: { borderWidth: 1 },
   pendingBtnDetailsText: { fontSize: 12, fontWeight: '700' },
+  pendingBtnOffer: { backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F640' },
+  pendingBtnOfferText: { color: '#3B82F6', fontSize: 12, fontWeight: '700' },
   pendingBtnConfirm: { backgroundColor: '#10B981' },
   pendingBtnConfirmText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   pendingMoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed' },
+
+  // Offer modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 16 },
+  offerModal: { width: '100%', maxWidth: 520, borderRadius: 16, overflow: 'hidden' },
+  offerHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 18, borderBottomWidth: 1 },
+  offerHeaderIcon: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#3B82F6', alignItems: 'center', justifyContent: 'center' },
+  offerTitle: { fontSize: 17, fontWeight: '800' },
+  offerSub: { fontSize: 12, marginTop: 2, fontWeight: '500' },
+  offerClose: { padding: 4 },
+  offerInfoBox: { padding: 14, borderRadius: 10, borderWidth: 1, marginBottom: 18, gap: 8 },
+  offerInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  offerInfoLabel: { fontSize: 12, fontWeight: '600' },
+  offerInfoValue: { fontSize: 13, fontWeight: '700' },
+  offerFieldLabel: { fontSize: 13, fontWeight: '700', marginBottom: 6 },
+  offerPriceBox: { flexDirection: 'row', alignItems: 'center', borderRadius: 10, borderWidth: 1, paddingHorizontal: 14, height: 52 },
+  offerCurrency: { fontSize: 14, fontWeight: '700', marginRight: 10 },
+  offerPriceInput: { flex: 1, fontSize: 22, fontWeight: '800', outlineWidth: 0 } as any,
+  offerMessageInput: { borderWidth: 1, borderRadius: 10, padding: 12, fontSize: 13, minHeight: 80, textAlignVertical: 'top', outlineWidth: 0 } as any,
+  offerTipBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 10, borderWidth: 1, marginTop: 16 },
+  offerTipText: { flex: 1, fontSize: 12, lineHeight: 16, fontWeight: '500' },
+  offerFooter: { flexDirection: 'row', gap: 10, padding: 16, borderTopWidth: 1 },
+  offerBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12, borderRadius: 10 },
+  offerBtnCancel: { borderWidth: 1 },
+  offerBtnCancelText: { fontSize: 14, fontWeight: '700' },
+  offerBtnSend: { backgroundColor: '#3B82F6' },
+  offerBtnSendText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });

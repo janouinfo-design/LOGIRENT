@@ -301,6 +301,64 @@ async def send_new_request_admin_email(client: dict, vehicle: dict, reservation:
         logger.error(f"Failed to send new request admin emails: {e}")
 
 
+def generate_price_offer_email(client_name: str, vehicle: dict, reservation: dict, old_price: float, new_price: float, message: str = '') -> str:
+    vname = f"{vehicle.get('brand', '')} {vehicle.get('model', '')}".strip()
+    price_changed = abs((old_price or 0) - (new_price or 0)) > 0.01
+    price_block = ''
+    if price_changed:
+        price_block = f'''
+        <div style="background-color:#FEF3C7;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #F59E0B;">
+          <p style="margin:0 0 8px;color:#92400E;font-weight:bold;font-size:14px;">Nouveau prix propose</p>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="color:#92400E;text-decoration:line-through;font-size:15px;">CHF {old_price:.2f}</span>
+            <span style="color:#64748B;font-size:18px;">&rarr;</span>
+            <span style="color:#10B981;font-weight:bold;font-size:22px;">CHF {new_price:.2f}</span>
+          </div>
+        </div>'''
+    else:
+        price_block = f'''
+        <div style="background-color:#10B98115;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #10B981;">
+          <p style="margin:0;color:#047857;font-weight:bold;font-size:14px;">Montant total : <span style="font-size:20px;">CHF {new_price:.2f}</span></p>
+        </div>'''
+
+    message_block = ''
+    if message:
+        message_block = f'''
+        <div style="background-color:#F1F5F9;padding:14px;border-radius:8px;margin:16px 0;">
+          <p style="margin:0 0 6px;color:#64748B;font-size:12px;font-weight:bold;text-transform:uppercase;">Message de l'agence</p>
+          <p style="margin:0;color:#1E293B;font-size:14px;line-height:1.5;">{message}</p>
+        </div>'''
+
+    body = f'''
+    <div style="text-align:center;padding:16px;background-color:#3B82F615;border-radius:8px;margin-bottom:20px;border:2px solid #3B82F6;">
+      <h2 style="color:#1D4ED8;margin:0;font-size:20px;">Offre de reservation</h2>
+      <p style="color:#1D4ED8;margin:6px 0 0;font-size:13px;">L'agence vous propose une offre pour votre demande</p>
+    </div>
+    <p>Bonjour <strong>{client_name}</strong>,</p>
+    <p>Apres etude de votre demande, notre agence vous fait parvenir une offre pour la reservation du <strong>{vname}</strong>.</p>
+    {_reservation_details_block(vehicle, reservation)}
+    {price_block}
+    {message_block}
+    <div style="background-color:#EFF6FF;padding:14px;border-radius:8px;margin:16px 0;border:1px solid #3B82F640;">
+      <p style="margin:0;color:#1E40AF;font-size:13px;line-height:1.5;">
+        Pour <strong>accepter cette offre</strong>, connectez-vous a votre espace LogiRent.
+        Si vous ne souhaitez pas donner suite, vous pouvez ignorer ce message.
+      </p>
+    </div>
+    {_documents_reminder_block()}'''
+
+    return _email_wrapper('Offre de reservation', '#3B82F6', body)
+
+
+async def send_price_offer_email(client: dict, vehicle: dict, reservation: dict, old_price: float, new_price: float, message: str = '', agency_id: str = None):
+    if not client or not client.get('email'):
+        return
+    html = generate_price_offer_email(client.get('name', ''), vehicle, reservation, old_price, new_price, message)
+    vname = f"{vehicle.get('brand', '')} {vehicle.get('model', '')}".strip()
+    subject = f"Offre de reservation - {vname} - CHF {new_price:.2f} | LogiRent"
+    await send_email(client['email'], subject, html, agency_id=agency_id)
+
+
 def generate_payment_confirmation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">

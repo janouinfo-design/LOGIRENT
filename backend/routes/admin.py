@@ -995,6 +995,86 @@ async def adjust_reservation_price(reservation_id: str, request: Request, user: 
     return {"message": f"Prix ajuste de CHF {old_total:.2f} a CHF {float(new_total):.2f}", "old_total": old_total, "new_total": float(new_total)}
 
 
+@router.post("/admin/reservations/{reservation_id}/send-offer")
+async def send_price_offer(reservation_id: str, request: Request, user: dict = Depends(get_admin_user)):
+    """Admin sends a (re)priced offer to the client for a pending reservation.
+    Optionally updates the total price and an accompanying message, then emails the client."""
+    from utils.email import send_price_offer_email
+    from utils.notifications import create_notification
+
+    body = await request.json()
+    new_total = body.get('total_price')
+    message = (body.get('message') or '').strip()
+
+    res = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Reservation non trouvee")
+    if res.get('status') not in ['pending', 'pending_cash']:
+        raise HTTPException(status_code=400, detail="L'offre ne peut etre envoyee que pour une demande en attente")
+
+    old_total = float(res.get('total_price', 0))
+    update: dict = {"updated_at": datetime.utcnow(), "last_offer_sent_at": datetime.utcnow()}
+    push: dict = {}
+    price_changed = False
+
+    if new_total is not None:
+        try:
+            new_total = float(new_total)
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Prix invalide")
+        if new_total < 0:
+            raise HTTPException(status_code=400, detail="Prix invalide")
+        if abs(new_total - old_total) > 0.01:
+            update["total_price"] = new_total
+            push["price_adjustments"] = {
+                "old_price": old_total,
+                "new_price": new_total,
+                "reason": message or "Offre ajustee par l'agence",
+                "adjusted_by": user.get('id'),
+                "adjusted_at": datetime.utcnow().isoformat(),
+            }
+            price_changed = True
+    else:
+        new_total = old_total
+
+    update_ops: dict = {"$set": update}
+    if push:
+        update_ops["$push"] = push
+    await db.reservations.update_one({"id": reservation_id}, update_ops)
+
+    # Fetch related entities for email
+    client = await db.users.find_one({"id": res.get('user_id')}, {"_id": 0})
+    vehicle = await db.vehicles.find_one({"id": res.get('vehicle_id')}, {"_id": 0})
+    reservation_updated = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+
+    if client and vehicle:
+        try:
+            await send_price_offer_email(
+                client, vehicle, reservation_updated,
+                old_price=old_total, new_price=new_total,
+                message=message, agency_id=res.get('agency_id')
+            )
+        except Exception as e:
+            logger.error(f"Failed to send offer email: {e}")
+
+        try:
+            vname = f"{vehicle.get('brand', '')} {vehicle.get('model', '')}".strip()
+            if price_changed:
+                msg = f"L'agence a revu le prix de votre demande pour {vname}: CHF {old_total:.2f} -> CHF {new_total:.2f}. Consultez votre e-mail pour accepter l'offre."
+            else:
+                msg = f"L'agence vous a envoye une offre pour {vname} (CHF {new_total:.2f}). Consultez votre e-mail pour accepter l'offre."
+            await create_notification(res.get('user_id'), 'status_changed', msg, reservation_id)
+        except Exception as e:
+            logger.error(f"Failed to notify client of offer: {e}")
+
+    return {
+        "message": "Offre envoyee au client",
+        "old_total": old_total,
+        "new_total": new_total,
+        "price_changed": price_changed,
+    }
+
+
 
 @router.put("/admin/reservations/{reservation_id}/payment-status")
 async def update_payment_status(reservation_id: str, payment_status: str, user: dict = Depends(get_admin_user)):
