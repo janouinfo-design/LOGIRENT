@@ -68,6 +68,7 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 4. **Creation client multi-etapes dans la reservation**: Base info -> details -> validation, avec WebcamCapture pour photos ID/permis.
 5. **Contrat retire cote client**: Les clients ne peuvent plus generer ni voir le contrat. Genere par l'admin a l'activation, envoye par email apres signature.
 6. **Page confirmation client mise a jour**: "Demande de reservation envoyee !" avec icone sablier, bouton "Telecharger le contrat" retire, message email d'attente, accents francais corriges.
+7. **Dashboard "Demandes a traiter"**: Nouvelle section prominente sur l'accueil admin (/app/frontend/app/agency-app/index.tsx) affichant les demandes en attente avec badge de comptage rouge, cartes client (nom cliquable + temps ecoule), infos vehicule+dates+montant, et 3 actions rapides (Refuser / Details / Confirmer). Lien "Tout voir" avec param URL `?filter=pending` qui pre-applique le filtre sur la page Reservations. Section cachee automatiquement s'il n'y a aucune demande en attente.
 
 ## Prioritized Backlog
 

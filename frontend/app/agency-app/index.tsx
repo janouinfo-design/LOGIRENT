@@ -22,6 +22,7 @@ export default function AgencyAppHome() {
   const [stats, setStats] = useState<any>(null);
   const [recentReservations, setRecentReservations] = useState<any[]>([]);
   const [todayReservations, setTodayReservations] = useState<any[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<any[]>([]);
   const [agency, setAgency] = useState<any>(null);
   const [docAlerts, setDocAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,7 @@ export default function AgencyAppHome() {
   const [actionModal, setActionModal] = useState<any>(null);
   const [returnModal, setReturnModal] = useState<any>(null);
   const [editClientModal, setEditClientModal] = useState<any>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const openClientProfile = async (userId: string) => {
     try {
       const res = await api.get(`/api/admin/users/${userId}`);
@@ -41,12 +43,13 @@ export default function AgencyAppHome() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [statsResp, resResp, todayResp, agenciesResp, alertsResp] = await Promise.all([
+      const [statsResp, resResp, todayResp, agenciesResp, alertsResp, pendingResp] = await Promise.all([
         api.get('/api/admin/stats'),
         api.get('/api/admin/reservations?limit=10'),
         api.get('/api/admin/reservations/today'),
         api.get('/api/agencies'),
         api.get('/api/admin/vehicles/document-alerts?days=30').catch(() => ({ data: { alerts: [] } })),
+        api.get('/api/admin/reservations?status=pending&limit=20').catch(() => ({ data: { reservations: [] } })),
       ]);
       setStats(statsResp.data);
       setRecentReservations(resResp.data.reservations || []);
@@ -54,6 +57,7 @@ export default function AgencyAppHome() {
       const agencies = agenciesResp.data;
       if (agencies?.length > 0) setAgency(agencies[0]);
       setDocAlerts(alertsResp.data.alerts || []);
+      setPendingRequests((pendingResp.data.reservations || []).sort((a: any, b: any) => new Date(b.created_at || b.start_date).getTime() - new Date(a.created_at || a.start_date).getTime()));
     } catch (err) {
       console.error(err);
     } finally {
@@ -126,6 +130,50 @@ export default function AgencyAppHome() {
     }
   };
 
+  const confirmRequest = async (id: string) => {
+    setProcessingId(id);
+    try {
+      await updateStatus(id, 'confirmed');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const rejectRequest = async (id: string) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm('Refuser cette demande de réservation ? Le client sera notifié par e-mail.')
+      : await new Promise<boolean>((resolve) => {
+          Alert.alert('Refuser la demande', 'Le client sera notifié par e-mail.', [
+            { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Refuser', style: 'destructive', onPress: () => resolve(true) },
+          ]);
+        });
+    if (!confirmed) return;
+    setProcessingId(id);
+    try {
+      await updateStatus(id, 'cancelled');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const formatRequestedAt = (iso?: string) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) return "à l'instant";
+      if (diffMin < 60) return `il y a ${diffMin} min`;
+      const diffH = Math.floor(diffMin / 60);
+      if (diffH < 24) return `il y a ${diffH}h`;
+      const diffD = Math.floor(diffH / 24);
+      if (diffD < 7) return `il y a ${diffD}j`;
+      return format(d, 'dd/MM/yyyy', { locale: fr });
+    } catch { return ''; }
+  };
+
   if (loading) return <View style={[s.container, { backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={C.accent} /></View>;
 
   return (
@@ -144,6 +192,143 @@ export default function AgencyAppHome() {
           <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.7)" />
         </LinearGradient>
       </TouchableOpacity>
+
+      {/* Demandes à traiter - pending reservation requests */}
+      {pendingRequests.length > 0 && (
+        <View style={{ marginBottom: 24 }} data-testid="pending-requests-section">
+          <View style={[s.pendingHeader, { backgroundColor: '#F59E0B15', borderColor: '#F59E0B40' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+              <View style={s.pendingHeaderIcon}>
+                <Ionicons name="hourglass" size={20} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Text style={[s.pendingHeaderTitle, { color: C.text }]}>Demandes à traiter</Text>
+                  <View style={s.pendingBadge}>
+                    <Text style={s.pendingBadgeText}>{pendingRequests.length}</Text>
+                  </View>
+                </View>
+                <Text style={[s.pendingHeaderSub, { color: C.textLight }]}>
+                  Nouvelles demandes de réservation en attente de votre validation
+                </Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
+              style={s.pendingSeeAll}
+              data-testid="pending-see-all"
+            >
+              <Text style={s.pendingSeeAllText}>Tout voir</Text>
+              <Ionicons name="chevron-forward" size={14} color="#F59E0B" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ gap: 10, marginTop: 10 }}>
+            {pendingRequests.slice(0, 3).map((r: any) => {
+              const isProcessing = processingId === r.id;
+              const start = new Date(r.start_date);
+              const end = new Date(r.end_date);
+              const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+              return (
+                <View
+                  key={r.id}
+                  style={[s.pendingCard, { backgroundColor: C.card, borderColor: C.border }]}
+                  data-testid={`pending-card-${r.id}`}
+                >
+                  <View style={s.pendingCardTop}>
+                    <TouchableOpacity
+                      onPress={() => r.user_id && openClientProfile(r.user_id)}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}
+                      data-testid={`pending-client-${r.id}`}
+                    >
+                      <View style={[s.pendingAvatar, { backgroundColor: '#F59E0B20' }]}>
+                        <Ionicons name="person" size={18} color="#F59E0B" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={[s.pendingClientName, { color: C.text }]} numberOfLines={1}>
+                          {r.user_name || r.user_email || 'Client'}
+                        </Text>
+                        <Text style={[s.pendingMeta, { color: C.textLight }]} numberOfLines={1}>
+                          <Ionicons name="time-outline" size={11} color={C.textLight} /> {formatRequestedAt(r.created_at)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    <View style={[s.pendingAmount, { backgroundColor: C.accent + '10' }]}>
+                      <Text style={[s.pendingAmountText, { color: C.accent }]}>
+                        CHF {Number(r.total_price || 0).toFixed(0)}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={[s.pendingInfo, { borderColor: C.border }]}>
+                    <View style={s.pendingInfoRow}>
+                      <Ionicons name="car-sport" size={14} color={C.textLight} />
+                      <Text style={[s.pendingInfoText, { color: C.text }]} numberOfLines={1}>
+                        {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`.trim() || 'Véhicule'}
+                      </Text>
+                    </View>
+                    <View style={s.pendingInfoRow}>
+                      <Ionicons name="calendar" size={14} color={C.textLight} />
+                      <Text style={[s.pendingInfoText, { color: C.text }]} numberOfLines={1}>
+                        {format(start, 'dd MMM', { locale: fr })} → {format(end, 'dd MMM yyyy', { locale: fr })}
+                      </Text>
+                      <Text style={[s.pendingDays, { color: C.textLight }]}>· {days}j</Text>
+                    </View>
+                  </View>
+
+                  <View style={s.pendingActions}>
+                    <TouchableOpacity
+                      style={[s.pendingBtn, s.pendingBtnReject]}
+                      onPress={() => rejectRequest(r.id)}
+                      disabled={isProcessing}
+                      data-testid={`pending-reject-${r.id}`}
+                    >
+                      <Ionicons name="close" size={16} color="#EF4444" />
+                      <Text style={s.pendingBtnRejectText}>Refuser</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[s.pendingBtn, s.pendingBtnDetails, { borderColor: C.border }]}
+                      onPress={() => setActionModal(r)}
+                      disabled={isProcessing}
+                      data-testid={`pending-details-${r.id}`}
+                    >
+                      <Ionicons name="eye-outline" size={16} color={C.text} />
+                      <Text style={[s.pendingBtnDetailsText, { color: C.text }]}>Détails</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[s.pendingBtn, s.pendingBtnConfirm, isProcessing && { opacity: 0.6 }]}
+                      onPress={() => confirmRequest(r.id)}
+                      disabled={isProcessing}
+                      data-testid={`pending-confirm-${r.id}`}
+                    >
+                      {isProcessing ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <>
+                          <Ionicons name="checkmark" size={16} color="#fff" />
+                          <Text style={s.pendingBtnConfirmText}>Confirmer</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
+            {pendingRequests.length > 3 && (
+              <TouchableOpacity
+                onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
+                style={[s.pendingMoreBtn, { borderColor: C.border }]}
+                data-testid="pending-more"
+              >
+                <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>
+                  Voir les {pendingRequests.length - 3} autres demandes
+                </Text>
+                <Ionicons name="arrow-forward" size={14} color={C.accent} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
 
       {/* Stats cards */}
       <View style={s.statsRow}>
@@ -318,4 +503,34 @@ const s = StyleSheet.create({
   statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
   statusText: { fontSize: 11, fontWeight: '700' },
   resFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+
+  // Demandes à traiter (pending requests)
+  pendingHeader: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 14, borderWidth: 1, gap: 10 },
+  pendingHeaderIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center' },
+  pendingHeaderTitle: { fontSize: 16, fontWeight: '800' },
+  pendingHeaderSub: { fontSize: 11, marginTop: 2, fontWeight: '500' },
+  pendingBadge: { backgroundColor: '#EF4444', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 10, minWidth: 22, alignItems: 'center' },
+  pendingBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+  pendingSeeAll: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
+  pendingSeeAllText: { color: '#F59E0B', fontSize: 12, fontWeight: '700' },
+  pendingCard: { borderRadius: 12, padding: 12, borderWidth: 1, borderLeftWidth: 3, borderLeftColor: '#F59E0B' },
+  pendingCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  pendingAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  pendingClientName: { fontSize: 14, fontWeight: '700' },
+  pendingMeta: { fontSize: 11, marginTop: 2, fontWeight: '500' },
+  pendingAmount: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+  pendingAmountText: { fontSize: 13, fontWeight: '800' },
+  pendingInfo: { gap: 5, paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1 },
+  pendingInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pendingInfoText: { fontSize: 12, fontWeight: '600', flex: 1 },
+  pendingDays: { fontSize: 11, fontWeight: '600' },
+  pendingActions: { flexDirection: 'row', gap: 6, marginTop: 10 },
+  pendingBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: 8 },
+  pendingBtnReject: { backgroundColor: '#FEE2E2' },
+  pendingBtnRejectText: { color: '#EF4444', fontSize: 12, fontWeight: '700' },
+  pendingBtnDetails: { borderWidth: 1 },
+  pendingBtnDetailsText: { fontSize: 12, fontWeight: '700' },
+  pendingBtnConfirm: { backgroundColor: '#10B981' },
+  pendingBtnConfirmText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  pendingMoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed' },
 });

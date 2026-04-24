@@ -51,7 +51,7 @@ type ViewMode = 'gestion' | 'planning';
 
 export default function AgencyReservations() {
   const { colors: C } = useThemeStore();
-  const params = useLocalSearchParams<{ highlight?: string; month?: string; tab?: string }>();
+  const params = useLocalSearchParams<{ highlight?: string; month?: string; tab?: string; filter?: string }>();
   const [viewMode, setViewMode] = useState<ViewMode>('gestion');
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [schedule, setSchedule] = useState<VehicleSchedule[]>([]);
@@ -126,6 +126,14 @@ export default function AgencyReservations() {
     }
     if (params.tab === 'planning') setViewMode('planning');
   }, [params.highlight, params.month, params.tab]);
+
+  // Handle quick filter param (from dashboard pending requests link)
+  useEffect(() => {
+    if (params.filter) {
+      setQuickFilter(params.filter as string);
+      setViewMode('gestion');
+    }
+  }, [params.filter]);
 
   const fetchReservations = async () => {
     try {
