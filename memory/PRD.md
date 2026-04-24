@@ -81,6 +81,11 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
   - **UI**: Bouton "Modifier prix" (bleu) remplace "Details" dans les cartes "Demandes a traiter". Clic sur le badge prix ou le bouton ouvre un modal avec: prix actuel affiche, input editable pour le nouveau prix, textarea message optionnel, tooltip explicatif. Action "Envoyer l'offre" (bouton bleu avec paper-plane icon).
   - **Validee**: pytest `test_offer_email.py` (2 cas: prix change / prix identique) + test endpoint live (360 CHF -> 299 CHF + message).
 
+10. **Cartes "Demandes a traiter" harmonisees avec "Reservations du jour"**:
+  - Meme modele visuel que `TodayReservationCard`: grille 3 colonnes, bordure gauche orange 4px, header (nom client cliquable souligne + badge DOCS + badge "Attente"), timestamp relatif, vehicule, dates + nombre de jours, chips Depart/Retour avec heures, prix cliquable (edit icon), badge paiement (Especes/Carte), 3 boutons d'action (Refuser / Modifier / Confirmer).
+  - Position: directement au-dessus de "Reservations du jour" pour priorite visuelle maximale.
+  - Section cachee automatiquement si aucune demande en attente.
+
 ## Prioritized Backlog
 
 ### P1 - Next

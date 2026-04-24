@@ -234,141 +234,142 @@ export default function AgencyAppHome() {
       {/* Demandes à traiter - pending reservation requests */}
       {pendingRequests.length > 0 && (
         <View style={{ marginBottom: 24 }} data-testid="pending-requests-section">
-          <View style={[s.pendingHeader, { backgroundColor: '#F59E0B15', borderColor: '#F59E0B40' }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-              <View style={s.pendingHeaderIcon}>
-                <Ionicons name="hourglass" size={20} color="#fff" />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <Text style={[s.pendingHeaderTitle, { color: C.text }]}>Demandes à traiter</Text>
-                  <View style={s.pendingBadge}>
-                    <Text style={s.pendingBadgeText}>{pendingRequests.length}</Text>
-                  </View>
-                </View>
-                <Text style={[s.pendingHeaderSub, { color: C.textLight }]}>
-                  Nouvelles demandes de réservation en attente de votre validation
-                </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Ionicons name="hourglass" size={18} color="#F59E0B" />
+              <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Demandes à traiter</Text>
+              <View style={s.pendingBadge}>
+                <Text style={s.pendingBadgeText}>{pendingRequests.length}</Text>
               </View>
             </View>
             <TouchableOpacity
               onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
-              style={s.pendingSeeAll}
               data-testid="pending-see-all"
             >
-              <Text style={s.pendingSeeAllText}>Tout voir</Text>
-              <Ionicons name="chevron-forward" size={14} color="#F59E0B" />
+              <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={{ gap: 10, marginTop: 10 }}>
-            {pendingRequests.slice(0, 3).map((r: any) => {
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+            {pendingRequests.map((r: any) => {
               const isProcessing = processingId === r.id;
               const start = new Date(r.start_date);
               const end = new Date(r.end_date);
               const days = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+              const startTime = (() => { try { return format(start, 'HH:mm'); } catch { return ''; } })();
+              const endTime = (() => { try { return format(end, 'HH:mm'); } catch { return ''; } })();
               return (
-                <View
-                  key={r.id}
-                  style={[s.pendingCard, { backgroundColor: C.card, borderColor: C.border }]}
-                  data-testid={`pending-card-${r.id}`}
-                >
-                  <View style={s.pendingCardTop}>
-                    <TouchableOpacity
-                      onPress={() => r.user_id && openClientProfile(r.user_id)}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}
-                      data-testid={`pending-client-${r.id}`}
-                    >
-                      <View style={[s.pendingAvatar, { backgroundColor: '#F59E0B20' }]}>
-                        <Ionicons name="person" size={18} color="#F59E0B" />
+                <View key={r.id} style={{ width: cardW }}>
+                  <View
+                    style={[s.pendingCardV2, { backgroundColor: C.card, borderColor: C.border }]}
+                    data-testid={`pending-card-${r.id}`}
+                  >
+                    {/* Header: Client name + status badge */}
+                    <View style={s.pendingV2Header}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 6 }}>
+                        <TouchableOpacity onPress={() => r.user_id && openClientProfile(r.user_id)} style={{ flex: 1 }} data-testid={`pending-client-${r.id}`}>
+                          <Text style={[s.pendingV2Name, { color: C.accent, textDecorationLine: 'underline' }]} numberOfLines={1}>
+                            {r.user_name || r.user_email || 'Client'}
+                          </Text>
+                        </TouchableOpacity>
+                        {r.docs_missing && (
+                          <View style={s.pendingV2DocsBadge}>
+                            <Ionicons name="alert-circle" size={12} color="#EF4444" />
+                            <Text style={{ color: '#EF4444', fontSize: 9, fontWeight: '800' }}>DOCS</Text>
+                          </View>
+                        )}
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={[s.pendingClientName, { color: C.text }]} numberOfLines={1}>
-                          {r.user_name || r.user_email || 'Client'}
-                        </Text>
-                        <Text style={[s.pendingMeta, { color: C.textLight }]} numberOfLines={1}>
-                          <Ionicons name="time-outline" size={11} color={C.textLight} /> {formatRequestedAt(r.created_at)}
+                      <View style={[s.pendingV2Badge, { backgroundColor: '#F59E0B20' }]}>
+                        <Text style={[s.pendingV2BadgeText, { color: '#F59E0B' }]}>Attente</Text>
+                      </View>
+                    </View>
+
+                    {/* Time since request */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                      <Ionicons name="time-outline" size={12} color={C.textLight} />
+                      <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '500' }}>{formatRequestedAt(r.created_at)}</Text>
+                    </View>
+
+                    {/* Vehicle */}
+                    <Text style={[s.pendingV2Vehicle, { color: C.textLight }]} numberOfLines={1}>
+                      {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`.trim() || 'Véhicule'}
+                    </Text>
+
+                    {/* Dates */}
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <Ionicons name="calendar-outline" size={13} color={C.textLight} />
+                      <Text style={{ color: C.text, fontSize: 12, fontWeight: '600' }}>
+                        {format(start, 'dd MMM', { locale: fr })} - {format(end, 'dd MMM', { locale: fr })}
+                      </Text>
+                      <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>· {days}j</Text>
+                    </View>
+
+                    {/* Pickup & Return times */}
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                      <View style={[s.pendingV2TimeChip, { backgroundColor: '#10B98110', borderColor: '#10B98130' }]}>
+                        <Ionicons name="log-in-outline" size={11} color="#10B981" />
+                        <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>Depart {startTime}</Text>
+                      </View>
+                      <View style={[s.pendingV2TimeChip, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
+                        <Ionicons name="log-out-outline" size={11} color="#3B82F6" />
+                        <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>Retour {endTime}</Text>
+                      </View>
+                    </View>
+
+                    {/* Price + payment method */}
+                    <View style={s.pendingV2PriceRow}>
+                      <TouchableOpacity onPress={() => openOfferModal(r)} data-testid={`pending-amount-${r.id}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                        <Text style={[s.pendingV2Price, { color: C.accent }]}>CHF {Number(r.total_price || 0).toFixed(0)}</Text>
+                        <Ionicons name="create-outline" size={13} color={C.accent} />
+                      </TouchableOpacity>
+                      <View style={[s.pendingV2PayBadge, { backgroundColor: (r.payment_method === 'cash' ? '#A855F7' : '#3B82F6') + '18' }]}>
+                        <Ionicons name={r.payment_method === 'cash' ? 'cash-outline' : 'card-outline'} size={11} color={r.payment_method === 'cash' ? '#A855F7' : '#3B82F6'} />
+                        <Text style={{ color: r.payment_method === 'cash' ? '#A855F7' : '#3B82F6', fontSize: 10, fontWeight: '700' }}>
+                          {r.payment_method === 'cash' ? 'Especes' : 'Carte'}
                         </Text>
                       </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[s.pendingAmount, { backgroundColor: C.accent + '10', borderWidth: 1, borderColor: C.accent + '30' }]}
-                      onPress={() => openOfferModal(r)}
-                      data-testid={`pending-amount-${r.id}`}
-                    >
-                      <Text style={[s.pendingAmountText, { color: C.accent }]}>
-                        CHF {Number(r.total_price || 0).toFixed(0)}
-                      </Text>
-                      <Ionicons name="create-outline" size={12} color={C.accent} style={{ marginLeft: 3 }} />
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={[s.pendingInfo, { borderColor: C.border }]}>
-                    <View style={s.pendingInfoRow}>
-                      <Ionicons name="car-sport" size={14} color={C.textLight} />
-                      <Text style={[s.pendingInfoText, { color: C.text }]} numberOfLines={1}>
-                        {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`.trim() || 'Véhicule'}
-                      </Text>
                     </View>
-                    <View style={s.pendingInfoRow}>
-                      <Ionicons name="calendar" size={14} color={C.textLight} />
-                      <Text style={[s.pendingInfoText, { color: C.text }]} numberOfLines={1}>
-                        {format(start, 'dd MMM', { locale: fr })} → {format(end, 'dd MMM yyyy', { locale: fr })}
-                      </Text>
-                      <Text style={[s.pendingDays, { color: C.textLight }]}>· {days}j</Text>
-                    </View>
-                  </View>
 
-                  <View style={s.pendingActions}>
-                    <TouchableOpacity
-                      style={[s.pendingBtn, s.pendingBtnReject]}
-                      onPress={() => rejectRequest(r.id)}
-                      disabled={isProcessing}
-                      data-testid={`pending-reject-${r.id}`}
-                    >
-                      <Ionicons name="close" size={16} color="#EF4444" />
-                      <Text style={s.pendingBtnRejectText}>Refuser</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[s.pendingBtn, s.pendingBtnOffer]}
-                      onPress={() => openOfferModal(r)}
-                      disabled={isProcessing}
-                      data-testid={`pending-offer-${r.id}`}
-                    >
-                      <Ionicons name="pricetag" size={15} color="#3B82F6" />
-                      <Text style={s.pendingBtnOfferText}>Modifier prix</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[s.pendingBtn, s.pendingBtnConfirm, isProcessing && { opacity: 0.6 }]}
-                      onPress={() => confirmRequest(r.id)}
-                      disabled={isProcessing}
-                      data-testid={`pending-confirm-${r.id}`}
-                    >
-                      {isProcessing ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <>
-                          <Ionicons name="checkmark" size={16} color="#fff" />
-                          <Text style={s.pendingBtnConfirmText}>Confirmer</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
+                    {/* Actions row - 3 quick action buttons */}
+                    <View style={[s.pendingV2Actions, { borderTopColor: C.border }]}>
+                      <TouchableOpacity
+                        style={[s.pendingV2Btn, { backgroundColor: '#FEE2E2' }]}
+                        onPress={() => rejectRequest(r.id)}
+                        disabled={isProcessing}
+                        data-testid={`pending-reject-${r.id}`}
+                      >
+                        <Ionicons name="close" size={14} color="#EF4444" />
+                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>Refuser</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[s.pendingV2Btn, { backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F640' }]}
+                        onPress={() => openOfferModal(r)}
+                        disabled={isProcessing}
+                        data-testid={`pending-offer-${r.id}`}
+                      >
+                        <Ionicons name="pricetag" size={13} color="#3B82F6" />
+                        <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Modifier</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[s.pendingV2Btn, { backgroundColor: '#10B981' }, isProcessing && { opacity: 0.6 }]}
+                        onPress={() => confirmRequest(r.id)}
+                        disabled={isProcessing}
+                        data-testid={`pending-confirm-${r.id}`}
+                      >
+                        {isProcessing ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <>
+                            <Ionicons name="checkmark" size={14} color="#fff" />
+                            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Confirmer</Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               );
             })}
-            {pendingRequests.length > 3 && (
-              <TouchableOpacity
-                onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
-                style={[s.pendingMoreBtn, { borderColor: C.border }]}
-                data-testid="pending-more"
-              >
-                <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>
-                  Voir les {pendingRequests.length - 3} autres demandes
-                </Text>
-                <Ionicons name="arrow-forward" size={14} color={C.accent} />
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       )}
@@ -645,37 +646,22 @@ const s = StyleSheet.create({
   statusText: { fontSize: 11, fontWeight: '700' },
   resFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 
-  // Demandes à traiter (pending requests)
-  pendingHeader: { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 14, borderWidth: 1, gap: 10 },
-  pendingHeaderIcon: { width: 38, height: 38, borderRadius: 19, backgroundColor: '#F59E0B', alignItems: 'center', justifyContent: 'center' },
-  pendingHeaderTitle: { fontSize: 16, fontWeight: '800' },
-  pendingHeaderSub: { fontSize: 11, marginTop: 2, fontWeight: '500' },
+  // Demandes à traiter (pending requests) - grid style matching TodayReservationCard
   pendingBadge: { backgroundColor: '#EF4444', paddingHorizontal: 8, paddingVertical: 1, borderRadius: 10, minWidth: 22, alignItems: 'center' },
   pendingBadgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
-  pendingSeeAll: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  pendingSeeAllText: { color: '#F59E0B', fontSize: 12, fontWeight: '700' },
-  pendingCard: { borderRadius: 12, padding: 12, borderWidth: 1, borderLeftWidth: 3, borderLeftColor: '#F59E0B' },
-  pendingCardTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
-  pendingAvatar: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  pendingClientName: { fontSize: 14, fontWeight: '700' },
-  pendingMeta: { fontSize: 11, marginTop: 2, fontWeight: '500' },
-  pendingAmount: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
-  pendingAmountText: { fontSize: 13, fontWeight: '800' },
-  pendingInfo: { gap: 5, paddingVertical: 8, borderTopWidth: 1, borderBottomWidth: 1 },
-  pendingInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  pendingInfoText: { fontSize: 12, fontWeight: '600', flex: 1 },
-  pendingDays: { fontSize: 11, fontWeight: '600' },
-  pendingActions: { flexDirection: 'row', gap: 6, marginTop: 10 },
-  pendingBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 9, borderRadius: 8 },
-  pendingBtnReject: { backgroundColor: '#FEE2E2' },
-  pendingBtnRejectText: { color: '#EF4444', fontSize: 12, fontWeight: '700' },
-  pendingBtnDetails: { borderWidth: 1 },
-  pendingBtnDetailsText: { fontSize: 12, fontWeight: '700' },
-  pendingBtnOffer: { backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F640' },
-  pendingBtnOfferText: { color: '#3B82F6', fontSize: 12, fontWeight: '700' },
-  pendingBtnConfirm: { backgroundColor: '#10B981' },
-  pendingBtnConfirmText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  pendingMoreBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 10, borderWidth: 1, borderStyle: 'dashed' },
+  pendingCardV2: { borderRadius: 10, padding: 12, borderWidth: 1, borderLeftWidth: 4, borderLeftColor: '#F59E0B', width: '100%' },
+  pendingV2Header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  pendingV2Name: { fontSize: 15, fontWeight: '800', flex: 1, marginRight: 8 },
+  pendingV2Badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  pendingV2BadgeText: { fontSize: 11, fontWeight: '700' },
+  pendingV2DocsBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FEE2E2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  pendingV2Vehicle: { fontSize: 13, fontWeight: '600', marginBottom: 4 },
+  pendingV2TimeChip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1 },
+  pendingV2PriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  pendingV2Price: { fontSize: 16, fontWeight: '800' },
+  pendingV2PayBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  pendingV2Actions: { flexDirection: 'row', gap: 5, paddingTop: 8, borderTopWidth: 1 },
+  pendingV2Btn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingVertical: 8, borderRadius: 6 },
 
   // Offer modal
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 16 },
