@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal, FlatList, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Modal, FlatList, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { Tabs, useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -56,6 +56,113 @@ const MENU_ITEMS: MenuItem[] = [
   },
   { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
 ];
+
+// Mobile bottom tab bar (5 tabs + "Plus" drawer for all other pages)
+function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules, modulesLoaded }: {
+  C: any; pathname: string; pendingCount: number; onNavigate: (key: string) => void; agencyModules: Record<string, boolean>; modulesLoaded: boolean;
+}) {
+  const [moreOpen, setMoreOpen] = useState(false);
+  const tabs = [
+    { key: 'index', label: 'Accueil', icon: 'home', iconO: 'home-outline', badge: 0 },
+    { key: 'reservations', label: 'Resas', icon: 'calendar', iconO: 'calendar-outline', badge: pendingCount },
+    { key: 'vehicles', label: 'Vehicules', icon: 'car', iconO: 'car-outline', badge: 0 },
+    { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline', badge: 0 },
+    { key: '__more__', label: 'Plus', icon: 'apps', iconO: 'apps-outline', badge: 0 },
+  ];
+
+  const isActive = (key: string) => {
+    if (key === 'index') return pathname === '/' || pathname === '/agency-app' || pathname === '/agency-app/';
+    if (key === '__more__') return false;
+    return pathname.includes(key);
+  };
+
+  const moreItems = [
+    { key: 'book', label: 'Nouvelle reservation', icon: 'add-circle-outline' },
+    { key: 'invoices', label: 'Factures', icon: 'receipt-outline' },
+    { key: 'statistics', label: 'Statistiques', icon: 'stats-chart-outline' },
+    { key: 'analytics', label: 'Analytics', icon: 'analytics-outline' },
+    { key: 'documents', label: 'Scan documents', icon: 'scan-outline' },
+    { key: 'tracking', label: 'GPS / Tracking', icon: 'navigate-outline' },
+    { key: 'contract-template', label: 'Modele contrat', icon: 'document-text-outline' },
+    { key: 'billing-settings', label: 'Parametres facturation', icon: 'settings-outline' },
+    { key: 'email-settings', label: 'Configuration Email', icon: 'mail-outline' },
+    { key: 'profile', label: 'Profil', icon: 'person-circle-outline' },
+  ].filter(it => {
+    const moduleKey = TAB_MODULE_MAP[it.key];
+    if (!moduleKey) return true;
+    if (!modulesLoaded) return true;
+    return agencyModules[moduleKey] !== false;
+  });
+
+  return (
+    <>
+      <View style={[bs.bar, { backgroundColor: C.card, borderTopColor: C.border }]} data-testid="mobile-bottom-tabs">
+        {tabs.map(t => {
+          const active = isActive(t.key);
+          return (
+            <TouchableOpacity
+              key={t.key}
+              style={bs.tab}
+              onPress={() => { if (t.key === '__more__') setMoreOpen(true); else onNavigate(t.key); }}
+              data-testid={`mobile-tab-${t.key}`}
+            >
+              <View>
+                <Ionicons name={(active ? t.icon : t.iconO) as any} size={22} color={active ? ACCENT : C.textLight} />
+                {t.badge > 0 && (
+                  <View style={bs.tabBadge}>
+                    <Text style={bs.tabBadgeText}>{t.badge > 9 ? '9+' : t.badge}</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
+        <Pressable style={bs.moreOverlay} onPress={() => setMoreOpen(false)}>
+          <Pressable style={[bs.morePanel, { backgroundColor: C.card }]} onPress={(e) => e.stopPropagation?.()}>
+            <View style={[bs.moreHeader, { borderBottomColor: C.border }]}>
+              <Text style={[bs.moreTitle, { color: C.text }]}>Plus d'options</Text>
+              <TouchableOpacity onPress={() => setMoreOpen(false)} data-testid="mobile-more-close">
+                <Ionicons name="close" size={24} color={C.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView>
+              {moreItems.map(it => (
+                <TouchableOpacity
+                  key={it.key}
+                  style={[bs.moreItem, { borderBottomColor: C.border }]}
+                  onPress={() => { setMoreOpen(false); onNavigate(it.key); }}
+                  data-testid={`mobile-more-${it.key}`}
+                >
+                  <Ionicons name={it.icon as any} size={20} color={C.textLight} />
+                  <Text style={[bs.moreItemText, { color: C.text }]}>{it.label}</Text>
+                  <Ionicons name="chevron-forward" size={18} color={C.textLight} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}
+
+const bs = StyleSheet.create({
+  bar: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 8, paddingTop: 6 },
+  tab: { flex: 1, alignItems: 'center', gap: 3, paddingVertical: 4 },
+  tabLabel: { fontSize: 10, fontWeight: '700' },
+  tabBadge: { position: 'absolute' as any, top: -4, right: -10, backgroundColor: '#EF4444', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: '#fff' },
+  tabBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  moreOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  morePanel: { maxHeight: '75%' as any, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 20 },
+  moreHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
+  moreTitle: { fontSize: 16, fontWeight: '800' },
+  moreItem: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderBottomWidth: 1 },
+  moreItemText: { flex: 1, fontSize: 14, fontWeight: '600' },
+});
 
 function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoaded, badge }: {
   item: MenuItem; isActive: boolean; onNavigate: (key: string) => void; C: any; agencyModules: Record<string, boolean>; modulesLoaded: boolean; badge?: number;
@@ -182,6 +289,10 @@ export default function AgencyAppLayout() {
     return () => clearInterval(interval);
   }, [isAuthenticated, token, pathname]);
 
+  // Responsive breakpoint
+  const { width: screenWidth } = useWindowDimensions();
+  const isMobile = screenWidth < 1024;
+
   if (!isAuthenticated || !user || user.role !== 'admin') return null;
 
   const timeAgo = (dateStr: string) => {
@@ -217,52 +328,59 @@ export default function AgencyAppLayout() {
 
   return (
     <View style={[s.container, { backgroundColor: C.bg }]}>
-      {/* Header with grouped menu */}
+      {/* Header with grouped menu (desktop: full menu, mobile: compact) */}
       <View style={[s.header, { backgroundColor: C.navBg, borderBottomColor: C.navBorder }]}>
         <View style={s.headerInner}>
           {/* Logo */}
           <View style={s.logoArea}>
             <Ionicons name="car-sport" size={22} color={ACCENT} />
             <Text style={[s.logoText, { color: C.text }]}>LogiRent</Text>
-            <View style={[s.agencyBadge, { backgroundColor: ACCENT + '15' }]}>
-              <Text style={[s.agencyBadgeText, { color: ACCENT }]}>{user.agency_name || 'Agence'}</Text>
-            </View>
+            {!isMobile && (
+              <View style={[s.agencyBadge, { backgroundColor: ACCENT + '15' }]}>
+                <Text style={[s.agencyBadgeText, { color: ACCENT }]}>{user.agency_name || 'Agence'}</Text>
+              </View>
+            )}
           </View>
 
-          {/* Menu Items */}
-          <View style={s.menuRow}>
-            {MENU_ITEMS.map(item => {
-              if (item.children) {
+          {/* Desktop menu (hidden on mobile) */}
+          {!isMobile && (
+            <View style={s.menuRow}>
+              {MENU_ITEMS.map(item => {
+                if (item.children) {
+                  return (
+                    <DropdownMenu
+                      key={item.key}
+                      item={item}
+                      isActive={isGroupActive(item)}
+                      onNavigate={navigateTo}
+                      C={C}
+                      agencyModules={agencyModules}
+                      modulesLoaded={modulesLoaded}
+                      badge={item.key === 'reservations-group' ? pendingCount : 0}
+                    />
+                  );
+                }
+
+                if (!isItemVisible(item)) return null;
+                const active = isTabActive(item.key);
+
                 return (
-                  <DropdownMenu
+                  <TouchableOpacity
                     key={item.key}
-                    item={item}
-                    isActive={isGroupActive(item)}
-                    onNavigate={navigateTo}
-                    C={C}
-                    agencyModules={agencyModules}
-                    modulesLoaded={modulesLoaded}
-                    badge={item.key === 'reservations-group' ? pendingCount : 0}
-                  />
+                    style={[s.menuItem, active && s.menuItemActive]}
+                    onPress={() => navigateTo(item.key)}
+                    data-testid={`menu-${item.key}`}
+                  >
+                    <Ionicons name={(active ? item.icon : item.iconO) as any} size={18} color={active ? ACCENT : C.textLight} />
+                    <Text style={[s.menuText, active && { color: ACCENT, fontWeight: '700' }]}>{item.label}</Text>
+                  </TouchableOpacity>
                 );
-              }
+              })}
+            </View>
+          )}
 
-              if (!isItemVisible(item)) return null;
-              const active = isTabActive(item.key);
-
-              return (
-                <TouchableOpacity
-                  key={item.key}
-                  style={[s.menuItem, active && s.menuItemActive]}
-                  onPress={() => navigateTo(item.key)}
-                  data-testid={`menu-${item.key}`}
-                >
-                  <Ionicons name={(active ? item.icon : item.iconO) as any} size={18} color={active ? ACCENT : C.textLight} />
-                  <Text style={[s.menuText, active && { color: ACCENT, fontWeight: '700' }]}>{item.label}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {/* Mobile spacer (pushes right actions to edge) */}
+          {isMobile && <View style={{ flex: 1 }} />}
 
           {/* Right actions */}
           <View style={s.rightActions}>
@@ -300,6 +418,18 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="complete-contract" options={{ title: 'Contrat', href: null }} />
         </Tabs>
       </View>
+
+      {/* Mobile bottom tab bar */}
+      {isMobile && (
+        <MobileBottomTabs
+          C={C}
+          pathname={pathname}
+          pendingCount={pendingCount}
+          onNavigate={navigateTo}
+          agencyModules={agencyModules}
+          modulesLoaded={modulesLoaded}
+        />
+      )}
 
       {/* Notification Panel */}
       <Modal visible={showNotifs} transparent animationType="slide" onRequestClose={() => setShowNotifs(false)}>

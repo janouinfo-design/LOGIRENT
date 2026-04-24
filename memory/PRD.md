@@ -86,6 +86,14 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
   - Position: au-dessus de "Reservations du jour", apres les KPIs (entre KPIs et Reservations du jour) pour priorite visuelle sans masquer les stats.
   - Section cachee automatiquement si aucune demande en attente.
 
+11. **App mobile admin responsive**:
+  - **Breakpoint**: < 1024px (telephones + tablettes) -> mode mobile, >= 1024px -> mode desktop.
+  - **Header mobile**: Logo + bell notifs + logout uniquement. Menu horizontal cache.
+  - **Bottom tab bar mobile**: 5 icones fixees en bas (Accueil, Resas avec badge pending, Vehicules, Clients, Plus) avec animation active en violet. Component `MobileBottomTabs` dans `_layout.tsx`.
+  - **Drawer "Plus"**: Modal slide-up contenant Nouvelle reservation, Factures, Statistiques, Analytics, GPS, Modele contrat, Parametres facturation, Email, Profil. Respecte les agency_modules activés/desactivés.
+  - **Detection**: `useWindowDimensions` hook, recalcul en live si l'utilisateur pivote le device ou redimensionne la fenetre.
+  - **Client**: L'interface client (tabs `/(tabs)`) utilisait deja des bottom tabs natives via `expo-router Tabs` avec 4 tabs (Accueil, Locations, Notifs, Profil).
+
 ## Prioritized Backlog
 
 ### P1 - Next
