@@ -89,8 +89,11 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 11. **App mobile admin responsive**:
   - **Breakpoint**: < 1024px (telephones + tablettes) -> mode mobile, >= 1024px -> mode desktop.
   - **Header mobile**: Logo + bell notifs + logout uniquement. Menu horizontal cache.
-  - **Bottom tab bar mobile**: 5 icones fixees en bas (Accueil, Resas avec badge pending, Vehicules, Clients, Plus) avec animation active en violet. Component `MobileBottomTabs` dans `_layout.tsx`.
-  - **Drawer "Plus"**: Modal slide-up contenant Nouvelle reservation, Factures, Statistiques, Analytics, GPS, Modele contrat, Parametres facturation, Email, Profil. Respecte les agency_modules activés/desactivés.
+  - **Bottom tab bar mobile**: 4 onglets + **bouton central FAB "Scan rapide"** (violet, eleve, icone appareil photo). Layout: Accueil | Resas (badge pending) | [SCAN] | Clients | Plus.
+  - **Modal Scan rapide** (slide-up): 
+    - "Scanner un document" (carte bleue) -> redirige vers `/agency-app/documents` pour scan IA OCR des permis/cartes d'identite.
+    - "Photos vehicule avant depart" -> charge automatiquement les reservations du jour via `/api/admin/reservations/today` et affiche chaque depart comme carte cliquable. Clic -> redirige vers `/agency-app/complete-contract?id=...` pour l'inspection vehicule.
+  - **Drawer "Plus"**: Nouvelle reservation, Vehicules, Factures, Statistiques, Analytics, GPS, Modele contrat, Parametres facturation, Email, Profil (respecte les agency_modules).
   - **Detection**: `useWindowDimensions` hook, recalcul en live si l'utilisateur pivote le device ou redimensionne la fenetre.
   - **Client**: L'interface client (tabs `/(tabs)`) utilisait deja des bottom tabs natives via `expo-router Tabs` avec 4 tabs (Accueil, Locations, Notifs, Profil).
 

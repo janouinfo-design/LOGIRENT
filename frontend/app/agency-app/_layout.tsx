@@ -57,26 +57,35 @@ const MENU_ITEMS: MenuItem[] = [
   { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
 ];
 
-// Mobile bottom tab bar (5 tabs + "Plus" drawer for all other pages)
+// Mobile bottom tab bar (4 tabs + central "Scan" FAB + "Plus" drawer)
 function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules, modulesLoaded }: {
   C: any; pathname: string; pendingCount: number; onNavigate: (key: string) => void; agencyModules: Record<string, boolean>; modulesLoaded: boolean;
 }) {
+  const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
-  const tabs = [
+  const [scanOpen, setScanOpen] = useState(false);
+  const [pickupReservations, setPickupReservations] = useState<any[]>([]);
+  const [pickupLoading, setPickupLoading] = useState(false);
+  const { token } = useAuthStore();
+
+  // Layout: left tabs | FAB | right tabs
+  const leftTabs = [
     { key: 'index', label: 'Accueil', icon: 'home', iconO: 'home-outline', badge: 0 },
     { key: 'reservations', label: 'Resas', icon: 'calendar', iconO: 'calendar-outline', badge: pendingCount },
-    { key: 'vehicles', label: 'Vehicules', icon: 'car', iconO: 'car-outline', badge: 0 },
+  ];
+  const rightTabs = [
     { key: 'clients', label: 'Clients', icon: 'people', iconO: 'people-outline', badge: 0 },
     { key: '__more__', label: 'Plus', icon: 'apps', iconO: 'apps-outline', badge: 0 },
   ];
 
   const isActive = (key: string) => {
     if (key === 'index') return pathname === '/' || pathname === '/agency-app' || pathname === '/agency-app/';
-    if (key === '__more__') return false;
+    if (key === '__more__' || key === '__scan__') return false;
     return pathname.includes(key);
   };
 
   const moreItems = [
+    { key: 'vehicles', label: 'Vehicules', icon: 'car-outline' },
     { key: 'book', label: 'Nouvelle reservation', icon: 'add-circle-outline' },
     { key: 'invoices', label: 'Factures', icon: 'receipt-outline' },
     { key: 'statistics', label: 'Statistiques', icon: 'stats-chart-outline' },
@@ -94,35 +103,137 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
     return agencyModules[moduleKey] !== false;
   });
 
+  const openScan = async () => {
+    setScanOpen(true);
+    setPickupLoading(true);
+    try {
+      const res = await axios.get(`${API_URL}/api/admin/reservations/today`, { headers: { Authorization: `Bearer ${token}` } });
+      setPickupReservations(res.data?.reservations || []);
+    } catch { setPickupReservations([]); }
+    finally { setPickupLoading(false); }
+  };
+
+  const renderTab = (t: any) => {
+    const active = isActive(t.key);
+    return (
+      <TouchableOpacity
+        key={t.key}
+        style={bs.tab}
+        onPress={() => { if (t.key === '__more__') setMoreOpen(true); else onNavigate(t.key); }}
+        data-testid={`mobile-tab-${t.key}`}
+      >
+        <View>
+          <Ionicons name={(active ? t.icon : t.iconO) as any} size={22} color={active ? ACCENT : C.textLight} />
+          {t.badge > 0 && (
+            <View style={bs.tabBadge}>
+              <Text style={bs.tabBadgeText}>{t.badge > 9 ? '9+' : t.badge}</Text>
+            </View>
+          )}
+        </View>
+        <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t.label}</Text>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <>
       <View style={[bs.bar, { backgroundColor: C.card, borderTopColor: C.border }]} data-testid="mobile-bottom-tabs">
-        {tabs.map(t => {
-          const active = isActive(t.key);
-          return (
-            <TouchableOpacity
-              key={t.key}
-              style={bs.tab}
-              onPress={() => { if (t.key === '__more__') setMoreOpen(true); else onNavigate(t.key); }}
-              data-testid={`mobile-tab-${t.key}`}
-            >
-              <View>
-                <Ionicons name={(active ? t.icon : t.iconO) as any} size={22} color={active ? ACCENT : C.textLight} />
-                {t.badge > 0 && (
-                  <View style={bs.tabBadge}>
-                    <Text style={bs.tabBadgeText}>{t.badge > 9 ? '9+' : t.badge}</Text>
-                  </View>
-                )}
-              </View>
-              <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
+        {leftTabs.map(renderTab)}
+
+        {/* Center FAB - Scan rapide */}
+        <View style={bs.fabWrap}>
+          <TouchableOpacity
+            style={bs.fab}
+            onPress={openScan}
+            activeOpacity={0.85}
+            data-testid="mobile-tab-scan"
+          >
+            <Ionicons name="camera" size={26} color="#fff" />
+          </TouchableOpacity>
+          <Text style={[bs.fabLabel, { color: ACCENT }]}>Scan</Text>
+        </View>
+
+        {rightTabs.map(renderTab)}
       </View>
+
+      {/* Scan options modal */}
+      <Modal visible={scanOpen} transparent animationType="slide" onRequestClose={() => setScanOpen(false)}>
+        <Pressable style={bs.moreOverlay} onPress={() => setScanOpen(false)}>
+          <Pressable style={[bs.morePanel, { backgroundColor: C.card }]} onPress={(e: any) => e.stopPropagation?.()}>
+            <View style={[bs.moreHeader, { borderBottomColor: C.border }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="camera" size={22} color={ACCENT} />
+                <Text style={[bs.moreTitle, { color: C.text }]}>Scan rapide</Text>
+              </View>
+              <TouchableOpacity onPress={() => setScanOpen(false)} data-testid="mobile-scan-close">
+                <Ionicons name="close" size={24} color={C.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView>
+              <TouchableOpacity
+                style={[bs.scanCard, { backgroundColor: '#3B82F610', borderColor: '#3B82F640' }]}
+                onPress={() => { setScanOpen(false); router.push('/agency-app/documents' as any); }}
+                data-testid="scan-documents-btn"
+              >
+                <View style={[bs.scanIconBox, { backgroundColor: '#3B82F6' }]}>
+                  <Ionicons name="scan" size={22} color="#fff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[bs.scanCardTitle, { color: C.text }]}>Scanner un document</Text>
+                  <Text style={[bs.scanCardSub, { color: C.textLight }]}>Permis de conduire, carte d'identite (IA OCR)</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={C.textLight} />
+              </TouchableOpacity>
+
+              <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 }}>
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>
+                  Photos vehicule avant depart
+                </Text>
+              </View>
+
+              {pickupLoading ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ color: C.textLight }}>Chargement...</Text>
+                </View>
+              ) : pickupReservations.length === 0 ? (
+                <View style={{ padding: 20, alignItems: 'center', gap: 6 }}>
+                  <Ionicons name="calendar-outline" size={28} color={C.textLight} />
+                  <Text style={{ color: C.textLight, fontSize: 12, textAlign: 'center' }}>
+                    Aucun depart prevu aujourd'hui
+                  </Text>
+                </View>
+              ) : (
+                pickupReservations.map((r: any) => (
+                  <TouchableOpacity
+                    key={r.id}
+                    style={[bs.scanCard, { backgroundColor: C.bg, borderColor: C.border }]}
+                    onPress={() => { setScanOpen(false); router.push(`/agency-app/complete-contract?id=${r.id}` as any); }}
+                    data-testid={`scan-pickup-${r.id}`}
+                  >
+                    <View style={[bs.scanIconBox, { backgroundColor: '#10B981' }]}>
+                      <Ionicons name="car-sport" size={22} color="#fff" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[bs.scanCardTitle, { color: C.text }]} numberOfLines={1}>
+                        {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`}
+                      </Text>
+                      <Text style={[bs.scanCardSub, { color: C.textLight }]} numberOfLines={1}>
+                        {r.user_name} · {r.status === 'confirmed' ? 'A livrer' : r.status === 'active' ? 'En cours' : 'A traiter'}
+                      </Text>
+                    </View>
+                    <Ionicons name="camera-outline" size={18} color={ACCENT} />
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <Modal visible={moreOpen} transparent animationType="slide" onRequestClose={() => setMoreOpen(false)}>
         <Pressable style={bs.moreOverlay} onPress={() => setMoreOpen(false)}>
-          <Pressable style={[bs.morePanel, { backgroundColor: C.card }]} onPress={(e) => e.stopPropagation?.()}>
+          <Pressable style={[bs.morePanel, { backgroundColor: C.card }]} onPress={(e: any) => e.stopPropagation?.()}>
             <View style={[bs.moreHeader, { borderBottomColor: C.border }]}>
               <Text style={[bs.moreTitle, { color: C.text }]}>Plus d'options</Text>
               <TouchableOpacity onPress={() => setMoreOpen(false)} data-testid="mobile-more-close">
@@ -151,17 +262,24 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
 }
 
 const bs = StyleSheet.create({
-  bar: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 8, paddingTop: 6 },
+  bar: { flexDirection: 'row', borderTopWidth: 1, paddingBottom: 8, paddingTop: 6, alignItems: 'flex-end' },
   tab: { flex: 1, alignItems: 'center', gap: 3, paddingVertical: 4 },
   tabLabel: { fontSize: 10, fontWeight: '700' },
   tabBadge: { position: 'absolute' as any, top: -4, right: -10, backgroundColor: '#EF4444', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: '#fff' },
   tabBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
+  fabWrap: { flex: 1, alignItems: 'center', gap: 2, marginTop: -24 },
+  fab: { width: 56, height: 56, borderRadius: 28, backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#fff', ...(Platform.OS === 'web' ? { boxShadow: '0 4px 12px rgba(124, 58, 237, 0.4)' } as any : { shadowColor: ACCENT, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 8, elevation: 8 }) },
+  fabLabel: { fontSize: 10, fontWeight: '800', marginTop: 2 },
   moreOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   morePanel: { maxHeight: '75%' as any, borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 20 },
   moreHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
   moreTitle: { fontSize: 16, fontWeight: '800' },
   moreItem: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderBottomWidth: 1 },
   moreItemText: { flex: 1, fontSize: 14, fontWeight: '600' },
+  scanCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, marginHorizontal: 16, marginTop: 12, borderRadius: 12, borderWidth: 1 },
+  scanIconBox: { width: 42, height: 42, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  scanCardTitle: { fontSize: 14, fontWeight: '800' },
+  scanCardSub: { fontSize: 12, fontWeight: '500', marginTop: 2 },
 });
 
 function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoaded, badge }: {
