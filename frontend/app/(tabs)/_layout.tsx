@@ -4,10 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
+import { usePushNotifications } from '../../src/hooks/usePushNotifications';
 
 export default function TabLayout() {
   const { isAuthenticated, user, isLoading } = useAuthStore();
   const { unreadCount } = useNotificationStore();
+
+  // Register for push notifications (mobile only)
+  usePushNotifications(isAuthenticated, user?.id);
 
   // Show loading while checking auth
   if (isLoading) {

@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
 import { useThemeStore } from '../../src/store/themeStore';
+import { usePushNotifications } from '../../src/hooks/usePushNotifications';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const ACCENT = '#7C3AED';
@@ -56,8 +57,8 @@ const MENU_ITEMS: MenuItem[] = [
   { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
 ];
 
-function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoaded }: {
-  item: MenuItem; isActive: boolean; onNavigate: (key: string) => void; C: any; agencyModules: Record<string, boolean>; modulesLoaded: boolean;
+function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoaded, badge }: {
+  item: MenuItem; isActive: boolean; onNavigate: (key: string) => void; C: any; agencyModules: Record<string, boolean>; modulesLoaded: boolean; badge?: number;
 }) {
   const [open, setOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -89,7 +90,14 @@ function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoa
         onPress={() => Platform.OS !== 'web' ? setOpen(!open) : onNavigate(visibleChildren[0].key)}
         data-testid={`menu-${item.key}`}
       >
-        <Ionicons name={(isActive ? item.icon : item.iconO) as any} size={18} color={isActive ? ACCENT : C.textLight} />
+        <View style={{ position: 'relative' }}>
+          <Ionicons name={(isActive ? item.icon : item.iconO) as any} size={18} color={isActive ? ACCENT : C.textLight} />
+          {badge && badge > 0 ? (
+            <View style={s.menuBadge} data-testid={`menu-badge-${item.key}`}>
+              <Text style={s.menuBadgeText}>{badge > 9 ? '9+' : badge}</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={[s.menuText, isActive && { color: ACCENT, fontWeight: '700' }]}>{item.label}</Text>
         <Ionicons name="chevron-down" size={12} color={C.textLight} style={{ marginLeft: 2 }} />
       </TouchableOpacity>
@@ -108,6 +116,11 @@ function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoa
             >
               <Ionicons name={child.iconO as any} size={16} color={C.textLight} />
               <Text style={[s.dropdownText, { color: C.text }]}>{child.label}</Text>
+              {child.key === 'reservations' && badge && badge > 0 ? (
+                <View style={[s.menuBadge, { position: 'relative', marginLeft: 'auto' }]}>
+                  <Text style={s.menuBadgeText}>{badge > 9 ? '9+' : badge}</Text>
+                </View>
+              ) : null}
             </TouchableOpacity>
           ))}
         </View>
@@ -125,6 +138,10 @@ export default function AgencyAppLayout() {
   const [showNotifs, setShowNotifs] = useState(false);
   const [agencyModules, setAgencyModules] = useState<Record<string, boolean>>({});
   const [modulesLoaded, setModulesLoaded] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Register for push notifications (mobile only)
+  usePushNotifications(isAuthenticated, user?.id);
 
   useEffect(() => { loadTheme(); }, []);
 
@@ -148,6 +165,22 @@ export default function AgencyAppLayout() {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
+
+  // Fetch pending reservations count for menu badge
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+    const fetchPending = () => {
+      axios.get(`${API_URL}/api/admin/stats`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          const byStatus = res.data?.reservations_by_status || {};
+          setPendingCount((byStatus.pending || 0) + (byStatus.pending_cash || 0));
+        })
+        .catch(() => setPendingCount(0));
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, token, pathname]);
 
   if (!isAuthenticated || !user || user.role !== 'admin') return null;
 
@@ -209,6 +242,7 @@ export default function AgencyAppLayout() {
                     C={C}
                     agencyModules={agencyModules}
                     modulesLoaded={modulesLoaded}
+                    badge={item.key === 'reservations-group' ? pendingCount : 0}
                   />
                 );
               }
@@ -390,4 +424,6 @@ const s = StyleSheet.create({
   notifItemTitle: { fontSize: 14, fontWeight: '700' },
   notifItemMsg: { fontSize: 12, marginTop: 2 },
   notifTime: { fontSize: 11, marginTop: 4 },
+  menuBadge: { position: 'absolute' as any, top: -6, right: -10, backgroundColor: '#EF4444', borderRadius: 9, minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, borderWidth: 2, borderColor: '#fff' },
+  menuBadgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
 });

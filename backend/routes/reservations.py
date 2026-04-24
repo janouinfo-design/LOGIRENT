@@ -99,12 +99,18 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     vname = f"{vehicle['brand']} {vehicle['model']}"
     category = vehicle.get('type', 'Standard')
 
-    # Send "request received" email to client
+    # Send "request received" email to client + admin alert
     try:
-        from utils.email import send_reservation_request_email
+        from utils.email import send_reservation_request_email, send_new_request_admin_email
         await send_reservation_request_email(user, vehicle, reservation.dict(), agency_id=vehicle.get('agency_id'))
     except Exception as email_error:
         logger.error(f"Failed to send request email: {email_error}")
+
+    # Send email alert to agency admins
+    try:
+        await send_new_request_admin_email(user, vehicle, reservation.dict(), agency_id=vehicle.get('agency_id'))
+    except Exception as email_error:
+        logger.error(f"Failed to send admin alert email: {email_error}")
 
     # Notify client: reservation request received
     try:

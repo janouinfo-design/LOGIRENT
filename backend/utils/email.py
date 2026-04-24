@@ -238,6 +238,69 @@ async def send_reservation_request_email(user: dict, vehicle: dict, reservation:
     )
 
 
+def generate_new_request_admin_email(client: dict, vehicle: dict, reservation: dict) -> str:
+    vname = f"{vehicle['brand']} {vehicle['model']}"
+    start = _format_date(reservation.get('start_date', ''))
+    end = _format_date(reservation.get('end_date', ''))
+    total_days = reservation.get('total_days', 0)
+    total_price = reservation.get('total_price', 0)
+    payment = 'Especes' if reservation.get('payment_method') == 'cash' else 'Carte'
+    client_phone = client.get('phone', '-')
+    client_email = client.get('email', '-')
+    body = f'''
+    <div style="text-align:center;padding:16px;background-color:#F59E0B15;border-radius:8px;margin-bottom:20px;border:2px solid #F59E0B;">
+      <h2 style="color:#92400E;margin:0;font-size:20px;">Nouvelle demande de reservation</h2>
+      <p style="color:#92400E;margin:6px 0 0;font-size:13px;">Une action de votre part est requise</p>
+    </div>
+    <div style="background-color:#F8FAFC;padding:20px;border-radius:8px;margin:20px 0;">
+      <h3 style="margin-top:0;color:#1A1A2E;">Details du client</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#64748B;">Nom :</td><td style="padding:6px 0;font-weight:bold;">{client.get('name', '-')}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Email :</td><td style="padding:6px 0;font-weight:bold;">{client_email}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Telephone :</td><td style="padding:6px 0;font-weight:bold;">{client_phone}</td></tr>
+      </table>
+    </div>
+    <div style="background-color:#F8FAFC;padding:20px;border-radius:8px;margin:20px 0;">
+      <h3 style="margin-top:0;color:#1A1A2E;">Details de la demande</h3>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#64748B;">Vehicule :</td><td style="padding:6px 0;font-weight:bold;">{vname}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Du :</td><td style="padding:6px 0;font-weight:bold;">{start}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Au :</td><td style="padding:6px 0;font-weight:bold;">{end}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Duree :</td><td style="padding:6px 0;font-weight:bold;">{total_days} jour(s)</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Paiement :</td><td style="padding:6px 0;font-weight:bold;">{payment}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">Montant :</td><td style="padding:6px 0;font-weight:bold;color:#10B981;">CHF {total_price}</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center;margin:24px 0;">
+      <a href="https://app.logirent.ch/agency-app" style="display:inline-block;background-color:#1A1A2E;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;">Traiter la demande</a>
+    </div>
+    <p style="color:#64748B;font-size:12px;text-align:center;">Connectez-vous au tableau de bord LogiRent pour confirmer ou refuser cette demande.</p>'''
+
+    return _email_wrapper('Nouvelle demande de reservation', '#F59E0B', body)
+
+
+async def send_new_request_admin_email(client: dict, vehicle: dict, reservation: dict, agency_id: str = None):
+    """Send email to all agency admins when a client submits a new reservation request."""
+    if not agency_id:
+        return
+    try:
+        admins = await db.users.find({"agency_id": agency_id, "role": "admin"}).to_list(50)
+        if not admins:
+            return
+        html = generate_new_request_admin_email(client, vehicle, reservation)
+        vname = f"{vehicle['brand']} {vehicle['model']}"
+        subject = f"Nouvelle demande - {client.get('name', 'Client')} - {vname} | LogiRent"
+        for admin in admins:
+            admin_email = admin.get('email')
+            if admin_email:
+                try:
+                    await send_email(admin_email, subject, html, agency_id=agency_id)
+                except Exception as e:
+                    logger.error(f"Failed to send admin email to {admin_email}: {e}")
+    except Exception as e:
+        logger.error(f"Failed to send new request admin emails: {e}")
+
+
 def generate_payment_confirmation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">

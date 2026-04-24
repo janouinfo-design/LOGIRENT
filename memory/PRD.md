@@ -69,6 +69,11 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 5. **Contrat retire cote client**: Les clients ne peuvent plus generer ni voir le contrat. Genere par l'admin a l'activation, envoye par email apres signature.
 6. **Page confirmation client mise a jour**: "Demande de reservation envoyee !" avec icone sablier, bouton "Telecharger le contrat" retire, message email d'attente, accents francais corriges.
 7. **Dashboard "Demandes a traiter"**: Nouvelle section prominente sur l'accueil admin (/app/frontend/app/agency-app/index.tsx) affichant les demandes en attente avec badge de comptage rouge, cartes client (nom cliquable + temps ecoule), infos vehicule+dates+montant, et 3 actions rapides (Refuser / Details / Confirmer). Lien "Tout voir" avec param URL `?filter=pending` qui pre-applique le filtre sur la page Reservations. Section cachee automatiquement s'il n'y a aucune demande en attente.
+8. **Systeme d'alertes nouvelles demandes (complete)**:
+  - **Email a l'agence**: Nouvelle fonction `send_new_request_admin_email` dans `utils/email.py` qui envoie un email avec details client + details reservation + bouton "Traiter la demande" a TOUS les admins de l'agence concernee, via le SMTP configure. Appelee depuis `POST /api/reservations`.
+  - **Badge rouge sur menu "Reservations"**: Pastille rouge avec compteur sur l'onglet Reservations du menu principal (`_layout.tsx`), visible depuis n'importe quelle page. Actualisee toutes les 30s via `/api/admin/stats`. Egalement sur le sous-menu "Toutes les reservations".
+  - **Notifications push mobile**: Hook `usePushNotifications` (`src/hooks/usePushNotifications.ts`) qui enregistre automatiquement le token Expo Push du device mobile dans `/api/notifications/register-token`. Active sur iOS/Android uniquement (no-op sur web). Necessite `expo.extra.eas.projectId` configure dans `app.json`. Les notifications push sont deja cablees cote backend (fonction `send_expo_push` dans `utils/notifications.py`).
+  - **Notification in-app**: Deja en place via `notify_admins_of_agency` (lors de creation de reservation).
 
 ## Prioritized Backlog
 
