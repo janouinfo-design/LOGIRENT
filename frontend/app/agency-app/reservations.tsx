@@ -30,8 +30,9 @@ interface VehicleSchedule {
 
 const QUICK_FILTERS = [
   { value: null, label: "Aujourd'hui" },
+  { value: 'pending', label: 'En attente' },
   { value: 'active', label: 'Active' },
-  { value: 'upcoming', label: 'A venir' },
+  { value: 'upcoming', label: 'Confirmee' },
   { value: 'overdue', label: 'Retards' },
   { value: 'cancelled', label: 'Annules' },
 ];
@@ -194,8 +195,9 @@ export default function AgencyReservations() {
       list = list.filter(r => r.user_name?.toLowerCase().includes(q) || r.vehicle_name?.toLowerCase().includes(q) || r.user_email?.toLowerCase().includes(q));
     } else {
       // Quick filter
-      if (quickFilter === 'active') list = list.filter(r => r.status === 'active');
-      else if (quickFilter === 'upcoming') list = list.filter(r => ['confirmed', 'pending', 'pending_cash'].includes(r.status));
+      if (quickFilter === 'pending') list = list.filter(r => ['pending', 'pending_cash'].includes(r.status));
+      else if (quickFilter === 'active') list = list.filter(r => r.status === 'active');
+      else if (quickFilter === 'upcoming') list = list.filter(r => r.status === 'confirmed');
       else if (quickFilter === 'overdue') list = list.filter(r => r.status === 'active' && new Date(r.end_date) < now);
       else if (quickFilter === 'cancelled') list = list.filter(r => r.status === 'cancelled');
       // null = today: show today's reservations
@@ -270,7 +272,8 @@ export default function AgencyReservations() {
   // KPI
   const kpiToday = todayData?.total || 0;
   const kpiActive = statsData?.reservations_by_status?.active || 0;
-  const kpiUpcoming = (statsData?.reservations_by_status?.confirmed || 0) + (statsData?.reservations_by_status?.pending || 0);
+  const kpiUpcoming = (statsData?.reservations_by_status?.confirmed || 0);
+  const kpiPending = (statsData?.reservations_by_status?.pending || 0) + (statsData?.reservations_by_status?.pending_cash || 0);
   const kpiOverdue = overdueData?.total || 0;
 
   // Activity events
@@ -405,7 +408,8 @@ export default function AgencyReservations() {
             {[
               { icon: 'car-sport', label: "Reservations aujourd'hui", value: kpiToday, color: '#1E3A5F', bg: '#F0F4F8', filter: null as string | null },
               { icon: 'play-circle', label: 'Active', value: kpiActive, color: '#10B981', bg: '#ECFDF5', filter: 'active' },
-              { icon: 'calendar', label: 'A venir', value: kpiUpcoming, color: '#3B82F6', bg: '#EFF6FF', filter: 'upcoming' },
+              { icon: 'hourglass', label: 'En attente', value: kpiPending, color: '#F59E0B', bg: '#FFFBEB', filter: 'pending' },
+              { icon: 'calendar', label: 'Confirmee', value: kpiUpcoming, color: '#3B82F6', bg: '#EFF6FF', filter: 'upcoming' },
               { icon: 'warning', label: 'Problemes / Retards', value: kpiOverdue, color: '#EF4444', bg: '#FEF2F2', filter: 'overdue' },
             ].map((k, i) => (
               <TouchableOpacity key={i} style={[s.kpiCard, { backgroundColor: k.bg }, quickFilter === k.filter && { borderWidth: 2, borderColor: k.color }]} onPress={() => { setQuickFilter(k.filter); setTimeout(scrollToTable, 100); }} activeOpacity={0.7} data-testid={`kpi-${k.filter || 'today'}`}>
