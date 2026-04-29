@@ -268,6 +268,13 @@ async def startup_cron():
     except Exception as e:
         logger.error(f"Object storage init failed: {e}")
 
+    # Run vehicle_models migration (idempotent)
+    try:
+        from utils.migrate_models import migrate_vehicle_models
+        await migrate_vehicle_models(db)
+    except Exception as e:
+        logger.error(f"Vehicle models migration failed at startup: {e}")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

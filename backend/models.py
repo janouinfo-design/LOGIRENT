@@ -149,6 +149,44 @@ class VehicleOption(BaseModel):
     price_per_day: float = 0
 
 
+class VehicleModel(BaseModel):
+    """Vehicle MODEL/CATEGORY shown to clients.
+    A category groups multiple physical vehicles with the same brand/model/type."""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    brand: str
+    model: str
+    year: int
+    type: str
+    price_per_day: float
+    photos: List[str] = []
+    description: Optional[str] = None
+    seats: int = 5
+    transmission: str = "automatic"
+    fuel_type: str = "essence"
+    options: List[VehicleOption] = []
+    pricing_tiers: List[dict] = []
+    seasonal_pricing: List[dict] = []
+    agency_id: Optional[str] = None
+    location: str = "Geneva"
+    is_active: bool = True
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class VehicleModelCreate(BaseModel):
+    brand: str
+    model: str
+    year: int
+    type: str
+    price_per_day: float
+    photos: List[str] = []
+    description: Optional[str] = None
+    seats: int = 5
+    transmission: str = "automatic"
+    fuel_type: str = "essence"
+    options: List[VehicleOption] = []
+    location: str = "Geneva"
+
+
 class Vehicle(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     brand: str
@@ -172,6 +210,8 @@ class Vehicle(BaseModel):
     fleet_count: int = 1  # Number of identical vehicles in stock
     pricing_tiers: List[dict] = []
     seasonal_pricing: List[dict] = []
+    model_id: Optional[str] = None  # Link to VehicleModel (catalog category)
+    mileage: Optional[int] = 0
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -206,7 +246,8 @@ class ReservationOption(BaseModel):
 class Reservation(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     user_id: str
-    vehicle_id: str
+    vehicle_id: Optional[str] = None  # Physical vehicle (null until admin assigns)
+    model_id: Optional[str] = None  # Vehicle MODEL/CATEGORY requested by client
     agency_id: Optional[str] = None
     start_date: datetime
     end_date: datetime
@@ -220,17 +261,25 @@ class Reservation(BaseModel):
     payment_method: str = "card"
     payment_session_id: Optional[str] = None
     payment_status: str = "unpaid"
+    assigned_at: Optional[datetime] = None  # When admin assigned a physical vehicle
+    assigned_by: Optional[str] = None  # Admin user_id who assigned
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class ReservationCreate(BaseModel):
-    vehicle_id: str
+    vehicle_id: Optional[str] = None  # Backward compat - if provided, treated as model_id
+    model_id: Optional[str] = None  # New preferred field
     start_date: datetime
     end_date: datetime
     options: List[str] = []
     payment_method: str = "card"
     selected_tier_id: Optional[str] = None
+
+
+class AssignVehicleRequest(BaseModel):
+    vehicle_id: str
+    confirm: bool = True  # If true, also set status=confirmed and send email
 
 
 class ReservationUpdate(BaseModel):

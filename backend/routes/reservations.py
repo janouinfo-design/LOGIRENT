@@ -15,38 +15,66 @@ router = APIRouter()
 
 @router.post("/reservations", response_model=Reservation)
 async def create_reservation(reservation_data: ReservationCreate, user: dict = Depends(get_current_user)):
-    vehicle = await db.vehicles.find_one({"id": reservation_data.vehicle_id})
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
+    """Client creates a reservation REQUEST. The client picks a MODEL (catalog),
+    not a specific physical vehicle. Admin will assign a physical vehicle later."""
+    # Accept either model_id (preferred) or vehicle_id (backward compat)
+    model_id = reservation_data.model_id or reservation_data.vehicle_id
+    if not model_id:
+        raise HTTPException(status_code=400, detail="model_id (or vehicle_id) required")
 
-    if vehicle['status'] == 'maintenance':
-        raise HTTPException(status_code=400, detail="Vehicle is under maintenance")
+    # Try to find as a vehicle_model first, then fall back to a vehicle (legacy)
+    model = await db.vehicle_models.find_one({"id": model_id}, {"_id": 0})
+    vehicle = None
+    if not model:
+        # Legacy: client sent a physical vehicle_id - resolve its model
+        vehicle = await db.vehicles.find_one({"id": model_id}, {"_id": 0})
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Modele de vehicule introuvable")
+        # Use the linked model_id if available, otherwise treat the vehicle as the catalog entry
+        if vehicle.get("model_id"):
+            model = await db.vehicle_models.find_one({"id": vehicle["model_id"]}, {"_id": 0})
+        if not model:
+            # Treat the vehicle itself as the catalog (legacy fallback)
+            model = vehicle
 
-    # Fleet-based availability: check concurrent reservations vs fleet_count
+    # Check fleet availability: count physical vehicles in this model
+    physical_vehicles = await db.vehicles.find({"model_id": model.get("id")}, {"_id": 0}).to_list(500)
+    if not physical_vehicles and vehicle:
+        # Single-vehicle legacy
+        physical_vehicles = [vehicle]
+
+    fleet_count = len(physical_vehicles) if physical_vehicles else model.get("fleet_count", 1)
+
     start = reservation_data.start_date
     end = reservation_data.end_date
-    fleet_count = vehicle.get('fleet_count', 1)
 
+    # Count concurrent reservations on the same model
     concurrent = await db.reservations.count_documents({
-        "vehicle_id": vehicle['id'],
+        "$or": [
+            {"model_id": model.get("id")},
+            {"vehicle_id": {"$in": [v.get("id") for v in physical_vehicles]} if physical_vehicles else None},
+        ],
         "status": {"$in": ["confirmed", "active", "pending", "pending_cash"]},
         "start_date": {"$lt": end},
         "end_date": {"$gt": start},
     })
 
     if concurrent >= fleet_count:
-        raise HTTPException(status_code=400, detail=f"Aucun {vehicle['brand']} {vehicle['model']} disponible pour ces dates ({concurrent}/{fleet_count} reserves)")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Aucun {model.get('brand')} {model.get('model')} disponible pour ces dates ({concurrent}/{fleet_count} reserves)"
+        )
 
     total_days = (reservation_data.end_date - reservation_data.start_date).days
     if total_days <= 0:
         raise HTTPException(status_code=400, detail="End date must be after start date")
 
-    base_price = vehicle['price_per_day'] * total_days
+    base_price = model['price_per_day'] * total_days
 
     # Handle selected pricing tier
     selected_tier = None
     if reservation_data.selected_tier_id:
-        pricing_tiers = vehicle.get('pricing_tiers', [])
+        pricing_tiers = model.get('pricing_tiers', [])
         for tier in pricing_tiers:
             if tier.get('id') == reservation_data.selected_tier_id and tier.get('active', True):
                 selected_tier = {
@@ -59,13 +87,13 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
                 base_price = float(tier['price'])
                 break
 
-    vehicle_options = {opt['name']: opt for opt in vehicle.get('options', [])}
+    model_options = {opt['name']: opt for opt in model.get('options', [])}
     selected_options = []
     options_price = 0
 
     for opt_name in reservation_data.options:
-        if opt_name in vehicle_options:
-            opt = vehicle_options[opt_name]
+        if opt_name in model_options:
+            opt = model_options[opt_name]
             opt_total = opt['price_per_day'] * total_days
             selected_options.append(ReservationOption(name=opt_name, price_per_day=opt['price_per_day'], total_price=opt_total))
             options_price += opt_total
@@ -75,13 +103,12 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
     if payment_method not in ["card", "cash"]:
         payment_method = "card"
 
-    # Client reservation = request (pending), admin must confirm
-    status = "pending"
-
+    # Client reservation = request (pending), admin must assign vehicle and confirm
     reservation = Reservation(
         user_id=user['id'],
-        vehicle_id=reservation_data.vehicle_id,
-        agency_id=vehicle.get('agency_id'),
+        vehicle_id=None,  # Will be assigned by admin
+        model_id=model.get("id"),
+        agency_id=model.get('agency_id'),
         start_date=reservation_data.start_date,
         end_date=reservation_data.end_date,
         options=selected_options,
@@ -90,14 +117,16 @@ async def create_reservation(reservation_data: ReservationCreate, user: dict = D
         base_price=base_price,
         options_price=options_price,
         total_price=total_price,
-        status=status,
+        status="pending",
         payment_method=payment_method
     )
 
     await db.reservations.insert_one(reservation.dict())
 
-    vname = f"{vehicle['brand']} {vehicle['model']}"
-    category = vehicle.get('type', 'Standard')
+    # For email: use model info as "vehicle" payload
+    vehicle = model
+    vname = f"{model['brand']} {model['model']}"
+    category = model.get('type', 'Standard')
 
     # Send "request received" email to client + admin alert
     try:

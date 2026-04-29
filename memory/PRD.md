@@ -97,6 +97,30 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
   - **Detection**: `useWindowDimensions` hook, recalcul en live si l'utilisateur pivote le device ou redimensionne la fenetre.
   - **Client**: L'interface client (tabs `/(tabs)`) utilisait deja des bottom tabs natives via `expo-router Tabs` avec 4 tabs (Accueil, Locations, Notifs, Profil).
 
+12. **Refonte modele de donnees: Catalogue (vehicle_models) vs Parc physique (vehicles)**:
+  - **Nouvelle collection `vehicle_models`**: Catalogue commercial affiche au client (marque, modele, type, photos, places, transmission, carburant, prix, options, description, agency_id, location).
+  - **Collection `vehicles` enrichie**: Ajout de `model_id` (FK vers vehicle_models). Conserve plate_number, mileage, status (available/reserved/rented/maintenance/inactive), chassis_number, etc.
+  - **Reservations**: Ajout de `model_id` (mandatory). Le `vehicle_id` devient nullable. Nouveaux champs `assigned_at` et `assigned_by`.
+  - **Migration auto** (`utils/migrate_models.py`): A chaque demarrage, groupe les vehicules existants par (brand, model, year, agency_id), cree un modele par groupe, lie chaque vehicule. Pour les reservations existantes, derive `model_id` depuis `vehicle_id` -> `vehicle.model_id`. Idempotent. Ran successfully: 13 models cree, 13 vehicules lies, 22 reservations mises a jour.
+
+13. **Endpoints "Assigner un vehicule" (admin)**:
+  - `GET /api/vehicle-models`: PUBLIC, retourne le catalogue avec `available_count` (nb vehicules physiques libres par modele).
+  - `GET /api/admin/vehicle-models`: Admin, retourne les modeles avec `fleet_count` + `maintenance_count`.
+  - `GET /api/admin/reservations/{id}/available-vehicles`: Retourne tous les vehicules physiques du modele avec flag `assignable` (pas en maintenance/inactive ET pas de chevauchement de dates avec une autre reservation `confirmed`/`active`).
+  - `POST /api/admin/reservations/{id}/assign-vehicle`: Verifie le chevauchement (rejete si conflit avec 409), assigne le vehicule, set status=`confirmed`, envoie email + notif client. Param `force=true` permet d'outrepasser (cas exceptionnels).
+  - **Validation testee live**: tentative d'assigner un vehicule deja reserve sur des dates qui chevauchent -> rejete avec "Ce vehicule est deja reserve sur cette periode".
+
+14. **Flux de reservation client refondu**:
+  - `POST /api/reservations` accepte maintenant `model_id` (preferred) ou `vehicle_id` (legacy). Le client envoie un modele du catalogue, **PAS** un vehicule physique.
+  - La reservation est creee avec `vehicle_id=null`, `model_id=X`, status=`pending`.
+  - Verification de la disponibilite faite sur le NIVEAU MODELE (count des reservations concurrentes vs nb total de vehicules physiques dans le modele).
+  - Email "Demande recue" envoye au client + email d'alerte aux admins de l'agence.
+
+15. **UI admin pour assigner un vehicule**:
+  - Quand une demande pending n'a PAS de vehicule_id, le bouton "Confirmer" devient "Assigner" (violet, icone car-sport). Clic -> ouvre un modal "Assigner un vehicule".
+  - **Modal d'assignation**: Header avec icone violette + titre + sous-titre. Bloc infos (modele demande + periode). Liste des vehicules physiques du modele avec: marque/modele, plaque (badge mono), kilometrage, statut (Disponible/Maintenance/Reserve/En location/Inactif), chip "Chevauchement" si conflit. Bouton "Choisir" actif uniquement pour les vehicules `assignable`. Tooltip bleu explicatif.
+  - Display du modele dans toutes les listes: "BMW Serie 3 320d ou similaire" si pas de vehicule assigne, sinon le vrai vehicule.
+
 ## Prioritized Backlog
 
 ### P1 - Next

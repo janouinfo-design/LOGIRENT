@@ -753,21 +753,35 @@ async def get_admin_reservations(skip: int = 0, limit: int = 20, status: Optiona
     reservations = await db.reservations.find(query).sort("start_date", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.reservations.count_documents(query)
 
-    # Batch fetch users and vehicles
+    # Batch fetch users, vehicles, and models
     user_ids = list(set(r.get('user_id') for r in reservations if r.get('user_id')))
     vehicle_ids = list(set(r.get('vehicle_id') for r in reservations if r.get('vehicle_id')))
+    model_ids = list(set(r.get('model_id') for r in reservations if r.get('model_id')))
     users_list = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1, "id_photo": 1, "license_photo": 1}).to_list(len(user_ids))
-    vehicles_list = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1}).to_list(len(vehicle_ids))
+    vehicles_list = await db.vehicles.find({"id": {"$in": vehicle_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1, "plate_number": 1}).to_list(len(vehicle_ids))
+    models_list = await db.vehicle_models.find({"id": {"$in": model_ids}}, {"_id": 0, "id": 1, "brand": 1, "model": 1, "type": 1}).to_list(len(model_ids))
     users_map = {u['id']: u for u in users_list}
     vehicles_map = {v['id']: v for v in vehicles_list}
+    models_map = {m['id']: m for m in models_list}
 
     for res in reservations:
         res['_id'] = str(res['_id'])
         u = users_map.get(res.get('user_id'))
         v = vehicles_map.get(res.get('vehicle_id'))
+        m = models_map.get(res.get('model_id'))
         res['user_name'] = u['name'] if u else 'Unknown'
         res['user_email'] = u['email'] if u else 'Unknown'
-        res['vehicle_name'] = f"{v['brand']} {v['model']}" if v else 'Unknown'
+        if v:
+            res['vehicle_name'] = f"{v['brand']} {v['model']}"
+            res['vehicle_plate'] = v.get('plate_number')
+        elif m:
+            # No vehicle assigned yet — show model name with "ou similaire"
+            res['vehicle_name'] = f"{m['brand']} {m['model']} ou similaire"
+            res['vehicle_plate'] = None
+        else:
+            res['vehicle_name'] = 'Modele introuvable'
+            res['vehicle_plate'] = None
+        res['model_name'] = f"{m['brand']} {m['model']}" if m else None
         res['docs_missing'] = not (u.get('id_photo') and u.get('license_photo')) if u else True
 
     return {"reservations": reservations, "total": total}
@@ -2067,3 +2081,172 @@ async def get_vehicle_seasonal_pricing_public(vehicle_id: str):
         raise HTTPException(status_code=404, detail="Vehicle not found")
     pricing = [s for s in vehicle.get("seasonal_pricing", []) if s.get("active", True)]
     return {"seasonal_pricing": pricing}
+
+
+# ==================== VEHICLE MODELS (CATEGORIES) ====================
+
+@router.get("/vehicle-models")
+async def list_vehicle_models_public():
+    """PUBLIC endpoint: returns vehicle MODELS (catalog). Each model includes available_count
+    showing how many physical vehicles are currently free."""
+    models = await db.vehicle_models.find({"is_active": True}, {"_id": 0}).to_list(500)
+    for m in models:
+        physical = await db.vehicles.find({"model_id": m["id"]}).to_list(500)
+        m["fleet_count"] = len(physical)
+        m["available_count"] = sum(1 for v in physical if v.get("status") == "available")
+    return models
+
+
+@router.get("/admin/vehicle-models")
+async def list_vehicle_models_admin(user: dict = Depends(get_admin_user)):
+    """Admin: returns vehicle models with full fleet stats."""
+    query = {}
+    if user.get("agency_id") and user.get("role") != "super_admin":
+        query["agency_id"] = user["agency_id"]
+    models = await db.vehicle_models.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    for m in models:
+        physical = await db.vehicles.find({"model_id": m["id"]}).to_list(500)
+        m["fleet_count"] = len(physical)
+        m["available_count"] = sum(1 for v in physical if v.get("status") == "available")
+        m["maintenance_count"] = sum(1 for v in physical if v.get("status") == "maintenance")
+    return {"vehicle_models": models}
+
+
+@router.get("/admin/reservations/{reservation_id}/available-vehicles")
+async def get_available_vehicles_for_reservation(reservation_id: str, user: dict = Depends(get_admin_user)):
+    """Returns physical vehicles in the reservation's model that are NOT
+    overlapping with the requested dates. Used to assign a vehicle."""
+    res = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    model_id = res.get("model_id")
+    if not model_id and res.get("vehicle_id"):
+        # Backward compat: derive from current vehicle
+        v = await db.vehicles.find_one({"id": res["vehicle_id"]}, {"_id": 0})
+        if v:
+            model_id = v.get("model_id")
+
+    if not model_id:
+        raise HTTPException(status_code=400, detail="Reservation has no model_id and no derivable model")
+
+    start = res["start_date"]
+    end = res["end_date"]
+
+    # Get all vehicles in this model
+    vehicles = await db.vehicles.find({"model_id": model_id}, {"_id": 0}).to_list(500)
+
+    # For each vehicle, check overlapping reservations
+    for v in vehicles:
+        overlapping = await db.reservations.find({
+            "vehicle_id": v["id"],
+            "id": {"$ne": reservation_id},
+            "status": {"$in": ["confirmed", "active"]},
+            "start_date": {"$lt": end},
+            "end_date": {"$gt": start},
+        }, {"_id": 0, "id": 1, "start_date": 1, "end_date": 1, "status": 1}).to_list(20)
+        v["has_overlap"] = len(overlapping) > 0
+        v["overlapping_reservations"] = overlapping
+        # available if status != maintenance/inactive AND no overlap
+        v["assignable"] = (
+            v.get("status") not in ["maintenance", "inactive"] and not v["has_overlap"]
+        )
+
+    # Also fetch other models' vehicles (similar) as fallback options
+    return {
+        "model_id": model_id,
+        "start_date": start,
+        "end_date": end,
+        "vehicles": vehicles,
+    }
+
+
+@router.post("/admin/reservations/{reservation_id}/assign-vehicle")
+async def assign_vehicle_to_reservation(reservation_id: str, request: Request, user: dict = Depends(get_admin_user)):
+    """Admin assigns a physical vehicle to a pending reservation.
+    - Verifies no overlap with another confirmed/active reservation.
+    - Sets reservation.vehicle_id, status='confirmed' (if confirm=true).
+    - Sends confirmation email to client.
+    """
+    body = await request.json()
+    vehicle_id = body.get("vehicle_id")
+    confirm = body.get("confirm", True)
+    force = body.get("force", False)
+
+    if not vehicle_id:
+        raise HTTPException(status_code=400, detail="vehicle_id required")
+
+    res = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+    if not res:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+
+    if vehicle.get("status") in ["maintenance", "inactive"] and not force:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Le vehicule est en {vehicle.get('status')} et ne peut pas etre assigne"
+        )
+
+    # Overlap check
+    if not force:
+        overlapping = await db.reservations.find_one({
+            "vehicle_id": vehicle_id,
+            "id": {"$ne": reservation_id},
+            "status": {"$in": ["confirmed", "active"]},
+            "start_date": {"$lt": res["end_date"]},
+            "end_date": {"$gt": res["start_date"]},
+        })
+        if overlapping:
+            raise HTTPException(
+                status_code=409,
+                detail="Ce vehicule est deja reserve sur cette periode"
+            )
+
+    # Assign
+    update = {
+        "vehicle_id": vehicle_id,
+        "assigned_at": datetime.utcnow(),
+        "assigned_by": user.get("id"),
+        "updated_at": datetime.utcnow(),
+    }
+    if confirm:
+        update["status"] = "confirmed"
+
+    await db.reservations.update_one({"id": reservation_id}, {"$set": update})
+
+    # Update vehicle status to "reserved" only when contract is signed (per requirements).
+    # Here we don't change vehicle.status — it stays "available" until contract signature.
+
+    # Send confirmation email + in-app notif if confirm=true
+    if confirm:
+        try:
+            client_user = await db.users.find_one({"id": res.get("user_id")}, {"_id": 0})
+            updated_res = await db.reservations.find_one({"id": reservation_id}, {"_id": 0})
+            if client_user:
+                from utils.email import send_reservation_confirmation
+                await send_reservation_confirmation(
+                    client_user, vehicle, updated_res,
+                    agency_id=res.get("agency_id")
+                )
+        except Exception as e:
+            logger.error(f"Confirmation email failed: {e}")
+
+        try:
+            vname = f"{vehicle.get('brand', '')} {vehicle.get('model', '')}".strip()
+            await create_notification(
+                res.get("user_id"),
+                "reservation_confirmed",
+                f"Votre reservation pour {vname} est confirmee. Plaque: {vehicle.get('plate_number', 'N/A')}",
+                reservation_id
+            )
+        except Exception as e:
+            logger.error(f"Notification failed: {e}")
+
+    return {
+        "message": "Vehicule assigne et reservation confirmee" if confirm else "Vehicule assigne",
+        "vehicle_id": vehicle_id,
+        "status": update.get("status", res["status"]),
+    }

@@ -35,6 +35,10 @@ export default function AgencyAppHome() {
   const [offerPrice, setOfferPrice] = useState<string>('');
   const [offerMessage, setOfferMessage] = useState<string>('');
   const [sendingOffer, setSendingOffer] = useState(false);
+  const [assignModal, setAssignModal] = useState<any>(null);
+  const [assignVehicles, setAssignVehicles] = useState<any[]>([]);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const openClientProfile = async (userId: string) => {
     try {
       const res = await api.get(`/api/admin/users/${userId}`);
@@ -135,6 +139,13 @@ export default function AgencyAppHome() {
   };
 
   const confirmRequest = async (id: string) => {
+    // Find the reservation in pending list
+    const r = pendingRequests.find((x: any) => x.id === id);
+    if (r && !r.vehicle_id) {
+      // No vehicle assigned yet → open assignment modal
+      openAssignModal(r);
+      return;
+    }
     setProcessingId(id);
     try {
       await updateStatus(id, 'confirmed');
@@ -209,6 +220,44 @@ export default function AgencyAppHome() {
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
     } finally {
       setSendingOffer(false);
+    }
+  };
+
+  const openAssignModal = async (r: any) => {
+    setAssignModal(r);
+    setAssignVehicles([]);
+    setAssignLoading(true);
+    try {
+      const res = await api.get(`/api/admin/reservations/${r.id}/available-vehicles`);
+      setAssignVehicles(res.data?.vehicles || []);
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || 'Impossible de charger les véhicules';
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+      setAssignModal(null);
+    } finally {
+      setAssignLoading(false);
+    }
+  };
+
+  const assignVehicleToRes = async (vehicleId: string) => {
+    if (!assignModal) return;
+    setAssigning(true);
+    try {
+      await api.post(`/api/admin/reservations/${assignModal.id}/assign-vehicle`, {
+        vehicle_id: vehicleId,
+        confirm: true,
+      });
+      Platform.OS === 'web'
+        ? window.alert('Véhicule assigné et réservation confirmée')
+        : Alert.alert('Succès', 'Véhicule assigné et réservation confirmée');
+      setAssignModal(null);
+      setAssignVehicles([]);
+      fetchData();
+    } catch (e: any) {
+      const msg = e.response?.data?.detail || "Erreur lors de l'assignation";
+      Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -399,7 +448,7 @@ export default function AgencyAppHome() {
                         <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Modifier</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
-                        style={[s.pendingV2Btn, { backgroundColor: '#10B981' }, isProcessing && { opacity: 0.6 }]}
+                        style={[s.pendingV2Btn, { backgroundColor: r.vehicle_id ? '#10B981' : '#7C3AED' }, isProcessing && { opacity: 0.6 }]}
                         onPress={() => confirmRequest(r.id)}
                         disabled={isProcessing}
                         data-testid={`pending-confirm-${r.id}`}
@@ -408,8 +457,10 @@ export default function AgencyAppHome() {
                           <ActivityIndicator size="small" color="#fff" />
                         ) : (
                           <>
-                            <Ionicons name="checkmark" size={14} color="#fff" />
-                            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Confirmer</Text>
+                            <Ionicons name={r.vehicle_id ? 'checkmark' : 'car-sport'} size={14} color="#fff" />
+                            <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
+                              {r.vehicle_id ? 'Confirmer' : 'Assigner'}
+                            </Text>
                           </>
                         )}
                       </TouchableOpacity>
@@ -613,6 +664,149 @@ export default function AgencyAppHome() {
           </View>
         </View>
       </Modal>
+
+      {/* Assign vehicle modal */}
+      <Modal visible={!!assignModal} transparent animationType="fade" onRequestClose={() => !assigning && setAssignModal(null)}>
+        <View style={s.modalOverlay}>
+          <View style={[s.offerModal, { backgroundColor: C.card, maxWidth: 640 }]} data-testid="assign-modal">
+            <View style={[s.offerHeader, { borderBottomColor: C.border }]}>
+              <View style={[s.offerHeaderIcon, { backgroundColor: '#7C3AED' }]}>
+                <Ionicons name="car-sport" size={22} color="#fff" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[s.offerTitle, { color: C.text }]}>Assigner un véhicule</Text>
+                <Text style={[s.offerSub, { color: C.textLight }]} numberOfLines={1}>
+                  {assignModal?.vehicle_name || `${assignModal?.vehicle_brand || ''} ${assignModal?.vehicle_model || ''}`.trim()} • {assignModal?.user_name}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => !assigning && setAssignModal(null)} style={s.offerClose} data-testid="assign-close">
+                <Ionicons name="close" size={22} color={C.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ maxHeight: 520 }} contentContainerStyle={{ padding: 16 }}>
+              {assignModal && (
+                <View style={[s.offerInfoBox, { backgroundColor: C.background, borderColor: C.border }]}>
+                  <View style={s.offerInfoRow}>
+                    <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Modèle demandé</Text>
+                    <Text style={[s.offerInfoValue, { color: C.text }]}>
+                      {assignModal.vehicle_name || `${assignModal.vehicle_brand} ${assignModal.vehicle_model}`}
+                    </Text>
+                  </View>
+                  <View style={s.offerInfoRow}>
+                    <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Période</Text>
+                    <Text style={[s.offerInfoValue, { color: C.text }]}>
+                      {format(new Date(assignModal.start_date), 'dd MMM', { locale: fr })} → {format(new Date(assignModal.end_date), 'dd MMM yyyy', { locale: fr })}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              <Text style={[s.offerFieldLabel, { color: C.text, marginBottom: 10 }]}>
+                Véhicules physiques disponibles ({assignVehicles.filter((v: any) => v.assignable).length}/{assignVehicles.length})
+              </Text>
+
+              {assignLoading ? (
+                <View style={{ padding: 30, alignItems: 'center' }}>
+                  <ActivityIndicator size="small" color={C.accent} />
+                </View>
+              ) : assignVehicles.length === 0 ? (
+                <View style={[s.offerInfoBox, { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }]}>
+                  <Text style={{ color: '#991B1B', fontSize: 13, fontWeight: '600' }}>
+                    Aucun véhicule de ce modèle dans la flotte. Vous pouvez choisir un véhicule similaire d'une autre catégorie ou refuser la demande.
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ gap: 10 }}>
+                  {assignVehicles.map((v: any) => (
+                    <TouchableOpacity
+                      key={v.id}
+                      disabled={!v.assignable || assigning}
+                      style={[
+                        s.assignCard,
+                        { backgroundColor: C.background, borderColor: C.border },
+                        v.assignable && { borderColor: '#10B98140', backgroundColor: '#10B98108' },
+                        !v.assignable && { opacity: 0.5 },
+                      ]}
+                      onPress={() => assignVehicleToRes(v.id)}
+                      data-testid={`assign-vehicle-${v.id}`}
+                    >
+                      <View style={[s.assignCardIcon, { backgroundColor: v.assignable ? '#10B981' : '#9CA3AF' }]}>
+                        <Ionicons name="car-sport" size={20} color="#fff" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <Text style={[{ color: C.text, fontSize: 14, fontWeight: '800' }]}>
+                            {v.brand} {v.model}
+                          </Text>
+                          <View style={[s.assignPlateBadge, { backgroundColor: C.text + '15' }]}>
+                            <Text style={{ color: C.text, fontSize: 11, fontWeight: '800' }}>{v.plate_number || 'NO-PLATE'}</Text>
+                          </View>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>
+                            <Ionicons name="speedometer-outline" size={11} color={C.textLight} /> {(v.mileage ?? 0).toLocaleString('fr-CH')} km
+                          </Text>
+                          <View style={[s.assignStatusChip, {
+                            backgroundColor: v.status === 'available' ? '#10B98115' : v.status === 'maintenance' ? '#F59E0B15' : '#EF444415',
+                          }]}>
+                            <Text style={{
+                              fontSize: 10, fontWeight: '700',
+                              color: v.status === 'available' ? '#10B981' : v.status === 'maintenance' ? '#F59E0B' : '#EF4444',
+                            }}>
+                              {v.status === 'available' ? 'Disponible' : v.status === 'maintenance' ? 'Maintenance' : v.status === 'reserved' ? 'Réservé' : v.status === 'rented' ? 'En location' : 'Inactif'}
+                            </Text>
+                          </View>
+                          {v.has_overlap && (
+                            <View style={[s.assignStatusChip, { backgroundColor: '#EF444415' }]}>
+                              <Ionicons name="warning" size={10} color="#EF4444" />
+                              <Text style={{ color: '#EF4444', fontSize: 10, fontWeight: '700' }}>Chevauchement</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                      {v.assignable ? (
+                        <View style={[s.assignBtn, { backgroundColor: '#10B981' }]}>
+                          {assigning ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <>
+                              <Ionicons name="checkmark" size={14} color="#fff" />
+                              <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>Choisir</Text>
+                            </>
+                          )}
+                        </View>
+                      ) : (
+                        <View style={[s.assignBtn, { backgroundColor: C.border }]}>
+                          <Ionicons name="ban" size={14} color={C.textLight} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <View style={[s.offerTipBox, { backgroundColor: '#3B82F610', borderColor: '#3B82F640', marginTop: 14 }]}>
+                <Ionicons name="information-circle" size={16} color="#3B82F6" />
+                <Text style={[s.offerTipText, { color: C.text }]}>
+                  Cliquez sur "Choisir" pour assigner ce véhicule et confirmer la réservation. Le client recevra un e-mail de confirmation avec la plaque.
+                </Text>
+              </View>
+            </ScrollView>
+
+            <View style={[s.offerFooter, { borderTopColor: C.border }]}>
+              <TouchableOpacity
+                style={[s.offerBtn, s.offerBtnCancel, { borderColor: C.border, flex: 1 }]}
+                onPress={() => !assigning && setAssignModal(null)}
+                disabled={assigning}
+                data-testid="assign-cancel"
+              >
+                <Text style={[s.offerBtnCancelText, { color: C.text }]}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -681,4 +875,11 @@ const s = StyleSheet.create({
   offerBtnCancelText: { fontSize: 14, fontWeight: '700' },
   offerBtnSend: { backgroundColor: '#3B82F6' },
   offerBtnSendText: { color: '#fff', fontSize: 14, fontWeight: '700' },
+
+  // Assign vehicle modal
+  assignCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 10, borderWidth: 1 },
+  assignCardIcon: { width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  assignPlateBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, fontFamily: 'monospace' as any },
+  assignStatusChip: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  assignBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
 });

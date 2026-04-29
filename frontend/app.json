@@ -59,7 +59,8 @@
           "photosPermission": "LogiRent accede a vos photos pour telecharger vos documents.",
           "cameraPermission": "LogiRent utilise la camera pour scanner vos documents."
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
