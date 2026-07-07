@@ -169,7 +169,7 @@ export default function HomeScreen() {
               <Text style={st.headerTitle}>LogiRent</Text>
             </View>
             <View style={st.headerRight}>
-              <LanguageSelector color="#FFFFFF" activeColor="#FFFFFF" compact />
+              <LanguageSelector color="#FFFFFF" activeColor="#FFFFFF" activeTextColor="#7C3AED" compact />
               <Text style={st.headerSub}>{t("Location de véhicules")}</Text>
               <Text style={st.headerStat}>{vehicles.length} {t("véhicules disponibles")}</Text>
             </View>
