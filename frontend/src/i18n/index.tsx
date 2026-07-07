@@ -1,8 +1,13 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import en from './translations.en';
+import de from './translations.de';
 
-type Lang = 'fr' | 'en';
+export type Lang = 'fr' | 'en' | 'de';
+const LANG_KEY = 'app_lang';
 
-const translations = {
+const legacy: Record<Lang, Record<string, string>> = {
   fr: {
     greeting: 'Bienvenue chez',
     heroTitle: 'Location de véhicules premium',
@@ -87,39 +92,133 @@ const translations = {
     myReservations: 'My Reservations',
     myProfile: 'My Profile',
   },
+  de: {
+    greeting: 'Willkommen bei',
+    heroTitle: 'Premium-Fahrzeugvermietung',
+    heroSubtitle: 'Finden Sie das perfekte Fahrzeug für Ihre Bedürfnisse. Premium-Service, wettbewerbsfähige Preise.',
+    searchPlaceholder: 'Fahrzeug suchen...',
+    categories: 'Kategorien',
+    all: 'Alle',
+    suv: 'SUV',
+    sedan: 'Limousine',
+    city: 'Kleinwagen',
+    utility: 'Nutzfahrzeug',
+    ourFleet: 'Unsere Flotte',
+    vehiclesCount: 'Fahrzeuge verfügbar',
+    viewAll: 'Alle ansehen',
+    details: 'Details',
+    perDay: '/Tag',
+    seats: 'Sitze',
+    automatic: 'Automatik',
+    manual: 'Schaltgetriebe',
+    available: 'Verfügbar',
+    unavailable: 'Nicht verfügbar',
+    newBadge: 'NEU',
+    whyUs: 'Warum LogiRent?',
+    benefit1Title: 'Neue Fahrzeuge',
+    benefit1Desc: 'Flotte wird jedes Jahr erneuert',
+    benefit2Title: '24/7 Support',
+    benefit2Desc: 'Unterstützung jederzeit verfügbar',
+    benefit3Title: 'Bester Preis',
+    benefit3Desc: 'Wettbewerbsfähige Preise garantiert',
+    benefit4Title: 'Flexibilität',
+    benefit4Desc: 'Kostenlose Stornierung 24h vorher',
+    ctaTitle: 'Bereit loszufahren?',
+    ctaSubtitle: 'Buchen Sie Ihr Fahrzeug mit wenigen Klicks',
+    ctaButton: 'Jetzt buchen',
+    home: 'Startseite',
+    vehicles: 'Fahrzeuge',
+    rentals: 'Mieten',
+    profile: 'Profil',
+    fleet: 'Unsere Flotte',
+    myReservations: 'Meine Buchungen',
+    myProfile: 'Mein Profil',
+  },
 };
+
+const dicts: Record<string, Record<string, string>> = { en, de };
+
+function detectLang(): Lang {
+  try {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem(LANG_KEY);
+      if (stored === 'fr' || stored === 'en' || stored === 'de') return stored;
+      const nav = (window.navigator.language || 'fr').slice(0, 2).toLowerCase();
+      if (nav === 'en' || nav === 'de') return nav as Lang;
+    }
+  } catch {}
+  return 'fr';
+}
+
+let currentLang: Lang = detectLang();
+
+export function t(text: any): string {
+  if (typeof text !== 'string') return text;
+  const lg = legacy[currentLang][text];
+  if (lg !== undefined) return lg;
+  if (currentLang !== 'fr') {
+    const d = dicts[currentLang];
+    if (d && d[text] !== undefined) return d[text];
+    const frLegacy = legacy.fr[text];
+    if (frLegacy !== undefined) return frLegacy;
+  }
+  return text;
+}
+
+export function getLang(): Lang {
+  return currentLang;
+}
 
 interface I18nContextType {
   lang: Lang;
-  t: (key: keyof typeof translations.fr) => string;
+  t: (key: string) => string;
   toggleLang: () => void;
   setLang: (lang: Lang) => void;
 }
 
 const I18nContext = createContext<I18nContextType>({
   lang: 'fr',
-  t: (key) => translations.fr[key],
+  t: (key) => t(key),
   toggleLang: () => {},
   setLang: () => {},
 });
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('fr');
+  const [lang, setLangState] = useState<Lang>(currentLang);
 
-  const t = useCallback(
-    (key: keyof typeof translations.fr) => translations[lang][key] || key,
-    [lang]
-  );
-
-  const toggleLang = useCallback(() => {
-    setLangState((prev) => (prev === 'fr' ? 'en' : 'fr'));
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      AsyncStorage.getItem(LANG_KEY).then((s) => {
+        if (s === 'fr' || s === 'en' || s === 'de') {
+          currentLang = s;
+          setLangState(s);
+        }
+      }).catch(() => {});
+    }
   }, []);
 
-  const setLang = useCallback((l: Lang) => setLangState(l), []);
+  const setLang = useCallback((l: Lang) => {
+    currentLang = l;
+    setLangState(l);
+    AsyncStorage.setItem(LANG_KEY, l).catch(() => {});
+    AsyncStorage.getItem('token').then((tok) => {
+      if (tok) {
+        import('../api/axios').then(({ default: api }) => {
+          api.put('/api/auth/profile', { preferred_language: l }).catch(() => {});
+        });
+      }
+    }).catch(() => {});
+  }, []);
+
+  const toggleLang = useCallback(() => {
+    setLang(currentLang === 'fr' ? 'en' : currentLang === 'en' ? 'de' : 'fr');
+  }, [setLang]);
+
+  const tFn = useCallback((key: string) => t(key), [lang]);
 
   return (
-    <I18nContext.Provider value={{ lang, t, toggleLang, setLang }}>
-      {children}
+    <I18nContext.Provider value={{ lang, t: tFn, toggleLang, setLang }}>
+      <React.Fragment key={lang}>{children}</React.Fragment>
     </I18nContext.Provider>
   );
 }

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { format, eachDayOfInterval, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, parseISO, isSameDay, differenceInDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import api from '../../api/axios';
+import { t } from '../../i18n';
 
 const RES_COLORS: Record<string, string> = {
   confirmed: '#10B981', active: '#3B82F6', pending: '#FBBF24', pending_cash: '#A855F7',
@@ -302,19 +303,19 @@ export const GanttChart = ({
           {([
             { value: 'all', label: 'Tous', icon: 'grid' },
             { value: 'confirmed', label: 'Confirmes', icon: 'checkmark-circle' },
-            { value: 'active', label: 'En cours', icon: 'car' },
+            { value: 'active', label: t("En cours"), icon: 'car' },
             { value: 'overdue', label: 'Retards', icon: 'warning' },
           ] as { value: StatusFilter; label: string; icon: string }[]).map(f => (
             <TouchableOpacity key={f.value} style={[g.sfBtn, statusFilter === f.value && { backgroundColor: C.accent + '20', borderColor: C.accent }]} onPress={() => handleStatusFilter(f.value)}>
               <Ionicons name={f.icon as any} size={12} color={statusFilter === f.value ? C.accent : C.textLight} />
-              <Text style={{ color: statusFilter === f.value ? C.accent : C.textLight, fontSize: 11, fontWeight: '600' }}>{f.label}</Text>
+              <Text style={{ color: statusFilter === f.value ? C.accent : C.textLight, fontSize: 11, fontWeight: '600' }}>{t(f.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={[g.searchWrap, { borderColor: C.border, backgroundColor: C.card }]}>
           <Ionicons name="search" size={14} color={C.textLight} />
-          <TextInput style={[g.searchInput, { color: C.text }]} placeholder="Vehicule..." placeholderTextColor={C.textLight} value={vehicleSearch} onChangeText={setVehicleSearch} />
+          <TextInput style={[g.searchInput, { color: C.text }]} placeholder={t("Vehicule...")} placeholderTextColor={C.textLight} value={vehicleSearch} onChangeText={setVehicleSearch} />
         </View>
       </View>
 
@@ -336,7 +337,7 @@ export const GanttChart = ({
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
           <Ionicons name="move" size={14} color="#3B82F6" />
-          <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>Drag & Drop (maintenir)</Text>
+          <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>{t("Drag & Drop (maintenir)")}</Text>
         </View>
       </ScrollView>
 
@@ -543,7 +544,7 @@ export const GanttChart = ({
                 </View>
               </View>
 
-              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 8 }}>ACTIONS RAPIDES</Text>
+              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 8 }}>{t("ACTIONS RAPIDES")}</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {popup.res.status !== 'confirmed' && popup.res.status !== 'completed' && popup.res.status !== 'cancelled' && (
                   <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#10B98115', borderColor: '#10B98140' }]} onPress={() => { updateStatus(popup.res.id, 'confirmed'); setPopup(null); }}>

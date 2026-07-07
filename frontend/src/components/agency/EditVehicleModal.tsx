@@ -5,6 +5,7 @@ import api from '../../../src/api/axios';
 import { Vehicle, VehicleDocument, TYPES, TRANSMISSIONS, FUELS, STATUSES, DOC_TYPES, getStatus, getDocIcon, formatFileSize, getExpiryStatus, getPhotoUrl, vst } from './vehicleTypes';
 import { VehiclePricingManager } from './VehiclePricingManager';
 import SeasonalPricingManager from './SeasonalPricingManager';
+import { t } from '../../i18n';
 
 interface Props {
   vehicle: Vehicle | null;
@@ -96,7 +97,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
     if (!currentVehicle) return;
     const confirmed = Platform.OS === 'web'
       ? window.confirm('Supprimer cette photo ?')
-      : await new Promise(resolve => Alert.alert('Confirmer', 'Supprimer cette photo ?', [{ text: 'Non', onPress: () => resolve(false) }, { text: 'Oui', onPress: () => resolve(true) }]));
+      : await new Promise(resolve => Alert.alert(t("Confirmer"), t("Supprimer cette photo ?"), [{ text: 'Non', onPress: () => resolve(false) }, { text: 'Oui', onPress: () => resolve(true) }]));
     if (!confirmed) return;
     try {
       const photos = [...(currentVehicle.photos || [])];
@@ -170,7 +171,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
     if (!currentVehicle) return;
     const confirmed = Platform.OS === 'web'
       ? window.confirm('Supprimer ce document ?')
-      : await new Promise(resolve => Alert.alert('Confirmer', 'Supprimer ce document ?', [{ text: 'Non', onPress: () => resolve(false) }, { text: 'Oui', onPress: () => resolve(true) }]));
+      : await new Promise(resolve => Alert.alert(t("Confirmer"), t("Supprimer ce document ?"), [{ text: 'Non', onPress: () => resolve(false) }, { text: 'Oui', onPress: () => resolve(true) }]));
     if (!confirmed) return;
     try {
       await api.delete(`/api/admin/vehicles/${currentVehicle.id}/documents/${docId}`);
@@ -190,7 +191,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
         <View style={vst.modalOverlay}>
           <View style={[vst.modalBox, { backgroundColor: C.card, maxHeight: Dimensions.get('window').height * 0.85, display: 'flex', flexDirection: 'column' }]}>
             <View style={vst.modalHeader}>
-              <Text style={[vst.modalTitle, { color: C.text }]}>Modifier le vehicule</Text>
+              <Text style={[vst.modalTitle, { color: C.text }]}>{t("Modifier le vehicule")}</Text>
               <TouchableOpacity onPress={onClose} data-testid="close-edit-modal">
                 <Ionicons name="close" size={24} color={C.textLight} />
               </TouchableOpacity>
@@ -232,7 +233,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                   <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.year} keyboardType="numeric" onChangeText={v => setEditForm({ ...editForm, year: v })} data-testid="edit-year" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[vst.fieldLabel, { color: C.textLight }]}>Prix/jour (CHF)</Text>
+                  <Text style={[vst.fieldLabel, { color: C.textLight }]}>{t("Prix/jour (CHF)")}</Text>
                   <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.price_per_day} keyboardType="numeric" onChangeText={v => setEditForm({ ...editForm, price_per_day: v })} data-testid="edit-price" />
                 </View>
               </View>
@@ -256,24 +257,24 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
 
               <View style={vst.fieldRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[vst.fieldLabel, { color: C.textLight }]}>Plaque d'immatriculation</Text>
-                  <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.plate_number} onChangeText={v => setEditForm({ ...editForm, plate_number: v })} placeholder="GE 12345" placeholderTextColor={C.textLight + '80'} data-testid="edit-plate-number" />
+                  <Text style={[vst.fieldLabel, { color: C.textLight }]}>{t("Plaque d'immatriculation")}</Text>
+                  <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.plate_number} onChangeText={v => setEditForm({ ...editForm, plate_number: v })} placeholder={t("GE 12345")} placeholderTextColor={C.textLight + '80'} data-testid="edit-plate-number" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[vst.fieldLabel, { color: C.textLight }]}>Couleur</Text>
-                  <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.color} onChangeText={v => setEditForm({ ...editForm, color: v })} placeholder="Noir, Blanc..." placeholderTextColor={C.textLight + '80'} data-testid="edit-color" />
+                  <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.color} onChangeText={v => setEditForm({ ...editForm, color: v })} placeholder={t("Noir, Blanc...")} placeholderTextColor={C.textLight + '80'} data-testid="edit-color" />
                 </View>
               </View>
 
               <View style={{ marginBottom: 12 }}>
-                <Text style={[vst.fieldLabel, { color: C.textLight }]}>Numero de chassis</Text>
-                <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.chassis_number} onChangeText={v => setEditForm({ ...editForm, chassis_number: v })} placeholder="WBA1234567890" placeholderTextColor={C.textLight + '80'} data-testid="edit-chassis-number" />
+                <Text style={[vst.fieldLabel, { color: C.textLight }]}>{t("Numero de chassis")}</Text>
+                <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={editForm.chassis_number} onChangeText={v => setEditForm({ ...editForm, chassis_number: v })} placeholder={t("WBA1234567890")} placeholderTextColor={C.textLight + '80'} data-testid="edit-chassis-number" />
               </View>
 
               <View style={{ marginBottom: 12, padding: 12, borderRadius: 10, backgroundColor: '#F0F4FF', borderWidth: 1, borderColor: '#C7D2FE' }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Ionicons name="layers" size={18} color="#7C3AED" />
-                  <Text style={{ color: '#1E293B', fontSize: 14, fontWeight: '800', flex: 1 }}>Stock / Quantite</Text>
+                  <Text style={{ color: '#1E293B', fontSize: 14, fontWeight: '800', flex: 1 }}>{t("Stock / Quantite")}</Text>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <TouchableOpacity onPress={() => setEditForm({ ...editForm, fleet_count: String(Math.max(1, parseInt(editForm.fleet_count || '1') - 1)) })} style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#E2E8F0', justifyContent: 'center', alignItems: 'center' }}>
                       <Text style={{ fontSize: 18, fontWeight: '800', color: '#475569' }}>-</Text>
@@ -284,7 +285,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                     </TouchableOpacity>
                   </View>
                 </View>
-                <Text style={{ color: '#64748B', fontSize: 11, marginTop: 4 }}>Nombre de vehicules identiques en stock. Le client verra une seule fiche mais pourra reserver tant qu'il y a du stock disponible.</Text>
+                <Text style={{ color: '#64748B', fontSize: 11, marginTop: 4 }}>{t("Nombre de vehicules identiques en stock. Le client verra une seule fiche mais pourra reserver tant qu'il y a du stock disponible.")}</Text>
               </View>
 
               {/* Type */}
@@ -365,7 +366,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
               ) : (
                 <View style={{ alignItems: 'center', paddingVertical: 16, opacity: 0.5 }}>
                   <Ionicons name="images-outline" size={28} color={C.textLight} />
-                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>Aucune photo</Text>
+                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>{t("Aucune photo")}</Text>
                 </View>
               )}
 
@@ -373,7 +374,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                 {uploadingPhoto ? <ActivityIndicator size="small" color="#10B981" /> : (
                   <>
                     <Ionicons name="camera" size={18} color="#10B981" />
-                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700' }}>Ajouter des photos</Text>
+                    <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700' }}>{t("Ajouter des photos")}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -409,8 +410,8 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
 
               <View style={vst.fieldRow}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[vst.fieldLabel, { color: C.textLight }]}>Date d'expiration (optionnel)</Text>
-                  <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={docExpiryDate} onChangeText={setDocExpiryDate} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight + '80'} data-testid="doc-expiry-date" />
+                  <Text style={[vst.fieldLabel, { color: C.textLight }]}>{t("Date d'expiration (optionnel)")}</Text>
+                  <TextInput style={[vst.input, { color: C.text, borderColor: C.border }]} value={docExpiryDate} onChangeText={setDocExpiryDate} placeholder={t("AAAA-MM-JJ")} placeholderTextColor={C.textLight + '80'} data-testid="doc-expiry-date" />
                 </View>
               </View>
 
@@ -418,7 +419,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                 {uploadingDoc ? <ActivityIndicator size="small" color={C.accent} /> : (
                   <>
                     <Ionicons name="cloud-upload" size={18} color={C.accent} />
-                    <Text style={{ color: C.accent, fontSize: 13, fontWeight: '700' }}>Ajouter un document</Text>
+                    <Text style={{ color: C.accent, fontSize: 13, fontWeight: '700' }}>{t("Ajouter un document")}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -440,7 +441,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                             {expStatus && (
                               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4, backgroundColor: expStatus.color + '18' }}>
                                 <Ionicons name={expStatus.icon as any} size={9} color={expStatus.color} />
-                                <Text style={{ color: expStatus.color, fontSize: 9, fontWeight: '700' }}>{expStatus.label}</Text>
+                                <Text style={{ color: expStatus.color, fontSize: 9, fontWeight: '700' }}>{t(expStatus.label)}</Text>
                               </View>
                             )}
                           </View>
@@ -458,7 +459,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
               ) : (
                 <View style={{ alignItems: 'center', paddingVertical: 16, opacity: 0.5 }}>
                   <Ionicons name="document-outline" size={28} color={C.textLight} />
-                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>Aucun document</Text>
+                  <Text style={{ color: C.textLight, fontSize: 12, marginTop: 4 }}>{t("Aucun document")}</Text>
                 </View>
               )}
             </ScrollView>

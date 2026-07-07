@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { formatDateInput } from '../../../src/utils/dateMask';
 import { WebcamCapture } from '../../../src/components/WebcamCapture';
+import { t } from '../../i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -192,7 +193,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
       await api.put(`/api/admin/users/${client.id}`, payload);
       onClose();
       onSaved();
-      Platform.OS === 'web' ? window.alert('Client mis a jour!') : Alert.alert('Succes', 'Client mis a jour!');
+      Platform.OS === 'web' ? window.alert('Client mis a jour!') : Alert.alert(t("Succes"), t("Client mis a jour!"));
     } catch (e: any) {
       const msg = e.response?.data?.detail || 'Erreur';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
@@ -207,7 +208,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
     if (!confirm) return;
     try {
       await api.delete(`/api/admin/users/${client.id}`);
-      Platform.OS === 'web' ? window.alert('Client supprime') : Alert.alert('Succes', 'Client supprime');
+      Platform.OS === 'web' ? window.alert('Client supprime') : Alert.alert(t("Succes"), t("Client supprime"));
       onClose();
       onSaved();
     } catch (e: any) {
@@ -223,7 +224,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
         <View style={[st.modal, { backgroundColor: C.card }]}>
           {/* Header - like vehicle modal */}
           <View style={st.header}>
-            <Text style={[st.title, { color: C.text }]}>Modifier le client</Text>
+            <Text style={[st.title, { color: C.text }]}>{t("Modifier le client")}</Text>
             <TouchableOpacity onPress={onClose} data-testid="close-edit-modal">
               <Ionicons name="close" size={24} color={C.text} />
             </TouchableOpacity>
@@ -243,7 +244,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                     onPress={() => setEditRating(editRating === r.value ? '' : r.value)}
                     data-testid={`rating-${r.value}`}>
                     <Ionicons name={r.icon} size={14} color={editRating === r.value ? r.color : C.textLight} />
-                    <Text style={{ color: editRating === r.value ? r.color : C.textLight, fontSize: 12, fontWeight: '700' }}>{r.label}</Text>
+                    <Text style={{ color: editRating === r.value ? r.color : C.textLight, fontSize: 12, fontWeight: '700' }}>{t(r.label)}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -252,11 +253,11 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               <View style={st.row}>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.upperLabel, { color: C.textLight }]}>NOM</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editLastName} onChangeText={setEditLastName} placeholder="Nom de famille" placeholderTextColor={C.textLight + '80'} data-testid="edit-client-lastname" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editLastName} onChangeText={setEditLastName} placeholder={t("Nom de famille")} placeholderTextColor={C.textLight + '80'} data-testid="edit-client-lastname" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.upperLabel, { color: C.textLight }]}>PRENOM</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editFirstName} onChangeText={setEditFirstName} placeholder="Prenom" placeholderTextColor={C.textLight + '80'} data-testid="edit-client-firstname" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editFirstName} onChangeText={setEditFirstName} placeholder={t("Prenom")} placeholderTextColor={C.textLight + '80'} data-testid="edit-client-firstname" />
                 </View>
               </View>
 
@@ -264,61 +265,61 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               <View style={st.row}>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.upperLabel, { color: C.textLight }]}>EMAIL</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editEmail} onChangeText={setEditEmail} placeholder="email@example.com" placeholderTextColor={C.textLight + '80'} keyboardType="email-address" autoCapitalize="none" data-testid="edit-client-email" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editEmail} onChangeText={setEditEmail} placeholder={t("email@example.com")} placeholderTextColor={C.textLight + '80'} keyboardType="email-address" autoCapitalize="none" data-testid="edit-client-email" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.upperLabel, { color: C.textLight }]}>TELEPHONE</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editPhone} onChangeText={setEditPhone} placeholder="+41 XX XXX XX XX" placeholderTextColor={C.textLight + '80'} keyboardType="phone-pad" data-testid="edit-client-phone" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editPhone} onChangeText={setEditPhone} placeholder={t("+41 XX XXX XX XX")} placeholderTextColor={C.textLight + '80'} keyboardType="phone-pad" data-testid="edit-client-phone" />
                 </View>
               </View>
 
               {/* ADRESSE - full width */}
               <Text style={[st.upperLabel, { color: C.textLight }]}>ADRESSE</Text>
-              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editAddress} onChangeText={setEditAddress} placeholder="Adresse du client" placeholderTextColor={C.textLight + '80'} data-testid="edit-client-address" />
+              <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editAddress} onChangeText={setEditAddress} placeholder={t("Adresse du client")} placeholderTextColor={C.textLight + '80'} data-testid="edit-client-address" />
 
               {/* ===== Section: Identite & Permis ===== */}
               <View style={[st.sectionDivider, { borderTopColor: C.border }]}>
                 <Ionicons name="id-card" size={16} color={C.accent} />
-                <Text style={[st.sectionTitle, { color: C.text }]}>Identite & Permis</Text>
+                <Text style={[st.sectionTitle, { color: C.text }]}>{t("Identite & Permis")}</Text>
               </View>
 
               <View style={st.row}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[st.upperLabel, { color: C.textLight }]}>LIEU DE NAISSANCE *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthPlace ? '#EF444450' : C.border }]} value={editBirthPlace} onChangeText={setEditBirthPlace} placeholder="Geneve" placeholderTextColor={C.textLight + '80'} data-testid="edit-birth-place" />
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>{t("LIEU DE NAISSANCE *")}</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthPlace ? '#EF444450' : C.border }]} value={editBirthPlace} onChangeText={setEditBirthPlace} placeholder={t("Geneve")} placeholderTextColor={C.textLight + '80'} data-testid="edit-birth-place" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[st.upperLabel, { color: C.textLight }]}>DATE DE NAISSANCE *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={(v) => setEditBirthDate(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'} data-testid="edit-birth-date" />
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>{t("DATE DE NAISSANCE *")}</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editBirthDate ? '#EF444450' : C.border }]} value={editBirthDate} onChangeText={(v) => setEditBirthDate(formatDateInput(v))} placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight + '80'} data-testid="edit-birth-date" />
                 </View>
               </View>
 
               <View style={st.row}>
                 <View style={{ flex: 1 }}>
                   <Text style={[st.upperLabel, { color: C.textLight }]}>NATIONALITE *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editNationality ? '#EF444450' : C.border }]} value={editNationality} onChangeText={setEditNationality} placeholder="Suisse" placeholderTextColor={C.textLight + '80'} data-testid="edit-nationality" />
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editNationality ? '#EF444450' : C.border }]} value={editNationality} onChangeText={setEditNationality} placeholder={t("Suisse")} placeholderTextColor={C.textLight + '80'} data-testid="edit-nationality" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[st.upperLabel, { color: C.textLight }]}>NUMERO DE PERMIS *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseNumber ? '#EF444450' : C.border }]} value={editLicenseNumber} onChangeText={setEditLicenseNumber} placeholder="GE-123456" placeholderTextColor={C.textLight + '80'} data-testid="edit-license-number" />
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>{t("NUMERO DE PERMIS *")}</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseNumber ? '#EF444450' : C.border }]} value={editLicenseNumber} onChangeText={setEditLicenseNumber} placeholder={t("GE-123456")} placeholderTextColor={C.textLight + '80'} data-testid="edit-license-number" />
                 </View>
               </View>
 
               <View style={st.row}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[st.upperLabel, { color: C.textLight }]}>DATE D'EMISSION *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={(v) => setEditLicenseIssue(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'} data-testid="edit-license-issue" />
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>{t("DATE D'EMISSION *")}</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseIssue ? '#EF444450' : C.border }]} value={editLicenseIssue} onChangeText={(v) => setEditLicenseIssue(formatDateInput(v))} placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight + '80'} data-testid="edit-license-issue" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[st.upperLabel, { color: C.textLight }]}>DATE D'EXPIRATION *</Text>
-                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={(v) => setEditLicenseExpiry(formatDateInput(v))} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'} data-testid="edit-license-expiry" />
+                  <Text style={[st.upperLabel, { color: C.textLight }]}>{t("DATE D'EXPIRATION *")}</Text>
+                  <TextInput style={[st.input, { backgroundColor: C.bg, color: C.text, borderColor: !editLicenseExpiry ? '#EF444450' : C.border }]} value={editLicenseExpiry} onChangeText={(v) => setEditLicenseExpiry(formatDateInput(v))} placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight + '80'} data-testid="edit-license-expiry" />
                 </View>
               </View>
 
               {/* ===== Section: Documents ===== */}
               <View style={[st.sectionDivider, { borderTopColor: C.border }]}>
                 <Ionicons name="document-attach" size={16} color={C.accent} />
-                <Text style={[st.sectionTitle, { color: C.text }]}>Documents (Photos)</Text>
+                <Text style={[st.sectionTitle, { color: C.text }]}>{t("Documents (Photos)")}</Text>
               </View>
               {Platform.OS === 'web' && (
                 <>
@@ -333,14 +334,14 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                 </>
               )}
 
-              <Text style={[st.upperLabel, { color: C.textLight }]}>PIECE D'IDENTITE</Text>
+              <Text style={[st.upperLabel, { color: C.textLight }]}>{t("PIECE D'IDENTITE")}</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                 {[
                   { label: 'Recto', field: 'id_photo', ref: idFrontRef, camRef: idFrontCamRef, type: 'id' as const },
                   { label: 'Verso', field: 'id_photo_back', ref: idBackRef, camRef: idBackCamRef, type: 'id_back' as const },
                 ].map(doc => (
                   <View key={doc.field} style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{t(doc.label)}</Text>
                     {(fullClient as any)?.[doc.field] ? (
                       <TouchableOpacity onPress={() => setPreviewPhoto((fullClient as any)[doc.field]!)} activeOpacity={0.8} style={{ width: '100%', height: 100, borderRadius: 8, overflow: 'hidden' }}>
                         <Image source={{ uri: (fullClient as any)[doc.field] }} style={{ width: '100%', height: 100, borderRadius: 8 }} resizeMode="cover" />
@@ -369,14 +370,14 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                 ))}
               </View>
 
-              <Text style={[st.upperLabel, { color: C.textLight }]}>PERMIS DE CONDUIRE</Text>
+              <Text style={[st.upperLabel, { color: C.textLight }]}>{t("PERMIS DE CONDUIRE")}</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
                 {[
                   { label: 'Recto', field: 'license_photo', ref: licenseFrontRef, camRef: licenseFrontCamRef, type: 'license' as const },
                   { label: 'Verso', field: 'license_photo_back', ref: licenseBackRef, camRef: licenseBackCamRef, type: 'license_back' as const },
                 ].map(doc => (
                   <View key={doc.field} style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{t(doc.label)}</Text>
                     {(fullClient as any)?.[doc.field] ? (
                       <TouchableOpacity onPress={() => setPreviewPhoto((fullClient as any)[doc.field]!)} activeOpacity={0.8} style={{ width: '100%', height: 100, borderRadius: 8, overflow: 'hidden' }}>
                         <Image source={{ uri: (fullClient as any)[doc.field] }} style={{ width: '100%', height: 100, borderRadius: 8 }} resizeMode="cover" />
@@ -404,14 +405,14 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
                   </View>
                 ))}
               </View>
-              <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 8 }}>Formats acceptes: JPG, PNG, WebP (max 10 MB). Verification IA automatique.</Text>
+              <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 8 }}>{t("Formats acceptes: JPG, PNG, WebP (max 10 MB). Verification IA automatique.")}</Text>
 
               {/* ===== Section: Notes ===== */}
               <View style={[st.sectionDivider, { borderTopColor: C.border }]}>
                 <Ionicons name="chatbox-ellipses" size={16} color={C.accent} />
-                <Text style={[st.sectionTitle, { color: C.text }]}>Notes admin</Text>
+                <Text style={[st.sectionTitle, { color: C.text }]}>{t("Notes admin")}</Text>
               </View>
-              <TextInput style={[st.input, st.textArea, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editNotes} onChangeText={setEditNotes} placeholder="Notes internes..." placeholderTextColor={C.textLight + '80'} multiline numberOfLines={3} data-testid="edit-client-notes" />
+              <TextInput style={[st.input, st.textArea, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} value={editNotes} onChangeText={setEditNotes} placeholder={t("Notes internes...")} placeholderTextColor={C.textLight + '80'} multiline numberOfLines={3} data-testid="edit-client-notes" />
 
               {/* ===== Bottom Buttons - like vehicle modal ===== */}
               <View style={st.bottomBtns}>
@@ -431,7 +432,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               {/* Delete */}
               <TouchableOpacity style={st.deleteBtn} onPress={deleteClient} data-testid="delete-client-btn">
                 <Ionicons name="trash" size={16} color="#EF4444" />
-                <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>Supprimer ce client</Text>
+                <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>{t("Supprimer ce client")}</Text>
               </TouchableOpacity>
             </ScrollView>
           )}

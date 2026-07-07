@@ -12,6 +12,7 @@ import { TodayReservationCard } from '../../src/components/agency/TodayReservati
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
 import { EditClientModal } from '../../src/components/agency/EditClientModal';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -114,7 +115,7 @@ export default function AgencyAppHome() {
         router.push(`/contract/${genResp.data.contract_id}` as any);
       }
     } catch (err: any) {
-      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur');
+      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert(t("Erreur"));
     }
   };
 
@@ -131,7 +132,7 @@ export default function AgencyAppHome() {
   const sendPaymentLink = async (id: string) => {
     try {
       await api.post(`/api/admin/reservations/${id}/send-payment-link`);
-      Platform.OS === 'web' ? window.alert('Lien de paiement envoyé') : Alert.alert('Succès', 'Lien envoyé');
+      Platform.OS === 'web' ? window.alert('Lien de paiement envoyé') : Alert.alert(t("Succès"), t("Lien envoyé"));
     } catch (e: any) {
       const msg = e.response?.data?.detail || 'Erreur';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
@@ -158,7 +159,7 @@ export default function AgencyAppHome() {
     const confirmed = Platform.OS === 'web'
       ? window.confirm('Refuser cette demande de réservation ? Le client sera notifié par e-mail.')
       : await new Promise<boolean>((resolve) => {
-          Alert.alert('Refuser la demande', 'Le client sera notifié par e-mail.', [
+          Alert.alert(t("Refuser la demande"), t("Le client sera notifié par e-mail."), [
             { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
             { text: 'Refuser', style: 'destructive', onPress: () => resolve(true) },
           ]);
@@ -199,7 +200,7 @@ export default function AgencyAppHome() {
     if (!offerModal) return;
     const priceNum = parseFloat(offerPrice);
     if (isNaN(priceNum) || priceNum < 0) {
-      Platform.OS === 'web' ? window.alert('Prix invalide') : Alert.alert('Erreur', 'Prix invalide');
+      Platform.OS === 'web' ? window.alert('Prix invalide') : Alert.alert(t("Erreur"), t("Prix invalide"));
       return;
     }
     setSendingOffer(true);
@@ -210,7 +211,7 @@ export default function AgencyAppHome() {
       });
       Platform.OS === 'web'
         ? window.alert('Offre envoyée au client par e-mail')
-        : Alert.alert('Succès', 'Offre envoyée au client par e-mail');
+        : Alert.alert(t("Succès"), t("Offre envoyée au client par e-mail"));
       setOfferModal(null);
       setOfferPrice('');
       setOfferMessage('');
@@ -249,7 +250,7 @@ export default function AgencyAppHome() {
       });
       Platform.OS === 'web'
         ? window.alert('Véhicule assigné et réservation confirmée')
-        : Alert.alert('Succès', 'Véhicule assigné et réservation confirmée');
+        : Alert.alert(t("Succès"), t("Véhicule assigné et réservation confirmée"));
       setAssignModal(null);
       setAssignVehicles([]);
       fetchData();
@@ -273,8 +274,8 @@ export default function AgencyAppHome() {
             <Ionicons name="add" size={26} color="#fff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={s.bookBtnText}>Nouvelle reservation</Text>
-            <Text style={s.bookBtnSub}>Reserver rapidement pour un client</Text>
+            <Text style={s.bookBtnText}>{t("Nouvelle reservation")}</Text>
+            <Text style={s.bookBtnSub}>{t("Reserver rapidement pour un client")}</Text>
           </View>
           <Ionicons name="chevron-forward" size={22} color="rgba(255,255,255,0.7)" />
         </LinearGradient>
@@ -300,7 +301,7 @@ export default function AgencyAppHome() {
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/statistics')} data-testid="stat-revenue">
           <Ionicons name="cash" size={32} color={C.accent} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_revenue ? `${stats.total_revenue.toFixed(0)}` : '0'}</Text>
-          <Text style={[s.statLabel, { color: C.textLight }]}>CHF Rev.</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>{t("CHF Rev.")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -341,7 +342,7 @@ export default function AgencyAppHome() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <Ionicons name="hourglass" size={18} color="#F59E0B" />
-              <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Demandes à traiter</Text>
+              <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>{t("Demandes à traiter")}</Text>
               <View style={s.pendingBadge}>
                 <Text style={s.pendingBadgeText}>{pendingRequests.length}</Text>
               </View>
@@ -350,7 +351,7 @@ export default function AgencyAppHome() {
               onPress={() => router.push('/agency-app/reservations?filter=pending' as any)}
               data-testid="pending-see-all"
             >
-              <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
+              <Text style={{ color: '#F59E0B', fontSize: 12, fontWeight: '600' }}>{t("Voir tout")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -478,7 +479,7 @@ export default function AgencyAppHome() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Ionicons name="today" size={18} color={C.accent} />
-            <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Reservations du jour</Text>
+            <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>{t("Reservations du jour")}</Text>
             {todayReservations.length > 0 && (
               <View style={{ backgroundColor: C.accent + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
                 <Text style={{ color: C.accent, fontSize: 12, fontWeight: '800' }}>{todayReservations.length}</Text>
@@ -486,14 +487,14 @@ export default function AgencyAppHome() {
             )}
           </View>
           <TouchableOpacity onPress={() => router.push('/agency-app/reservations')} data-testid="see-all-reservations">
-            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
+            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>{t("Voir tout")}</Text>
           </TouchableOpacity>
         </View>
 
         {todayReservations.length === 0 ? (
           <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}>
             <Ionicons name="calendar-outline" size={28} color={C.textLight} />
-            <Text style={{ color: C.textLight, fontSize: 13 }}>Aucune reservation aujourd'hui</Text>
+            <Text style={{ color: C.textLight, fontSize: 13 }}>{t("Aucune reservation aujourd'hui")}</Text>
           </View>
         ) : (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -516,13 +517,13 @@ export default function AgencyAppHome() {
       {/* Recent reservations - as cards */}
       <View style={{ marginBottom: 24 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>Dernieres reservations</Text>
+          <Text style={[s.sectionTitle, { color: C.text, marginBottom: 0 }]}>{t("Dernieres reservations")}</Text>
           <TouchableOpacity onPress={() => router.push('/agency-app/reservations')} data-testid="see-all-recent">
-            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Voir tout</Text>
+            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>{t("Voir tout")}</Text>
           </TouchableOpacity>
         </View>
         {recentReservations.length === 0 ? (
-          <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}><Text style={{ color: C.textLight, fontSize: 14 }}>Aucune reservation recente</Text></View>
+          <View style={[s.emptyCard, { backgroundColor: C.card, borderColor: C.border }]}><Text style={{ color: C.textLight, fontSize: 14 }}>{t("Aucune reservation recente")}</Text></View>
         ) : (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
             {recentReservations.map((r: any) => (
@@ -576,7 +577,7 @@ export default function AgencyAppHome() {
                 <Ionicons name="pricetag" size={22} color="#fff" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[s.offerTitle, { color: C.text }]}>Modifier et envoyer l'offre</Text>
+                <Text style={[s.offerTitle, { color: C.text }]}>{t("Modifier et envoyer l'offre")}</Text>
                 <Text style={[s.offerSub, { color: C.textLight }]} numberOfLines={1}>
                   {offerModal?.vehicle_name || `${offerModal?.vehicle_brand || ''} ${offerModal?.vehicle_model || ''}`.trim()} • {offerModal?.user_name}
                 </Text>
@@ -589,18 +590,18 @@ export default function AgencyAppHome() {
             <ScrollView style={{ maxHeight: 500 }} contentContainerStyle={{ padding: 20 }}>
               <View style={[s.offerInfoBox, { backgroundColor: C.background, borderColor: C.border }]}>
                 <View style={s.offerInfoRow}>
-                  <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Prix actuel</Text>
+                  <Text style={[s.offerInfoLabel, { color: C.textLight }]}>{t("Prix actuel")}</Text>
                   <Text style={[s.offerInfoValue, { color: C.text }]}>CHF {Number(offerModal?.total_price || 0).toFixed(2)}</Text>
                 </View>
                 <View style={s.offerInfoRow}>
-                  <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Période</Text>
+                  <Text style={[s.offerInfoLabel, { color: C.textLight }]}>{t("Période")}</Text>
                   <Text style={[s.offerInfoValue, { color: C.text }]}>
                     {offerModal && format(new Date(offerModal.start_date), 'dd MMM', { locale: fr })} → {offerModal && format(new Date(offerModal.end_date), 'dd MMM yyyy', { locale: fr })}
                   </Text>
                 </View>
               </View>
 
-              <Text style={[s.offerFieldLabel, { color: C.text }]}>Nouveau prix total (CHF)</Text>
+              <Text style={[s.offerFieldLabel, { color: C.text }]}>{t("Nouveau prix total (CHF)")}</Text>
               <View style={[s.offerPriceBox, { backgroundColor: C.background, borderColor: C.border }]}>
                 <Text style={[s.offerCurrency, { color: C.textLight }]}>CHF</Text>
                 <TextInput
@@ -620,7 +621,7 @@ export default function AgencyAppHome() {
               <TextInput
                 value={offerMessage}
                 onChangeText={setOfferMessage}
-                placeholder="Ex: Remise appliquée pour fidélité, supplément kilométrage..."
+                placeholder={t("Ex: Remise appliquée pour fidélité, supplément kilométrage...")}
                 placeholderTextColor={C.textLight}
                 multiline
                 numberOfLines={3}
@@ -630,9 +631,7 @@ export default function AgencyAppHome() {
 
               <View style={[s.offerTipBox, { backgroundColor: '#3B82F610', borderColor: '#3B82F640' }]}>
                 <Ionicons name="mail" size={16} color="#3B82F6" />
-                <Text style={[s.offerTipText, { color: C.text }]}>
-                  Le client recevra un e-mail avec le nouveau prix et pourra accepter ou refuser l'offre depuis son espace.
-                </Text>
+                <Text style={[s.offerTipText, { color: C.text }]}>{t("Le client recevra un e-mail avec le nouveau prix et pourra accepter ou refuser l'offre depuis son espace.")}</Text>
               </View>
             </ScrollView>
 
@@ -656,7 +655,7 @@ export default function AgencyAppHome() {
                 ) : (
                   <>
                     <Ionicons name="paper-plane" size={15} color="#fff" />
-                    <Text style={s.offerBtnSendText}>Envoyer l'offre</Text>
+                    <Text style={s.offerBtnSendText}>{t("Envoyer l'offre")}</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -674,7 +673,7 @@ export default function AgencyAppHome() {
                 <Ionicons name="car-sport" size={22} color="#fff" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[s.offerTitle, { color: C.text }]}>Assigner un véhicule</Text>
+                <Text style={[s.offerTitle, { color: C.text }]}>{t("Assigner un véhicule")}</Text>
                 <Text style={[s.offerSub, { color: C.textLight }]} numberOfLines={1}>
                   {assignModal?.vehicle_name || `${assignModal?.vehicle_brand || ''} ${assignModal?.vehicle_model || ''}`.trim()} • {assignModal?.user_name}
                 </Text>
@@ -688,13 +687,13 @@ export default function AgencyAppHome() {
               {assignModal && (
                 <View style={[s.offerInfoBox, { backgroundColor: C.background, borderColor: C.border }]}>
                   <View style={s.offerInfoRow}>
-                    <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Modèle demandé</Text>
+                    <Text style={[s.offerInfoLabel, { color: C.textLight }]}>{t("Modèle demandé")}</Text>
                     <Text style={[s.offerInfoValue, { color: C.text }]}>
                       {assignModal.vehicle_name || `${assignModal.vehicle_brand} ${assignModal.vehicle_model}`}
                     </Text>
                   </View>
                   <View style={s.offerInfoRow}>
-                    <Text style={[s.offerInfoLabel, { color: C.textLight }]}>Période</Text>
+                    <Text style={[s.offerInfoLabel, { color: C.textLight }]}>{t("Période")}</Text>
                     <Text style={[s.offerInfoValue, { color: C.text }]}>
                       {format(new Date(assignModal.start_date), 'dd MMM', { locale: fr })} → {format(new Date(assignModal.end_date), 'dd MMM yyyy', { locale: fr })}
                     </Text>
@@ -712,9 +711,7 @@ export default function AgencyAppHome() {
                 </View>
               ) : assignVehicles.length === 0 ? (
                 <View style={[s.offerInfoBox, { backgroundColor: '#FEE2E2', borderColor: '#FCA5A5' }]}>
-                  <Text style={{ color: '#991B1B', fontSize: 13, fontWeight: '600' }}>
-                    Aucun véhicule de ce modèle dans la flotte. Vous pouvez choisir un véhicule similaire d'une autre catégorie ou refuser la demande.
-                  </Text>
+                  <Text style={{ color: '#991B1B', fontSize: 13, fontWeight: '600' }}>{t("Aucun véhicule de ce modèle dans la flotte. Vous pouvez choisir un véhicule similaire d'une autre catégorie ou refuser la demande.")}</Text>
                 </View>
               ) : (
                 <View style={{ gap: 10 }}>
@@ -754,7 +751,7 @@ export default function AgencyAppHome() {
                               fontSize: 10, fontWeight: '700',
                               color: v.status === 'available' ? '#10B981' : v.status === 'maintenance' ? '#F59E0B' : '#EF4444',
                             }}>
-                              {v.status === 'available' ? 'Disponible' : v.status === 'maintenance' ? 'Maintenance' : v.status === 'reserved' ? 'Réservé' : v.status === 'rented' ? 'En location' : 'Inactif'}
+                              {v.status === 'available' ? 'Disponible' : v.status === 'maintenance' ? 'Maintenance' : v.status === 'reserved' ? 'Réservé' : v.status === 'rented' ? t("En location") : 'Inactif'}
                             </Text>
                           </View>
                           {v.has_overlap && (
@@ -788,9 +785,7 @@ export default function AgencyAppHome() {
 
               <View style={[s.offerTipBox, { backgroundColor: '#3B82F610', borderColor: '#3B82F640', marginTop: 14 }]}>
                 <Ionicons name="information-circle" size={16} color="#3B82F6" />
-                <Text style={[s.offerTipText, { color: C.text }]}>
-                  Cliquez sur "Choisir" pour assigner ce véhicule et confirmer la réservation. Le client recevra un e-mail de confirmation avec la plaque.
-                </Text>
+                <Text style={[s.offerTipText, { color: C.text }]}>{t("Cliquez sur \"Choisir\" pour assigner ce véhicule et confirmer la réservation. Le client recevra un e-mail de confirmation avec la plaque.")}</Text>
               </View>
             </ScrollView>
 

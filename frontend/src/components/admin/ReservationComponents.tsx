@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, TextInput, ScrollView 
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { getStatusColor, getStatusLabel, getPaymentColor, getPaymentLabel, formatDate, formatDateTime } from '../../utils/admin-helpers';
+import { t } from '../../i18n';
 
 interface Reservation {
   id: string;
@@ -92,7 +93,7 @@ export function StatusActionModal({ visible, type, reservation, C, onClose, onSt
 }) {
   if (!visible || !reservation) return null;
   const statusOpts = [
-    { value: 'pending', label: 'En attente', icon: 'time', color: '#F59E0B' },
+    { value: 'pending', label: t("En attente"), icon: 'time', color: '#F59E0B' },
     { value: 'pending_cash', label: 'Especes', icon: 'cash', color: '#D97706' },
     { value: 'confirmed', label: 'Confirmee', icon: 'checkmark-circle', color: '#10B981' },
     { value: 'active', label: 'Active', icon: 'car', color: '#1E3A8A' },
@@ -100,8 +101,8 @@ export function StatusActionModal({ visible, type, reservation, C, onClose, onSt
     { value: 'cancelled', label: 'Annulee', icon: 'close-circle', color: '#EF4444' },
   ];
   const paymentOpts = [
-    { value: 'unpaid', label: 'Non paye', icon: 'close-circle', color: '#EF4444' },
-    { value: 'pending', label: 'En attente', icon: 'time', color: '#F59E0B' },
+    { value: 'unpaid', label: t("Non paye"), icon: 'close-circle', color: '#EF4444' },
+    { value: 'pending', label: t("En attente"), icon: 'time', color: '#F59E0B' },
     { value: 'paid', label: 'Paye', icon: 'checkmark-circle', color: '#10B981' },
     { value: 'refunded', label: 'Rembourse', icon: 'return-down-back', color: '#6B7280' },
   ];
@@ -113,7 +114,7 @@ export function StatusActionModal({ visible, type, reservation, C, onClose, onSt
         <TouchableOpacity activeOpacity={1} style={[st.modalBox, { backgroundColor: C.card }]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <Text style={{ fontSize: 18, fontWeight: '700', color: C.text }}>
-              {type === 'status' ? 'Statut de reservation' : 'Statut de paiement'}
+              {type === 'status' ? t("Statut de reservation") : t("Statut de paiement")}
             </Text>
             <TouchableOpacity onPress={onClose} data-testid="close-action-modal"><Ionicons name="close" size={22} color={C.text} /></TouchableOpacity>
           </View>
@@ -126,7 +127,7 @@ export function StatusActionModal({ visible, type, reservation, C, onClose, onSt
                 onPress={() => { type === 'status' ? onStatusChange(reservation.id, opt.value) : onPaymentChange(reservation.id, opt.value); onClose(); }}
                 data-testid={`${type === 'status' ? 'status' : 'payment'}-${opt.value}`}>
                 <Ionicons name={opt.icon as any} size={18} color={opt.color} />
-                <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: opt.color }}>{opt.label}</Text>
+                <Text style={{ flex: 1, fontSize: 14, fontWeight: '600', color: opt.color }}>{t(opt.label)}</Text>
                 {currentVal === opt.value && <Ionicons name="checkmark" size={16} color={opt.color} />}
               </TouchableOpacity>
             ))}
@@ -156,34 +157,34 @@ export function DateFilterModal({ visible, C, onClose, onApply, onClear }: {
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: C.bg }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.border }}>
-          <Text style={{ fontSize: 18, fontWeight: '600', color: C.text }}>Filtrer par date</Text>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: C.text }}>{t("Filtrer par date")}</Text>
           <TouchableOpacity onPress={onClose}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
         </View>
         <ScrollView style={{ flex: 1, padding: 20 }}>
           <View style={{ flexDirection: 'row', gap: 12, marginBottom: 24 }}>
-            {[{ val: 'rental' as const, icon: 'car', label: 'Periode de location' }, { val: 'created' as const, icon: 'time', label: 'Date de creation' }].map(o => (
+            {[{ val: 'rental' as const, icon: 'car', label: t("Periode de location") }, { val: 'created' as const, icon: 'time', label: t("Date de creation") }].map(o => (
               <TouchableOpacity key={o.val}
                 style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 14, borderRadius: 12, backgroundColor: filterType === o.val ? C.accent : C.card, borderWidth: 2, borderColor: C.accent, gap: 8 }}
                 onPress={() => setFilterType(o.val)}>
                 <Ionicons name={o.icon as any} size={20} color={filterType === o.val ? '#fff' : C.accent} />
-                <Text style={{ fontSize: 13, fontWeight: '600', color: filterType === o.val ? '#fff' : C.accent }}>{o.label}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '600', color: filterType === o.val ? '#fff' : C.accent }}>{t(o.label)}</Text>
               </TouchableOpacity>
             ))}
           </View>
           <View style={{ backgroundColor: C.card, borderRadius: 12, padding: 16, marginBottom: 24 }}>
-            {[{ label: 'Date de debut', val: start, set: setStart }, { label: 'Date de fin', val: end, set: setEnd }].map((f, i) => (
+            {[{ label: t("Date de debut"), val: start, set: setStart }, { label: t("Date de fin"), val: end, set: setEnd }].map((f, i) => (
               <View key={i} style={{ marginBottom: i === 0 ? 16 : 0 }}>
-                <Text style={{ fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 8 }}>{f.label}</Text>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: C.text, marginBottom: 8 }}>{t(f.label)}</Text>
                 <TextInput style={{ backgroundColor: C.bg, borderRadius: 10, padding: 14, fontSize: 16, color: C.text, borderWidth: 1, borderColor: C.border }}
-                  value={f.val} onChangeText={f.set} placeholder="AAAA-MM-JJ" placeholderTextColor={C.textLight} />
+                  value={f.val} onChangeText={f.set} placeholder={t("AAAA-MM-JJ")} placeholderTextColor={C.textLight} />
               </View>
             ))}
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 24 }}>
-            {[{ label: "Aujourd'hui", d: 0 }, { label: '7 derniers jours', d: 7 }, { label: '30 derniers jours', d: 30 }].map(q => (
+            {[{ label: "Aujourd'hui", d: 0 }, { label: t("7 derniers jours"), d: 7 }, { label: t("30 derniers jours"), d: 30 }].map(q => (
               <TouchableOpacity key={q.label} style={{ backgroundColor: C.card, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1, borderColor: C.border }}
                 onPress={() => quickSet(q.d)}>
-                <Text style={{ fontSize: 13, color: C.text, fontWeight: '500' }}>{q.label}</Text>
+                <Text style={{ fontSize: 13, color: C.text, fontWeight: '500' }}>{t(q.label)}</Text>
               </TouchableOpacity>
             ))}
           </View>

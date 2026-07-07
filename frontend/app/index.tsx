@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
 import Button from '../src/components/Button';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '../src/i18n';
+import { LanguageSelector } from '../src/components/LanguageSelector';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,50 +43,51 @@ export default function WelcomeScreen() {
           resizeMode="cover"
         />
         <View style={styles.overlay} />
+        <View style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 10, paddingHorizontal: 4, paddingVertical: 2 }}>
+          <LanguageSelector color="#1E293B" activeColor="#1E3A8A" />
+        </View>
         <View style={styles.heroContent}>
           <View style={styles.logoContainer}>
             <Ionicons name="car-sport" size={48} color="#FFFFFF" />
           </View>
           <Text style={styles.appName}>LogiRent</Text>
-          <Text style={styles.tagline}>Location de véhicules premium</Text>
+          <Text style={styles.tagline}>{t("Location de véhicules premium")}</Text>
         </View>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title}>Votre trajet commence ici</Text>
-        <Text style={styles.subtitle}>
-          Découvrez des véhicules premium pour chaque aventure. De la ville à la montagne.
-        </Text>
+        <Text style={styles.title}>{t("Votre trajet commence ici")}</Text>
+        <Text style={styles.subtitle}>{t("Découvrez des véhicules premium pour chaque aventure. De la ville à la montagne.")}</Text>
 
         <View style={styles.features}>
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
               <Ionicons name="shield-checkmark" size={24} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureText}>Véhicules assurés</Text>
+            <Text style={styles.featureText}>{t("Véhicules assurés")}</Text>
           </View>
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
               <Ionicons name="card" size={24} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureText}>Paiement sécurisé</Text>
+            <Text style={styles.featureText}>{t("Paiement sécurisé")}</Text>
           </View>
           <View style={styles.feature}>
             <View style={styles.featureIcon}>
               <Ionicons name="location" size={24} color={COLORS.primary} />
             </View>
-            <Text style={styles.featureText}>Plusieurs agences</Text>
+            <Text style={styles.featureText}>{t("Plusieurs agences")}</Text>
           </View>
         </View>
 
         <View style={styles.buttons}>
           <Button
-            title="Commencer"
+            title={t("Commencer")}
             onPress={() => router.push('/(auth)/register')}
             size="large"
           />
           <Button
-            title="J'ai déjà un compte"
+            title={t("J'ai déjà un compte")}
             onPress={() => router.push('/(auth)/login')}
             variant="ghost"
             size="large"
@@ -96,8 +99,8 @@ export default function WelcomeScreen() {
             <Ionicons name="qr-code-outline" size={20} color={COLORS.primary} />
           </View>
           <View>
-            <Text style={styles.scanTitle}>Scanner le QR de votre agence</Text>
-            <Text style={styles.scanSub}>Rejoignez votre agence en un scan</Text>
+            <Text style={styles.scanTitle}>{t("Scanner le QR de votre agence")}</Text>
+            <Text style={styles.scanSub}>{t("Rejoignez votre agence en un scan")}</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={COLORS.textLight} />
         </TouchableOpacity>

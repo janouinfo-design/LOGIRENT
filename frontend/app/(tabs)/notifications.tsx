@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, Redirect } from 'expo-router';
 import { useNotificationStore, Notification } from '../../src/store/notificationStore';
 import { useAuthStore } from '../../src/store/authStore';
+import { t } from '../../src/i18n';
 
 const ICON_MAP: Record<string, string> = {
   'checkmark-circle': 'checkmark-circle',
@@ -66,7 +67,7 @@ function NotificationItem({ item, onPress, onDelete }: { item: Notification; onP
       </View>
       <View style={s.notifContent}>
         <View style={s.notifTopRow}>
-          <Text style={[s.notifTitle, !item.read && s.notifTitleUnread]} numberOfLines={1}>{item.title}</Text>
+          <Text style={[s.notifTitle, !item.read && s.notifTitleUnread]} numberOfLines={1}>{t(item.title)}</Text>
           <Text style={s.notifTime}>{timeAgo(item.created_at)}</Text>
         </View>
         <Text style={s.notifMsg} numberOfLines={2}>{item.message}</Text>
@@ -135,7 +136,7 @@ export default function NotificationsScreen() {
         {unreadCount > 0 && (
           <TouchableOpacity onPress={markAllAsRead} style={s.markAllBtn} data-testid="mark-all-read-btn">
             <Ionicons name="checkmark-done" size={16} color="#7C3AED" />
-            <Text style={s.markAllText}>Tout marquer lu</Text>
+            <Text style={s.markAllText}>{t("Tout marquer lu")}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -157,10 +158,8 @@ export default function NotificationsScreen() {
             <View style={s.emptyIconWrap}>
               <Ionicons name="notifications-off-outline" size={48} color="#D1D5DB" />
             </View>
-            <Text style={s.emptyTitle}>Aucune notification</Text>
-            <Text style={s.emptySubtitle}>
-              Vos notifications de réservations, paiements et rappels apparaitront ici.
-            </Text>
+            <Text style={s.emptyTitle}>{t("Aucune notification")}</Text>
+            <Text style={s.emptySubtitle}>{t("Vos notifications de réservations, paiements et rappels apparaitront ici.")}</Text>
           </View>
         }
       />

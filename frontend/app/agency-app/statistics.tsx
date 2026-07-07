@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import Svg, { Rect, Text as SvgText, Line, G, Path } from 'react-native-svg';
+import { t } from '../../src/i18n';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ interface AdvancedStats {
 }
 
 function BarChart({ data, labelKey, valueKey, color, textColor, gridColor, height = 140 }: any) {
-  if (!data || data.length === 0) return <Text style={{ color: textColor, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>;
+  if (!data || data.length === 0) return <Text style={{ color: textColor, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>;
   const chartW = SCREEN_W - 80;
   const maxVal = Math.max(...data.map((d: any) => d[valueKey]), 1);
   const barW = Math.min(36, (chartW - 20) / data.length - 4);
@@ -118,29 +119,29 @@ export default function AgencyStatistics() {
   const onRefresh = async () => { setRefreshing(true); await fetchData(); setRefreshing(false); };
 
   if (loading) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={C.accent} /></View>;
-  if (!stats) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: C.textLight }}>Erreur de chargement</Text></View>;
+  if (!stats) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: C.textLight }}>{t("Erreur de chargement")}</Text></View>;
 
   const pmColors: Record<string, string> = { card: C.accent, cash: '#fbbf24', twint: '#06b6d4' };
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
       <Text style={{ color: C.text, fontSize: 20, fontWeight: '800', marginBottom: 4 }}>Statistiques</Text>
-      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 16 }}>Vue détaillée de votre activité</Text>
+      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 16 }}>{t("Vue détaillée de votre activité")}</Text>
 
       {/* KPI Cards */}
       <View style={st.kpiRow}>
         {[
-          { icon: 'cash', label: 'Revenu mois', value: `CHF ${stats.revenue_this_month.toFixed(0)}`, color: C.success, trend: stats.revenue_change_pct },
-          { icon: 'calendar', label: 'Réservations', value: `${stats.reservations_this_month}`, color: C.warning, sub: `${stats.reservations_last_month} mois dernier` },
-          { icon: 'time', label: 'Durée moy.', value: `${stats.avg_booking_duration}j`, color: C.info },
-          { icon: 'wallet', label: 'Panier moy.', value: `CHF ${stats.avg_revenue_per_reservation.toFixed(0)}`, color: C.accent },
+          { icon: 'cash', label: t("Revenu mois"), value: `CHF ${stats.revenue_this_month.toFixed(0)}`, color: C.success, trend: stats.revenue_change_pct },
+          { icon: 'calendar', label: t("Réservations"), value: `${stats.reservations_this_month}`, color: C.warning, sub: `${stats.reservations_last_month} mois dernier` },
+          { icon: 'time', label: t("Durée moy."), value: `${stats.avg_booking_duration}j`, color: C.info },
+          { icon: 'wallet', label: t("Panier moy."), value: `CHF ${stats.avg_revenue_per_reservation.toFixed(0)}`, color: C.accent },
         ].map((kpi, i) => (
           <View key={i} style={[st.kpiCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: kpi.color }]} data-testid={`agency-kpi-${i}`}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <View style={{ width: 28, height: 28, borderRadius: 7, backgroundColor: kpi.color + '20', justifyContent: 'center', alignItems: 'center' }}>
                 <Ionicons name={kpi.icon as any} size={14} color={kpi.color} />
               </View>
-              <Text style={{ color: C.textLight, fontSize: 10 }}>{kpi.label}</Text>
+              <Text style={{ color: C.textLight, fontSize: 10 }}>{t(kpi.label)}</Text>
             </View>
             <Text style={{ color: C.text, fontSize: 20, fontWeight: '800', marginTop: 4 }}>{kpi.value}</Text>
             {kpi.trend !== undefined && (
@@ -154,13 +155,13 @@ export default function AgencyStatistics() {
       </View>
 
       {/* Daily Revenue Chart */}
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8, marginTop: 8 }}>Revenu Journalier (30j)</Text>
+      <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8, marginTop: 8 }}>{t("Revenu Journalier (30j)")}</Text>
       <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
         <BarChart data={stats.daily_revenue} labelKey="date" valueKey="revenue" color={C.accent} textColor={C.textLight} gridColor={C.border} />
       </View>
 
       {/* Vehicle Utilization */}
-      <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8, marginTop: 16 }}>Utilisation des Véhicules</Text>
+      <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8, marginTop: 16 }}>{t("Utilisation des Véhicules")}</Text>
       <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
         {stats.vehicle_utilization.slice(0, 6).map((v, i) => (
           <View key={v.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: i < 5 ? 8 : 0 }}>
@@ -171,13 +172,13 @@ export default function AgencyStatistics() {
             <Text style={{ color: C.text, fontSize: 11, fontWeight: '700', width: 36, textAlign: 'right' }}>{v.utilization}%</Text>
           </View>
         ))}
-        {stats.vehicle_utilization.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>Aucun véhicule</Text>}
+        {stats.vehicle_utilization.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>{t("Aucun véhicule")}</Text>}
       </View>
 
       {/* Revenue per Vehicle + Payment Methods */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
         <View style={{ flex: 1 }}>
-          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8 }}>Top Revenus</Text>
+          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8 }}>{t("Top Revenus")}</Text>
           <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
             {stats.revenue_per_vehicle.slice(0, 4).map((v, i) => (
               <View key={v.id} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
@@ -212,19 +213,19 @@ export default function AgencyStatistics() {
         <View style={[st.miniCard, { backgroundColor: C.card, borderColor: C.error + '30' }]}>
           <Ionicons name="close-circle" size={18} color={C.error} />
           <Text style={{ color: C.text, fontSize: 20, fontWeight: '800' }}>{stats.cancellation_rate}%</Text>
-          <Text style={{ color: C.textLight, fontSize: 9, textAlign: 'center' }}>Taux d'annulation</Text>
+          <Text style={{ color: C.textLight, fontSize: 9, textAlign: 'center' }}>{t("Taux d'annulation")}</Text>
         </View>
         <View style={[st.miniCard, { backgroundColor: C.card, borderColor: C.success + '30' }]}>
           <Ionicons name="people" size={18} color={C.success} />
           <Text style={{ color: C.text, fontSize: 20, fontWeight: '800' }}>{stats.new_clients_30d}</Text>
-          <Text style={{ color: C.textLight, fontSize: 9, textAlign: 'center' }}>Nouveaux clients (30j)</Text>
+          <Text style={{ color: C.textLight, fontSize: 9, textAlign: 'center' }}>{t("Nouveaux clients (30j)")}</Text>
         </View>
       </View>
 
       {/* Top Clients */}
       {topClients.length > 0 && (
         <View style={{ marginTop: 16 }}>
-          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8 }}>Top Clients</Text>
+          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700', marginBottom: 8 }}>{t("Top Clients")}</Text>
           <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
             {topClients.slice(0, 5).map((c: any, i: number) => {
               const rColors: Record<string, string> = { vip: '#8B5CF6', good: C.success, neutral: '#6B7280', bad: '#F59E0B', blocked: C.error };
@@ -249,13 +250,13 @@ export default function AgencyStatistics() {
       <View style={{ marginTop: 16 }} data-testid="agency-revenue-forecast">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Ionicons name="sparkles" size={16} color={C.accent} />
-          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700' }}>Prévisions de Revenus (IA)</Text>
+          <Text style={{ color: C.text, fontSize: 15, fontWeight: '700' }}>{t("Prévisions de Revenus (IA)")}</Text>
         </View>
         <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.accent + '40' }]}>
           {forecastLoading ? (
             <View style={{ alignItems: 'center', padding: 20 }}>
               <ActivityIndicator size="small" color={C.accent} />
-              <Text style={{ color: C.textLight, fontSize: 11, marginTop: 6 }}>Analyse IA en cours...</Text>
+              <Text style={{ color: C.textLight, fontSize: 11, marginTop: 6 }}>{t("Analyse IA en cours...")}</Text>
             </View>
           ) : forecastData ? (
             <>
@@ -264,7 +265,7 @@ export default function AgencyStatistics() {
                   ...(forecastData.historical || []).map((h: any) => ({ ...h, type: 'historical' })),
                   ...(forecastData.forecast || []).map((f: any) => ({ ...f, type: 'forecast' })),
                 ];
-                if (allData.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>Aucune donnée</Text>;
+                if (allData.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>{t("Aucune donnée")}</Text>;
                 const chartW = SCREEN_W - 80;
                 const chartH = 120;
                 const maxVal = Math.max(...allData.map(d => d.revenue), 1);
@@ -302,7 +303,7 @@ export default function AgencyStatistics() {
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={{ width: 10, height: 6, borderRadius: 2, backgroundColor: C.accent, opacity: 0.5 }} />
-                  <Text style={{ color: C.textLight, fontSize: 9 }}>Prévision IA</Text>
+                  <Text style={{ color: C.textLight, fontSize: 9 }}>{t("Prévision IA")}</Text>
                 </View>
               </View>
 
@@ -338,7 +339,7 @@ export default function AgencyStatistics() {
               )}
             </>
           ) : (
-            <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>Prévision non disponible</Text>
+            <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>{t("Prévision non disponible")}</Text>
           )}
         </View>
       </View>

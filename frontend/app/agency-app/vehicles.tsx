@@ -11,6 +11,7 @@ import VehicleCard from '../../src/components/agency/VehicleCard';
 import EditVehicleModal from '../../src/components/agency/EditVehicleModal';
 import NewVehicleModal from '../../src/components/agency/NewVehicleModal';
 import PhotoGalleryModal from '../../src/components/agency/PhotoGalleryModal';
+import { t } from '../../src/i18n';
 
 const GAP = 14;
 const PAD = 16;
@@ -68,7 +69,7 @@ export default function AgencyVehicles() {
     if (!confirm) return;
     try {
       await api.delete(`/api/admin/vehicles/${v.id}`);
-      Platform.OS === 'web' ? window.alert('Vehicule supprime') : Alert.alert('Succes', 'Vehicule supprime');
+      Platform.OS === 'web' ? window.alert('Vehicule supprime') : Alert.alert(t("Succes"), t("Vehicule supprime"));
       fetchVehicles();
     } catch (e: any) {
       const msg = e?.response?.data?.detail || 'Erreur';
@@ -104,7 +105,7 @@ export default function AgencyVehicles() {
       {/* Header */}
       <View style={st.header}>
         <View>
-          <Text style={[st.headerTitle, { color: C.text }]}>Flotte de vehicules</Text>
+          <Text style={[st.headerTitle, { color: C.text }]}>{t("Flotte de vehicules")}</Text>
           <Text style={[st.headerSub, { color: C.textLight }]}>{vehicles.length} vehicules enregistres</Text>
         </View>
         <TouchableOpacity
@@ -123,7 +124,7 @@ export default function AgencyVehicles() {
         <Ionicons name="search" size={18} color={C.textLight} />
         <TextInput
           style={[st.searchInput, { color: C.text }]}
-          placeholder="Rechercher par nom, plaque, type..."
+          placeholder={t("Rechercher par nom, plaque, type...")}
           placeholderTextColor={C.textLight}
           value={search}
           onChangeText={setSearch}
@@ -184,8 +185,8 @@ export default function AgencyVehicles() {
         {filtered.length === 0 && (
           <View style={st.empty}>
             <Ionicons name="car-outline" size={52} color={C.textLight + '40'} />
-            <Text style={{ color: C.textLight, fontSize: 15, marginTop: 10, fontWeight: '500' }}>Aucun vehicule trouve</Text>
-            <Text style={{ color: C.textLight + '80', fontSize: 13, marginTop: 4 }}>Essayez de modifier vos filtres</Text>
+            <Text style={{ color: C.textLight, fontSize: 15, marginTop: 10, fontWeight: '500' }}>{t("Aucun vehicule trouve")}</Text>
+            <Text style={{ color: C.textLight + '80', fontSize: 13, marginTop: 4 }}>{t("Essayez de modifier vos filtres")}</Text>
           </View>
         )}
       </ScrollView>

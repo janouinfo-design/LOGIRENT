@@ -6,6 +6,7 @@ import api from '../../src/api/axios';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 import { USER_RATINGS } from '../../src/utils/admin-helpers';
+import { t } from '../../src/i18n';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -136,7 +137,7 @@ export default function AdminUsers() {
             </View>
             <View style={[st.ratingTag, { backgroundColor: ri.color + '20', paddingHorizontal: 6, paddingVertical: 2 }]}>
               <Ionicons name={ri.icon as any} size={10} color={ri.color} />
-              <Text style={{ fontSize: 11, fontWeight: '600', color: ri.color }}>{ri.label}</Text>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: ri.color }}>{t(ri.label)}</Text>
             </View>
           </View>
         </View>
@@ -150,7 +151,7 @@ export default function AdminUsers() {
         <Text style={{ fontSize: 14, fontWeight: '600', color: C.text }}>{total} utilisateurs</Text>
         <TouchableOpacity style={[st.importBtn, { backgroundColor: C.accent }]} onPress={() => Platform.OS === 'web' ? importRef.current?.click() : alert('Import Excel disponible sur web')} disabled={importing} data-testid="import-excel-btn">
           <Ionicons name="cloud-upload-outline" size={18} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{importing ? 'Import...' : 'Importer Excel'}</Text>
+          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '600' }}>{importing ? 'Import...' : t("Importer Excel")}</Text>
         </TouchableOpacity>
         {Platform.OS === 'web' && <input ref={(el: any) => { importRef.current = el; }} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' } as any} onChange={handleImport} />}
       </View>
@@ -158,14 +159,14 @@ export default function AdminUsers() {
         numColumns={3}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await fetchUsers(); setRefreshing(false); }} />}
-        ListEmptyComponent={!loading ? <View style={{ alignItems: 'center', paddingTop: 60 }}><Ionicons name="people-outline" size={48} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 12 }}>Aucun utilisateur</Text></View> : null}
+        ListEmptyComponent={!loading ? <View style={{ alignItems: 'center', paddingTop: 60 }}><Ionicons name="people-outline" size={48} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 12 }}>{t("Aucun utilisateur")}</Text></View> : null}
       />
 
       {/* User Detail Modal */}
       <Modal visible={showModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowModal(false)}>
         <View style={{ flex: 1, backgroundColor: C.bg }}>
           <View style={[st.modalHeader, { backgroundColor: C.card, borderBottomColor: C.border }]}>
-            <Text style={{ fontSize: 18, fontWeight: '600', color: C.text }}>Details du client</Text>
+            <Text style={{ fontSize: 18, fontWeight: '600', color: C.text }}>{t("Details du client")}</Text>
             <TouchableOpacity onPress={() => setShowModal(false)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
           </View>
           {sel && (
@@ -191,7 +192,7 @@ export default function AdminUsers() {
                       style={[st.ratingOpt, { borderColor: r.color, backgroundColor: sel.client_rating === r.value ? r.color : 'transparent' }]}
                       onPress={() => updateRating(r.value)} data-testid={`rating-${r.value}`}>
                       <Ionicons name={r.icon as any} size={18} color={sel.client_rating === r.value ? '#fff' : r.color} />
-                      <Text style={{ fontSize: 12, fontWeight: '600', color: sel.client_rating === r.value ? '#fff' : r.color }}>{r.label}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: sel.client_rating === r.value ? '#fff' : r.color }}>{t(r.label)}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -201,17 +202,17 @@ export default function AdminUsers() {
               <View style={[st.section, { backgroundColor: C.card }]}>
                 <Text style={[st.sectionTitle, { color: C.text }]}>Notes</Text>
                 <TextInput style={[st.notesInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={notes} onChangeText={setNotes}
-                  placeholder="Notes sur ce client..." placeholderTextColor={C.textLight} multiline numberOfLines={4} />
-                <Button title="Sauvegarder" onPress={saveInfo} loading={saving} variant="outline" style={{ marginTop: 12 }} />
+                  placeholder={t("Notes sur ce client...")} placeholderTextColor={C.textLight} multiline numberOfLines={4} />
+                <Button title={t("Sauvegarder")} onPress={saveInfo} loading={saving} variant="outline" style={{ marginTop: 12 }} />
               </View>
 
               {/* Documents */}
               <View style={[st.section, { backgroundColor: C.card }]}>
                 <Text style={[st.sectionTitle, { color: C.text }]}>Documents</Text>
                 <View style={st.docsGrid}>
-                  {[{ type: 'id' as const, label: "Piece d'identite", photo: sel.id_photo }, { type: 'license' as const, label: 'Permis de conduire', photo: sel.license_photo }].map(doc => (
+                  {[{ type: 'id' as const, label: t("Piece d'identite"), photo: sel.id_photo }, { type: 'license' as const, label: t("Permis de conduire"), photo: sel.license_photo }].map(doc => (
                     <View key={doc.type} style={{ width: '48%' }}>
-                      <Text style={{ fontSize: 12, fontWeight: '600', color: C.textLight, marginBottom: 8 }}>{doc.label}</Text>
+                      <Text style={{ fontSize: 12, fontWeight: '600', color: C.textLight, marginBottom: 8 }}>{t(doc.label)}</Text>
                       <TouchableOpacity onPress={() => handlePhoto(doc.type)} disabled={uploading === doc.type}>
                         {uploading === doc.type ? <View style={[st.docPlaceholder, { borderColor: C.border }]}><ActivityIndicator color={C.accent} /></View>
                           : doc.photo ? <View><Image source={{ uri: doc.photo }} style={st.docImg} /><View style={st.docOverlay}><Ionicons name="camera" size={20} color="#fff" /></View></View>
@@ -235,7 +236,7 @@ export default function AdminUsers() {
                     {[{ label: 'Nom', val: editName, set: setEditName }, { label: 'Email', val: editEmail, set: setEditEmail },
                       { label: 'Telephone', val: editPhone, set: setEditPhone }, { label: 'Adresse', val: editAddress, set: setEditAddress }].map((f, i) => (
                       <View key={i}>
-                        <Text style={{ fontSize: 12, fontWeight: '600', color: C.textLight, marginBottom: 4 }}>{f.label}</Text>
+                        <Text style={{ fontSize: 12, fontWeight: '600', color: C.textLight, marginBottom: 4 }}>{t(f.label)}</Text>
                         <TextInput style={[st.editInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={f.val} onChangeText={f.set} />
                       </View>
                     ))}

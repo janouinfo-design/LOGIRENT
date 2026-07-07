@@ -7,6 +7,8 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
 import { useThemeStore } from '../../src/store/themeStore';
 import { usePushNotifications } from '../../src/hooks/usePushNotifications';
+import { t } from '../../src/i18n';
+import { LanguageSelector } from '../../src/components/LanguageSelector';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 const ACCENT = '#7C3AED';
@@ -30,8 +32,8 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: 'reservations-group', label: 'Reservations', icon: 'calendar', iconO: 'calendar-outline',
     children: [
-      { key: 'reservations', label: 'Toutes les reservations', icon: 'calendar', iconO: 'calendar-outline' },
-      { key: 'book', label: 'Nouvelle reservation', icon: 'add-circle', iconO: 'add-circle-outline' },
+      { key: 'reservations', label: t("Toutes les reservations"), icon: 'calendar', iconO: 'calendar-outline' },
+      { key: 'book', label: t("Nouvelle reservation"), icon: 'add-circle', iconO: 'add-circle-outline' },
     ],
   },
   { key: 'vehicles', label: 'Vehicules', icon: 'car', iconO: 'car-outline' },
@@ -40,7 +42,7 @@ const MENU_ITEMS: MenuItem[] = [
     key: 'finance-group', label: 'Finance', icon: 'wallet', iconO: 'wallet-outline',
     children: [
       { key: 'invoices', label: 'Factures', icon: 'receipt', iconO: 'receipt-outline' },
-      { key: 'billing-settings', label: 'Parametres facturation', icon: 'settings', iconO: 'settings-outline' },
+      { key: 'billing-settings', label: t("Parametres facturation"), icon: 'settings', iconO: 'settings-outline' },
       { key: 'statistics', label: 'Statistiques', icon: 'stats-chart', iconO: 'stats-chart-outline' },
       { key: 'analytics', label: 'Analytics', icon: 'analytics', iconO: 'analytics-outline' },
     ],
@@ -48,10 +50,10 @@ const MENU_ITEMS: MenuItem[] = [
   {
     key: 'outils-group', label: 'Outils', icon: 'construct', iconO: 'construct-outline',
     children: [
-      { key: 'documents', label: 'Scan documents', icon: 'scan', iconO: 'scan-outline' },
-      { key: 'tracking', label: 'GPS / Tracking', icon: 'navigate', iconO: 'navigate-outline' },
-      { key: 'contract-template', label: 'Modele contrat', icon: 'document-text', iconO: 'document-text-outline' },
-      { key: 'email-settings', label: 'Configuration Email', icon: 'mail', iconO: 'mail-outline' },
+      { key: 'documents', label: t("Scan documents"), icon: 'scan', iconO: 'scan-outline' },
+      { key: 'tracking', label: t("GPS / Tracking"), icon: 'navigate', iconO: 'navigate-outline' },
+      { key: 'contract-template', label: t("Modele contrat"), icon: 'document-text', iconO: 'document-text-outline' },
+      { key: 'email-settings', label: t("Configuration Email"), icon: 'mail', iconO: 'mail-outline' },
     ],
   },
   { key: 'profile', label: 'Profil', icon: 'person-circle', iconO: 'person-circle-outline' },
@@ -86,15 +88,15 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
 
   const moreItems = [
     { key: 'vehicles', label: 'Vehicules', icon: 'car-outline' },
-    { key: 'book', label: 'Nouvelle reservation', icon: 'add-circle-outline' },
+    { key: 'book', label: t("Nouvelle reservation"), icon: 'add-circle-outline' },
     { key: 'invoices', label: 'Factures', icon: 'receipt-outline' },
     { key: 'statistics', label: 'Statistiques', icon: 'stats-chart-outline' },
     { key: 'analytics', label: 'Analytics', icon: 'analytics-outline' },
-    { key: 'documents', label: 'Scan documents', icon: 'scan-outline' },
-    { key: 'tracking', label: 'GPS / Tracking', icon: 'navigate-outline' },
-    { key: 'contract-template', label: 'Modele contrat', icon: 'document-text-outline' },
-    { key: 'billing-settings', label: 'Parametres facturation', icon: 'settings-outline' },
-    { key: 'email-settings', label: 'Configuration Email', icon: 'mail-outline' },
+    { key: 'documents', label: t("Scan documents"), icon: 'scan-outline' },
+    { key: 'tracking', label: t("GPS / Tracking"), icon: 'navigate-outline' },
+    { key: 'contract-template', label: t("Modele contrat"), icon: 'document-text-outline' },
+    { key: 'billing-settings', label: t("Parametres facturation"), icon: 'settings-outline' },
+    { key: 'email-settings', label: t("Configuration Email"), icon: 'mail-outline' },
     { key: 'profile', label: 'Profil', icon: 'person-circle-outline' },
   ].filter(it => {
     const moduleKey = TAB_MODULE_MAP[it.key];
@@ -130,7 +132,7 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
             </View>
           )}
         </View>
-        <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t.label}</Text>
+        <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t(t.label)}</Text>
       </TouchableOpacity>
     );
   };
@@ -163,7 +165,7 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
             <View style={[bs.moreHeader, { borderBottomColor: C.border }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="camera" size={22} color={ACCENT} />
-                <Text style={[bs.moreTitle, { color: C.text }]}>Scan rapide</Text>
+                <Text style={[bs.moreTitle, { color: C.text }]}>{t("Scan rapide")}</Text>
               </View>
               <TouchableOpacity onPress={() => setScanOpen(false)} data-testid="mobile-scan-close">
                 <Ionicons name="close" size={24} color={C.text} />
@@ -180,16 +182,14 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
                   <Ionicons name="scan" size={22} color="#fff" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={[bs.scanCardTitle, { color: C.text }]}>Scanner un document</Text>
-                  <Text style={[bs.scanCardSub, { color: C.textLight }]}>Permis de conduire, carte d'identite (IA OCR)</Text>
+                  <Text style={[bs.scanCardTitle, { color: C.text }]}>{t("Scanner un document")}</Text>
+                  <Text style={[bs.scanCardSub, { color: C.textLight }]}>{t("Permis de conduire, carte d'identite (IA OCR)")}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={18} color={C.textLight} />
               </TouchableOpacity>
 
               <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 6 }}>
-                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>
-                  Photos vehicule avant depart
-                </Text>
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '700', textTransform: 'uppercase' }}>{t("Photos vehicule avant depart")}</Text>
               </View>
 
               {pickupLoading ? (
@@ -199,9 +199,7 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
               ) : pickupReservations.length === 0 ? (
                 <View style={{ padding: 20, alignItems: 'center', gap: 6 }}>
                   <Ionicons name="calendar-outline" size={28} color={C.textLight} />
-                  <Text style={{ color: C.textLight, fontSize: 12, textAlign: 'center' }}>
-                    Aucun depart prevu aujourd'hui
-                  </Text>
+                  <Text style={{ color: C.textLight, fontSize: 12, textAlign: 'center' }}>{t("Aucun depart prevu aujourd'hui")}</Text>
                 </View>
               ) : (
                 pickupReservations.map((r: any) => (
@@ -219,7 +217,7 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
                         {r.vehicle_name || `${r.vehicle_brand || ''} ${r.vehicle_model || ''}`}
                       </Text>
                       <Text style={[bs.scanCardSub, { color: C.textLight }]} numberOfLines={1}>
-                        {r.user_name} · {r.status === 'confirmed' ? 'A livrer' : r.status === 'active' ? 'En cours' : 'A traiter'}
+                        {r.user_name} · {r.status === 'confirmed' ? 'A livrer' : r.status === 'active' ? t("En cours") : t("A traiter")}
                       </Text>
                     </View>
                     <Ionicons name="camera-outline" size={18} color={ACCENT} />
@@ -235,7 +233,7 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
         <Pressable style={bs.moreOverlay} onPress={() => setMoreOpen(false)}>
           <Pressable style={[bs.morePanel, { backgroundColor: C.card }]} onPress={(e: any) => e.stopPropagation?.()}>
             <View style={[bs.moreHeader, { borderBottomColor: C.border }]}>
-              <Text style={[bs.moreTitle, { color: C.text }]}>Plus d'options</Text>
+              <Text style={[bs.moreTitle, { color: C.text }]}>{t("Plus d'options")}</Text>
               <TouchableOpacity onPress={() => setMoreOpen(false)} data-testid="mobile-more-close">
                 <Ionicons name="close" size={24} color={C.text} />
               </TouchableOpacity>
@@ -249,7 +247,7 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
                   data-testid={`mobile-more-${it.key}`}
                 >
                   <Ionicons name={it.icon as any} size={20} color={C.textLight} />
-                  <Text style={[bs.moreItemText, { color: C.text }]}>{it.label}</Text>
+                  <Text style={[bs.moreItemText, { color: C.text }]}>{t(it.label)}</Text>
                   <Ionicons name="chevron-forward" size={18} color={C.textLight} />
                 </TouchableOpacity>
               ))}
@@ -323,7 +321,7 @@ function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoa
             </View>
           ) : null}
         </View>
-        <Text style={[s.menuText, isActive && { color: ACCENT, fontWeight: '700' }]}>{item.label}</Text>
+        <Text style={[s.menuText, isActive && { color: ACCENT, fontWeight: '700' }]}>{t(item.label)}</Text>
         <Ionicons name="chevron-down" size={12} color={C.textLight} style={{ marginLeft: 2 }} />
       </TouchableOpacity>
 
@@ -340,7 +338,7 @@ function DropdownMenu({ item, isActive, onNavigate, C, agencyModules, modulesLoa
               data-testid={`submenu-${child.key}`}
             >
               <Ionicons name={child.iconO as any} size={16} color={C.textLight} />
-              <Text style={[s.dropdownText, { color: C.text }]}>{child.label}</Text>
+              <Text style={[s.dropdownText, { color: C.text }]}>{t(child.label)}</Text>
               {child.key === 'reservations' && badge && badge > 0 ? (
                 <View style={[s.menuBadge, { position: 'relative', marginLeft: 'auto' }]}>
                   <Text style={s.menuBadgeText}>{badge > 9 ? '9+' : badge}</Text>
@@ -490,7 +488,7 @@ export default function AgencyAppLayout() {
                     data-testid={`menu-${item.key}`}
                   >
                     <Ionicons name={(active ? item.icon : item.iconO) as any} size={18} color={active ? ACCENT : C.textLight} />
-                    <Text style={[s.menuText, active && { color: ACCENT, fontWeight: '700' }]}>{item.label}</Text>
+                    <Text style={[s.menuText, active && { color: ACCENT, fontWeight: '700' }]}>{t(item.label)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -502,6 +500,7 @@ export default function AgencyAppLayout() {
 
           {/* Right actions */}
           <View style={s.rightActions}>
+            <LanguageSelector color={C.textLight} activeColor={ACCENT} compact={isMobile} />
             <TouchableOpacity onPress={() => { fetchNotifications(); setShowNotifs(true); }} style={s.iconBtn} data-testid="agency-notification-bell">
               <Ionicons name="notifications" size={20} color={C.textLight} />
               {unreadCount > 0 && (
@@ -557,7 +556,7 @@ export default function AgencyAppLayout() {
               <Text style={[s.notifTitle, { color: C.text }]}>Notifications</Text>
               <View style={s.notifActions}>
                 {unreadCount > 0 && (
-                  <TouchableOpacity onPress={markAllAsRead}><Text style={{ color: ACCENT, fontSize: 13 }}>Tout lire</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={markAllAsRead}><Text style={{ color: ACCENT, fontSize: 13 }}>{t("Tout lire")}</Text></TouchableOpacity>
                 )}
                 <TouchableOpacity onPress={() => setShowNotifs(false)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
               </View>
@@ -565,7 +564,7 @@ export default function AgencyAppLayout() {
             <FlatList
               data={notifications}
               keyExtractor={(item) => item.id}
-              ListEmptyComponent={<View style={s.emptyNotif}><Ionicons name="notifications-off-outline" size={32} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 8 }}>Aucune notification</Text></View>}
+              ListEmptyComponent={<View style={s.emptyNotif}><Ionicons name="notifications-off-outline" size={32} color={C.textLight} /><Text style={{ color: C.textLight, marginTop: 8 }}>{t("Aucune notification")}</Text></View>}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={[s.notifItem, { borderBottomColor: C.border }, !item.read && { backgroundColor: ACCENT + '08' }]}
@@ -573,7 +572,7 @@ export default function AgencyAppLayout() {
                 >
                   <View style={[s.notifDot, !item.read && { backgroundColor: ACCENT }]} />
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.notifItemTitle, { color: C.text }]}>{item.title}</Text>
+                    <Text style={[s.notifItemTitle, { color: C.text }]}>{t(item.title)}</Text>
                     <Text style={[s.notifItemMsg, { color: C.textLight }]}>{item.message}</Text>
                     <Text style={[s.notifTime, { color: C.textLight }]}>{timeAgo(item.created_at)}</Text>
                   </View>

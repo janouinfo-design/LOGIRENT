@@ -6,6 +6,7 @@ import QRCode from 'react-qr-code';
 import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -66,7 +67,7 @@ export default function AgencyProfile() {
           <Text style={[s.adminEmail, { color: C.textLight }]}>{user?.email}</Text>
           <View style={[s.roleBadge, { backgroundColor: C.accent + '15' }]}>
             <Ionicons name="shield-checkmark" size={12} color={C.accent} />
-            <Text style={[s.roleText, { color: C.accent }]}>Admin Agence</Text>
+            <Text style={[s.roleText, { color: C.accent }]}>{t("Admin Agence")}</Text>
           </View>
         </View>
       </View>
@@ -76,7 +77,7 @@ export default function AgencyProfile() {
         <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} testID="agency-info-section">
           <View style={s.sectionHeader}>
             <Ionicons name="business" size={20} color={C.primary} />
-            <Text style={[s.sectionTitle, { color: C.text }]}>Mon agence</Text>
+            <Text style={[s.sectionTitle, { color: C.text }]}>{t("Mon agence")}</Text>
           </View>
           <View style={[s.infoRow, { borderBottomColor: C.border }]}>
             <Text style={[s.infoLabel, { color: C.textLight }]}>Nom</Text>
@@ -90,13 +91,13 @@ export default function AgencyProfile() {
           )}
           {agency.phone && (
             <View style={[s.infoRow, { borderBottomColor: C.border }]}>
-              <Text style={[s.infoLabel, { color: C.textLight }]}>Téléphone</Text>
+              <Text style={[s.infoLabel, { color: C.textLight }]}>{t("Téléphone")}</Text>
               <Text style={[s.infoValue, { color: C.text }]}>{agency.phone}</Text>
             </View>
           )}
           {agency.email && (
             <View style={[s.infoRow, { borderBottomColor: C.border }]}>
-              <Text style={[s.infoLabel, { color: C.textLight }]}>Email agence</Text>
+              <Text style={[s.infoLabel, { color: C.textLight }]}>{t("Email agence")}</Text>
               <Text style={[s.infoValue, { color: C.text }]}>{agency.email}</Text>
             </View>
           )}
@@ -107,7 +108,7 @@ export default function AgencyProfile() {
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} testID="agency-links-section">
         <View style={s.sectionHeader}>
           <Ionicons name="link" size={20} color={C.primary} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Liens & QR Codes</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Liens & QR Codes")}</Text>
         </View>
 
         {/* Client App Link */}
@@ -117,8 +118,8 @@ export default function AgencyProfile() {
               <Ionicons name="globe-outline" size={18} color={C.success} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[s.linkTitle, { color: C.text }]}>App Client</Text>
-              <Text style={[s.linkDesc, { color: C.textLight }]}>Les clients scannent pour réserver</Text>
+              <Text style={[s.linkTitle, { color: C.text }]}>{t("App Client")}</Text>
+              <Text style={[s.linkDesc, { color: C.textLight }]}>{t("Les clients scannent pour réserver")}</Text>
             </View>
           </View>
           <Text style={[s.linkUrl, { color: C.accent }]} selectable numberOfLines={2}>{clientLink}</Text>
@@ -133,7 +134,7 @@ export default function AgencyProfile() {
             </TouchableOpacity>
             <TouchableOpacity style={[s.linkBtn, { backgroundColor: C.accent + '15' }]} onPress={() => setShowQR('client')} testID="qr-client-link">
               <Ionicons name="qr-code-outline" size={16} color={C.accent} />
-              <Text style={[s.linkBtnText, { color: C.accent }]}>QR Code</Text>
+              <Text style={[s.linkBtnText, { color: C.accent }]}>{t("QR Code")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -145,8 +146,8 @@ export default function AgencyProfile() {
               <Ionicons name="shield-checkmark-outline" size={18} color={C.warning} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[s.linkTitle, { color: C.text }]}>App Admin Agence</Text>
-              <Text style={[s.linkDesc, { color: C.textLight }]}>Gestion de l'agence</Text>
+              <Text style={[s.linkTitle, { color: C.text }]}>{t("App Admin Agence")}</Text>
+              <Text style={[s.linkDesc, { color: C.textLight }]}>{t("Gestion de l'agence")}</Text>
             </View>
           </View>
           <Text style={[s.linkUrl, { color: C.accent }]} selectable numberOfLines={2}>{adminLink}</Text>
@@ -161,7 +162,7 @@ export default function AgencyProfile() {
             </TouchableOpacity>
             <TouchableOpacity style={[s.linkBtn, { backgroundColor: C.accent + '15' }]} onPress={() => setShowQR('admin')} testID="qr-admin-link">
               <Ionicons name="qr-code-outline" size={16} color={C.accent} />
-              <Text style={[s.linkBtnText, { color: C.accent }]}>QR Code</Text>
+              <Text style={[s.linkBtnText, { color: C.accent }]}>{t("QR Code")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -172,12 +173,12 @@ export default function AgencyProfile() {
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} testID="settings-section">
         <View style={s.sectionHeader}>
           <Ionicons name="settings" size={20} color={C.primary} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Paramètres</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Paramètres")}</Text>
         </View>
         {/* Theme toggle removed - light mode only */}
         <TouchableOpacity style={[s.menuItem, { borderBottomColor: C.border }]} onPress={() => router.push('/agency-app/tracking')} testID="profile-gps-settings">
           <Ionicons name="navigate-outline" size={20} color={C.textLight} />
-          <Text style={[s.menuText, { color: C.text }]}>Configuration GPS Navixy</Text>
+          <Text style={[s.menuText, { color: C.text }]}>{t("Configuration GPS Navixy")}</Text>
           <Ionicons name="chevron-forward" size={18} color={C.textLight} />
         </TouchableOpacity>
       </View>
@@ -185,7 +186,7 @@ export default function AgencyProfile() {
       {/* Logout */}
       <TouchableOpacity style={[s.logoutBtn, { backgroundColor: C.error }]} onPress={() => { logout(); router.replace('/admin-login'); }} testID="profile-logout-btn">
         <Ionicons name="log-out-outline" size={20} color="#fff" />
-        <Text style={s.logoutText}>Se déconnecter</Text>
+        <Text style={s.logoutText}>{t("Se déconnecter")}</Text>
       </TouchableOpacity>
 
       {/* QR Code Modal */}
@@ -194,7 +195,7 @@ export default function AgencyProfile() {
           <View style={[s.modal, { backgroundColor: C.card }]}>
             <View style={s.modalHeader}>
               <Text style={[s.modalTitle, { color: C.text }]}>
-                {showQR === 'client' ? 'QR Code - App Client' : showQR === 'admin' ? 'QR Code - App Admin' : 'QR Code - Super Admin'}
+                {showQR === 'client' ? 'QR Code - App Client' : showQR === 'admin' ? t("QR Code - App Admin") : t("QR Code - Super Admin")}
               </Text>
               <TouchableOpacity onPress={() => setShowQR(null)}>
                 <Ionicons name="close-circle" size={28} color={C.error} />
@@ -209,10 +210,10 @@ export default function AgencyProfile() {
                 />
               </View>
               <Text style={[s.qrLabel, { color: C.text }]}>
-                {showQR === 'client' ? 'App Client' : showQR === 'admin' ? 'App Admin Agence' : 'Super Admin'}
+                {showQR === 'client' ? 'App Client' : showQR === 'admin' ? t("App Admin Agence") : t("Super Admin")}
               </Text>
               <Text style={[s.qrDesc, { color: C.textLight }]}>
-                {showQR === 'client' ? 'Le client scanne ce code pour s\'inscrire et réserver' : showQR === 'admin' ? 'L\'admin scanne pour gérer l\'agence' : 'Accès à la gestion globale de toutes les agences'}
+                {showQR === 'client' ? 'Le client scanne ce code pour s\'inscrire et réserver' : showQR === 'admin' ? t("L'admin scanne pour gérer l'agence") : t("Accès à la gestion globale de toutes les agences")}
               </Text>
               <View style={s.qrBox}>
                 <QRCode
@@ -232,12 +233,12 @@ export default function AgencyProfile() {
                   onPress={() => copyToClipboard(showQR === 'client' ? clientLink : showQR === 'admin' ? adminLink : superAdminLink)}
                 >
                   <Ionicons name="copy" size={16} color="#fff" />
-                  <Text style={s.qrActionText}>Copier le lien</Text>
+                  <Text style={s.qrActionText}>{t("Copier le lien")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[s.qrActionBtn, { backgroundColor: C.success }]}
                   onPress={() => shareLink(
-                    showQR === 'client' ? 'App Client' : showQR === 'admin' ? 'App Admin' : 'Super Admin',
+                    showQR === 'client' ? 'App Client' : showQR === 'admin' ? t("App Admin") : t("Super Admin"),
                     showQR === 'client' ? clientLink : showQR === 'admin' ? adminLink : superAdminLink
                   )}
                 >

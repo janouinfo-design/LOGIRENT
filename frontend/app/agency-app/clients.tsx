@@ -8,6 +8,7 @@ import { useThemeStore } from '../../src/store/themeStore';
 import { EditClientModal } from '../../src/components/agency/EditClientModal';
 import { NewClientModal } from '../../src/components/agency/NewClientModal';
 import { ImportClientModal } from '../../src/components/agency/ImportClientModal';
+import { t } from '../../src/i18n';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -150,7 +151,7 @@ export default function AgencyClients() {
       <View style={s.topRow}>
         <View style={[s.searchBar, { backgroundColor: C.card, borderColor: C.border }]}>
           <Ionicons name="search" size={18} color={C.textLight} />
-          <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
+          <TextInput style={[s.searchInput, { color: C.text }]} placeholder={t("Rechercher...")} placeholderTextColor={C.textLight} value={search} onChangeText={setSearch} />
         </View>
         <TouchableOpacity style={[s.iconActionBtn, { backgroundColor: C.success + '30', borderWidth: 1, borderColor: C.success + '50' }]} onPress={() => setShowImportModal(true)} data-testid="import-clients-btn">
           <Ionicons name="cloud-upload" size={20} color={C.success} />
@@ -167,7 +168,7 @@ export default function AgencyClients() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         columnWrapperStyle={{ gap: 10, marginBottom: 10 }}
-        ListEmptyComponent={<View style={s.empty}><Ionicons name="people-outline" size={40} color={C.textLight} /><Text style={[s.emptyText, { color: C.textLight }]}>Aucun client</Text></View>}
+        ListEmptyComponent={<View style={s.empty}><Ionicons name="people-outline" size={40} color={C.textLight} /><Text style={[s.emptyText, { color: C.textLight }]}>{t("Aucun client")}</Text></View>}
         renderItem={renderClientCard}
       />
 

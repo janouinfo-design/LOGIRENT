@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Activi
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
+import { t } from '../../src/i18n';
 
 const ACCENT = '#7C3AED';
 
@@ -39,7 +40,7 @@ export default function BillingSettingsScreen() {
     setSaving(true);
     try {
       await api.put('/api/admin/billing-settings', form);
-      Alert.alert('Succes', 'Parametres de facturation sauvegardes');
+      Alert.alert(t("Succes"), t("Parametres de facturation sauvegardes"));
     } catch (e: any) {
       Alert.alert('Erreur', e.response?.data?.detail || 'Erreur de sauvegarde');
     }
@@ -51,38 +52,34 @@ export default function BillingSettingsScreen() {
   if (loading) return <View style={[s.center, { backgroundColor: C.bg }]}><ActivityIndicator size="large" color={ACCENT} /></View>;
 
   const fields: { key: string; label: string; icon: string; placeholder: string; half?: boolean }[] = [
-    { key: 'company_name', label: 'Raison sociale', icon: 'business', placeholder: 'LogiRent SA' },
-    { key: 'street', label: 'Rue', icon: 'location', placeholder: 'Rue du Mont-Blanc' },
+    { key: 'company_name', label: t("Raison sociale"), icon: 'business', placeholder: t("LogiRent SA") },
+    { key: 'street', label: 'Rue', icon: 'location', placeholder: t("Rue du Mont-Blanc") },
     { key: 'house_number', label: 'Numero', icon: 'keypad', placeholder: '12', half: true },
     { key: 'pcode', label: 'NPA', icon: 'navigate', placeholder: '1201', half: true },
     { key: 'city', label: 'Ville', icon: 'map', placeholder: 'Geneve' },
     { key: 'country', label: 'Pays', icon: 'globe', placeholder: 'CH', half: true },
     { key: 'phone', label: 'Telephone', icon: 'call', placeholder: '+41 22 123 45 67' },
-    { key: 'email', label: 'Email facturation', icon: 'mail', placeholder: 'facturation@logirent.ch' },
-    { key: 'website', label: 'Site web', icon: 'globe-outline', placeholder: 'www.logirent.ch' },
-    { key: 'vat_number', label: 'Numero TVA', icon: 'receipt', placeholder: 'CHE-123.456.789 TVA' },
+    { key: 'email', label: t("Email facturation"), icon: 'mail', placeholder: 'facturation@logirent.ch' },
+    { key: 'website', label: t("Site web"), icon: 'globe-outline', placeholder: 'www.logirent.ch' },
+    { key: 'vat_number', label: t("Numero TVA"), icon: 'receipt', placeholder: t("CHE-123.456.789 TVA") },
   ];
 
   return (
     <View style={[s.container, { backgroundColor: C.bg }]} data-testid="billing-settings-page">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
-        <Text style={[s.title, { color: C.text }]}>Parametres de facturation</Text>
-        <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 20 }}>
-          Ces informations apparaitront sur vos factures et QR-factures suisses.
-        </Text>
+        <Text style={[s.title, { color: C.text }]}>{t("Parametres de facturation")}</Text>
+        <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 20 }}>{t("Ces informations apparaitront sur vos factures et QR-factures suisses.")}</Text>
 
         {/* IBAN Section - Highlighted */}
         <View style={s.ibanSection} data-testid="iban-section">
           <View style={s.ibanHeader}>
             <Ionicons name="card" size={22} color="#fff" />
-            <Text style={s.ibanTitle}>IBAN / QR-IBAN</Text>
+            <Text style={s.ibanTitle}>{t("IBAN / QR-IBAN")}</Text>
           </View>
-          <Text style={s.ibanDesc}>
-            Votre IBAN sera utilise pour generer les QR-factures suisses. Pour un QR-IBAN (references structurees), utilisez un compte avec prefixe 30000-31999.
-          </Text>
+          <Text style={s.ibanDesc}>{t("Votre IBAN sera utilise pour generer les QR-factures suisses. Pour un QR-IBAN (references structurees), utilisez un compte avec prefixe 30000-31999.")}</Text>
           <TextInput
             style={s.ibanInput}
-            placeholder="CH93 0076 2011 6238 5295 7"
+            placeholder={t("CH93 0076 2011 6238 5295 7")}
             placeholderTextColor="#9CA3AF"
             value={form.iban}
             onChangeText={v => updateField('iban', v)}
@@ -93,7 +90,7 @@ export default function BillingSettingsScreen() {
             <View style={s.ibanBadge}>
               <Ionicons name="checkmark-circle" size={14} color="#10B981" />
               <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '600' }}>
-                {form.iban.replace(/\s/g, '').length >= 21 ? 'IBAN valide' : 'IBAN incomplet'}
+                {form.iban.replace(/\s/g, '').length >= 21 ? t("IBAN valide") : t("IBAN incomplet")}
               </Text>
             </View>
           )}
@@ -101,11 +98,11 @@ export default function BillingSettingsScreen() {
 
         {/* Company Info Fields */}
         <View style={s.fieldsSection}>
-          <Text style={[s.sectionTitle, { color: C.text }]}>Coordonnees societe</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Coordonnees societe")}</Text>
           <View style={s.fieldsGrid}>
             {fields.map(f => (
               <View key={f.key} style={[s.fieldWrapper, f.half && { flex: 0.48 }]}>
-                <Text style={[s.fieldLabel, { color: C.textLight }]}>{f.label}</Text>
+                <Text style={[s.fieldLabel, { color: C.textLight }]}>{t(f.label)}</Text>
                 <View style={[s.fieldInput, { borderColor: C.border, backgroundColor: C.card }]}>
                   <Ionicons name={f.icon as any} size={16} color={C.textLight} />
                   <TextInput
@@ -125,7 +122,7 @@ export default function BillingSettingsScreen() {
         {/* Preview */}
         {form.company_name && (
           <View style={[s.previewCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Text style={[s.sectionTitle, { color: C.text }]}>Apercu facture</Text>
+            <Text style={[s.sectionTitle, { color: C.text }]}>{t("Apercu facture")}</Text>
             <View style={s.previewContent}>
               <Text style={{ color: C.text, fontWeight: '800', fontSize: 15 }}>{form.company_name}</Text>
               {form.street && <Text style={{ color: C.textLight, fontSize: 13 }}>{form.street} {form.house_number}</Text>}

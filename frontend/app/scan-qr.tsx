@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '../src/i18n';
 
 const C = {
   purple: '#7C3AED',
@@ -70,7 +71,7 @@ export default function ScanQR() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} data-testid="scan-back-btn">
           <Ionicons name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Scanner le QR Code</Text>
+        <Text style={styles.headerTitle}>{t("Scanner le QR Code")}</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -81,14 +82,14 @@ export default function ScanQR() {
             {!scanning && !error && (
               <View style={styles.loadingOverlay}>
                 <Ionicons name="camera-outline" size={48} color="#FFF" />
-                <Text style={styles.loadingText}>Chargement de la caméra...</Text>
+                <Text style={styles.loadingText}>{t("Chargement de la caméra...")}</Text>
               </View>
             )}
           </View>
         ) : (
           <View style={styles.nativeMessage}>
             <Ionicons name="qr-code-outline" size={64} color={C.gray} />
-            <Text style={styles.messageText}>Scanner QR disponible uniquement sur le web</Text>
+            <Text style={styles.messageText}>{t("Scanner QR disponible uniquement sur le web")}</Text>
           </View>
         )}
 
@@ -97,7 +98,7 @@ export default function ScanQR() {
             <Ionicons name="alert-circle" size={24} color="#EF4444" />
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity style={styles.retryBtn} onPress={() => { setError(''); router.replace('/scan-qr'); }}>
-              <Text style={styles.retryText}>Réessayer</Text>
+              <Text style={styles.retryText}>{t("Réessayer")}</Text>
             </TouchableOpacity>
           </View>
         ) : null}
@@ -105,9 +106,7 @@ export default function ScanQR() {
 
       <View style={styles.instructions}>
         <Ionicons name="scan-outline" size={24} color={C.purple} />
-        <Text style={styles.instructionText}>
-          Pointez votre caméra vers le QR code affiché dans l'agence
-        </Text>
+        <Text style={styles.instructionText}>{t("Pointez votre caméra vers le QR code affiché dans l'agence")}</Text>
       </View>
     </View>
   );

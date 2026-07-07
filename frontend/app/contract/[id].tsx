@@ -6,6 +6,7 @@ import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
 import SignatureCanvas from '../../src/components/SignatureCanvas';
 import VehicleInspection from '../../src/components/VehicleInspection';
+import { t } from '../../src/i18n';
 
 interface ContractData {
   id: string;
@@ -19,7 +20,7 @@ interface ContractData {
 
 const T = {
   fr: {
-    title: 'CONTRAT DE LOCATION',
+    title: t("CONTRAT DE LOCATION"),
     vehicle: 'Vehicule', plates: 'Plaques', color: 'Couleur',
     responsible: 'Responsable de la location',
     nom: 'Nom', prenom: 'Prenom', adresse: 'Adresse', tel: 'Tel', email: 'Email',
@@ -38,7 +39,7 @@ const T = {
       "Le locataire reconnaît être responsable de tout dommage, amende ou frais résultant de l'utilisation du véhicule. Le présent document vaut reconnaissance de dette au sens de l'art. 82 LP.",
   },
   en: {
-    title: 'RENTAL CONTRACT',
+    title: t("RENTAL CONTRACT"),
     vehicle: 'Vehicle', plates: 'Plates', color: 'Color',
     responsible: 'Rental Responsible',
     nom: 'Last Name', prenom: 'First Name', adresse: 'Address', tel: 'Phone', email: 'Email',
@@ -74,7 +75,7 @@ export default function ContractView() {
       setContract(resp.data);
       setEditData(resp.data?.contract_data || {});
     } catch {
-      Platform.OS === 'web' ? window.alert('Contrat introuvable') : Alert.alert('Erreur', 'Contrat introuvable');
+      Platform.OS === 'web' ? window.alert('Contrat introuvable') : Alert.alert(t("Erreur"), t("Contrat introuvable"));
     } finally { setLoading(false); }
   }, [id]);
 
@@ -86,7 +87,7 @@ export default function ContractView() {
       await api.put(`/api/admin/contracts/${id}/update-fields`, editData);
       await fetchContract();
       setEditing(false);
-      Platform.OS === 'web' ? window.alert('Contrat sauvegarde !') : Alert.alert('Succes', 'Contrat sauvegarde !');
+      Platform.OS === 'web' ? window.alert('Contrat sauvegarde !') : Alert.alert(t("Succes"), t("Contrat sauvegarde !"));
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Erreur lors de la sauvegarde';
       Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Erreur', msg);
@@ -98,10 +99,10 @@ export default function ContractView() {
       setSigning(true);
       await api.put(`/api/contracts/${id}/sign`, { signature_data: signatureBase64 });
       setShowSignModal(false);
-      Platform.OS === 'web' ? window.alert('Contrat signe !') : Alert.alert('Succes', 'Contrat signe !');
+      Platform.OS === 'web' ? window.alert('Contrat signe !') : Alert.alert(t("Succes"), t("Contrat signe !"));
       fetchContract();
     } catch (err: any) {
-      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur');
+      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert(t("Erreur"));
     } finally { setSigning(false); }
   };
 
@@ -115,7 +116,7 @@ export default function ContractView() {
         a.href = url; a.download = `contrat_${id?.slice(0, 8)}.pdf`; a.click(); URL.revokeObjectURL(url);
       }
     } catch {
-      Platform.OS === 'web' ? window.alert('Impossible de telecharger le PDF') : Alert.alert('Erreur');
+      Platform.OS === 'web' ? window.alert('Impossible de telecharger le PDF') : Alert.alert(t("Erreur"));
     }
   };
 
@@ -124,7 +125,7 @@ export default function ContractView() {
   };
 
   if (loading) return <View style={st.center}><ActivityIndicator size="large" color={C.accent} /></View>;
-  if (!contract) return <View style={st.center}><Text style={{ color: C.textLight }}>Contrat introuvable</Text></View>;
+  if (!contract) return <View style={st.center}><Text style={{ color: C.textLight }}>{t("Contrat introuvable")}</Text></View>;
 
   const lang = (contract.language || 'fr') as 'fr' | 'en';
   const t = T[lang] || T.fr;
@@ -141,12 +142,12 @@ export default function ContractView() {
           </TouchableOpacity>
           <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={[st.agencyName, { color: C.text }]}>{d.agency_name}</Text>
-            <Text style={[st.contractTitle, { color: C.text }]}>{t.title}</Text>
+            <Text style={[st.contractTitle, { color: C.text }]}>{t(t.title)}</Text>
           </View>
           <View style={[st.badge, { backgroundColor: isSigned ? '#10B98120' : '#F59E0B20' }]}>
             <Ionicons name={isSigned ? 'checkmark-circle' : 'time'} size={12} color={isSigned ? '#10B981' : '#F59E0B'} />
             <Text style={{ color: isSigned ? '#10B981' : '#F59E0B', fontSize: 10, fontWeight: '700' }}>
-              {isSigned ? 'Signe' : 'En attente'}
+              {isSigned ? 'Signe' : t("En attente")}
             </Text>
           </View>
         </View>
@@ -193,7 +194,7 @@ export default function ContractView() {
         </Section>
 
         {/* Dates & Km Section */}
-        <Section title="Dates & Km" C={C}>
+        <Section title={t("Dates & Km")} C={C}>
           <View style={st.row}>
             <View style={{ flex: 1 }}>
               <Text style={[st.dateLabel, { color: C.textLight }]}>{t.datePrise}</Text>
@@ -213,7 +214,7 @@ export default function ContractView() {
         </Section>
 
         {/* Pricing Section */}
-        <Section title="Tarification" C={C}>
+        <Section title={t("Tarification")} C={C}>
           <Field label={t.prixJour} field="price_per_day" d={d} C={C} editing={editing} onChange={updateField} keyboard="numeric" prefix="CHF " />
           <View style={[st.totalRow, { borderTopColor: C.border }]}>
             <Text style={[st.totalLabel, { color: C.text }]}>{t.total}</Text>
@@ -224,7 +225,7 @@ export default function ContractView() {
         </Section>
 
         {/* Conditions */}
-        <Section title="Conditions" C={C}>
+        <Section title={t("Conditions")} C={C}>
           <Text style={[st.conditionsText, { color: C.textLight }]}>{t.conditions}</Text>
         </Section>
 
@@ -249,7 +250,7 @@ export default function ContractView() {
 
         {/* Signature */}
         {isSigned && contract.signature_client && (
-          <Section title="Signature" C={C}>
+          <Section title={t("Signature")} C={C}>
             <Text style={{ color: '#10B981', fontSize: 13, fontWeight: '700', marginBottom: 8 }}>
               {t.signed} - {contract.signature_date?.split('T')[0] || ''}
             </Text>
@@ -294,7 +295,7 @@ export default function ContractView() {
         <View style={st.modalOverlay}>
           <View style={[st.modalContent, { backgroundColor: C.card, borderColor: C.border }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={{ color: C.text, fontSize: 16, fontWeight: '700' }}>Votre signature</Text>
+              <Text style={{ color: C.text, fontSize: 16, fontWeight: '700' }}>{t("Votre signature")}</Text>
               <TouchableOpacity onPress={() => setShowSignModal(false)}>
                 <Ionicons name="close" size={24} color={C.textLight} />
               </TouchableOpacity>

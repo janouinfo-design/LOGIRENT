@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
+import { t } from '../../i18n';
 
 interface Props {
   visible: boolean;
@@ -56,21 +57,21 @@ export const ImportClientModal = ({ visible, onClose, C, onImported }: Props) =>
             <input ref={fileInputRef as any} type="file" accept=".xlsx,.xls,.csv,.zip" style={{ display: 'none' }} onChange={handleImportFile} />
           )}
           <View style={st.modalHeader}>
-            <Text style={[st.modalTitle, { color: C.text }]}>Importer des clients</Text>
+            <Text style={[st.modalTitle, { color: C.text }]}>{t("Importer des clients")}</Text>
             <TouchableOpacity onPress={handleClose}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
           </View>
           <ScrollView>
             <View style={[st.infoBox, { backgroundColor: C.accent + '10', borderColor: C.accent + '30' }]}>
               <Ionicons name="information-circle" size={20} color={C.accent} />
               <View style={{ flex: 1 }}>
-                <Text style={[st.infoTitle, { color: C.text }]}>Formats acceptes</Text>
-                <Text style={[st.infoDesc, { color: C.textLight }]}>Excel (.xlsx), CSV (.csv), ou ZIP contenant un Excel + photos</Text>
+                <Text style={[st.infoTitle, { color: C.text }]}>{t("Formats acceptes")}</Text>
+                <Text style={[st.infoDesc, { color: C.textLight }]}>{t("Excel (.xlsx), CSV (.csv), ou ZIP contenant un Excel + photos")}</Text>
               </View>
             </View>
             <View style={[st.infoBox, { backgroundColor: C.primary + '10', borderColor: C.primary + '30' }]}>
               <Ionicons name="document-text" size={20} color={C.primary} />
               <View style={{ flex: 1 }}>
-                <Text style={[st.infoTitle, { color: C.text }]}>Colonnes Excel</Text>
+                <Text style={[st.infoTitle, { color: C.text }]}>{t("Colonnes Excel")}</Text>
                 <Text style={[st.infoDesc, { color: C.textLight }]}>nom, email, telephone, adresse, photo{'\n'}(La colonne "photo" = nom du fichier image dans le ZIP)</Text>
               </View>
             </View>
@@ -80,13 +81,13 @@ export const ImportClientModal = ({ visible, onClose, C, onImported }: Props) =>
               onPress={() => fileInputRef.current?.click()}
               data-testid="import-file-btn">
               {importing ? <ActivityIndicator color="#fff" size="small" /> : <Ionicons name="cloud-upload" size={22} color="#fff" />}
-              <Text style={st.importBtnText}>{importing ? 'Import en cours...' : 'Choisir un fichier'}</Text>
+              <Text style={st.importBtnText}>{importing ? t("Import en cours...") : t("Choisir un fichier")}</Text>
             </TouchableOpacity>
             {importResult && !importResult.error && (
               <View style={[st.resultBox, { backgroundColor: C.success + '15', borderColor: C.success + '40' }]} data-testid="import-result-success">
                 <View style={st.resultHeader}>
                   <Ionicons name="checkmark-circle" size={22} color={C.success} />
-                  <Text style={[st.resultTitle, { color: C.success }]}>Import reussi</Text>
+                  <Text style={[st.resultTitle, { color: C.success }]}>{t("Import reussi")}</Text>
                 </View>
                 <View style={st.resultStats}>
                   <View style={st.resultStat}><Text style={[st.resultNum, { color: C.text }]}>{importResult.created}</Text><Text style={[st.resultStatLabel, { color: C.textLight }]}>crees</Text></View>

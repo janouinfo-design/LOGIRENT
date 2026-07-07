@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
+import { LanguageSelector } from '../../src/components/LanguageSelector';
 
 const NAV_ITEMS = [
   { key: '/super-admin', label: 'Dashboard', icon: 'grid-outline' as const },
@@ -39,11 +41,12 @@ export default function SuperAdminLayout() {
             <Ionicons name="shield-checkmark" size={22} color={C.error} />
             <Text style={[s.brandText, { color: C.text }]}>LogiRent</Text>
             <View style={[s.superBadge, { backgroundColor: C.error + '20', borderColor: C.error + '40' }]}>
-              <Text style={[s.superText, { color: C.error }]}>SUPER ADMIN</Text>
+              <Text style={[s.superText, { color: C.error }]}>{t("SUPER ADMIN")}</Text>
             </View>
           </View>
         </View>
         <View style={s.topBarRight}>
+          <LanguageSelector color={C.textLight} activeColor={C.error} compact />
           <Text style={[s.userName, { color: C.textLight }]}>{user.name}</Text>
           {/* Theme toggle removed - light mode only */}
           <TouchableOpacity onPress={() => { logout(); router.replace('/admin-login'); }} testID="sa-logout-btn">
@@ -63,7 +66,7 @@ export default function SuperAdminLayout() {
               data-testid={`sa-nav-${item.label.toLowerCase()}`}
             >
               <Ionicons name={item.icon} size={18} color={isActive ? C.error : C.textLight} />
-              <Text style={[s.navText, { color: isActive ? C.error : C.textLight }, isActive && { fontWeight: '700' }]}>{item.label}</Text>
+              <Text style={[s.navText, { color: isActive ? C.error : C.textLight }, isActive && { fontWeight: '700' }]}>{t(item.label)}</Text>
             </TouchableOpacity>
           );
         })}

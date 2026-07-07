@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../src/store/authStore';
+import { t } from '../src/i18n';
 
 const COLORS = {
   primary: '#6C2BD9',
@@ -76,7 +77,7 @@ export default function AdminLogin() {
             </View>
             <Text style={styles.title}>Administration</Text>
             <Text style={styles.subtitle}>
-              {isRegister ? 'Créer une nouvelle agence' : 'Connectez-vous à votre espace admin'}
+              {isRegister ? t("Créer une nouvelle agence") : t("Connectez-vous à votre espace admin")}
             </Text>
           </View>
 
@@ -91,12 +92,12 @@ export default function AdminLogin() {
             {isRegister && (
               <>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nom complet</Text>
+                  <Text style={styles.label}>{t("Nom complet")}</Text>
                   <View style={styles.inputContainer}>
                     <Ionicons name="person-outline" size={20} color={COLORS.textLight} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Votre nom"
+                      placeholder={t("Votre nom")}
                       placeholderTextColor={COLORS.textLight}
                       value={name}
                       onChangeText={setName}
@@ -105,12 +106,12 @@ export default function AdminLogin() {
                   </View>
                 </View>
                 <View style={styles.inputGroup}>
-                  <Text style={styles.label}>Nom de l'agence</Text>
+                  <Text style={styles.label}>{t("Nom de l'agence")}</Text>
                   <View style={styles.inputContainer}>
                     <Ionicons name="business-outline" size={20} color={COLORS.textLight} />
                     <TextInput
                       style={styles.input}
-                      placeholder="Ex: LogiRent Lausanne"
+                      placeholder={t("Ex: LogiRent Lausanne")}
                       placeholderTextColor={COLORS.textLight}
                       value={agencyName}
                       onChangeText={setAgencyName}
@@ -127,7 +128,7 @@ export default function AdminLogin() {
                 <Ionicons name="mail-outline" size={20} color={COLORS.textLight} />
                 <TextInput
                   style={styles.input}
-                  placeholder="admin@agence.ch"
+                  placeholder={t("admin@agence.ch")}
                   placeholderTextColor={COLORS.textLight}
                   value={email}
                   onChangeText={setEmail}
@@ -139,12 +140,12 @@ export default function AdminLogin() {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Mot de passe</Text>
+              <Text style={styles.label}>{t("Mot de passe")}</Text>
               <View style={styles.inputContainer}>
                 <Ionicons name="lock-closed-outline" size={20} color={COLORS.textLight} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Mot de passe"
+                  placeholder={t("Mot de passe")}
                   placeholderTextColor={COLORS.textLight}
                   value={password}
                   onChangeText={setPassword}
@@ -164,7 +165,7 @@ export default function AdminLogin() {
               data-testid="admin-login-submit"
             >
               <Text style={styles.submitText}>
-                {loading ? 'Chargement...' : isRegister ? 'Créer mon agence' : 'Se connecter'}
+                {loading ? 'Chargement...' : isRegister ? t("Créer mon agence") : t("Se connecter")}
               </Text>
             </TouchableOpacity>
 
@@ -174,7 +175,7 @@ export default function AdminLogin() {
               data-testid="admin-login-switch"
             >
               <Text style={styles.switchText}>
-                {isRegister ? 'Déjà admin ? Se connecter' : 'Nouvelle agence ? Créer un compte'}
+                {isRegister ? t("Déjà admin ? Se connecter") : t("Nouvelle agence ? Créer un compte")}
               </Text>
             </TouchableOpacity>
 
@@ -184,7 +185,7 @@ export default function AdminLogin() {
               data-testid="super-admin-link"
             >
               <Ionicons name="shield" size={16} color={COLORS.accent} />
-              <Text style={styles.superAdminText}>Super Admin</Text>
+              <Text style={styles.superAdminText}>{t("Super Admin")}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

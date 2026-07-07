@@ -81,6 +81,7 @@ async def build_user_profile(user: dict) -> UserProfile:
         license_issue_date=user.get('license_issue_date'),
         license_expiry_date=user.get('license_expiry_date'),
         nationality=user.get('nationality'),
+        preferred_language=user.get('preferred_language', 'fr'),
         role=user.get('role', 'client'),
         agency_id=agency_id,
         agency_name=agency_name,

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, Modal, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../api/axios';
+import { t } from '../../i18n';
 
 const FUEL_LEVELS = [
   { value: 'full', label: 'Plein', icon: 'battery-full', pct: 100 },
@@ -65,12 +66,12 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
   const handleSubmit = async () => {
     if (!kmDep || !kmRet) {
       if (Platform.OS === 'web') { window.alert('Veuillez saisir les kilometres depart et retour'); }
-      else { Alert.alert('Erreur', 'Veuillez saisir les kilometres depart et retour'); }
+      else { Alert.alert(t("Erreur"), t("Veuillez saisir les kilometres depart et retour")); }
       return;
     }
     if (parseInt(kmRet) < parseInt(kmDep)) {
       if (Platform.OS === 'web') { window.alert('Le km retour doit etre superieur au km depart'); }
-      else { Alert.alert('Erreur', 'Le km retour doit etre superieur au km depart'); }
+      else { Alert.alert(t("Erreur"), t("Le km retour doit etre superieur au km depart")); }
       return;
     }
 
@@ -107,7 +108,7 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
           <View style={{ backgroundColor: '#1E3A5F', padding: 20 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
               <View>
-                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>Retour Vehicule</Text>
+                <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>{t("Retour Vehicule")}</Text>
                 <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13, marginTop: 2 }}>{vname}</Text>
               </View>
               <TouchableOpacity onPress={onClose} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' }} data-testid="close-return-modal">
@@ -133,20 +134,20 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
                   </View>
                   <View style={{ flexDirection: 'row', gap: 10 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4, fontWeight: '600' }}>KM Depart</Text>
+                      <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4, fontWeight: '600' }}>{t("KM Depart")}</Text>
                       <TextInput
                         value={kmDep} onChangeText={setKmDep}
-                        placeholder="Ex: 45000" placeholderTextColor="#94A3B8"
+                        placeholder={t("Ex: 45000")} placeholderTextColor="#94A3B8"
                         keyboardType="numeric"
                         style={{ borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12, fontSize: 15, fontWeight: '700', color: C.text, backgroundColor: C.bg }}
                         data-testid="km-departure-input"
                       />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4, fontWeight: '600' }}>KM Retour</Text>
+                      <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4, fontWeight: '600' }}>{t("KM Retour")}</Text>
                       <TextInput
                         value={kmRet} onChangeText={setKmRet}
-                        placeholder="Ex: 45350" placeholderTextColor="#94A3B8"
+                        placeholder={t("Ex: 45350")} placeholderTextColor="#94A3B8"
                         keyboardType="numeric"
                         style={{ borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12, fontSize: 15, fontWeight: '700', color: C.text, backgroundColor: C.bg }}
                         data-testid="km-return-input"
@@ -155,11 +156,11 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
                   </View>
                   <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>Limite km/jour</Text>
+                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>{t("Limite km/jour")}</Text>
                       <TextInput value={kmLimit} onChangeText={setKmLimit} keyboardType="numeric" style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, padding: 8, fontSize: 13, color: C.text, backgroundColor: C.bg }} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>CHF/km excedent</Text>
+                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>{t("CHF/km excedent")}</Text>
                       <TextInput value={pricePerKm} onChangeText={setPricePerKm} keyboardType="decimal-pad" style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, padding: 8, fontSize: 13, color: C.text, backgroundColor: C.bg }} />
                     </View>
                   </View>
@@ -177,29 +178,29 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
                     <Ionicons name="water" size={18} color="#F59E0B" />
                     <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Carburant</Text>
                   </View>
-                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 6, fontWeight: '600' }}>Niveau au depart</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 6, fontWeight: '600' }}>{t("Niveau au depart")}</Text>
                   <View style={{ flexDirection: 'row', gap: 4, marginBottom: 10 }}>
                     {FUEL_LEVELS.map(f => (
                       <TouchableOpacity key={f.value} onPress={() => setFuelDep(f.value)} style={{ flex: 1, paddingVertical: 8, borderRadius: 8, borderWidth: 2, borderColor: fuelDep === f.value ? '#F59E0B' : C.border, backgroundColor: fuelDep === f.value ? '#FEF3C7' : C.bg, alignItems: 'center' }} data-testid={`fuel-dep-${f.value}`}>
-                        <Text style={{ fontSize: 11, fontWeight: '700', color: fuelDep === f.value ? '#92400E' : C.textLight }}>{f.label}</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: fuelDep === f.value ? '#92400E' : C.textLight }}>{t(f.label)}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
-                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 6, fontWeight: '600' }}>Niveau au retour</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 6, fontWeight: '600' }}>{t("Niveau au retour")}</Text>
                   <View style={{ flexDirection: 'row', gap: 4 }}>
                     {FUEL_LEVELS.map(f => (
                       <TouchableOpacity key={f.value} onPress={() => setFuelRet(f.value)} style={{ flex: 1, paddingVertical: 8, borderRadius: 8, borderWidth: 2, borderColor: fuelRet === f.value ? '#F59E0B' : C.border, backgroundColor: fuelRet === f.value ? '#FEF3C7' : C.bg, alignItems: 'center' }} data-testid={`fuel-ret-${f.value}`}>
-                        <Text style={{ fontSize: 11, fontWeight: '700', color: fuelRet === f.value ? '#92400E' : C.textLight }}>{f.label}</Text>
+                        <Text style={{ fontSize: 11, fontWeight: '700', color: fuelRet === f.value ? '#92400E' : C.textLight }}>{t(f.label)}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                   <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>Penalite carburant (CHF)</Text>
+                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>{t("Penalite carburant (CHF)")}</Text>
                       <TextInput value={fuelPenalty} onChangeText={setFuelPenalty} keyboardType="decimal-pad" style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, padding: 8, fontSize: 13, color: C.text, backgroundColor: C.bg }} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>Penalite retard CHF/h</Text>
+                      <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 3 }}>{t("Penalite retard CHF/h")}</Text>
                       <TextInput value={latePenalty} onChangeText={setLatePenalty} keyboardType="decimal-pad" style={{ borderWidth: 1, borderColor: C.border, borderRadius: 8, padding: 8, fontSize: 13, color: C.text, backgroundColor: C.bg }} />
                     </View>
                   </View>
@@ -213,8 +214,8 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
 
                 {/* Notes */}
                 <View style={{ marginBottom: 16 }}>
-                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4, fontWeight: '600' }}>Notes (optionnel)</Text>
-                  <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3} placeholder="Remarques sur le vehicule..." placeholderTextColor="#94A3B8" style={{ borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12, fontSize: 13, color: C.text, backgroundColor: C.bg, minHeight: 60, textAlignVertical: 'top' }} data-testid="return-notes" />
+                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4, fontWeight: '600' }}>{t("Notes (optionnel)")}</Text>
+                  <TextInput value={notes} onChangeText={setNotes} multiline numberOfLines={3} placeholder={t("Remarques sur le vehicule...")} placeholderTextColor="#94A3B8" style={{ borderWidth: 1, borderColor: C.border, borderRadius: 10, padding: 12, fontSize: 13, color: C.text, backgroundColor: C.bg, minHeight: 60, textAlignVertical: 'top' }} data-testid="return-notes" />
                 </View>
 
                 {/* Recap */}
@@ -232,7 +233,7 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
                   )}
                   {preview.fuelCost > 0 && (
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <Text style={{ fontSize: 12, color: '#DC2626' }}>+ Carburant manquant</Text>
+                      <Text style={{ fontSize: 12, color: '#DC2626' }}>{t("+ Carburant manquant")}</Text>
                       <Text style={{ fontSize: 12, fontWeight: '700', color: '#DC2626' }}>CHF {preview.fuelCost.toFixed(2)}</Text>
                     </View>
                   )}
@@ -252,7 +253,7 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
                   {submitting ? <ActivityIndicator color="#fff" /> : (
                     <>
                       <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                      <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>Confirmer le retour</Text>
+                      <Text style={{ color: '#fff', fontSize: 15, fontWeight: '800' }}>{t("Confirmer le retour")}</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -261,33 +262,33 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
               /* Success result */
               <View style={{ alignItems: 'center', paddingVertical: 20 }}>
                 <Ionicons name="checkmark-circle" size={64} color="#10B981" />
-                <Text style={{ color: C.text, fontSize: 18, fontWeight: '900', marginTop: 12 }}>Retour enregistre !</Text>
+                <Text style={{ color: C.text, fontSize: 18, fontWeight: '900', marginTop: 12 }}>{t("Retour enregistre !")}</Text>
                 <Text style={{ color: C.textLight, fontSize: 13, marginTop: 4, textAlign: 'center' }}>
                   {result.km_driven} km parcourus
                   {result.km_excess > 0 ? ` (${result.km_excess} km en excedent)` : ''}
                 </Text>
                 {result.surcharges?.length > 0 && (
                   <View style={{ width: '100%', marginTop: 16, padding: 12, backgroundColor: '#FEF2F2', borderRadius: 10 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#991B1B', marginBottom: 6 }}>Supplements appliques</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#991B1B', marginBottom: 6 }}>{t("Supplements appliques")}</Text>
                     {result.surcharges.map((s: any, i: number) => (
                       <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 }}>
-                        <Text style={{ fontSize: 12, color: '#DC2626' }}>{s.label}</Text>
+                        <Text style={{ fontSize: 12, color: '#DC2626' }}>{t(s.label)}</Text>
                         <Text style={{ fontSize: 12, fontWeight: '700', color: '#DC2626' }}>CHF {s.amount.toFixed(2)}</Text>
                       </View>
                     ))}
                     <View style={{ borderTopWidth: 1, borderTopColor: '#FECACA', paddingTop: 6, marginTop: 6, flexDirection: 'row', justifyContent: 'space-between' }}>
-                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#991B1B' }}>Total supplements</Text>
+                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#991B1B' }}>{t("Total supplements")}</Text>
                       <Text style={{ fontSize: 14, fontWeight: '900', color: '#DC2626' }}>CHF {result.total_surcharge.toFixed(2)}</Text>
                     </View>
                   </View>
                 )}
                 {result.surcharges?.length === 0 && (
                   <View style={{ width: '100%', marginTop: 16, padding: 12, backgroundColor: '#F0FDF4', borderRadius: 10 }}>
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#059669', textAlign: 'center' }}>Aucun supplement. Retour conforme !</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#059669', textAlign: 'center' }}>{t("Aucun supplement. Retour conforme !")}</Text>
                   </View>
                 )}
                 <View style={{ width: '100%', marginTop: 16, padding: 12, backgroundColor: '#F8FAFC', borderRadius: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ fontSize: 14, fontWeight: '800', color: C.text }}>Nouveau total</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '800', color: C.text }}>{t("Nouveau total")}</Text>
                   <Text style={{ fontSize: 14, fontWeight: '900', color: '#1E3A5F' }}>CHF {result.new_total?.toFixed(2)}</Text>
                 </View>
                 <TouchableOpacity onPress={() => { setResult(null); onSuccess(); onClose(); }} style={{ marginTop: 20, backgroundColor: '#10B981', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 10 }} data-testid="close-return-success">

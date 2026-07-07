@@ -4,18 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
+import { t } from '../../src/i18n';
 
 const ACCENT = '#7C3AED';
 
 const DOC_TYPES = [
-  { key: 'id_card_front', label: 'Carte ID (recto)', icon: 'card' },
-  { key: 'id_card_back', label: 'Carte ID (verso)', icon: 'card-outline' },
-  { key: 'license_front', label: 'Permis (recto)', icon: 'car' },
-  { key: 'license_back', label: 'Permis (verso)', icon: 'car-outline' },
+  { key: 'id_card_front', label: t("Carte ID (recto)"), icon: 'card' },
+  { key: 'id_card_back', label: t("Carte ID (verso)"), icon: 'card-outline' },
+  { key: 'license_front', label: t("Permis (recto)"), icon: 'car' },
+  { key: 'license_back', label: t("Permis (verso)"), icon: 'car-outline' },
 ];
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  pending: { bg: '#F59E0B15', text: '#B45309', label: 'En attente' },
+  pending: { bg: '#F59E0B15', text: '#B45309', label: t("En attente") },
   validated: { bg: '#10B98115', text: '#059669', label: 'Valide' },
   rejected: { bg: '#EF444415', text: '#DC2626', label: 'Rejete' },
 };
@@ -89,7 +90,7 @@ export default function DocumentScanScreen() {
       try {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('Permission requise', 'Autorisez la camera pour scanner les documents.');
+          Alert.alert(t("Permission requise"), t("Autorisez la camera pour scanner les documents."));
           return;
         }
         const result = await ImagePicker.launchCameraAsync({
@@ -159,7 +160,7 @@ export default function DocumentScanScreen() {
         filename,
       });
       fetchDocs(selectedClient.id);
-      Alert.alert('Succes', 'Document uploade - OCR en cours...');
+      Alert.alert(t("Succes"), t("Document uploade - OCR en cours..."));
       // Poll for OCR completion after a delay
       setTimeout(() => { if (selectedClient) fetchDocs(selectedClient.id); }, 5000);
       setTimeout(() => { if (selectedClient) fetchDocs(selectedClient.id); }, 12000);
@@ -210,10 +211,8 @@ export default function DocumentScanScreen() {
   return (
     <View style={[s.container, { backgroundColor: C.bg }]} data-testid="document-scan-page">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
-        <Text style={[s.title, { color: C.text }]}>Scan de documents</Text>
-        <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 16 }}>
-          Scannez les pieces d'identite et permis de vos clients. L'OCR IA extrait automatiquement les informations.
-        </Text>
+        <Text style={[s.title, { color: C.text }]}>{t("Scan de documents")}</Text>
+        <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 16 }}>{t("Scannez les pieces d'identite et permis de vos clients. L'OCR IA extrait automatiquement les informations.")}</Text>
 
         <View style={[s.mainGrid, !isWide && { flexDirection: 'column' }]}>
           {/* Client Selector */}
@@ -223,7 +222,7 @@ export default function DocumentScanScreen() {
               <Ionicons name="search" size={16} color={C.textLight} />
               <TextInput
                 style={[s.searchText, { color: C.text }]}
-                placeholder="Rechercher..."
+                placeholder={t("Rechercher...")}
                 placeholderTextColor={C.textLight}
                 value={searchClient}
                 onChangeText={setSearchClient}
@@ -255,7 +254,7 @@ export default function DocumentScanScreen() {
             {!selectedClient ? (
               <View style={s.emptyState}>
                 <Ionicons name="person-circle-outline" size={64} color={C.textLight} />
-                <Text style={{ color: C.textLight, fontSize: 16, fontWeight: '600', marginTop: 12 }}>Selectionnez un client</Text>
+                <Text style={{ color: C.textLight, fontSize: 16, fontWeight: '600', marginTop: 12 }}>{t("Selectionnez un client")}</Text>
               </View>
             ) : (
               <>
@@ -267,7 +266,7 @@ export default function DocumentScanScreen() {
                     {DOC_TYPES.map(dt => (
                       <View key={dt.key} style={[s.docTypeCard, { borderColor: C.border }]}>
                         <Ionicons name={dt.icon as any} size={24} color={ACCENT} />
-                        <Text style={{ color: C.text, fontSize: 13, fontWeight: '700', textAlign: 'center' }}>{dt.label}</Text>
+                        <Text style={{ color: C.text, fontSize: 13, fontWeight: '700', textAlign: 'center' }}>{t(dt.label)}</Text>
                         <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                           <TouchableOpacity style={s.captureBtn} onPress={() => handleCapture(dt.key)} data-testid={`capture-${dt.key}`}>
                             <Ionicons name="camera" size={16} color="#fff" />
@@ -290,7 +289,7 @@ export default function DocumentScanScreen() {
                     documents.length === 0 ? (
                       <View style={s.emptyDocs}>
                         <Ionicons name="documents-outline" size={36} color={C.textLight} />
-                        <Text style={{ color: C.textLight, fontSize: 14 }}>Aucun document</Text>
+                        <Text style={{ color: C.textLight, fontSize: 14 }}>{t("Aucun document")}</Text>
                       </View>
                     ) : (
                       <View style={s.docsGrid}>
@@ -304,7 +303,7 @@ export default function DocumentScanScreen() {
                                   <Ionicons name="expand" size={12} color="#fff" />
                                 </View>
                                 <View style={[s.docStatusBadge, { backgroundColor: sc.bg }]}>
-                                  <Text style={{ color: sc.text, fontSize: 10, fontWeight: '700' }}>{sc.label}</Text>
+                                  <Text style={{ color: sc.text, fontSize: 10, fontWeight: '700' }}>{t(sc.label)}</Text>
                                 </View>
                                 {doc.ocr_status && (
                                   <View style={[s.ocrBadge, {
@@ -312,7 +311,7 @@ export default function DocumentScanScreen() {
                                   }]}>
                                     <Ionicons name={doc.ocr_status === 'completed' ? 'scan' : doc.ocr_status === 'processing' ? 'hourglass' : 'alert-circle'} size={10} color={doc.ocr_status === 'completed' ? '#059669' : doc.ocr_status === 'processing' ? '#B45309' : '#DC2626'} />
                                     <Text style={{ fontSize: 9, fontWeight: '700', color: doc.ocr_status === 'completed' ? '#059669' : doc.ocr_status === 'processing' ? '#B45309' : '#DC2626' }}>
-                                      {doc.ocr_status === 'completed' ? `OCR ${doc.ocr_confidence || 0}%` : doc.ocr_status === 'processing' ? 'OCR...' : 'OCR echoue'}
+                                      {doc.ocr_status === 'completed' ? `OCR ${doc.ocr_confidence || 0}%` : doc.ocr_status === 'processing' ? 'OCR...' : t("OCR echoue")}
                                     </Text>
                                   </View>
                                 )}
@@ -376,14 +375,14 @@ export default function DocumentScanScreen() {
         <View style={s.modalOverlay}>
           <View style={[s.modalContent, { backgroundColor: C.card }]}>
             <View style={s.modalHeader}>
-              <Text style={[s.modalTitle, { color: C.text }]}>Valider le document</Text>
+              <Text style={[s.modalTitle, { color: C.text }]}>{t("Valider le document")}</Text>
               <TouchableOpacity onPress={() => setShowValidate(null)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
             </View>
             {showValidate?.url && (
               <Image source={{ uri: showValidate.url }} style={s.modalImage} resizeMode="contain" />
             )}
             <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 8, marginTop: 12 }}>
-              {showValidate?.ocr_status === 'completed' ? 'Informations pre-remplies par OCR IA - Verifiez et corrigez si necessaire' : 'Saisie manuelle des informations'}
+              {showValidate?.ocr_status === 'completed' ? t("Informations pre-remplies par OCR IA - Verifiez et corrigez si necessaire") : t("Saisie manuelle des informations")}
             </Text>
             {showValidate?.ocr_confidence > 0 && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10, backgroundColor: '#10B98110', padding: 8, borderRadius: 8 }}>
@@ -393,18 +392,18 @@ export default function DocumentScanScreen() {
             )}
 
             {[
-              { key: 'name', label: 'Nom complet', placeholder: 'Jean Dupont' },
-              { key: 'date_of_birth', label: 'Date de naissance', placeholder: '01.01.1990' },
+              { key: 'name', label: t("Nom complet"), placeholder: t("Jean Dupont") },
+              { key: 'date_of_birth', label: t("Date de naissance"), placeholder: '01.01.1990' },
               { key: 'nationality', label: 'Nationalite', placeholder: 'Suisse' },
-              { key: 'document_number', label: 'N° document', placeholder: '12345678' },
-              { key: 'license_number', label: 'N° permis', placeholder: 'G123456' },
-              { key: 'license_expiry_date', label: 'Expiration permis', placeholder: '01.01.2030' },
-              { key: 'expiry_date', label: 'Date expiration doc', placeholder: '01.01.2030' },
-              { key: 'place_of_birth', label: 'Lieu de naissance', placeholder: 'Geneve' },
-              { key: 'license_categories', label: 'Categories permis', placeholder: 'B, B1' },
+              { key: 'document_number', label: t("N° document"), placeholder: '12345678' },
+              { key: 'license_number', label: t("N° permis"), placeholder: 'G123456' },
+              { key: 'license_expiry_date', label: t("Expiration permis"), placeholder: '01.01.2030' },
+              { key: 'expiry_date', label: t("Date expiration doc"), placeholder: '01.01.2030' },
+              { key: 'place_of_birth', label: t("Lieu de naissance"), placeholder: 'Geneve' },
+              { key: 'license_categories', label: t("Categories permis"), placeholder: 'B, B1' },
             ].map(f => (
               <View key={f.key} style={{ marginBottom: 8 }}>
-                <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>{f.label}</Text>
+                <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>{t(f.label)}</Text>
                 <TextInput
                   style={[s.modalInput, { borderColor: C.border, color: C.text }]}
                   placeholder={f.placeholder}
@@ -441,7 +440,7 @@ export default function DocumentScanScreen() {
           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             {showPreview && <Image source={{ uri: showPreview }} style={s.previewImage} resizeMode="contain" />}
           </View>
-          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', paddingBottom: 20 }}>Appuyez X pour fermer</Text>
+          <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, textAlign: 'center', paddingBottom: 20 }}>{t("Appuyez X pour fermer")}</Text>
         </View>
       </Modal>
     </View>

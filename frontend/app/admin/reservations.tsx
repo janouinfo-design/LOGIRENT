@@ -7,6 +7,7 @@ import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import { STATUS_OPTIONS } from '../../src/utils/admin-helpers';
 import { ReservationCard, StatusActionModal, DateFilterModal } from '../../src/components/admin/ReservationComponents';
+import { t } from '../../src/i18n';
 
 interface Reservation {
   id: string; user_name: string; user_email: string; user_phone?: string;
@@ -106,7 +107,7 @@ export default function AdminReservations() {
         <View style={{ flexDirection: 'row', padding: 16, paddingBottom: 8, gap: 10 }}>
           <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, paddingHorizontal: 14, height: 46, gap: 10 }}>
             <Ionicons name="search" size={20} color={C.textLight} />
-            <TextInput style={{ flex: 1, fontSize: 15, color: C.text }} placeholder="Rechercher..." placeholderTextColor={C.textLight}
+            <TextInput style={{ flex: 1, fontSize: 15, color: C.text }} placeholder={t("Rechercher...")} placeholderTextColor={C.textLight}
               value={searchQuery} onChangeText={setSearchQuery} data-testid="reservation-search-input" />
             {searchQuery.length > 0 && <TouchableOpacity onPress={() => setSearchQuery('')}><Ionicons name="close-circle" size={20} color={C.textLight} /></TouchableOpacity>}
           </View>
@@ -140,7 +141,7 @@ export default function AdminReservations() {
           ].map((s, i) => (
             <View key={i} style={{ flex: 1, backgroundColor: C.card, borderRadius: 12, padding: 12, alignItems: 'center' }}>
               <Text style={{ fontSize: 20, fontWeight: '700', color: s.color }}>{s.val}</Text>
-              <Text style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{s.label}</Text>
+              <Text style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{t(s.label)}</Text>
             </View>
           ))}
         </View>
@@ -152,7 +153,7 @@ export default function AdminReservations() {
               style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: statusFilter === opt.value ? C.accent : C.card, gap: 6 }}
               onPress={() => setStatusFilter(opt.value)} data-testid={`filter-tab-${opt.value || 'all'}`}>
               <Ionicons name={opt.icon as any} size={16} color={statusFilter === opt.value ? '#fff' : C.textLight} />
-              <Text style={{ fontSize: 13, fontWeight: '500', color: statusFilter === opt.value ? '#fff' : C.textLight }}>{opt.label}</Text>
+              <Text style={{ fontSize: 13, fontWeight: '500', color: statusFilter === opt.value ? '#fff' : C.textLight }}>{t(opt.label)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -169,7 +170,7 @@ export default function AdminReservations() {
           {filteredReservations.length === 0 ? (
             <View style={{ alignItems: 'center', paddingTop: 60 }}>
               <Ionicons name="calendar-outline" size={48} color={C.textLight} />
-              <Text style={{ fontSize: 16, color: C.textLight, marginTop: 12 }}>Aucune reservation trouvee</Text>
+              <Text style={{ fontSize: 16, color: C.textLight, marginTop: 12 }}>{t("Aucune reservation trouvee")}</Text>
             </View>
           ) : filteredReservations.map(item => (
             <ReservationCard key={item.id} item={item} C={C}

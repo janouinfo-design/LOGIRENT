@@ -4,16 +4,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
 import api from '../src/api/axios';
+import { t } from '../src/i18n';
 
 const ACCENT = '#7C3AED';
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 const STATUS_MAP: Record<string, { bg: string; text: string; label: string; icon: string }> = {
   draft: { bg: '#6B728015', text: '#6B7280', label: 'Brouillon', icon: 'document-outline' },
-  pending: { bg: '#F59E0B15', text: '#B45309', label: 'En attente', icon: 'time-outline' },
+  pending: { bg: '#F59E0B15', text: '#B45309', label: t("En attente"), icon: 'time-outline' },
   partially_paid: { bg: '#3B82F615', text: '#1D4ED8', label: 'Partiel', icon: 'card-outline' },
   paid: { bg: '#10B98115', text: '#059669', label: 'Paye', icon: 'checkmark-circle' },
-  overdue: { bg: '#EF444415', text: '#DC2626', label: 'En retard', icon: 'alert-circle' },
+  overdue: { bg: '#EF444415', text: '#DC2626', label: t("En retard"), icon: 'alert-circle' },
   cancelled: { bg: '#6B728015', text: '#6B7280', label: 'Annulee', icon: 'close-circle-outline' },
   refunded: { bg: '#8B5CF615', text: '#7C3AED', label: 'Rembourse', icon: 'return-down-back' },
 };
@@ -71,7 +72,7 @@ export default function MyInvoicesScreen() {
         URL.revokeObjectURL(url);
       }
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible de telecharger le PDF');
+      Alert.alert(t("Erreur"), t("Impossible de telecharger le PDF"));
     }
   };
 
@@ -100,7 +101,7 @@ export default function MyInvoicesScreen() {
             <Ionicons name="arrow-back" size={22} color="#374151" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>Mes factures</Text>
+            <Text style={s.title}>{t("Mes factures")}</Text>
             <Text style={s.subtitle}>{invoices.length} facture{invoices.length > 1 ? 's' : ''}</Text>
           </View>
         </View>
@@ -110,7 +111,7 @@ export default function MyInvoicesScreen() {
           <View style={s.balanceCard} data-testid="balance-card">
             <Ionicons name="wallet" size={28} color="#fff" />
             <View style={{ flex: 1 }}>
-              <Text style={s.balanceLabel}>Solde a payer</Text>
+              <Text style={s.balanceLabel}>{t("Solde a payer")}</Text>
               <Text style={s.balanceAmount}>CHF {totalOwed.toFixed(2)}</Text>
             </View>
           </View>
@@ -120,7 +121,7 @@ export default function MyInvoicesScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }} contentContainerStyle={{ gap: 8 }}>
           {[
             { key: 'all', label: 'Toutes' },
-            { key: 'unpaid', label: 'A payer' },
+            { key: 'unpaid', label: t("A payer") },
             { key: 'paid', label: 'Payees' },
           ].map(f => (
             <TouchableOpacity
@@ -129,7 +130,7 @@ export default function MyInvoicesScreen() {
               onPress={() => setFilter(f.key)}
               data-testid={`client-filter-${f.key}`}
             >
-              <Text style={[s.filterText, filter === f.key && s.filterTextActive]}>{f.label}</Text>
+              <Text style={[s.filterText, filter === f.key && s.filterTextActive]}>{t(f.label)}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -138,7 +139,7 @@ export default function MyInvoicesScreen() {
         {filtered.length === 0 ? (
           <View style={s.empty}>
             <Ionicons name="receipt-outline" size={48} color="#D1D5DB" />
-            <Text style={s.emptyText}>Aucune facture</Text>
+            <Text style={s.emptyText}>{t("Aucune facture")}</Text>
           </View>
         ) : (
           filtered.map(inv => {
@@ -153,7 +154,7 @@ export default function MyInvoicesScreen() {
                   </View>
                   <View style={[s.statusBadge, { backgroundColor: sm.bg }]}>
                     <Ionicons name={sm.icon as any} size={14} color={sm.text} />
-                    <Text style={{ color: sm.text, fontSize: 12, fontWeight: '700' }}>{sm.label}</Text>
+                    <Text style={{ color: sm.text, fontSize: 12, fontWeight: '700' }}>{t(sm.label)}</Text>
                   </View>
                 </View>
 
@@ -176,12 +177,12 @@ export default function MyInvoicesScreen() {
 
                 <View style={s.cardAmounts}>
                   <View>
-                    <Text style={s.amountLabel}>Total TTC</Text>
+                    <Text style={s.amountLabel}>{t("Total TTC")}</Text>
                     <Text style={s.amountValue}>CHF {inv.total_incl_tax?.toFixed(2)}</Text>
                   </View>
                   {inv.balance_due > 0 && canPay && (
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={s.amountLabel}>Solde du</Text>
+                      <Text style={s.amountLabel}>{t("Solde du")}</Text>
                       <Text style={[s.amountValue, { color: '#DC2626' }]}>CHF {inv.balance_due.toFixed(2)}</Text>
                     </View>
                   )}
@@ -190,7 +191,7 @@ export default function MyInvoicesScreen() {
                 <View style={s.cardActions}>
                   <TouchableOpacity style={s.downloadBtn} onPress={() => handleDownload(inv)} data-testid={`client-pdf-${inv.id}`}>
                     <Ionicons name="download-outline" size={16} color={ACCENT} />
-                    <Text style={{ color: ACCENT, fontSize: 13, fontWeight: '700' }}>PDF / QR-Facture</Text>
+                    <Text style={{ color: ACCENT, fontSize: 13, fontWeight: '700' }}>{t("PDF / QR-Facture")}</Text>
                   </TouchableOpacity>
 
                   {canPay && (

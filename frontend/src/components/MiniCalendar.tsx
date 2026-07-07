@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths, isBefore, startOfDay, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import axios from 'axios';
+import { t } from '../i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -99,7 +100,7 @@ export default function MiniCalendar({ visible, onClose, onSelectDate, selectedD
             <View style={s.legend}>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: C.booked }]} />
-                <Text style={s.legendText}>Occupé</Text>
+                <Text style={s.legendText}>{t("Occupé")}</Text>
               </View>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: C.free }]} />
@@ -107,7 +108,7 @@ export default function MiniCalendar({ visible, onClose, onSelectDate, selectedD
               </View>
               <View style={s.legendItem}>
                 <View style={[s.legendDot, { backgroundColor: '#D1D5DB' }]} />
-                <Text style={s.legendText}>Passé</Text>
+                <Text style={s.legendText}>{t("Passé")}</Text>
               </View>
             </View>
           )}

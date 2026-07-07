@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator, Scr
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../api/axios';
+import { t } from '../../i18n';
 
 const C = { accent: '#7C3AED', bg: '#F9FAFB', card: '#FFF', text: '#111827', textLight: '#6B7280', border: '#E5E7EB', success: '#10B981', error: '#EF4444', warning: '#F59E0B', blue: '#2563EB' };
 
@@ -111,7 +112,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'Autorisez la camera pour prendre une photo.');
+        Alert.alert(t("Permission requise"), t("Autorisez la camera pour prendre une photo."));
         return;
       }
       const res = await ImagePicker.launchCameraAsync({
@@ -173,7 +174,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
     <View style={s.container} data-testid="damage-analyzer">
       <View style={s.header}>
         <Ionicons name="scan-outline" size={18} color={C.blue} />
-        <Text style={s.title}>Detection de dommages IA</Text>
+        <Text style={s.title}>{t("Detection de dommages IA")}</Text>
       </View>
 
       {!preview ? (
@@ -203,8 +204,8 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
             <>
               <TouchableOpacity style={s.uploadArea} onPress={() => setShowPickerModal(true)} data-testid="upload-photo-btn">
                 <Ionicons name="camera-outline" size={32} color={C.accent} />
-                <Text style={s.uploadText}>Prendre ou importer une photo</Text>
-                <Text style={s.uploadHint}>L'IA analysera automatiquement les dommages</Text>
+                <Text style={s.uploadText}>{t("Prendre ou importer une photo")}</Text>
+                <Text style={s.uploadHint}>{t("L'IA analysera automatiquement les dommages")}</Text>
               </TouchableOpacity>
 
               {showPickerModal && (
@@ -239,12 +240,12 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
               {analyzing ? (
                 <>
                   <ActivityIndicator size="small" color="#FFF" />
-                  <Text style={s.analyzeBtnText}>Analyse en cours...</Text>
+                  <Text style={s.analyzeBtnText}>{t("Analyse en cours...")}</Text>
                 </>
               ) : (
                 <>
                   <Ionicons name="eye-outline" size={16} color="#FFF" />
-                  <Text style={s.analyzeBtnText}>Analyser les dommages</Text>
+                  <Text style={s.analyzeBtnText}>{t("Analyser les dommages")}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -254,7 +255,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
             <View style={s.resultCard} data-testid="damage-result">
               {/* Overall condition */}
               <View style={s.conditionRow}>
-                <Text style={s.conditionLabel}>Etat general:</Text>
+                <Text style={s.conditionLabel}>{t("Etat general:")}</Text>
                 <View style={[s.conditionBadge, { backgroundColor: (CONDITION_COLORS[result.overall_condition] || C.textLight) + '20' }]}>
                   <View style={[s.conditionDot, { backgroundColor: CONDITION_COLORS[result.overall_condition] || C.textLight }]} />
                   <Text style={[s.conditionText, { color: CONDITION_COLORS[result.overall_condition] || C.textLight }]}>
@@ -290,7 +291,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
               ) : (
                 <View style={s.noDamage}>
                   <Ionicons name="checkmark-circle" size={24} color={C.success} />
-                  <Text style={s.noDamageText}>Aucun dommage detecte</Text>
+                  <Text style={s.noDamageText}>{t("Aucun dommage detecte")}</Text>
                 </View>
               )}
 
@@ -310,7 +311,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
               {/* New photo button */}
               <TouchableOpacity style={s.newPhotoBtn} onPress={() => { setPreview(null); setResult(null); }} data-testid="new-photo-btn">
                 <Ionicons name="camera" size={14} color={C.accent} />
-                <Text style={s.newPhotoBtnText}>Analyser une autre photo</Text>
+                <Text style={s.newPhotoBtnText}>{t("Analyser une autre photo")}</Text>
               </TouchableOpacity>
             </View>
           )}

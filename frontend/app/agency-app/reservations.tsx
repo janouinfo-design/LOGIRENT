@@ -12,6 +12,7 @@ import { GanttChart } from '../../src/components/agency/GanttChart';
 import { ReservationActionModal } from '../../src/components/agency/ReservationActionModal';
 import ReturnVehicleModal from '../../src/components/agency/ReturnVehicleModal';
 import { EditClientModal } from '../../src/components/agency/EditClientModal';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -30,7 +31,7 @@ interface VehicleSchedule {
 
 const QUICK_FILTERS = [
   { value: null, label: "Aujourd'hui" },
-  { value: 'pending', label: 'En attente' },
+  { value: 'pending', label: t("En attente") },
   { value: 'active', label: 'Active' },
   { value: 'upcoming', label: 'Confirmee' },
   { value: 'overdue', label: 'Retards' },
@@ -289,17 +290,17 @@ export default function AgencyReservations() {
     const events: { type: string; label: string; desc: string; color: string; res?: Reservation }[] = [];
     const today = new Date();
     // Overdue
-    overdueList.slice(0, 1).forEach((o: any) => events.push({ type: 'overdue', label: 'Vehicule en retard', desc: `${o.vehicle_name} en retard`, color: '#EF4444', res: o }));
+    overdueList.slice(0, 1).forEach((o: any) => events.push({ type: 'overdue', label: t("Vehicule en retard"), desc: `${o.vehicle_name} en retard`, color: '#EF4444', res: o }));
     // Recent created
     recent.slice(0, 1).forEach(r => {
       const created = new Date(r.created_at || r.start_date);
       const mins = Math.round((today.getTime() - created.getTime()) / 60000);
-      events.push({ type: 'new', label: 'Nouvelle reservation', desc: mins < 60 ? `creee il y a ${mins} min` : `creee le ${format(created, 'dd/MM')}`, color: '#3B82F6', res: r });
+      events.push({ type: 'new', label: t("Nouvelle reservation"), desc: mins < 60 ? `creee il y a ${mins} min` : `creee le ${format(created, 'dd/MM')}`, color: '#3B82F6', res: r });
     });
     // Active
-    reservations.filter(r => r.status === 'active').slice(0, 1).forEach(r => events.push({ type: 'active', label: 'Location demarree', desc: `${r.user_name} a pris le vehicule`, color: '#10B981', res: r }));
+    reservations.filter(r => r.status === 'active').slice(0, 1).forEach(r => events.push({ type: 'active', label: t("Location demarree"), desc: `${r.user_name} a pris le vehicule`, color: '#10B981', res: r }));
     // Pending payment
-    pendingPayments.slice(0, 1).forEach(r => events.push({ type: 'payment', label: 'Paiement en attente', desc: 'Paiement non recu', color: '#F59E0B', res: r }));
+    pendingPayments.slice(0, 1).forEach(r => events.push({ type: 'payment', label: t("Paiement en attente"), desc: t("Paiement non recu"), color: '#F59E0B', res: r }));
     return events;
   }, [overdueList, recent, reservations, pendingPayments]);
 
@@ -334,13 +335,13 @@ export default function AgencyReservations() {
 
   const updatePayment = async (id: string, status: string) => {
     try { await api.put(`/api/admin/reservations/${id}/payment-status?payment_status=${status}`); setActionModal(null); fetchReservations(); fetchStats(); }
-    catch (e: any) { Platform.OS === 'web' ? window.alert(e.response?.data?.detail || 'Erreur') : Alert.alert('Erreur'); }
+    catch (e: any) { Platform.OS === 'web' ? window.alert(e.response?.data?.detail || 'Erreur') : Alert.alert(t("Erreur")); }
   };
 
   const sendPaymentLink = async (id: string) => {
     setSendingLink(true);
-    try { await api.post(`/api/admin/reservations/${id}/send-payment-link`, { origin_url: API_URL }); Platform.OS === 'web' ? window.alert('Lien envoye!') : Alert.alert('Succes', 'Lien envoye!'); setActionModal(null); }
-    catch (e: any) { Platform.OS === 'web' ? window.alert(e.response?.data?.detail || 'Erreur') : Alert.alert('Erreur'); }
+    try { await api.post(`/api/admin/reservations/${id}/send-payment-link`, { origin_url: API_URL }); Platform.OS === 'web' ? window.alert('Lien envoye!') : Alert.alert(t("Succes"), t("Lien envoye!")); setActionModal(null); }
+    catch (e: any) { Platform.OS === 'web' ? window.alert(e.response?.data?.detail || 'Erreur') : Alert.alert(t("Erreur")); }
     finally { setSendingLink(false); }
   };
 
@@ -370,7 +371,7 @@ export default function AgencyReservations() {
             onPress={() => setViewMode(tab.key)}
           >
             <Ionicons name={tab.icon as any} size={16} color={viewMode === tab.key ? '#fff' : C.textLight} />
-            <Text style={[s.tabLabel, { color: viewMode === tab.key ? '#fff' : C.textLight }]}>{tab.label}</Text>
+            <Text style={[s.tabLabel, { color: viewMode === tab.key ? '#fff' : C.textLight }]}>{t(tab.label)}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -388,7 +389,7 @@ export default function AgencyReservations() {
               <Ionicons name="search" size={16} color="#94A3B8" />
               <TextInput
                 style={s.searchInput}
-                placeholder="Rechercher..."
+                placeholder={t("Rechercher...")}
                 placeholderTextColor="#94A3B8"
                 value={search}
                 onChangeText={setSearch}
@@ -402,27 +403,27 @@ export default function AgencyReservations() {
                   onPress={() => { setQuickFilter(f.value); setTimeout(scrollToTable, 100); }}
                   data-testid={`filter-${f.value || 'today'}`}
                 >
-                  <Text style={[s.qfLabel, quickFilter === f.value && s.qfLabelActive]}>{f.label}</Text>
+                  <Text style={[s.qfLabel, quickFilter === f.value && s.qfLabelActive]}>{t(f.label)}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <TouchableOpacity style={s.createBtn} onPress={() => router.push('/agency-app/book' as any)}>
-              <Text style={s.createBtnText}>Creer Reservation</Text>
+              <Text style={s.createBtnText}>{t("Creer Reservation")}</Text>
             </TouchableOpacity>
           </View>
 
           {/* KPI Cards */}
           <View style={s.kpiRow}>
             {[
-              { icon: 'car-sport', label: "Reservations aujourd'hui", value: kpiToday, color: '#1E3A5F', bg: '#F0F4F8', filter: null as string | null },
+              { icon: 'car-sport', label: t("Reservations aujourd'hui"), value: kpiToday, color: '#1E3A5F', bg: '#F0F4F8', filter: null as string | null },
               { icon: 'play-circle', label: 'Active', value: kpiActive, color: '#10B981', bg: '#ECFDF5', filter: 'active' },
-              { icon: 'hourglass', label: 'En attente', value: kpiPending, color: '#F59E0B', bg: '#FFFBEB', filter: 'pending' },
+              { icon: 'hourglass', label: t("En attente"), value: kpiPending, color: '#F59E0B', bg: '#FFFBEB', filter: 'pending' },
               { icon: 'calendar', label: 'Confirmee', value: kpiUpcoming, color: '#3B82F6', bg: '#EFF6FF', filter: 'upcoming' },
-              { icon: 'warning', label: 'Problemes / Retards', value: kpiOverdue, color: '#EF4444', bg: '#FEF2F2', filter: 'overdue' },
+              { icon: 'warning', label: t("Problemes / Retards"), value: kpiOverdue, color: '#EF4444', bg: '#FEF2F2', filter: 'overdue' },
             ].map((k, i) => (
               <TouchableOpacity key={i} style={[s.kpiCard, { backgroundColor: k.bg }, quickFilter === k.filter && { borderWidth: 2, borderColor: k.color }]} onPress={() => { setQuickFilter(k.filter); setTimeout(scrollToTable, 100); }} activeOpacity={0.7} data-testid={`kpi-${k.filter || 'today'}`}>
                 <Ionicons name={k.icon as any} size={20} color={k.color} />
-                <Text style={[s.kpiLabel, { color: '#475569' }]}>{k.label}</Text>
+                <Text style={[s.kpiLabel, { color: '#475569' }]}>{t(k.label)}</Text>
                 <Text style={[s.kpiValue, { color: k.color }]}>{k.value}</Text>
               </TouchableOpacity>
             ))}
@@ -431,33 +432,33 @@ export default function AgencyReservations() {
           {/* Activite Recente */}
           <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
             <View style={s.cardHeader}>
-              <Text style={[s.cardTitle, { color: C.text }]}>Activite Recente</Text>
+              <Text style={[s.cardTitle, { color: C.text }]}>{t("Activite Recente")}</Text>
               <TouchableOpacity onPress={() => setQuickFilter(null)}>
-                <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>Voir toutes &gt;</Text>
+                <Text style={{ color: C.accent, fontSize: 13, fontWeight: '600' }}>{t("Voir toutes &gt;")}</Text>
               </TouchableOpacity>
             </View>
             {activityEvents.length > 0 ? activityEvents.map((ev, i) => (
               <TouchableOpacity key={i} style={s.activityRow} onPress={() => ev.res && setActionModal(ev.res)}>
                 <View style={[s.activityDot, { backgroundColor: ev.color }]} />
                 <Text style={[s.activityText, { color: C.text }]}>
-                  <Text style={{ fontWeight: '800' }}>{ev.label}</Text>{'  '}{ev.desc}
+                  <Text style={{ fontWeight: '800' }}>{t(ev.label)}</Text>{'  '}{ev.desc}
                 </Text>
               </TouchableOpacity>
             )) : (
-              <Text style={{ color: C.textLight, fontSize: 13, padding: 16, textAlign: 'center' }}>Aucune activite recente</Text>
+              <Text style={{ color: C.textLight, fontSize: 13, padding: 16, textAlign: 'center' }}>{t("Aucune activite recente")}</Text>
             )}
           </View>
 
           {/* Dernieres Reservations (table) */}
           <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Text style={[s.cardTitle, { color: C.text, padding: 16, paddingBottom: 8 }]}>Dernieres Reservations</Text>
+            <Text style={[s.cardTitle, { color: C.text, padding: 16, paddingBottom: 8 }]}>{t("Dernieres Reservations")}</Text>
             {/* Header */}
             <View style={[s.tRow, { backgroundColor: '#F1F5F9' }]}>
               <Text style={[s.tH, { flex: 1.2 }]}>Client</Text>
               <Text style={[s.tH, { flex: 1.2 }]}>Vehicule</Text>
               <Text style={[s.tH, { flex: 0.7 }]}>Debut</Text>
               <Text style={[s.tH, { flex: 0.5 }]}>Heure</Text>
-              <Text style={[s.tH, { flex: 0.6 }]}>Creee le</Text>
+              <Text style={[s.tH, { flex: 0.6 }]}>{t("Creee le")}</Text>
               <Text style={[s.tH, { flex: 0.8 }]}>Statut</Text>
               <Text style={[s.tH, { flex: 1.6 }]}>Actions</Text>
             </View>
@@ -510,7 +511,7 @@ export default function AgencyReservations() {
               </View>
             ))}
             <TouchableOpacity style={s.seeAll} onPress={() => { /* scroll to full table */ }}>
-              <Text style={{ color: C.accent, fontSize: 13, fontWeight: '700' }}>Voir toutes les reservations</Text>
+              <Text style={{ color: C.accent, fontSize: 13, fontWeight: '700' }}>{t("Voir toutes les reservations")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -524,7 +525,7 @@ export default function AgencyReservations() {
                       <Ionicons name="car" size={20} color="#D97706" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 13 }}>Vehicule non rendu</Text>
+                      <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 13 }}>{t("Vehicule non rendu")}</Text>
                       <Text style={{ color: '#78716C', fontSize: 12 }}>{overdueList.length} vehicule(s) en retard</Text>
                     </View>
                     <Ionicons name={expandedAlert === 'overdue' ? 'chevron-up' : 'chevron-down'} size={18} color="#D97706" />
@@ -536,7 +537,7 @@ export default function AgencyReservations() {
                       <Ionicons name="card" size={20} color="#3B82F6" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '700', color: '#1E3A8A', fontSize: 13 }}>Paiement en attente</Text>
+                      <Text style={{ fontWeight: '700', color: '#1E3A8A', fontSize: 13 }}>{t("Paiement en attente")}</Text>
                       <Text style={{ color: '#78716C', fontSize: 12 }}>{pendingPayments.length} paiement(s) en attente</Text>
                     </View>
                     <Ionicons name={expandedAlert === 'pending' ? 'chevron-up' : 'chevron-down'} size={18} color="#3B82F6" />
@@ -548,7 +549,7 @@ export default function AgencyReservations() {
                       <Ionicons name="location" size={20} color="#EF4444" />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '700', color: '#991B1B', fontSize: 13 }}>Client en retard</Text>
+                      <Text style={{ fontWeight: '700', color: '#991B1B', fontSize: 13 }}>{t("Client en retard")}</Text>
                       <Text style={{ color: '#78716C', fontSize: 12 }}>{overdueList.length} client(s) en retard</Text>
                     </View>
                     <Ionicons name={expandedAlert === 'late' ? 'chevron-up' : 'chevron-down'} size={18} color="#EF4444" />
@@ -621,17 +622,17 @@ export default function AgencyReservations() {
 
           {/* ===== TOUTES LES RESERVATIONS (Full table) ===== */}
           <View ref={tableRef} style={[s.card, { backgroundColor: C.card, borderColor: C.border }]} data-testid="all-reservations-table">
-            <Text style={[s.cardTitle, { color: C.text, padding: 16, paddingBottom: 8 }]}>Toutes les Reservations</Text>
+            <Text style={[s.cardTitle, { color: C.text, padding: 16, paddingBottom: 8 }]}>{t("Toutes les Reservations")}</Text>
             {/* Header */}
             <View style={[s.tRow, { backgroundColor: '#F1F5F9' }]}>
               <Text style={[s.tH, { flex: 1.2 }]}>Vehicule</Text>
               <Text style={[s.tH, { flex: 1 }]}>Client</Text>
               <TouchableOpacity style={{ flex: 0.9, flexDirection: 'row', alignItems: 'center', gap: 2 }} onPress={() => toggleSort('start')}>
-                <Text style={s.tH}>Date debut</Text>
+                <Text style={s.tH}>{t("Date debut")}</Text>
                 {sortCol === 'start' && <Ionicons name={sortDir === 'desc' ? 'caret-down' : 'caret-up'} size={10} color="#64748B" />}
               </TouchableOpacity>
               <TouchableOpacity style={{ flex: 0.9, flexDirection: 'row', alignItems: 'center', gap: 2 }} onPress={() => toggleSort('end')}>
-                <Text style={s.tH}>Date fin</Text>
+                <Text style={s.tH}>{t("Date fin")}</Text>
                 {sortCol === 'end' && <Ionicons name={sortDir === 'desc' ? 'caret-down' : 'caret-up'} size={10} color="#64748B" />}
               </TouchableOpacity>
               <Text style={[s.tH, { flex: 0.7 }]}>Statut</Text>
@@ -718,7 +719,7 @@ export default function AgencyReservations() {
           {highlightId && (
             <Animated.View style={{ opacity: highlightAnim, flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8, padding: 10, borderRadius: 10, backgroundColor: '#10B981' }}>
               <Ionicons name="checkmark-circle" size={20} color="#fff" />
-              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>Reservation creee avec succes !</Text>
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700', flex: 1 }}>{t("Reservation creee avec succes !")}</Text>
             </Animated.View>
           )}
 
@@ -743,14 +744,14 @@ export default function AgencyReservations() {
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Ionicons name="list" size={16} color={C.accent} />
-                <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Reservations du mois</Text>
+                <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>{t("Reservations du mois")}</Text>
               </View>
               <View style={{ backgroundColor: C.accent + '15', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
                 <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>{planningCards.length} resultat(s)</Text>
               </View>
             </View>
             {planningCards.length === 0 && (
-              <Text style={{ color: C.textLight, fontSize: 13, textAlign: 'center', paddingVertical: 16 }}>Aucune reservation pour cette periode</Text>
+              <Text style={{ color: C.textLight, fontSize: 13, textAlign: 'center', paddingVertical: 16 }}>{t("Aucune reservation pour cette periode")}</Text>
             )}
             {(() => {
               const screenW = Dimensions.get('window').width;
@@ -789,7 +790,7 @@ export default function AgencyReservations() {
                       {r.docs_missing && (
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 2 }}>
                           <Ionicons name="alert-circle" size={10} color="#EF4444" />
-                          <Text style={{ color: '#EF4444', fontSize: 8, fontWeight: '800' }}>DOCS MANQUANTS</Text>
+                          <Text style={{ color: '#EF4444', fontSize: 8, fontWeight: '800' }}>{t("DOCS MANQUANTS")}</Text>
                         </View>
                       )}
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

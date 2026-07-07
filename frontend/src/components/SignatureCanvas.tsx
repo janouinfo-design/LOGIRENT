@@ -1,6 +1,7 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, PanResponder } from 'react-native';
 import Svg, { Path as SvgPath } from 'react-native-svg';
+import { t } from '../i18n';
 
 interface Props {
   onSave: (base64: string) => void;
@@ -41,7 +42,7 @@ export default function SignatureCanvas({ onSave, saving, colors: C }: Props) {
 
   return (
     <View>
-      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>Dessinez votre signature ci-dessous</Text>
+      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>{t("Dessinez votre signature ci-dessous")}</Text>
       <View style={[st.canvasWrap, { borderColor: C.border }]} {...panResponder.panHandlers}>
         <Svg height={150} width="100%">
           {paths.map((p, i) => <SvgPath key={i} d={p} stroke="#1A1A2E" strokeWidth={2} fill="none" />)}
@@ -159,7 +160,7 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
 
   return (
     <View>
-      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>Dessinez votre signature ci-dessous avec la souris</Text>
+      <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>{t("Dessinez votre signature ci-dessous avec la souris")}</Text>
       <View style={[st.canvasWrap, { borderColor: C.border }]}>
         <canvas
           ref={(el: HTMLCanvasElement | null) => { canvasRef.current = el; }}
@@ -176,7 +177,7 @@ function WebSignatureCanvas({ onSave, saving, colors: C }: Props) {
           disabled={!canConfirm || saving}
           data-testid="signature-confirm-btn"
         >
-          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>{saving ? 'Envoi...' : 'Confirmer la signature'}</Text>
+          <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>{saving ? 'Envoi...' : t("Confirmer la signature")}</Text>
         </TouchableOpacity>
       </View>
     </View>

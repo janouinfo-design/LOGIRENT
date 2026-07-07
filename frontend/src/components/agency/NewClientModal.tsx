@@ -5,6 +5,7 @@ import api from '../../../src/api/axios';
 import { useAuthStore } from '../../../src/store/authStore';
 import { useThemeStore } from '../../../src/store/themeStore';
 import { formatDateInput } from '../../../src/utils/dateMask';
+import { t } from '../../i18n';
 
 interface Props {
   visible: boolean;
@@ -13,10 +14,10 @@ interface Props {
 }
 
 const DOC_TYPES = [
-  { key: 'license_front', label: 'Permis (recto)', icon: 'card-outline' },
-  { key: 'license_back', label: 'Permis (verso)', icon: 'card-outline' },
-  { key: 'id_front', label: 'Carte ID (recto)', icon: 'id-card-outline' },
-  { key: 'id_back', label: 'Carte ID (verso)', icon: 'id-card-outline' },
+  { key: 'license_front', label: t("Permis (recto)"), icon: 'card-outline' },
+  { key: 'license_back', label: t("Permis (verso)"), icon: 'card-outline' },
+  { key: 'id_front', label: t("Carte ID (recto)"), icon: 'id-card-outline' },
+  { key: 'id_back', label: t("Carte ID (verso)"), icon: 'id-card-outline' },
 ] as const;
 
 export function NewClientModal({ visible, onClose, onCreated }: Props) {
@@ -183,7 +184,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !lastName.trim() ? '#EF444450' : C.border }]}
                       value={lastName} onChangeText={setLastName}
-                      placeholder="Dupont" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("Dupont")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-lastname"
                     />
                   </View>
@@ -192,7 +193,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={firstName} onChangeText={setFirstName}
-                      placeholder="Jean" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("Jean")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-firstname"
                     />
                   </View>
@@ -205,18 +206,18 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: !email.trim() ? '#EF444450' : C.border }]}
                       value={email} onChangeText={setEmail}
-                      placeholder="email@exemple.ch" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("email@exemple.ch")} placeholderTextColor={C.textLight + '80'}
                       keyboardType="email-address" autoCapitalize="none"
                       data-testid="new-client-email"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.label, { color: C.textLight }]}>MOT DE PASSE</Text>
+                    <Text style={[s.label, { color: C.textLight }]}>{t("MOT DE PASSE")}</Text>
                     <View style={{ position: 'relative' }}>
                       <TextInput
                         style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, paddingRight: 40 }]}
                         value={password} onChangeText={setPassword}
-                        placeholder="Auto-genere si vide" placeholderTextColor={C.textLight + '80'}
+                        placeholder={t("Auto-genere si vide")} placeholderTextColor={C.textLight + '80'}
                         secureTextEntry={!showPassword}
                         data-testid="new-client-password"
                       />
@@ -248,7 +249,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={address} onChangeText={setAddress}
-                      placeholder="Lausanne" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("Lausanne")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-address"
                     />
                   </View>
@@ -257,25 +258,25 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                 {/* Section Identite */}
                 <View style={[s.sectionDivider, { borderTopColor: C.border }]}>
                   <Ionicons name="id-card" size={16} color={C.accent} />
-                  <Text style={[s.sectionTitle, { color: C.text }]}>Identite & Permis</Text>
+                  <Text style={[s.sectionTitle, { color: C.text }]}>{t("Identite & Permis")}</Text>
                 </View>
 
                 <View style={s.row}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.label, { color: C.textLight }]}>LIEU DE NAISSANCE</Text>
+                    <Text style={[s.label, { color: C.textLight }]}>{t("LIEU DE NAISSANCE")}</Text>
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={birthPlace} onChangeText={setBirthPlace}
-                      placeholder="Geneve" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("Geneve")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-birth-place"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.label, { color: C.textLight }]}>DATE DE NAISSANCE</Text>
+                    <Text style={[s.label, { color: C.textLight }]}>{t("DATE DE NAISSANCE")}</Text>
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={dob} onChangeText={(v) => setDob(formatDateInput(v))}
-                      placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-dob"
                     />
                   </View>
@@ -287,16 +288,16 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={nationality} onChangeText={setNationality}
-                      placeholder="Suisse" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("Suisse")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-nationality"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.label, { color: C.textLight }]}>N. DE PERMIS</Text>
+                    <Text style={[s.label, { color: C.textLight }]}>{t("N. DE PERMIS")}</Text>
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={license} onChangeText={setLicense}
-                      placeholder="CH-123456" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("CH-123456")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-license"
                     />
                   </View>
@@ -304,20 +305,20 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
 
                 <View style={s.row}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.label, { color: C.textLight }]}>DATE D'EMISSION</Text>
+                    <Text style={[s.label, { color: C.textLight }]}>{t("DATE D'EMISSION")}</Text>
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={licenseIssued} onChangeText={(v) => setLicenseIssued(formatDateInput(v))}
-                      placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-license-issued"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[s.label, { color: C.textLight }]}>DATE D'EXPIRATION</Text>
+                    <Text style={[s.label, { color: C.textLight }]}>{t("DATE D'EXPIRATION")}</Text>
                     <TextInput
                       style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
                       value={licenseExpiry} onChangeText={(v) => setLicenseExpiry(formatDateInput(v))}
-                      placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight + '80'}
+                      placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight + '80'}
                       data-testid="new-client-license-expiry"
                     />
                   </View>
@@ -332,7 +333,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                     {saving ? <ActivityIndicator color="#fff" size="small" /> : (
                       <>
                         <Ionicons name="checkmark" size={18} color="#fff" />
-                        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Creer et continuer</Text>
+                        <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t("Creer et continuer")}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -347,23 +348,21 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                 <View style={[s.passwordBox, { borderColor: '#10B981' }]}>
                   <Ionicons name="key" size={20} color="#10B981" />
                   <View style={{ flex: 1 }}>
-                    <Text style={{ color: C.text, fontSize: 12, fontWeight: '700' }}>Mot de passe du client</Text>
+                    <Text style={{ color: C.text, fontSize: 12, fontWeight: '700' }}>{t("Mot de passe du client")}</Text>
                     <Text style={{ color: '#10B981', fontSize: 18, fontWeight: '800', letterSpacing: 2, fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }}>
                       {generatedPassword}
                     </Text>
                     <Text style={{ color: C.textLight, fontSize: 10, marginTop: 2 }}>
-                      {email ? 'Un email de bienvenue a ete envoye au client' : 'Notez ce mot de passe'}
+                      {email ? t("Un email de bienvenue a ete envoye au client") : t("Notez ce mot de passe")}
                     </Text>
                   </View>
                 </View>
 
                 <View style={[s.sectionDivider, { borderTopColor: C.border }]}>
                   <Ionicons name="camera" size={16} color={C.accent} />
-                  <Text style={[s.sectionTitle, { color: C.text }]}>Scanner les documents</Text>
+                  <Text style={[s.sectionTitle, { color: C.text }]}>{t("Scanner les documents")}</Text>
                 </View>
-                <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 12 }}>
-                  Prenez en photo ou telechargez le permis de conduire et la carte d'identite
-                </Text>
+                <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 12 }}>{t("Prenez en photo ou telechargez le permis de conduire et la carte d'identite")}</Text>
 
                 <View style={s.docGrid}>
                   {DOC_TYPES.map(doc => (
@@ -381,7 +380,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                       ) : (
                         <>
                           <Ionicons name={doc.icon as any} size={28} color={C.textLight} />
-                          <Text style={{ color: C.textLight, fontSize: 11, textAlign: 'center', marginTop: 4 }}>{doc.label}</Text>
+                          <Text style={{ color: C.textLight, fontSize: 11, textAlign: 'center', marginTop: 4 }}>{t(doc.label)}</Text>
                         </>
                       )}
                       {docPreviews[doc.key] && (

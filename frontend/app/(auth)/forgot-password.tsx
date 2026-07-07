@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -66,11 +67,10 @@ export default function ForgotPasswordScreen() {
             <View style={s.iconWrap}>
               <Ionicons name="key" size={40} color={C.primary} />
             </View>
-            <Text style={s.title}>Mot de passe oublié</Text>
+            <Text style={s.title}>{t("Mot de passe oublié")}</Text>
             <Text style={s.subtitle}>
               {step === 'email'
-                ? 'Entrez votre email pour recevoir un code de réinitialisation'
-                : 'Entrez le code reçu par email et votre nouveau mot de passe'}
+                ? t("Entrez votre email pour recevoir un code de réinitialisation") : t("Entrez le code reçu par email et votre nouveau mot de passe")}
             </Text>
           </View>
 
@@ -97,7 +97,7 @@ export default function ForgotPasswordScreen() {
                     <Ionicons name="mail-outline" size={20} color={C.textLight} />
                     <TextInput
                       style={s.input}
-                      placeholder="votre@email.com"
+                      placeholder={t("votre@email.com")}
                       placeholderTextColor={C.textLight}
                       value={email}
                       onChangeText={setEmail}
@@ -108,18 +108,18 @@ export default function ForgotPasswordScreen() {
                   </View>
                 </View>
                 <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleSendCode} disabled={loading} data-testid="forgot-send-btn">
-                  <Text style={s.btnText}>{loading ? 'Envoi...' : 'Envoyer le code'}</Text>
+                  <Text style={s.btnText}>{loading ? 'Envoi...' : t("Envoyer le code")}</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
                 <View style={s.inputGroup}>
-                  <Text style={s.label}>Code de réinitialisation</Text>
+                  <Text style={s.label}>{t("Code de réinitialisation")}</Text>
                   <View style={s.inputBox}>
                     <Ionicons name="shield-checkmark-outline" size={20} color={C.textLight} />
                     <TextInput
                       style={[s.input, { letterSpacing: 3, fontSize: 18, fontWeight: '700' }]}
-                      placeholder="XXXXXXXX"
+                      placeholder={t("XXXXXXXX")}
                       placeholderTextColor={C.textLight}
                       value={code}
                       onChangeText={setCode}
@@ -130,12 +130,12 @@ export default function ForgotPasswordScreen() {
                   </View>
                 </View>
                 <View style={s.inputGroup}>
-                  <Text style={s.label}>Nouveau mot de passe</Text>
+                  <Text style={s.label}>{t("Nouveau mot de passe")}</Text>
                   <View style={s.inputBox}>
                     <Ionicons name="lock-closed-outline" size={20} color={C.textLight} />
                     <TextInput
                       style={s.input}
-                      placeholder="Nouveau mot de passe"
+                      placeholder={t("Nouveau mot de passe")}
                       placeholderTextColor={C.textLight}
                       value={newPassword}
                       onChangeText={setNewPassword}
@@ -148,17 +148,17 @@ export default function ForgotPasswordScreen() {
                   </View>
                 </View>
                 <TouchableOpacity style={[s.btn, loading && s.btnDisabled]} onPress={handleResetPassword} disabled={loading} data-testid="forgot-reset-btn">
-                  <Text style={s.btnText}>{loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}</Text>
+                  <Text style={s.btnText}>{loading ? t("Réinitialisation...") : t("Réinitialiser le mot de passe")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.resendBtn} onPress={() => { setStep('email'); setError(''); setSuccess(''); }}>
-                  <Text style={s.resendText}>Renvoyer le code</Text>
+                  <Text style={s.resendText}>{t("Renvoyer le code")}</Text>
                 </TouchableOpacity>
               </>
             )}
 
             <TouchableOpacity style={s.backLink} onPress={() => router.replace('/login' as any)}>
               <Ionicons name="arrow-back" size={16} color={C.primary} />
-              <Text style={s.backLinkText}>Retour à la connexion</Text>
+              <Text style={s.backLinkText}>{t("Retour à la connexion")}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

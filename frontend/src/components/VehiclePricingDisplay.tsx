@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '../i18n';
 
 interface PricingTier {
   id: string;
@@ -35,8 +36,8 @@ export const VehiclePricingDisplay = ({ tiers, C, selectedTierId, onSelectTier, 
     <View style={[st.container, { backgroundColor: C.card, borderColor: C.border }]} data-testid="pricing-display">
       <View style={st.header}>
         <Ionicons name="pricetags" size={16} color={C.accent} />
-        <Text style={[st.title, { color: C.text }]}>Tarifs & Forfaits</Text>
-        {selectable && <Text style={{ color: C.textLight, fontSize: 11 }}>Selectionnez un forfait</Text>}
+        <Text style={[st.title, { color: C.text }]}>{t("Tarifs & Forfaits")}</Text>
+        {selectable && <Text style={{ color: C.textLight, fontSize: 11 }}>{t("Selectionnez un forfait")}</Text>}
       </View>
 
       {/* Default price option (no tier) */}
@@ -54,7 +55,7 @@ export const VehiclePricingDisplay = ({ tiers, C, selectedTierId, onSelectTier, 
               {!selectedTierId && <View style={[st.radioInner, { backgroundColor: C.accent }]} />}
             </View>
             <View>
-              <Text style={[st.tierName, { color: C.text }]}>Tarif standard</Text>
+              <Text style={[st.tierName, { color: C.text }]}>{t("Tarif standard")}</Text>
               <Text style={{ color: C.textLight, fontSize: 11 }}>{totalDays} jour{totalDays > 1 ? 's' : ''} x CHF {(defaultPrice / totalDays).toFixed(0)}/jour</Text>
             </View>
           </View>

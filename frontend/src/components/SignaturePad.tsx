@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../api/axios';
+import { t } from '../i18n';
 
 interface Props {
   contractId: string;
@@ -101,14 +102,14 @@ export default function SignaturePad({ contractId, onSigned, readOnly, existingS
   };
 
   if (Platform.OS !== 'web') {
-    return <Text style={s.fallback}>La signature electronique est disponible sur la version web</Text>;
+    return <Text style={s.fallback}>{t("La signature electronique est disponible sur la version web")}</Text>;
   }
 
   return (
     <View style={s.container} data-testid="signature-pad">
       <View style={s.header}>
         <Ionicons name="create-outline" size={18} color="#2563EB" />
-        <Text style={s.title}>Signature electronique</Text>
+        <Text style={s.title}>{t("Signature electronique")}</Text>
         {signed && <View style={s.signedBadge}><Ionicons name="checkmark-circle" size={14} color="#10B981" /><Text style={s.signedText}>Signe</Text></View>}
       </View>
 
@@ -128,7 +129,7 @@ export default function SignaturePad({ contractId, onSigned, readOnly, existingS
         />
         {!hasSignature && !signed && (
           <View style={s.placeholder}>
-            <Text style={s.placeholderText}>Signez ici avec la souris ou le doigt</Text>
+            <Text style={s.placeholderText}>{t("Signez ici avec la souris ou le doigt")}</Text>
           </View>
         )}
       </View>
@@ -143,7 +144,7 @@ export default function SignaturePad({ contractId, onSigned, readOnly, existingS
             {saving ? <ActivityIndicator size="small" color="#FFF" /> : (
               <>
                 <Ionicons name="checkmark-done" size={16} color="#FFF" />
-                <Text style={s.signText}>Signer le contrat</Text>
+                <Text style={s.signText}>{t("Signer le contrat")}</Text>
               </>
             )}
           </TouchableOpacity>

@@ -6,6 +6,7 @@ import axios from 'axios';
 import VehicleCard from '../../src/components/VehicleCard';
 import { Vehicle } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -98,7 +99,7 @@ export default function AgencyPage() {
       {/* Hero */}
       <View style={styles.hero}>
         <View style={styles.heroOverlay}>
-          <Text style={styles.heroLabel}>BIENVENUE CHEZ</Text>
+          <Text style={styles.heroLabel}>{t("BIENVENUE CHEZ")}</Text>
           <Text style={[styles.heroTitle, isMobile && styles.heroTitleMobile]}>{agency.name}</Text>
           {agency.address && (
             <View style={styles.locationRow}>
@@ -109,7 +110,7 @@ export default function AgencyPage() {
           <View style={styles.statsRow}>
             <View style={styles.stat}>
               <Text style={styles.statNum}>{agency.vehicle_count}</Text>
-              <Text style={styles.statLabel}>Véhicules</Text>
+              <Text style={styles.statLabel}>{t("Véhicules")}</Text>
             </View>
             {agency.phone && (
               <View style={styles.stat}>
@@ -125,14 +126,14 @@ export default function AgencyPage() {
       {!isAuthenticated && (
         <View style={styles.authSection} data-testid="agency-auth-section">
           <Text style={styles.authTitle}>Rejoignez {agency.name}</Text>
-          <Text style={styles.authSub}>Créez votre compte pour réserver nos véhicules</Text>
+          <Text style={styles.authSub}>{t("Créez votre compte pour réserver nos véhicules")}</Text>
           <View style={styles.authBtns}>
             <TouchableOpacity style={styles.registerBtn} onPress={handleRegister} data-testid="agency-register-btn">
               <Ionicons name="person-add-outline" size={16} color="#FFF" />
-              <Text style={styles.registerBtnText}>Créer un compte</Text>
+              <Text style={styles.registerBtnText}>{t("Créer un compte")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.loginBtn} onPress={handleLogin} data-testid="agency-login-btn">
-              <Text style={styles.loginBtnText}>Déjà inscrit ? Se connecter</Text>
+              <Text style={styles.loginBtnText}>{t("Déjà inscrit ? Se connecter")}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -147,7 +148,7 @@ export default function AgencyPage() {
 
       {/* Vehicles */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Nos véhicules</Text>
+        <Text style={styles.sectionTitle}>{t("Nos véhicules")}</Text>
         <Text style={styles.sectionCount}>{vehicles.length} disponibles</Text>
       </View>
 
@@ -165,7 +166,7 @@ export default function AgencyPage() {
       {vehicles.length === 0 && (
         <View style={styles.empty}>
           <Ionicons name="car-outline" size={48} color={C.gray} />
-          <Text style={styles.emptyText}>Aucun véhicule disponible</Text>
+          <Text style={styles.emptyText}>{t("Aucun véhicule disponible")}</Text>
         </View>
       )}
 

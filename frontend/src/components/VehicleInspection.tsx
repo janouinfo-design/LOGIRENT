@@ -3,21 +3,22 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Modal, TextInput, Scro
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { WebcamCapture } from '../../src/components/WebcamCapture';
+import { t } from '../i18n';
 
 const ZONES = [
-  { key: 'pare_chocs_avant', label: 'Pare-chocs avant', icon: 'car-outline' },
-  { key: 'ailiere_gauche_avant', label: 'Ailiere G. avant', icon: 'arrow-back-outline' },
+  { key: 'pare_chocs_avant', label: t("Pare-chocs avant"), icon: 'car-outline' },
+  { key: 'ailiere_gauche_avant', label: t("Ailiere G. avant"), icon: 'arrow-back-outline' },
   { key: 'toit', label: 'Toit', icon: 'sunny-outline' },
-  { key: 'ailiere_droit_avant', label: 'Ailiere D. avant', icon: 'arrow-forward-outline' },
-  { key: 'porte_avant_gauche', label: 'Porte avant G.', icon: 'enter-outline' },
-  { key: 'roof', label: 'Toit central', icon: 'albums-outline' },
-  { key: 'porte_avant_droite', label: 'Porte avant D.', icon: 'exit-outline' },
-  { key: 'porte_arriere_gauche', label: 'Porte arriere G.', icon: 'enter-outline' },
+  { key: 'ailiere_droit_avant', label: t("Ailiere D. avant"), icon: 'arrow-forward-outline' },
+  { key: 'porte_avant_gauche', label: t("Porte avant G."), icon: 'enter-outline' },
+  { key: 'roof', label: t("Toit central"), icon: 'albums-outline' },
+  { key: 'porte_avant_droite', label: t("Porte avant D."), icon: 'exit-outline' },
+  { key: 'porte_arriere_gauche', label: t("Porte arriere G."), icon: 'enter-outline' },
   { key: 'coffre', label: 'Coffre', icon: 'cube-outline' },
-  { key: 'porte_arriere_droite', label: 'Porte arriere D.', icon: 'exit-outline' },
-  { key: 'ailiere_gauche_arriere', label: 'Ailiere G. arriere', icon: 'arrow-back-outline' },
-  { key: 'pare_chocs_arriere', label: 'Pare-chocs arriere', icon: 'car-outline' },
-  { key: 'ailier_droit_arriere', label: 'Ailier D. arriere', icon: 'arrow-forward-outline' },
+  { key: 'porte_arriere_droite', label: t("Porte arriere D."), icon: 'exit-outline' },
+  { key: 'ailiere_gauche_arriere', label: t("Ailiere G. arriere"), icon: 'arrow-back-outline' },
+  { key: 'pare_chocs_arriere', label: t("Pare-chocs arriere"), icon: 'car-outline' },
+  { key: 'ailier_droit_arriere', label: t("Ailier D. arriere"), icon: 'arrow-forward-outline' },
 ] as const;
 
 interface DamageData {
@@ -219,9 +220,9 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
               disabled={aiGlobalAnalyzing}
             >
               {aiGlobalAnalyzing ? (
-                <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Analyse IA...</Text></>
+                <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>{t("Analyse IA...")}</Text></>
               ) : (
-                <><Ionicons name="camera" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Scan IA (Camera)</Text></>
+                <><Ionicons name="camera" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>{t("Scan IA (Camera)")}</Text></>
               )}
             </TouchableOpacity>
             <TouchableOpacity
@@ -230,16 +231,14 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
               disabled={aiGlobalAnalyzing}
             >
               {aiGlobalAnalyzing ? (
-                <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Analyse IA...</Text></>
+                <><ActivityIndicator size="small" color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>{t("Analyse IA...")}</Text></>
               ) : (
-                <><Ionicons name="folder-open" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>Scan IA (Fichier)</Text></>
+                <><Ionicons name="folder-open" size={18} color="#7C3AED" /><Text style={{ color: '#7C3AED', fontSize: 12, fontWeight: '700' }}>{t("Scan IA (Fichier)")}</Text></>
               )}
             </TouchableOpacity>
           </View>
 
-          <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8, marginTop: 10, textAlign: 'center' }}>
-            Ou touchez une zone pour signaler manuellement
-          </Text>
+          <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8, marginTop: 10, textAlign: 'center' }}>{t("Ou touchez une zone pour signaler manuellement")}</Text>
           <View style={s.gridWrap}>
             {ZONES.map(zone => {
               const hasDamage = hasDamageCheck(zone.key);
@@ -284,7 +283,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
               <View key={zone.key} style={[s.damageRow, { borderColor: '#FCA5A540' }]}>
                 <Ionicons name="alert-circle" size={14} color="#EF4444" />
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#991B1B', fontSize: 11, fontWeight: '700' }}>{zone.label}</Text>
+                  <Text style={{ color: '#991B1B', fontSize: 11, fontWeight: '700' }}>{t(zone.label)}</Text>
                   {info.note ? <Text style={{ color: '#7F1D1D', fontSize: 12 }}>{info.note}</Text> : null}
                   {info.photos && info.photos.length > 0 && (
                     <View style={{ flexDirection: 'row', gap: 4, marginTop: 4 }}>
@@ -318,14 +317,12 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
               </TouchableOpacity>
             </View>
 
-            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 10 }}>
-              Decrivez le dommage et ajoutez des photos
-            </Text>
+            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 10 }}>{t("Decrivez le dommage et ajoutez des photos")}</Text>
             <TextInput
               style={[s.noteInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]}
               value={noteText}
               onChangeText={setNoteText}
-              placeholder="Ex: Rayure 10cm, bosse legere..."
+              placeholder={t("Ex: Rayure 10cm, bosse legere...")}
               placeholderTextColor={C.textLight + '80'}
               multiline
               numberOfLines={3}
@@ -333,7 +330,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
             />
 
             {/* Photos */}
-            <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginTop: 10, marginBottom: 6, textTransform: 'uppercase' }}>PHOTOS DE LA ZONE</Text>
+            <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginTop: 10, marginBottom: 6, textTransform: 'uppercase' }}>{t("PHOTOS DE LA ZONE")}</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
               {zonePhotos.map((photo, idx) => (
                 <View key={idx} style={{ position: 'relative' }}>
@@ -364,9 +361,9 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
                 disabled={aiAnalyzing}
               >
                 {aiAnalyzing ? (
-                  <><ActivityIndicator size="small" color="#10B981" /><Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>Analyse IA en cours...</Text></>
+                  <><ActivityIndicator size="small" color="#10B981" /><Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>{t("Analyse IA en cours...")}</Text></>
                 ) : (
-                  <><Ionicons name="sparkles" size={16} color="#10B981" /><Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>Analyser avec IA</Text></>
+                  <><Ionicons name="sparkles" size={16} color="#10B981" /><Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>{t("Analyser avec IA")}</Text></>
                 )}
               </TouchableOpacity>
             )}
@@ -394,7 +391,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
               >
                 <Ionicons name="checkmark" size={16} color="#fff" />
                 <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>
-                  {(noteText.trim() || zonePhotos.length > 0) ? 'Enregistrer' : 'Aucun dommage'}
+                  {(noteText.trim() || zonePhotos.length > 0) ? 'Enregistrer' : t("Aucun dommage")}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -407,7 +404,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
         visible={showGlobalWebcam}
         onClose={() => setShowGlobalWebcam(false)}
         onCapture={handleGlobalWebcamCapture}
-        title="Scan IA - Photographier le vehicule"
+        title={t("Scan IA - Photographier le vehicule")}
       />
     </View>
   );

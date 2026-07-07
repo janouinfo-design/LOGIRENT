@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import Svg, { Rect, Text as SvgText, Line, G, Path } from 'react-native-svg';
+import { t } from '../../src/i18n';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -27,7 +28,7 @@ interface AdvancedStats {
 }
 
 function BarChart({ data, labelKey, valueKey, color, height = 150, C }: any) {
-  if (!data || data.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>;
+  if (!data || data.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>;
   const chartW = SCREEN_W - 80;
   const maxVal = Math.max(...data.map((d: any) => d[valueKey]), 1);
   const barW = Math.min(36, (chartW - 20) / data.length - 4);
@@ -134,22 +135,22 @@ export default function SuperAdminStatistics() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <Text style={[s.title, { color: C.text }]}>Statistiques Globales</Text>
-      <Text style={[s.subtitle, { color: C.textLight }]}>Vue d'ensemble de toutes les agences</Text>
+      <Text style={[s.title, { color: C.text }]}>{t("Statistiques Globales")}</Text>
+      <Text style={[s.subtitle, { color: C.textLight }]}>{t("Vue d'ensemble de toutes les agences")}</Text>
 
       {/* KPIs */}
       <View style={s.kpiRow}>
         {[
-          { icon: 'cash', label: 'Revenu (mois)', value: `CHF ${stats.revenue_this_month.toFixed(0)}`, color: C.success, trend: stats.revenue_change_pct },
-          { icon: 'calendar', label: 'Réservations', value: `${stats.reservations_this_month}`, color: C.gold },
-          { icon: 'time', label: 'Durée moy.', value: `${stats.avg_booking_duration}j`, color: C.info },
-          { icon: 'wallet', label: 'Panier moy.', value: `CHF ${stats.avg_revenue_per_reservation.toFixed(0)}`, color: C.purple },
+          { icon: 'cash', label: t("Revenu (mois)"), value: `CHF ${stats.revenue_this_month.toFixed(0)}`, color: C.success, trend: stats.revenue_change_pct },
+          { icon: 'calendar', label: t("Réservations"), value: `${stats.reservations_this_month}`, color: C.gold },
+          { icon: 'time', label: t("Durée moy."), value: `${stats.avg_booking_duration}j`, color: C.info },
+          { icon: 'wallet', label: t("Panier moy."), value: `CHF ${stats.avg_revenue_per_reservation.toFixed(0)}`, color: C.purple },
           { icon: 'business', label: 'Agences', value: `${agencies.length}`, color: C.accent },
-          { icon: 'people', label: 'Nvx clients (30j)', value: `${stats.new_clients_30d}`, color: C.success },
+          { icon: 'people', label: t("Nvx clients (30j)"), value: `${stats.new_clients_30d}`, color: C.success },
         ].map((kpi, i) => (
           <View key={i} style={[s.kpiCard, { borderTopColor: kpi.color }]} data-testid={`sa-kpi-${i}`}>
             <Ionicons name={kpi.icon as any} size={20} color={kpi.color} />
-            <Text style={s.kpiLabel}>{kpi.label}</Text>
+            <Text style={s.kpiLabel}>{t(kpi.label)}</Text>
             <Text style={s.kpiValue}>{kpi.value}</Text>
             {kpi.trend !== undefined && (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
@@ -163,7 +164,7 @@ export default function SuperAdminStatistics() {
 
       {/* Daily Revenue Chart */}
       <View style={s.section}>
-        <Text style={s.sectionTitle}>Revenu Journalier (30 derniers jours)</Text>
+        <Text style={s.sectionTitle}>{t("Revenu Journalier (30 derniers jours)")}</Text>
         <View style={s.chartCard}>
           <BarChart data={stats.daily_revenue} labelKey="date" valueKey="revenue" color={C.accent} C={C} />
         </View>
@@ -171,7 +172,7 @@ export default function SuperAdminStatistics() {
 
       {/* Weekly Trends */}
       <View style={s.section}>
-        <Text style={s.sectionTitle}>Tendances Hebdomadaires</Text>
+        <Text style={s.sectionTitle}>{t("Tendances Hebdomadaires")}</Text>
         <View style={s.chartCard}>
           <BarChart data={stats.weekly_trends} labelKey="week" valueKey="revenue" color={C.info} height={120} C={C} />
         </View>
@@ -179,7 +180,7 @@ export default function SuperAdminStatistics() {
 
       {/* Utilization */}
       <View style={s.section}>
-        <Text style={s.sectionTitle}>Taux d'Utilisation des Véhicules</Text>
+        <Text style={s.sectionTitle}>{t("Taux d'Utilisation des Véhicules")}</Text>
         <View style={s.chartCard}>
           {stats.vehicle_utilization.slice(0, 10).map((v, i) => (
             <View key={v.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: i < 9 ? 8 : 0 }}>
@@ -190,14 +191,14 @@ export default function SuperAdminStatistics() {
               <Text style={{ color: C.text, fontSize: 11, fontWeight: '700', width: 40, textAlign: 'right' }}>{v.utilization}%</Text>
             </View>
           ))}
-          {stats.vehicle_utilization.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>}
+          {stats.vehicle_utilization.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>}
         </View>
       </View>
 
       {/* Revenue per vehicle + Payment Methods + Cancellation */}
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <Text style={s.sectionTitle}>Top Revenus par Véhicule</Text>
+          <Text style={s.sectionTitle}>{t("Top Revenus par Véhicule")}</Text>
           <View style={s.chartCard}>
             {stats.revenue_per_vehicle.slice(0, 5).map((v, i) => (
               <View key={v.id} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
@@ -213,7 +214,7 @@ export default function SuperAdminStatistics() {
         </View>
 
         <View style={{ flex: 1 }}>
-          <Text style={s.sectionTitle}>Modes de Paiement</Text>
+          <Text style={s.sectionTitle}>{t("Modes de Paiement")}</Text>
           <View style={s.chartCard}>
             <DonutChart segments={stats.payment_methods.map(pm => ({
               label: pm.method === 'cash' ? 'Espèces' : pm.method === 'card' ? 'Carte' : pm.method,
@@ -225,7 +226,7 @@ export default function SuperAdminStatistics() {
           <View style={[s.chartCard, { marginTop: 12, alignItems: 'center', paddingVertical: 16 }]}>
             <Ionicons name="close-circle" size={22} color={C.error} />
             <Text style={{ color: C.text, fontSize: 24, fontWeight: '800', marginTop: 4 }}>{stats.cancellation_rate}%</Text>
-            <Text style={{ color: C.textLight, fontSize: 11 }}>Taux d'annulation</Text>
+            <Text style={{ color: C.textLight, fontSize: 11 }}>{t("Taux d'annulation")}</Text>
           </View>
         </View>
       </View>
@@ -233,7 +234,7 @@ export default function SuperAdminStatistics() {
       {/* Revenue by month from basic stats */}
       {basicStats?.revenue_by_month?.length > 0 && (
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Revenu Mensuel (6 mois)</Text>
+          <Text style={s.sectionTitle}>{t("Revenu Mensuel (6 mois)")}</Text>
           <View style={s.chartCard}>
             <BarChart data={basicStats.revenue_by_month} labelKey="month" valueKey="revenue" color={C.success} height={130} C={C} />
           </View>
@@ -243,7 +244,7 @@ export default function SuperAdminStatistics() {
       {/* Agency Comparison */}
       {agencyComparison.length > 0 && (
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Comparaison par Agence</Text>
+          <Text style={s.sectionTitle}>{t("Comparaison par Agence")}</Text>
           <View style={s.chartCard}>
             {agencyComparison.filter(a => a.revenue > 0 || a.bookings > 0 || a.vehicles > 0).map((a, i) => (
               <View key={a.id} style={[{ paddingVertical: 12 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
@@ -277,7 +278,7 @@ export default function SuperAdminStatistics() {
       {/* Top Clients */}
       {topClients.length > 0 && (
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Top Clients</Text>
+          <Text style={s.sectionTitle}>{t("Top Clients")}</Text>
           <View style={s.chartCard}>
             {topClients.slice(0, 8).map((c, i) => {
               const rColors: Record<string, string> = { vip: '#8B5CF6', good: C.success, neutral: '#6B7280', bad: C.gold, blocked: C.error };
@@ -302,13 +303,13 @@ export default function SuperAdminStatistics() {
       <View style={s.section} data-testid="sa-revenue-forecast">
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Ionicons name="sparkles" size={18} color={C.purple} />
-          <Text style={s.sectionTitle}>Prévisions de Revenus (IA)</Text>
+          <Text style={s.sectionTitle}>{t("Prévisions de Revenus (IA)")}</Text>
         </View>
         <View style={[s.chartCard, { borderColor: C.purple + '40' }]}>
           {forecastLoading ? (
             <View style={{ alignItems: 'center', padding: 24 }}>
               <ActivityIndicator size="small" color={C.purple} />
-              <Text style={{ color: C.textLight, fontSize: 11, marginTop: 8 }}>Analyse IA en cours...</Text>
+              <Text style={{ color: C.textLight, fontSize: 11, marginTop: 8 }}>{t("Analyse IA en cours...")}</Text>
             </View>
           ) : forecastData ? (
             <>
@@ -318,7 +319,7 @@ export default function SuperAdminStatistics() {
                   ...(forecastData.historical || []).map((h: any) => ({ ...h, type: 'historical' })),
                   ...(forecastData.forecast || []).map((f: any) => ({ ...f, type: 'forecast' })),
                 ];
-                if (allData.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>;
+                if (allData.length === 0) return <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>;
                 const chartW = SCREEN_W - 80;
                 const chartH = 140;
                 const maxVal = Math.max(...allData.map(d => d.revenue), 1);
@@ -357,7 +358,7 @@ export default function SuperAdminStatistics() {
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
                   <View style={{ width: 12, height: 8, borderRadius: 2, backgroundColor: C.purple, opacity: 0.6 }} />
-                  <Text style={{ color: C.textLight, fontSize: 10 }}>Prévision IA</Text>
+                  <Text style={{ color: C.textLight, fontSize: 10 }}>{t("Prévision IA")}</Text>
                 </View>
               </View>
 
@@ -393,7 +394,7 @@ export default function SuperAdminStatistics() {
               )}
             </>
           ) : (
-            <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Prévision non disponible</Text>
+            <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Prévision non disponible")}</Text>
           )}
         </View>
       </View>

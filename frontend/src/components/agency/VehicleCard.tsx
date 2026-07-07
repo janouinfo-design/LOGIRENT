@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Vehicle, getStatus, getPhotoUrl } from './vehicleTypes';
+import { t } from '../../i18n';
 
 interface Props {
   item: Vehicle;
@@ -42,7 +43,7 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onDelete, 
         )}
         <View style={[s.badge, { backgroundColor: sc.bg, borderColor: sc.border }]} data-testid={`vehicle-status-${item.id}`}>
           <View style={[s.dot, { backgroundColor: sc.text }]} />
-          <Text style={[s.badgeText, { color: sc.text }]}>{sc.label}</Text>
+          <Text style={[s.badgeText, { color: sc.text }]}>{t(sc.label)}</Text>
         </View>
         {photoCount > 1 && (
           <View style={s.photoBadge}>

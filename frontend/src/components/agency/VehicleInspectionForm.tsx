@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Activi
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../api/axios';
 import DamageAnalyzer from './DamageAnalyzer';
+import { t } from '../../i18n';
 
 const C = { accent: '#7C3AED', bg: '#F9FAFB', card: '#FFF', text: '#111827', textLight: '#6B7280', border: '#E5E7EB', success: '#10B981', error: '#EF4444', warning: '#F59E0B', blue: '#2563EB' };
 
@@ -104,11 +105,11 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
       <View style={s.metricsRow}>
         <View style={s.metricCard}>
           <Text style={s.metricLabel}>Kilometrage</Text>
-          <TextInput style={s.metricInput} value={kmReading} onChangeText={setKmReading} keyboardType="numeric" placeholder="Ex: 45200" placeholderTextColor={C.textLight} editable={!isReadOnly} data-testid="km-input" />
+          <TextInput style={s.metricInput} value={kmReading} onChangeText={setKmReading} keyboardType="numeric" placeholder={t("Ex: 45200")} placeholderTextColor={C.textLight} editable={!isReadOnly} data-testid="km-input" />
           <Text style={s.metricUnit}>km</Text>
         </View>
         <View style={s.metricCard}>
-          <Text style={s.metricLabel}>Niveau carburant</Text>
+          <Text style={s.metricLabel}>{t("Niveau carburant")}</Text>
           <View style={s.fuelRow}>
             {FUEL_LEVELS.map(level => (
               <TouchableOpacity key={level} style={[s.fuelBtn, fuelLevel === level && s.fuelBtnActive]} onPress={() => !isReadOnly && setFuelLevel(level)} data-testid={`fuel-${level}`}>
@@ -120,7 +121,7 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
       </View>
 
       {/* Checklist */}
-      <Text style={s.sectionTitle}>Checklist vehicule</Text>
+      <Text style={s.sectionTitle}>{t("Checklist vehicule")}</Text>
       {items.map((item, i) => (
         <View key={i} style={[s.checkItem, item.condition === 'damaged' && s.checkItemDamaged]} data-testid={`check-item-${i}`}>
           <TouchableOpacity style={s.checkRow} onPress={() => !isReadOnly && toggleItem(i)}>
@@ -130,18 +131,18 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
           <View style={s.conditionRow}>
             {Object.entries(CONDITIONS).map(([key, val]) => (
               <TouchableOpacity key={key} style={[s.condBtn, item.condition === key && { backgroundColor: val.color, borderColor: val.color }]} onPress={() => !isReadOnly && setCondition(i, key)}>
-                <Text style={[s.condText, item.condition === key && { color: '#FFF' }]}>{val.label}</Text>
+                <Text style={[s.condText, item.condition === key && { color: '#FFF' }]}>{t(val.label)}</Text>
               </TouchableOpacity>
             ))}
           </View>
           {(item.condition !== 'ok' || item.notes) && (
-            <TextInput style={s.itemNotes} placeholder="Notes..." placeholderTextColor={C.textLight} value={item.notes} onChangeText={v => !isReadOnly && setItemNotes(i, v)} multiline data-testid={`item-notes-${i}`} />
+            <TextInput style={s.itemNotes} placeholder={t("Notes...")} placeholderTextColor={C.textLight} value={item.notes} onChangeText={v => !isReadOnly && setItemNotes(i, v)} multiline data-testid={`item-notes-${i}`} />
           )}
         </View>
       ))}
 
       {/* AI Damage Detection */}
-      <Text style={s.sectionTitle}>Detection de dommages IA</Text>
+      <Text style={s.sectionTitle}>{t("Detection de dommages IA")}</Text>
       <DamageAnalyzer
         inspectionId={existing?.id}
         context={type}
@@ -154,8 +155,8 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
       />
 
       {/* General Notes */}
-      <Text style={s.sectionTitle}>Remarques generales</Text>
-      <TextInput style={s.generalNotes} placeholder="Notes supplementaires..." placeholderTextColor={C.textLight} value={notes} onChangeText={v => !isReadOnly && setNotes(v)} multiline numberOfLines={3} editable={!isReadOnly} data-testid="general-notes" />
+      <Text style={s.sectionTitle}>{t("Remarques generales")}</Text>
+      <TextInput style={s.generalNotes} placeholder={t("Notes supplementaires...")} placeholderTextColor={C.textLight} value={notes} onChangeText={v => !isReadOnly && setNotes(v)} multiline numberOfLines={3} editable={!isReadOnly} data-testid="general-notes" />
 
       {/* Submit */}
       {!isReadOnly && (
@@ -163,13 +164,13 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
           {saving ? <ActivityIndicator size="small" color="#FFF" /> : (
             <>
               <Ionicons name="checkmark-done" size={18} color="#FFF" />
-              <Text style={s.submitText}>Valider l'etat des lieux</Text>
+              <Text style={s.submitText}>{t("Valider l'etat des lieux")}</Text>
             </>
           )}
         </TouchableOpacity>
       )}
       {!allChecked && !isReadOnly && (
-        <Text style={s.hint}>Cochez tous les elements pour valider</Text>
+        <Text style={s.hint}>{t("Cochez tous les elements pour valider")}</Text>
       )}
     </ScrollView>
   );

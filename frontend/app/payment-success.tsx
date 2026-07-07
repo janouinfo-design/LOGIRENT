@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useReservationStore } from '../src/store/reservationStore';
 import Button from '../src/components/Button';
+import { t } from '../src/i18n';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -66,8 +67,8 @@ export default function PaymentSuccessScreen() {
         {status === 'loading' && (
           <>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.title}>Processing Payment</Text>
-            <Text style={styles.subtitle}>Please wait while we confirm your payment...</Text>
+            <Text style={styles.title}>{t("Processing Payment")}</Text>
+            <Text style={styles.subtitle}>{t("Please wait while we confirm your payment...")}</Text>
           </>
         )}
 
@@ -76,17 +77,15 @@ export default function PaymentSuccessScreen() {
             <View style={styles.iconContainer}>
               <Ionicons name="checkmark-circle" size={80} color={COLORS.success} />
             </View>
-            <Text style={styles.title}>Payment Successful!</Text>
-            <Text style={styles.subtitle}>
-              Your reservation has been confirmed. Check your email for details.
-            </Text>
+            <Text style={styles.title}>{t("Payment Successful!")}</Text>
+            <Text style={styles.subtitle}>{t("Your reservation has been confirmed. Check your email for details.")}</Text>
             <View style={styles.buttons}>
               <Button
-                title="View My Reservations"
+                title={t("View My Reservations")}
                 onPress={() => router.replace('/(tabs)/reservations')}
               />
               <Button
-                title="Back to Home"
+                title={t("Back to Home")}
                 onPress={() => router.replace('/(tabs)')}
                 variant="outline"
               />
@@ -99,17 +98,15 @@ export default function PaymentSuccessScreen() {
             <View style={styles.iconContainer}>
               <Ionicons name="close-circle" size={80} color={COLORS.error} />
             </View>
-            <Text style={styles.title}>Payment Issue</Text>
-            <Text style={styles.subtitle}>
-              We couldn't confirm your payment. Please contact support or try again.
-            </Text>
+            <Text style={styles.title}>{t("Payment Issue")}</Text>
+            <Text style={styles.subtitle}>{t("We couldn't confirm your payment. Please contact support or try again.")}</Text>
             <View style={styles.buttons}>
               <Button
-                title="View My Reservations"
+                title={t("View My Reservations")}
                 onPress={() => router.replace('/(tabs)/reservations')}
               />
               <Button
-                title="Back to Home"
+                title={t("Back to Home")}
                 onPress={() => router.replace('/(tabs)')}
                 variant="outline"
               />

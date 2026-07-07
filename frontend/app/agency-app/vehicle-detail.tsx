@@ -6,6 +6,7 @@ import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import { getPhotoUrl } from '../../src/components/agency/vehicleTypes';
 import AvailabilityCalendarModal from '../../src/components/AvailabilityCalendarModal';
+import { t } from '../../src/i18n';
 
 const ACCENT = '#7C3AED';
 
@@ -33,7 +34,7 @@ export default function VehicleDetail() {
   }, [id]);
 
   if (loading) return <View style={[p.center, { backgroundColor: C.bg }]}><ActivityIndicator size="large" color={ACCENT} /></View>;
-  if (!vehicle) return <View style={[p.center, { backgroundColor: C.bg }]}><Text style={{ color: C.text }}>Vehicule introuvable</Text></View>;
+  if (!vehicle) return <View style={[p.center, { backgroundColor: C.bg }]}><Text style={{ color: C.text }}>{t("Vehicule introuvable")}</Text></View>;
 
   const photos = vehicle.photos || [];
   const photoUrl = photos[photoIdx] ? getPhotoUrl(photos[photoIdx]) : null;
@@ -56,17 +57,17 @@ export default function VehicleDetail() {
   ];
 
   const conditions = [
-    { icon: 'person', label: 'Age minimum', value: '21 ans' },
+    { icon: 'person', label: t("Age minimum"), value: '21 ans' },
     { icon: 'card', label: 'Caution', value: 'CHF 1\'500' },
     { icon: 'document-text', label: 'Permis', value: 'B valide depuis 2 ans' },
     { icon: 'shield-checkmark', label: 'Assurance', value: 'Incluse (RC + CDW)' },
-    { icon: 'speedometer', label: 'Km inclus', value: '200 km/jour' },
+    { icon: 'speedometer', label: t("Km inclus"), value: '200 km/jour' },
   ];
 
   const reviews = [
-    { name: 'Marc D.', rating: 5, text: 'Vehicule impeccable, service rapide et professionnel. Je recommande !', date: 'Il y a 2 semaines' },
+    { name: 'Marc D.', rating: 5, text: t("Vehicule impeccable, service rapide et professionnel. Je recommande !"), date: 'Il y a 2 semaines' },
     { name: 'Sophie L.', rating: 5, text: `${vehicle.brand} parfaite pour un week-end. Tres propre, bien entretenue.`, date: 'Il y a 1 mois' },
-    { name: 'Pierre M.', rating: 4, text: 'Bonne experience, vehicule conforme aux photos. Petit retard a la livraison.', date: 'Il y a 2 mois' },
+    { name: 'Pierre M.', rating: 4, text: t("Bonne experience, vehicule conforme aux photos. Petit retard a la livraison."), date: 'Il y a 2 mois' },
   ];
 
   const goPhoto = (dir: number) => {
@@ -176,7 +177,7 @@ export default function VehicleDetail() {
               {specs.map((s, i) => (
                 <View key={i} style={[p.specCard, { backgroundColor: C.card, borderColor: C.border }]}>
                   <Ionicons name={s.icon as any} size={22} color={ACCENT} />
-                  <Text style={[p.specLabel, { color: C.text }]}>{s.label}</Text>
+                  <Text style={[p.specLabel, { color: C.text }]}>{t(s.label)}</Text>
                 </View>
               ))}
             </View>
@@ -200,21 +201,21 @@ export default function VehicleDetail() {
             )}
 
             {/* Conditions */}
-            <Text style={[p.sectionTitle, { color: C.text }]}>Conditions de location</Text>
+            <Text style={[p.sectionTitle, { color: C.text }]}>{t("Conditions de location")}</Text>
             <View style={[p.conditionsCard, { backgroundColor: C.card, borderColor: C.border }]}>
               {conditions.map((c, i) => (
                 <View key={i} style={[p.condRow, i < conditions.length - 1 && { borderBottomWidth: 1, borderBottomColor: C.border }]}>
                   <View style={[p.condIcon, { backgroundColor: ACCENT + '10' }]}>
                     <Ionicons name={c.icon as any} size={18} color={ACCENT} />
                   </View>
-                  <Text style={[p.condLabel, { color: C.textLight }]}>{c.label}</Text>
+                  <Text style={[p.condLabel, { color: C.textLight }]}>{t(c.label)}</Text>
                   <Text style={[p.condValue, { color: C.text }]}>{c.value}</Text>
                 </View>
               ))}
             </View>
 
             {/* Reviews */}
-            <Text style={[p.sectionTitle, { color: C.text }]}>Avis clients</Text>
+            <Text style={[p.sectionTitle, { color: C.text }]}>{t("Avis clients")}</Text>
             {reviews.map((r, i) => (
               <View key={i} style={[p.reviewCard, { backgroundColor: C.card, borderColor: C.border }]}>
                 <View style={p.reviewHead}>
@@ -240,7 +241,7 @@ export default function VehicleDetail() {
           <View style={[p.rightCol, isWide && { width: 340 }]}>
             <View style={[p.bookingCard, { backgroundColor: C.card, borderColor: C.border }]}>
               {/* Price */}
-              <Text style={[p.priceFrom, { color: C.textLight }]}>A partir de</Text>
+              <Text style={[p.priceFrom, { color: C.textLight }]}>{t("A partir de")}</Text>
               <View style={p.priceRow}>
                 <Text style={[p.priceBig, { color: C.text }]}>CHF {vehicle.price_per_day}</Text>
                 <Text style={[p.priceUnit, { color: C.textLight }]}> /jour</Text>
@@ -253,27 +254,27 @@ export default function VehicleDetail() {
 
               {/* CTA */}
               <TouchableOpacity style={p.ctaPrimary} data-testid="reserve-now-btn" activeOpacity={0.85} onPress={() => router.push({ pathname: '/booking/[id]', params: { id: vehicle.id } })}>
-                <Text style={p.ctaPrimaryText}>Reserver maintenant</Text>
+                <Text style={p.ctaPrimaryText}>{t("Reserver maintenant")}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
               <TouchableOpacity style={[p.ctaSecondary, { borderColor: C.border }]} data-testid="check-availability-btn" activeOpacity={0.7} onPress={() => setAvailabilityOpen(true)}>
                 <Ionicons name="calendar-outline" size={18} color={ACCENT} />
-                <Text style={[p.ctaSecondaryText, { color: ACCENT }]}>Voir la disponibilite</Text>
+                <Text style={[p.ctaSecondaryText, { color: ACCENT }]}>{t("Voir la disponibilite")}</Text>
               </TouchableOpacity>
 
               {/* Trust signals */}
               <View style={[p.trustRow, { borderTopColor: C.border }]}>
                 <View style={p.trustItem}>
                   <Ionicons name="shield-checkmark" size={16} color="#10B981" />
-                  <Text style={[p.trustText, { color: C.textLight }]}>Assurance incluse</Text>
+                  <Text style={[p.trustText, { color: C.textLight }]}>{t("Assurance incluse")}</Text>
                 </View>
                 <View style={p.trustItem}>
                   <Ionicons name="close-circle" size={16} color="#10B981" />
-                  <Text style={[p.trustText, { color: C.textLight }]}>Annulation gratuite</Text>
+                  <Text style={[p.trustText, { color: C.textLight }]}>{t("Annulation gratuite")}</Text>
                 </View>
                 <View style={p.trustItem}>
                   <Ionicons name="flash" size={16} color="#10B981" />
-                  <Text style={[p.trustText, { color: C.textLight }]}>Confirmation instantanee</Text>
+                  <Text style={[p.trustText, { color: C.textLight }]}>{t("Confirmation instantanee")}</Text>
                 </View>
               </View>
             </View>

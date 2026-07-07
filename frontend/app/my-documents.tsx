@@ -4,18 +4,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../src/api/axios';
+import { t } from '../src/i18n';
 
 const ACCENT = '#7C3AED';
 
 const DOC_TYPES = [
-  { key: 'id_card_front', label: 'Carte identite (recto)', icon: 'card', color: '#3B82F6' },
-  { key: 'id_card_back', label: 'Carte identite (verso)', icon: 'card-outline', color: '#3B82F6' },
-  { key: 'license_front', label: 'Permis conduire (recto)', icon: 'car', color: '#10B981' },
-  { key: 'license_back', label: 'Permis conduire (verso)', icon: 'car-outline', color: '#10B981' },
+  { key: 'id_card_front', label: t("Carte identite (recto)"), icon: 'card', color: '#3B82F6' },
+  { key: 'id_card_back', label: t("Carte identite (verso)"), icon: 'card-outline', color: '#3B82F6' },
+  { key: 'license_front', label: t("Permis conduire (recto)"), icon: 'car', color: '#10B981' },
+  { key: 'license_back', label: t("Permis conduire (verso)"), icon: 'car-outline', color: '#10B981' },
 ];
 
 const STATUS_MAP: Record<string, { bg: string; text: string; label: string; icon: string }> = {
-  pending: { bg: '#F59E0B15', text: '#B45309', label: 'En verification', icon: 'time-outline' },
+  pending: { bg: '#F59E0B15', text: '#B45309', label: t("En verification"), icon: 'time-outline' },
   validated: { bg: '#10B98115', text: '#059669', label: 'Valide', icon: 'checkmark-circle' },
   rejected: { bg: '#EF444415', text: '#DC2626', label: 'Rejete', icon: 'close-circle' },
 };
@@ -42,7 +43,7 @@ export default function MyDocumentsScreen() {
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'Autorisez la camera pour scanner vos documents.');
+        Alert.alert(t("Permission requise"), t("Autorisez la camera pour scanner vos documents."));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -86,7 +87,7 @@ export default function MyDocumentsScreen() {
         filename: `${docType}.jpg`,
       });
       await fetchDocs();
-      Alert.alert('Succes', 'Document envoye - Analyse OCR en cours...');
+      Alert.alert(t("Succes"), t("Document envoye - Analyse OCR en cours..."));
       // Poll for OCR completion
       setTimeout(() => fetchDocs(), 6000);
       setTimeout(() => fetchDocs(), 15000);
@@ -112,8 +113,8 @@ export default function MyDocumentsScreen() {
             <Ionicons name="arrow-back" size={22} color="#374151" />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
-            <Text style={s.title}>Mes documents</Text>
-            <Text style={s.subtitle}>Scannez vos pieces d'identite et permis</Text>
+            <Text style={s.title}>{t("Mes documents")}</Text>
+            <Text style={s.subtitle}>{t("Scannez vos pieces d'identite et permis")}</Text>
           </View>
         </View>
 
@@ -121,7 +122,7 @@ export default function MyDocumentsScreen() {
         <View style={s.progressCard}>
           <View style={s.progressHeader}>
             <Ionicons name="shield-checkmark" size={24} color="#fff" />
-            <Text style={s.progressTitle}>Verification d'identite</Text>
+            <Text style={s.progressTitle}>{t("Verification d'identite")}</Text>
           </View>
           <Text style={s.progressDesc}>
             {completedCount}/4 documents valides
@@ -130,9 +131,7 @@ export default function MyDocumentsScreen() {
             <View style={[s.progressFill, { width: `${(completedCount / 4) * 100}%` }]} />
           </View>
           {completedCount < 4 && (
-            <Text style={s.progressHint}>
-              Scannez vos documents pour completer votre verification et pouvoir reserver.
-            </Text>
+            <Text style={s.progressHint}>{t("Scannez vos documents pour completer votre verification et pouvoir reserver.")}</Text>
           )}
         </View>
 
@@ -149,11 +148,11 @@ export default function MyDocumentsScreen() {
                   <Ionicons name={dt.icon as any} size={22} color={dt.color} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={s.docLabel}>{dt.label}</Text>
+                  <Text style={s.docLabel}>{t(dt.label)}</Text>
                   {sm && (
                     <View style={[s.statusBadge, { backgroundColor: sm.bg }]}>
                       <Ionicons name={sm.icon as any} size={12} color={sm.text} />
-                      <Text style={{ color: sm.text, fontSize: 11, fontWeight: '700' }}>{sm.label}</Text>
+                      <Text style={{ color: sm.text, fontSize: 11, fontWeight: '700' }}>{t(sm.label)}</Text>
                     </View>
                   )}
                 </View>
@@ -177,7 +176,7 @@ export default function MyDocumentsScreen() {
                     color: existing.ocr_status === 'completed' ? '#059669' : existing.ocr_status === 'processing' ? '#B45309' : '#DC2626'
                   }}>
                     {existing.ocr_status === 'completed' ? `OCR: Donnees extraites (${existing.ocr_confidence || 0}%)` :
-                     existing.ocr_status === 'processing' ? 'Analyse OCR en cours...' : 'OCR echoue'}
+                     existing.ocr_status === 'processing' ? t("Analyse OCR en cours...") : t("OCR echoue")}
                   </Text>
                 </View>
               )}
@@ -185,7 +184,7 @@ export default function MyDocumentsScreen() {
               {isUploading ? (
                 <View style={s.uploadingState}>
                   <ActivityIndicator color={ACCENT} />
-                  <Text style={{ color: '#6B7280', fontSize: 13 }}>Envoi en cours...</Text>
+                  <Text style={{ color: '#6B7280', fontSize: 13 }}>{t("Envoi en cours...")}</Text>
                 </View>
               ) : (
                 <View style={s.docActions}>
@@ -206,9 +205,7 @@ export default function MyDocumentsScreen() {
         {/* Info */}
         <View style={s.infoCard}>
           <Ionicons name="information-circle" size={20} color="#3B82F6" />
-          <Text style={s.infoText}>
-            Vos documents sont stockes de maniere securisee et seront verifies par notre equipe dans les 24h.
-          </Text>
+          <Text style={s.infoText}>{t("Vos documents sont stockes de maniere securisee et seront verifies par notre equipe dans les 24h.")}</Text>
         </View>
       </ScrollView>
     </View>

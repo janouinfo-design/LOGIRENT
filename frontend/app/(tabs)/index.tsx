@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useVehicleStore } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
 import VehicleCard from '../../src/components/VehicleCard';
-import { useI18n } from '../../src/i18n';
+import { useI18n, t } from '../../src/i18n';
 import { useThemeStore } from '../../src/store/themeStore';
 
 const vehicleTypes = [
@@ -86,7 +86,7 @@ export default function HomeScreen() {
   // ==================== SEARCH SIDEBAR (Desktop) ====================
   const SearchPanel = () => (
     <View style={[st.searchPanel, { backgroundColor: C.card, borderColor: C.border }]} data-testid="search-panel">
-      <Text style={[st.searchTitle, { color: C.text }]}>Rechercher un véhicule</Text>
+      <Text style={[st.searchTitle, { color: C.text }]}>{t("Rechercher un véhicule")}</Text>
 
       <TouchableOpacity
         style={[st.searchBar, { borderColor: C.border, backgroundColor: C.bg }]}
@@ -98,7 +98,7 @@ export default function HomeScreen() {
       </TouchableOpacity>
 
       {/* Quick Filters */}
-      <Text style={[st.filterLabel, { color: C.textLight }]}>Catégories</Text>
+      <Text style={[st.filterLabel, { color: C.textLight }]}>{t("Catégories")}</Text>
       <View style={st.filterGrid}>
         {vehicleTypes.map(type => {
           const active = selectedType === type.id;
@@ -120,7 +120,7 @@ export default function HomeScreen() {
       <View style={[st.statsBox, { backgroundColor: C.bg }]}>
         <View style={st.stat}>
           <Text style={[st.statNum, { color: '#7C3AED' }]}>{vehicles.length}+</Text>
-          <Text style={[st.statLabel, { color: C.textLight }]}>{lang === 'fr' ? 'Véhicules' : 'Vehicles'}</Text>
+          <Text style={[st.statLabel, { color: C.textLight }]}>{lang === 'fr' ? t("Véhicules") : 'Vehicles'}</Text>
         </View>
         <View style={st.stat}>
           <Text style={[st.statNum, { color: '#7C3AED' }]}>24/7</Text>
@@ -168,8 +168,8 @@ export default function HomeScreen() {
               <Text style={st.headerTitle}>LogiRent</Text>
             </View>
             <View style={st.headerRight}>
-              <Text style={st.headerSub}>{lang === 'fr' ? 'Location de véhicules' : 'Vehicle Rental'}</Text>
-              <Text style={st.headerStat}>{vehicles.length} {lang === 'fr' ? 'véhicules disponibles' : 'vehicles available'}</Text>
+              <Text style={st.headerSub}>{lang === 'fr' ? t("Location de véhicules") : t("Vehicle Rental")}</Text>
+              <Text style={st.headerStat}>{vehicles.length} {lang === 'fr' ? t("véhicules disponibles") : t("vehicles available")}</Text>
             </View>
           </View>
         </View>
@@ -258,7 +258,7 @@ export default function HomeScreen() {
             {displayedVehicles.length === 0 && (
               <View style={st.empty}>
                 <Ionicons name="car-outline" size={48} color={C.textLight} />
-                <Text style={[st.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
+                <Text style={[st.emptyText, { color: C.textLight }]}>{t("Aucun véhicule trouvé")}</Text>
               </View>
             )}
           </View>

@@ -3,6 +3,7 @@ import { View, Text, Modal, ScrollView, TextInput, TouchableOpacity, ActivityInd
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../../src/api/axios';
 import { vst } from './vehicleTypes';
+import { t } from '../../i18n';
 
 interface Props {
   visible: boolean;
@@ -140,8 +141,8 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
         <View style={[vst.modalBox, { backgroundColor: C.card, maxHeight: '90%', maxWidth: 600 }]}>
           <View style={vst.modalHeader}>
             <View>
-              <Text style={[vst.modalTitle, { color: C.text, fontSize: 20 }]}>Nouveau vehicule</Text>
-              <Text style={{ color: C.textLight, fontSize: 12, marginTop: 2 }}>Remplissez les informations du vehicule</Text>
+              <Text style={[vst.modalTitle, { color: C.text, fontSize: 20 }]}>{t("Nouveau vehicule")}</Text>
+              <Text style={{ color: C.textLight, fontSize: 12, marginTop: 2 }}>{t("Remplissez les informations du vehicule")}</Text>
             </View>
             <TouchableOpacity onPress={handleClose} data-testid="close-add-modal">
               <Ionicons name="close" size={24} color={C.textLight} />
@@ -165,7 +166,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
                       <Text style={{ color: C.text, fontSize: 14, fontWeight: '700' }}>{form.brand}</Text>
                     </View>
                   ) : (
-                    <Text style={{ color: C.textLight, fontSize: 14, flex: 1 }}>Choisir une marque</Text>
+                    <Text style={{ color: C.textLight, fontSize: 14, flex: 1 }}>{t("Choisir une marque")}</Text>
                   )}
                   <Ionicons name={showBrands ? 'chevron-up' : 'chevron-down'} size={16} color={C.textLight} />
                 </TouchableOpacity>
@@ -174,7 +175,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
                   <View style={[s.dropdownList, { backgroundColor: C.card, borderColor: C.border }]}>
                     <View style={[s.searchInDropdown, { borderColor: C.border, backgroundColor: C.bg }]}>
                       <Ionicons name="search" size={14} color={C.textLight} />
-                      <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={brandSearch} onChangeText={setBrandSearch} autoFocus />
+                      <TextInput style={[s.searchInput, { color: C.text }]} placeholder={t("Rechercher...")} placeholderTextColor={C.textLight} value={brandSearch} onChangeText={setBrandSearch} autoFocus />
                     </View>
                     <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
                       {filteredBrands.map(b => (
@@ -205,7 +206,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
                         <View style={[s.dropdownList, { backgroundColor: C.card, borderColor: C.border }]}>
                           <View style={[s.searchInDropdown, { borderColor: C.border, backgroundColor: C.bg }]}>
                             <Ionicons name="search" size={14} color={C.textLight} />
-                            <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher un modele..." placeholderTextColor={C.textLight} value={modelSearch} onChangeText={setModelSearch} autoFocus />
+                            <TextInput style={[s.searchInput, { color: C.text }]} placeholder={t("Rechercher un modele...")} placeholderTextColor={C.textLight} value={modelSearch} onChangeText={setModelSearch} autoFocus />
                           </View>
                           <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
                             {filteredModels.map(m => (
@@ -218,7 +219,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
                       )}
                     </>
                   ) : (
-                    <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.model} onChangeText={v => setForm(p => ({ ...p, model: v }))} placeholder="Saisir le modele" placeholderTextColor={C.textLight} />
+                    <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.model} onChangeText={v => setForm(p => ({ ...p, model: v }))} placeholder={t("Saisir le modele")} placeholderTextColor={C.textLight} />
                   )}
                 </View>
               )}
@@ -254,7 +255,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
                     <View style={[s.dropdownList, { backgroundColor: C.card, borderColor: C.border, zIndex: 100 }]}>
                       <View style={[s.searchInDropdown, { borderColor: C.border, backgroundColor: C.bg }]}>
                         <Ionicons name="search" size={14} color={C.textLight} />
-                        <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher..." placeholderTextColor={C.textLight} value={typeSearch} onChangeText={setTypeSearch} autoFocus />
+                        <TextInput style={[s.searchInput, { color: C.text }]} placeholder={t("Rechercher...")} placeholderTextColor={C.textLight} value={typeSearch} onChangeText={setTypeSearch} autoFocus />
                       </View>
                       <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
                         {filteredTypes.map(t => (
@@ -269,12 +270,12 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
               </View>
 
               {/* Section: Tarification */}
-              <Text style={[s.section, { color: '#7C3AED' }]}>Tarification et caracteristiques</Text>
+              <Text style={[s.section, { color: '#7C3AED' }]}>{t("Tarification et caracteristiques")}</Text>
 
               {/* Price, Seats, Plate */}
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[s.fieldLabel, { color: C.text }]}>Prix/jour (CHF) *</Text>
+                  <Text style={[s.fieldLabel, { color: C.text }]}>{t("Prix/jour (CHF) *")}</Text>
                   <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg, fontSize: 16, fontWeight: '700' }]} value={String(form.price_per_day || '')} onChangeText={v => setForm(p => ({ ...p, price_per_day: parseFloat(v) || 0 }))} keyboardType="numeric" placeholder="120" placeholderTextColor={C.textLight} />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -283,7 +284,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[s.fieldLabel, { color: C.text }]}>Plaque</Text>
-                  <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.plate_number} onChangeText={v => setForm(p => ({ ...p, plate_number: v }))} placeholder="GE 123456" placeholderTextColor={C.textLight} />
+                  <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.plate_number} onChangeText={v => setForm(p => ({ ...p, plate_number: v }))} placeholder={t("GE 123456")} placeholderTextColor={C.textLight} />
                 </View>
               </View>
 
@@ -319,11 +320,11 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={[s.fieldLabel, { color: C.text }]}>Couleur</Text>
-                  <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.color} onChangeText={v => setForm(p => ({ ...p, color: v }))} placeholder="Noir" placeholderTextColor={C.textLight} />
+                  <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.color} onChangeText={v => setForm(p => ({ ...p, color: v }))} placeholder={t("Noir")} placeholderTextColor={C.textLight} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[s.fieldLabel, { color: C.text }]}>Localisation</Text>
-                  <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.location} onChangeText={v => setForm(p => ({ ...p, location: v }))} placeholder="Geneve" placeholderTextColor={C.textLight} />
+                  <TextInput style={[s.dropdown, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]} value={form.location} onChangeText={v => setForm(p => ({ ...p, location: v }))} placeholder={t("Geneve")} placeholderTextColor={C.textLight} />
                 </View>
               </View>
             </View>
@@ -338,7 +339,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
               {loading ? <ActivityIndicator size="small" color="#fff" /> : (
                 <>
                   <Ionicons name="add-circle" size={18} color="#fff" />
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>Creer le vehicule</Text>
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>{t("Creer le vehicule")}</Text>
                 </>
               )}
             </TouchableOpacity>

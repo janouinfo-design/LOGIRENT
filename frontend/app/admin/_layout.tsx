@@ -5,14 +5,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const NAV_ITEMS = [
-  { key: '/admin', label: 'Tableau de bord', icon: 'grid-outline' as const },
-  { key: '/admin/vehicles', label: 'Véhicules', icon: 'car-outline' as const },
-  { key: '/admin/reservations', label: 'Réservations', icon: 'calendar-outline' as const },
+  { key: '/admin', label: t("Tableau de bord"), icon: 'grid-outline' as const },
+  { key: '/admin/vehicles', label: t("Véhicules"), icon: 'car-outline' as const },
+  { key: '/admin/reservations', label: t("Réservations"), icon: 'calendar-outline' as const },
   { key: '/admin/users', label: 'Clients', icon: 'people-outline' as const },
   { key: '/admin/statistics', label: 'Statistiques', icon: 'stats-chart-outline' as const },
-  { key: '/admin/tracking', label: 'Suivi GPS', icon: 'locate-outline' as const },
+  { key: '/admin/tracking', label: t("Suivi GPS"), icon: 'locate-outline' as const },
 ];
 
 export default function AdminLayout() {
@@ -49,7 +50,7 @@ export default function AdminLayout() {
           </TouchableOpacity>
           <View style={styles.brandGroup}>
             <Ionicons name="shield-checkmark" size={20} color={C.accent} />
-            <Text style={[styles.brandText, { color: C.text }]}>LogiRent Admin</Text>
+            <Text style={[styles.brandText, { color: C.text }]}>{t("LogiRent Admin")}</Text>
           </View>
         </View>
         <View style={styles.topBarRight}>
@@ -78,7 +79,7 @@ export default function AdminLayout() {
               data-testid={`admin-nav-${item.key.replace('/admin/', '').replace('/admin', 'dashboard')}`}
             >
               <Ionicons name={item.icon} size={18} color={isActive ? C.accent : C.textLight} />
-              <Text style={[styles.navTabText, { color: isActive ? C.accent : C.textLight }, isActive && { fontWeight: '700' }]}>{item.label}</Text>
+              <Text style={[styles.navTabText, { color: isActive ? C.accent : C.textLight }, isActive && { fontWeight: '700' }]}>{t(item.label)}</Text>
             </TouchableOpacity>
           );
         })}

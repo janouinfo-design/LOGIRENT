@@ -1,0 +1,58 @@
+{
+  "summary": "Tested i18n FR/EN/DE across landing, login, client-authenticated, admin agency, super admin, and backend emails/API. Backend fully passes (9/9 tests). Frontend: landing/login/admin-agency/super-admin selectors and translations work correctly and persist via localStorage. CRITICAL GAP: the LanguageSelector is NOT rendered on client-authenticated screens - it exists only inside a TopNavBar component in /app/frontend/app/_layout.tsx that is never mounted (line 100: `{showNav && null}`), so logged-in clients cannot change language from within the app.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Client-authenticated layout (app/_layout.tsx + (tabs)/_layout.tsx)",
+        "issue": "LanguageSelector NOT visible after client login. The TopNavBar component (which contains <LanguageSelector />) is defined in app/_layout.tsx but never rendered - line 100 has `{showNav && null}` instead of `{showNav && <TopNavBar />}`. Neither is it added to app/(tabs)/_layout.tsx. Requirement 'la barre de navigation supérieure contient le sélecteur FR/EN/DE' is NOT satisfied for logged-in clients. All other roles (admin, super admin, landing, login) work.",
+        "selector": "get_by_text('DE', exact=True) returns 0 on /home, /vehicles, /reservations, /profile after client login",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Agency admin header (/agency-app)",
+        "issues": [
+          "Navigation labels 'Vehicules', 'Clients', 'Finance', 'Outils', 'Profil', 'Accueil' remain in French when switching to EN/DE. Only 'Reservations' translated. Coverage ~50% of top-nav tabs (dashboard content itself translates correctly)."
+        ]
+      },
+      {
+        "screen": "Super admin header (/super-admin)",
+        "issues": [
+          "Tabs 'Dashboard', 'Agences', 'Utilisateurs', 'Statistiques' remain in French in EN/DE modes (only Véhicules→Vehicles/Fahrzeuge and Réservations→Reservations/Reservierungen translated)."
+        ]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_i18n_emails_profile.py",
+    "/app/test_reports/pytest/i18n_results.xml"
+  ],
+  "action_items": [
+    "CRITICAL: Render <TopNavBar /> for authenticated clients in /app/frontend/app/_layout.tsx (replace `{showNav && null}` on line 100 with `{showNav && <TopNavBar />}`), OR add <LanguageSelector /> to /app/frontend/app/(tabs)/_layout.tsx so client-connected users can switch languages.",
+    "OPTIONAL: Wrap remaining French tab labels in agency/super-admin headers with t(...) - specifically 'Vehicules', 'Clients', 'Finance', 'Outils', 'Profil', 'Accueil', 'Dashboard', 'Agences', 'Utilisateurs', 'Statistiques'."
+  ],
+  "critical_code_review_comments": [
+    "app/_layout.tsx line 100 `{showNav && null}` is dead code - TopNavBar function is fully defined (lines 40-85) but never mounted; probable regression from a refactor.",
+    "The tabs labels in agency admin/super admin layouts are hard-coded FR strings without t() wrapping - inconsistent with the codemod that transformed 75 other files.",
+    "utils/email.py: `generate_new_request_admin_email` is not multilingual (hard-coded FR) - acceptable since it's sent to admin, but noted."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_i18n_emails_profile.py (new)"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9)",
+    "frontend": "80% (landing/login/admin/super-admin OK; client-authenticated selector MISSING)"
+  },
+  "test_credentials": "Used from /app/memory/test_credentials.md - client1@logirent.ch, admin-geneva@logirent.ch, superadmin@logirent.ch (all pwd LogiRent2024!). preferred_language restored to 'fr' by test_restore_french test.",
+  "seed_data_creation": "None",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend i18n emails + PUT/GET /api/auth/profile {preferred_language} fully validated. Landing/login/admin/super-admin i18n visually verified with real page snapshots. Key bug: client (tabs) layout misses LanguageSelector - the TopNavBar component in app/_layout.tsx is defined but rendered as `{showNav && null}` (line 100). data-testid `lang-fr/lang-en/lang-de` did NOT match via [data-testid=...] selector - had to use get_by_text('FR/EN/DE', exact=True) instead (React Native testID may not always translate to data-testid on web depending on component/hostComponent choice).",
+  "rca of the issue": "Frontend regression: /app/frontend/app/_layout.tsx defines a TopNavBar component (lines 40-85) that includes the LanguageSelector for authenticated clients, but at line 100 it is invoked as `{showNav && null}` instead of `{showNav && <TopNavBar />}`. Reproduction: login as client1@logirent.ch → observe missing FR/EN/DE selector on / /vehicles /reservations /profile screens. Mitigation: change line 100 to `{showNav && <TopNavBar />}` in app/_layout.tsx."
+}

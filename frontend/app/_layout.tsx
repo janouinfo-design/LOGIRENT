@@ -5,7 +5,8 @@ import { useAuthStore } from '../src/store/authStore';
 import { View, Text, TouchableOpacity, ActivityIndicator, StyleSheet, Image, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { I18nProvider, useI18n } from '../src/i18n';
+import { I18nProvider, t } from '../src/i18n';
+import { LanguageSelector } from '../src/components/LanguageSelector';
 import { useNotificationStore } from '../src/store/notificationStore';
 import { useThemeStore } from '../src/store/themeStore';
 
@@ -24,7 +25,6 @@ function TopNavBar() {
   const router = useRouter();
   const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const { colors: T } = useThemeStore();
-  const { lang, setLang } = useI18n();
   const { logout } = useAuthStore();
   const { width } = useWindowDimensions();
   const isMobile = width < 1024;
@@ -65,22 +65,13 @@ function TopNavBar() {
                   </View>
                 )}
               </View>
-              <Text style={[styles.navLabel, { color: active ? T.accent : T.textLight, fontSize: isMobile ? 9 : 12 }, active && { fontWeight: '600' }]}>{tab.label}</Text>
+              <Text style={[styles.navLabel, { color: active ? T.accent : T.textLight, fontSize: isMobile ? 9 : 12 }, active && { fontWeight: '600' }]}>{t(tab.label)}</Text>
             </TouchableOpacity>
           );
         })}
       </View>
       <View style={styles.rightSection}>
-        {!isMobile && (
-          <>
-            <TouchableOpacity style={[styles.langBtn, lang === 'fr' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('fr')} data-testid="lang-fr">
-              <Text style={[styles.langFlag, { color: T.text }]}>FR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.langBtn, lang === 'en' && { opacity: 1, backgroundColor: T.accent + '18' }]} onPress={() => setLang('en')} data-testid="lang-en">
-              <Text style={[styles.langFlag, { color: T.text }]}>EN</Text>
-            </TouchableOpacity>
-          </>
-        )}
+        <LanguageSelector color={T.text} activeColor={T.accent} compact={isMobile} />
         <TouchableOpacity
           style={[styles.iconBtn, { backgroundColor: '#EF4444' + '18', marginLeft: 4 }]}
           onPress={() => { logout(); router.replace('/login' as any); }}

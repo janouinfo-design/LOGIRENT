@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../api/axios';
+import { t } from '../../i18n';
 
 const C = { accent: '#7C3AED', bg: '#F9FAFB', card: '#FFF', text: '#111827', textLight: '#6B7280', border: '#E5E7EB', success: '#10B981', error: '#EF4444', blue: '#2563EB' };
 
@@ -62,7 +63,7 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
       <View style={s.header}>
         <View style={s.headerLeft}>
           <Ionicons name="calendar-outline" size={18} color={C.blue} />
-          <Text style={s.title}>Tarifs saisonniers</Text>
+          <Text style={s.title}>{t("Tarifs saisonniers")}</Text>
         </View>
         <TouchableOpacity style={s.addBtn} onPress={addItem} data-testid="add-seasonal-price">
           <Ionicons name="add" size={16} color="#FFF" />
@@ -71,14 +72,14 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
       </View>
 
       {items.length === 0 ? (
-        <Text style={s.empty}>Aucun tarif saisonnier configure</Text>
+        <Text style={s.empty}>{t("Aucun tarif saisonnier configure")}</Text>
       ) : (
         items.map((item, i) => (
           <View key={item.id || i} style={s.card} data-testid={`seasonal-item-${i}`}>
             <View style={s.cardHeader}>
               <TextInput
                 style={s.nameInput}
-                placeholder="Nom (ex: Ete 2026)"
+                placeholder={t("Nom (ex: Ete 2026)")}
                 placeholderTextColor={C.textLight}
                 value={item.name}
                 onChangeText={v => updateItem(i, 'name', v)}
@@ -96,7 +97,7 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
                 <Text style={s.label}>Debut</Text>
                 <TextInput
                   style={s.input}
-                  placeholder="AAAA-MM-JJ"
+                  placeholder={t("AAAA-MM-JJ")}
                   placeholderTextColor={C.textLight}
                   value={item.start_date}
                   onChangeText={v => updateItem(i, 'start_date', v)}
@@ -106,7 +107,7 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
                 <Text style={s.label}>Fin</Text>
                 <TextInput
                   style={s.input}
-                  placeholder="AAAA-MM-JJ"
+                  placeholder={t("AAAA-MM-JJ")}
                   placeholderTextColor={C.textLight}
                   value={item.end_date}
                   onChangeText={v => updateItem(i, 'end_date', v)}
@@ -128,12 +129,12 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
                     style={[s.typeBtn, item.modifier_type === 'fixed_price' && s.typeBtnActive]}
                     onPress={() => updateItem(i, 'modifier_type', 'fixed_price')}
                   >
-                    <Text style={[s.typeBtnText, item.modifier_type === 'fixed_price' && s.typeBtnTextActive]}>Prix fixe</Text>
+                    <Text style={[s.typeBtnText, item.modifier_type === 'fixed_price' && s.typeBtnTextActive]}>{t("Prix fixe")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
               <View style={s.valueField}>
-                <Text style={s.label}>{item.modifier_type === 'percentage' ? 'Reduction (%)' : 'CHF / jour'}</Text>
+                <Text style={s.label}>{item.modifier_type === 'percentage' ? 'Reduction (%)' : t("CHF / jour")}</Text>
                 <TextInput
                   style={s.input}
                   placeholder={item.modifier_type === 'percentage' ? '-15' : '150'}

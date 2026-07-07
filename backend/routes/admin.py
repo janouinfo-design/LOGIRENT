@@ -820,14 +820,10 @@ async def update_reservation_status(reservation_id: str, status: str, user: dict
         if status in status_msgs and client:
             await create_notification(client['id'], notif_types[status], status_msgs[status], reservation_id)
             try:
-                email_html = generate_status_change_email(cname, vname, status, reservation)
-                email_subjects = {
-                    'confirmed': f"Réservation confirmée - {vname}",
-                    'active': f"Location en cours - {vname}",
-                    'completed': f"Location terminée - {vname}",
-                    'cancelled': f"Réservation annulée - {vname}",
-                }
-                await send_email(client['email'], email_subjects.get(status, f"Mise à jour réservation - {vname}"), email_html, agency_id=user.get('agency_id'))
+                clang = (client.get('preferred_language') or 'fr')
+                from utils.email import status_change_subject
+                email_html = generate_status_change_email(cname, vname, status, reservation, lang=clang)
+                await send_email(client['email'], status_change_subject(status, vname, clang), email_html, agency_id=user.get('agency_id'))
             except Exception as e:
                 logger.error(f"Failed to send status change email: {e}")
 

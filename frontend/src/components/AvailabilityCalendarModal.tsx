@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Modal, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../api/axios';
+import { t } from '../i18n';
 
 const ACCENT = '#7C3AED';
 const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -300,7 +301,7 @@ export default function AvailabilityCalendarModal({ visible, vehicleId, vehicleN
                       data-testid="confirm-date-btn"
                     >
                       <Ionicons name="arrow-forward" size={16} color="#fff" />
-                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>Reserver cette date</Text>
+                      <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>{t("Reserver cette date")}</Text>
                     </TouchableOpacity>
                   </View>
                 )}

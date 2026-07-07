@@ -9,6 +9,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSa
 import { fr } from 'date-fns/locale';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const _C = {
   purple: '#7C3AED',
@@ -119,7 +120,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
       {canCancel && (
         <TouchableOpacity style={styles.cancelBtn} onPress={() => onCancel(item.id)} data-testid={`cancel-${item.id}`}>
           <Ionicons name="close-circle-outline" size={16} color={_C.error} />
-          <Text style={styles.cancelText}>Annuler la réservation</Text>
+          <Text style={styles.cancelText}>{t("Annuler la réservation")}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -283,7 +284,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
           {selectedReservations.length === 0 ? (
             <View style={calStyles.emptyDay}>
               <Ionicons name="calendar-outline" size={28} color={_C.gray} />
-              <Text style={calStyles.emptyDayText}>Aucune réservation</Text>
+              <Text style={calStyles.emptyDayText}>{t("Aucune réservation")}</Text>
               {!isBefore(startOfDay(selectedDate), startOfDay(new Date())) && (
                 <TouchableOpacity
                   style={calStyles.bookBtn}
@@ -291,7 +292,7 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
                   data-testid="cal-book-vehicle-btn"
                 >
                   <Ionicons name="add-circle-outline" size={16} color="#FFF" />
-                  <Text style={calStyles.bookBtnText}>Réserver un véhicule</Text>
+                  <Text style={calStyles.bookBtnText}>{t("Réserver un véhicule")}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -358,9 +359,9 @@ function ReservationsScreen() {
         cancelReservation(id).then(() => fetchReservations());
       }
     } else {
-      Alert.alert('Annuler la réservation', 'Voulez-vous annuler cette réservation ?', [
+      Alert.alert(t("Annuler la réservation"), t("Voulez-vous annuler cette réservation ?"), [
         { text: 'Non', style: 'cancel' },
-        { text: 'Oui, annuler', style: 'destructive', onPress: () => cancelReservation(id).then(() => fetchReservations()) },
+        { text: t("Oui, annuler"), style: 'destructive', onPress: () => cancelReservation(id).then(() => fetchReservations()) },
       ]);
     }
   };
@@ -386,7 +387,7 @@ function ReservationsScreen() {
       <View style={[styles.header, { backgroundColor: C.bg }]}>
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.title}>Mes Locations</Text>
+            <Text style={styles.title}>{t("Mes Locations")}</Text>
             <Text style={styles.subtitle}>{reservations.length} réservation{reservations.length !== 1 ? 's' : ''}</Text>
           </View>
           {/* View Mode Toggle */}
@@ -415,7 +416,7 @@ function ReservationsScreen() {
           {filters.map(f => (
             <TouchableOpacity key={f.id} style={[styles.filterChip, { height: 36 }, filter === f.id && styles.filterChipActive]}
               onPress={() => setFilter(f.id)} data-testid={`filter-${f.id}`}>
-              <Text style={[styles.filterText, filter === f.id && styles.filterTextActive]}>{f.label}</Text>
+              <Text style={[styles.filterText, filter === f.id && styles.filterTextActive]}>{t(f.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -431,9 +432,9 @@ function ReservationsScreen() {
               {filteredReservations.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="calendar-outline" size={56} color={C.gray} />
-                  <Text style={[styles.emptyText, { color: C.textLight }]}>Aucune réservation</Text>
-                  <Text style={styles.emptySubtext}>Réservez votre premier véhicule</Text>
-                  <Button title="Voir les véhicules" onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
+                  <Text style={[styles.emptyText, { color: C.textLight }]}>{t("Aucune réservation")}</Text>
+                  <Text style={styles.emptySubtext}>{t("Réservez votre premier véhicule")}</Text>
+                  <Button title={t("Voir les véhicules")} onPress={() => router.push('/(tabs)/vehicles')} style={{ marginTop: 20 }} />
                 </View>
               ) : (
                 filteredReservations.map((item) => (

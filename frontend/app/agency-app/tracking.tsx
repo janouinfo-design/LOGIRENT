@@ -5,6 +5,7 @@ import api from '../../src/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CardSkeleton } from '../../src/components/Skeleton';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 type Position = {
   tracker_id: number;
@@ -147,7 +148,7 @@ export default function AgencyTracking() {
         <View style={s.modalOverlay}>
           <View style={[s.modal, { backgroundColor: C.card }]}>
             <View style={s.modalHeader}>
-              <Text style={[s.modalTitle, { color: C.text }]}>Configuration Navixy</Text>
+              <Text style={[s.modalTitle, { color: C.text }]}>{t("Configuration Navixy")}</Text>
               <TouchableOpacity onPress={() => setShowConfig(false)}>
                 <Ionicons name="close" size={24} color={C.text} />
               </TouchableOpacity>
@@ -155,24 +156,22 @@ export default function AgencyTracking() {
             <ScrollView>
               <View style={[s.infoBox, { backgroundColor: C.accent + '10', borderColor: C.accent + '30' }]}>
                 <Ionicons name="information-circle" size={18} color={C.accent} />
-                <Text style={[s.infoText, { color: C.textLight }]}>
-                  Connectez-vous sur navixy.com pour obtenir votre URL API et votre clé (hash).
-                </Text>
+                <Text style={[s.infoText, { color: C.textLight }]}>{t("Connectez-vous sur navixy.com pour obtenir votre URL API et votre clé (hash).")}</Text>
               </View>
-              <Text style={[s.label, { color: C.textLight }]}>URL API Navixy</Text>
+              <Text style={[s.label, { color: C.textLight }]}>{t("URL API Navixy")}</Text>
               <TextInput
                 style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
-                placeholder="https://api.navixy.com/v2"
+                placeholder={t("https://api.navixy.com/v2")}
                 placeholderTextColor={C.textLight}
                 value={navixyUrl}
                 onChangeText={setNavixyUrl}
                 autoCapitalize="none"
                 data-testid="navixy-url-input"
               />
-              <Text style={[s.label, { color: C.textLight }]}>Hash API (clé d'authentification)</Text>
+              <Text style={[s.label, { color: C.textLight }]}>{t("Hash API (clé d'authentification)")}</Text>
               <TextInput
                 style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]}
-                placeholder="votre_hash_navixy"
+                placeholder={t("votre_hash_navixy")}
                 placeholderTextColor={C.textLight}
                 value={navixyHash}
                 onChangeText={setNavixyHash}
@@ -200,7 +199,7 @@ export default function AgencyTracking() {
     return (
       <View style={[s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator size="large" color={C.accent} />
-        <Text style={[s.loadingText, { color: C.textLight }]}>Chargement GPS...</Text>
+        <Text style={[s.loadingText, { color: C.textLight }]}>{t("Chargement GPS...")}</Text>
       </View>
     );
   }
@@ -209,13 +208,11 @@ export default function AgencyTracking() {
     return (
       <View style={[s.center, { backgroundColor: C.bg }]}>
         <Ionicons name="navigate-circle-outline" size={64} color={C.textLight} />
-        <Text style={[s.setupTitle, { color: C.text }]}>Suivi GPS</Text>
-        <Text style={[s.setupDesc, { color: C.textLight }]}>
-          Configurez votre clé API Navixy pour activer le suivi GPS de votre flotte.
-        </Text>
+        <Text style={[s.setupTitle, { color: C.text }]}>{t("Suivi GPS")}</Text>
+        <Text style={[s.setupDesc, { color: C.textLight }]}>{t("Configurez votre clé API Navixy pour activer le suivi GPS de votre flotte.")}</Text>
         <TouchableOpacity style={[s.configBtn, { backgroundColor: C.primary }]} onPress={() => setShowConfig(true)} data-testid="setup-navixy-btn">
           <Ionicons name="settings" size={18} color="#fff" />
-          <Text style={s.configBtnText}>Configurer Navixy</Text>
+          <Text style={s.configBtnText}>{t("Configurer Navixy")}</Text>
         </TouchableOpacity>
         {renderConfigModal()}
       </View>
@@ -230,7 +227,7 @@ export default function AgencyTracking() {
           {selectedTracker ? (
             <View style={[s.mapLabel, { backgroundColor: C.accent }]}>
               <Ionicons name="location" size={14} color="#fff" />
-              <Text style={s.mapLabelText}>{selectedTracker.label}</Text>
+              <Text style={s.mapLabelText}>{t(selectedTracker.label)}</Text>
               <TouchableOpacity onPress={() => setSelectedTracker(null)} data-testid="clear-selection-btn">
                 <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
@@ -238,14 +235,14 @@ export default function AgencyTracking() {
           ) : (
             <View style={[s.mapLabel, { backgroundColor: C.card }]}>
               <Ionicons name="map" size={14} color={C.textLight} />
-              <Text style={[s.mapLabelText, { color: C.textLight }]}>Sélectionnez un véhicule</Text>
+              <Text style={[s.mapLabelText, { color: C.textLight }]}>{t("Sélectionnez un véhicule")}</Text>
             </View>
           )}
           <iframe
             key={selectedTracker?.tracker_id || 'default'}
             src={getMapUrl()}
             style={{ width: '100%', height: 280, border: 'none' } as any}
-            title="GPS Map"
+            title={t("GPS Map")}
           />
         </View>
       )}
@@ -255,7 +252,7 @@ export default function AgencyTracking() {
         {/* Header row */}
         <View style={s.headerRow}>
           <View>
-            <Text style={[s.title, { color: C.text }]}>Suivi GPS</Text>
+            <Text style={[s.title, { color: C.text }]}>{t("Suivi GPS")}</Text>
             <Text style={[s.subtitle, { color: C.textLight }]}>MAJ: {lastRefresh}</Text>
           </View>
           <View style={s.headerActions}>
@@ -284,15 +281,15 @@ export default function AgencyTracking() {
           <View style={s.statsRow}>
             <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.success }]}>
               <Text style={[s.statNum, { color: C.text }]}>{movingCount}</Text>
-              <Text style={[s.statLabel, { color: C.textLight }]}>En route</Text>
+              <Text style={[s.statLabel, { color: C.textLight }]}>{t("En route")}</Text>
             </View>
             <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.warning }]}>
               <Text style={[s.statNum, { color: C.text }]}>{parkedCount}</Text>
-              <Text style={[s.statLabel, { color: C.textLight }]}>Stationnés</Text>
+              <Text style={[s.statLabel, { color: C.textLight }]}>{t("Stationnés")}</Text>
             </View>
             <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.error }]}>
               <Text style={[s.statNum, { color: C.text }]}>{offlineCount}</Text>
-              <Text style={[s.statLabel, { color: C.textLight }]}>Hors ligne</Text>
+              <Text style={[s.statLabel, { color: C.textLight }]}>{t("Hors ligne")}</Text>
             </View>
           </View>
         )}
@@ -303,7 +300,7 @@ export default function AgencyTracking() {
             <Ionicons name="search" size={18} color={C.textLight} />
             <TextInput
               style={[s.searchInput, { color: C.text }]}
-              placeholder="Rechercher un véhicule..."
+              placeholder={t("Rechercher un véhicule...")}
               placeholderTextColor={C.textLight}
               value={search}
               onChangeText={setSearch}
@@ -346,7 +343,7 @@ export default function AgencyTracking() {
                   </View>
                   {/* Info */}
                   <View style={{ paddingHorizontal: 8, paddingBottom: 8 }}>
-                    <Text style={[s.vehicleName, { textAlign: 'center', fontSize: 13 }]} numberOfLines={1}>{p.label}</Text>
+                    <Text style={[s.vehicleName, { textAlign: 'center', fontSize: 13 }]} numberOfLines={1}>{t(p.label)}</Text>
                     <View style={[s.badge, { backgroundColor: getStatusColor(p) + '20', alignSelf: 'center', marginTop: 4 }]}>
                       <Text style={[s.badgeText, { color: getStatusColor(p), fontSize: 12 }]}>{getStatusLabel(p)}</Text>
                     </View>
@@ -366,12 +363,12 @@ export default function AgencyTracking() {
                           data-testid={`maps-link-${p.tracker_id}`}
                         >
                           <Ionicons name="navigate" size={10} color="#3B82F6" />
-                          <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>Google Maps</Text>
+                          <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>{t("Google Maps")}</Text>
                         </TouchableOpacity>
                       </>
                     ) : null}
                     <Text style={[s.detailText, { color: C.textLight, textAlign: 'center', fontSize: 11, marginTop: 2 }]}>
-                      {p.ignition ? 'Moteur ON' : 'Moteur OFF'}
+                      {p.ignition ? t("Moteur ON") : t("Moteur OFF")}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -390,7 +387,7 @@ export default function AgencyTracking() {
         {!error && positions.length === 0 && configured && (
           <View style={s.emptyState}>
             <Ionicons name="car-outline" size={40} color={C.textLight} />
-            <Text style={[s.emptyText, { color: C.textLight }]}>Aucun tracker trouvé</Text>
+            <Text style={[s.emptyText, { color: C.textLight }]}>{t("Aucun tracker trouvé")}</Text>
           </View>
         )}
       </ScrollView>

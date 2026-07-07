@@ -8,6 +8,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
 import { VehicleForm, PhotoManagementModal } from '../../src/components/admin/VehicleComponents';
+import { t } from '../../src/i18n';
 
 const SCREEN_W = Dimensions.get('window').width;
 
@@ -58,7 +59,7 @@ export default function AdminVehicles() {
       if (user?.role === 'admin' && user?.agency_id) params.agency_id = user.agency_id;
       const resp = await api.get('/api/vehicles', { params });
       setVehicles(resp.data);
-    } catch { Alert.alert('Erreur', 'Impossible de charger les vehicules'); }
+    } catch { Alert.alert(t("Erreur"), t("Impossible de charger les vehicules")); }
     finally { setIsLoading(false); }
   };
 
@@ -84,7 +85,7 @@ export default function AdminVehicles() {
     } else {
       Alert.alert('Statut', `Actuel: ${v.status}`, [
         { text: 'Disponible', onPress: () => updateStatus(v.id, 'available') },
-        { text: 'En location', onPress: () => updateStatus(v.id, 'rented') },
+        { text: t("En location"), onPress: () => updateStatus(v.id, 'rented') },
         { text: 'Maintenance', onPress: () => updateStatus(v.id, 'maintenance') },
         { text: 'Annuler', style: 'cancel' },
       ]);
@@ -115,7 +116,7 @@ export default function AdminVehicles() {
       };
       if (isEdit && editingVehicle) await api.put(`/api/admin/vehicles/${editingVehicle.id}`, data);
       else await api.post('/api/admin/vehicles', data);
-      alert(isEdit ? 'Vehicule modifie !' : 'Vehicule ajoute !');
+      alert(isEdit ? t("Vehicule modifie !") : t("Vehicule ajoute !"));
       isEdit ? setShowEditModal(false) : setShowAddModal(false);
       resetForm(); fetchVehicles();
     } catch (e: any) { alert('Erreur: ' + (e.response?.data?.detail || 'Erreur')); }
@@ -185,7 +186,7 @@ export default function AdminVehicles() {
         </View>
         <VehicleForm {...formProps} />
         <View style={[st.modalFooter, { backgroundColor: C.card, borderTopColor: C.border }]}>
-          <Button title="Annuler" onPress={onClose} variant="outline" style={{ flex: 1 }} />
+          <Button title={t("Annuler")} onPress={onClose} variant="outline" style={{ flex: 1 }} />
           <Button title={isEdit ? 'Enregistrer' : 'Ajouter'} onPress={() => handleSave(isEdit)} loading={submitting} style={{ flex: 1 }} />
         </View>
       </View>
@@ -202,13 +203,13 @@ export default function AdminVehicles() {
         ListHeaderComponent={
           <TouchableOpacity style={[st.addBtn, { borderColor: C.accent, backgroundColor: C.card }]} onPress={() => { resetForm(); setShowAddModal(true); }} data-testid="add-vehicle-btn">
             <Ionicons name="add-circle" size={24} color={C.accent} />
-            <Text style={{ fontSize: 16, fontWeight: '600', color: C.accent }}>Ajouter un Vehicule</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: C.accent }}>{t("Ajouter un Vehicule")}</Text>
           </TouchableOpacity>
         }
         ListEmptyComponent={!isLoading ? (
           <View style={{ alignItems: 'center', paddingTop: 60 }}>
             <Ionicons name="car-outline" size={48} color={C.textLight} />
-            <Text style={{ fontSize: 16, color: C.textLight, marginTop: 12 }}>Aucun vehicule</Text>
+            <Text style={{ fontSize: 16, color: C.textLight, marginTop: 12 }}>{t("Aucun vehicule")}</Text>
           </View>
         ) : null}
       />

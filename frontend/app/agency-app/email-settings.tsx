@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, Activi
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const PRESETS = [
   { label: 'Gmail', host: 'smtp.gmail.com', port: 587, tls: true, note: 'Utilisez un mot de passe d\'application Google' },
@@ -89,10 +90,8 @@ export default function EmailSettingsScreen() {
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
       {/* Header */}
       <View style={{ marginBottom: 20 }}>
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: '900' }}>Configuration Email</Text>
-        <Text style={{ color: C.textLight, fontSize: 13, marginTop: 4 }}>
-          Configurez le serveur SMTP de votre agence pour envoyer les emails depuis votre propre adresse
-        </Text>
+        <Text style={{ color: C.text, fontSize: 22, fontWeight: '900' }}>{t("Configuration Email")}</Text>
+        <Text style={{ color: C.textLight, fontSize: 13, marginTop: 4 }}>{t("Configurez le serveur SMTP de votre agence pour envoyer les emails depuis votre propre adresse")}</Text>
       </View>
 
       {/* Status */}
@@ -112,11 +111,11 @@ export default function EmailSettingsScreen() {
 
       {/* Presets */}
       <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
-        <Text style={[s.sectionTitle, { color: C.text }]}>Preselection du serveur</Text>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{t("Preselection du serveur")}</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
           {PRESETS.map((p, i) => (
             <TouchableOpacity key={i} onPress={() => applyPreset(p)} style={{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: host === p.host ? '#3B82F6' : C.border, backgroundColor: host === p.host ? '#EFF6FF' : C.bg }} data-testid={`preset-${p.label.toLowerCase().replace(/[^a-z]/g, '')}`}>
-              <Text style={{ fontSize: 12, fontWeight: '700', color: host === p.host ? '#3B82F6' : C.textLight }}>{p.label}</Text>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: host === p.host ? '#3B82F6' : C.textLight }}>{t(p.label)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -124,13 +123,13 @@ export default function EmailSettingsScreen() {
 
       {/* SMTP Config */}
       <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
-        <Text style={[s.sectionTitle, { color: C.text }]}>Serveur SMTP</Text>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{t("Serveur SMTP")}</Text>
 
-        <Text style={[s.label, { color: C.textLight }]}>Nom d'expediteur</Text>
-        <TextInput value={senderName} onChangeText={setSenderName} placeholder="Ex: AbiCar Location" placeholderTextColor="#94A3B8" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="sender-name-input" />
+        <Text style={[s.label, { color: C.textLight }]}>{t("Nom d'expediteur")}</Text>
+        <TextInput value={senderName} onChangeText={setSenderName} placeholder={t("Ex: AbiCar Location")} placeholderTextColor="#94A3B8" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="sender-name-input" />
 
-        <Text style={[s.label, { color: C.textLight }]}>Serveur SMTP</Text>
-        <TextInput value={host} onChangeText={setHost} placeholder="smtp.gmail.com" placeholderTextColor="#94A3B8" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="smtp-host-input" />
+        <Text style={[s.label, { color: C.textLight }]}>{t("Serveur SMTP")}</Text>
+        <TextInput value={host} onChangeText={setHost} placeholder={t("smtp.gmail.com")} placeholderTextColor="#94A3B8" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="smtp-host-input" />
 
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <View style={{ flex: 1 }}>
@@ -143,11 +142,11 @@ export default function EmailSettingsScreen() {
           </View>
         </View>
 
-        <Text style={[s.label, { color: C.textLight }]}>Adresse email</Text>
-        <TextInput value={email} onChangeText={setEmail} placeholder="contact@votreagence.ch" placeholderTextColor="#94A3B8" keyboardType="email-address" autoCapitalize="none" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="smtp-email-input" />
+        <Text style={[s.label, { color: C.textLight }]}>{t("Adresse email")}</Text>
+        <TextInput value={email} onChangeText={setEmail} placeholder={t("contact@votreagence.ch")} placeholderTextColor="#94A3B8" keyboardType="email-address" autoCapitalize="none" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="smtp-email-input" />
 
         <Text style={[s.label, { color: C.textLight }]}>Mot de passe {passwordSet && !password ? '(deja configure)' : ''}</Text>
-        <TextInput value={password} onChangeText={setPassword} placeholder={passwordSet ? '••••••••' : 'Mot de passe SMTP'} placeholderTextColor="#94A3B8" secureTextEntry style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="smtp-password-input" />
+        <TextInput value={password} onChangeText={setPassword} placeholder={passwordSet ? '••••••••' : t("Mot de passe SMTP")} placeholderTextColor="#94A3B8" secureTextEntry style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="smtp-password-input" />
 
         <TouchableOpacity onPress={handleSave} disabled={saving} style={[s.primaryBtn, { opacity: saving ? 0.6 : 1 }]} data-testid="save-smtp-btn">
           {saving ? <ActivityIndicator color="#fff" size="small" /> : (
@@ -161,16 +160,16 @@ export default function EmailSettingsScreen() {
 
       {/* Test */}
       <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
-        <Text style={[s.sectionTitle, { color: C.text }]}>Tester la configuration</Text>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{t("Tester la configuration")}</Text>
 
-        <Text style={[s.label, { color: C.textLight }]}>Email de test (optionnel)</Text>
-        <TextInput value={testEmail} onChangeText={setTestEmail} placeholder="votre@email.com" placeholderTextColor="#94A3B8" keyboardType="email-address" autoCapitalize="none" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="test-email-input" />
+        <Text style={[s.label, { color: C.textLight }]}>{t("Email de test (optionnel)")}</Text>
+        <TextInput value={testEmail} onChangeText={setTestEmail} placeholder={t("votre@email.com")} placeholderTextColor="#94A3B8" keyboardType="email-address" autoCapitalize="none" style={[s.input, { borderColor: C.border, color: C.text, backgroundColor: C.bg }]} data-testid="test-email-input" />
 
         <TouchableOpacity onPress={handleTest} disabled={testing} style={[s.secondaryBtn, { borderColor: C.border, opacity: testing ? 0.6 : 1 }]} data-testid="test-smtp-btn">
           {testing ? <ActivityIndicator color="#3B82F6" size="small" /> : (
             <>
               <Ionicons name="send" size={16} color="#3B82F6" />
-              <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '700' }}>Envoyer un email de test</Text>
+              <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '700' }}>{t("Envoyer un email de test")}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -190,7 +189,7 @@ export default function EmailSettingsScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 10 }}>
           <Ionicons name="information-circle" size={20} color="#3B82F6" />
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#334155', fontSize: 13, fontWeight: '700', marginBottom: 4 }}>Comment ca fonctionne ?</Text>
+            <Text style={{ color: '#334155', fontSize: 13, fontWeight: '700', marginBottom: 4 }}>{t("Comment ca fonctionne ?")}</Text>
             <Text style={{ color: '#64748B', fontSize: 12, lineHeight: 18 }}>
               Les emails (confirmations, rappels, factures) seront envoyes depuis votre adresse email.
               Vos clients verront votre nom et pourront repondre directement a votre agence.

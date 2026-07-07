@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error('Error fetching stats:', error.response?.data || error.message);
       if (error.response?.status === 401) {
-        Alert.alert('Session expirée', 'Veuillez vous reconnecter');
+        Alert.alert(t("Session expirée"), t("Veuillez vous reconnecter"));
         router.replace('/(auth)/login');
       }
     } finally { setLoading(false); }
@@ -43,11 +44,11 @@ export default function AdminDashboard() {
   const onRefresh = async () => { setRefreshing(true); await fetchStats(); setRefreshing(false); };
 
   const menuItems = [
-    { icon: 'car', label: 'Véhicules', count: stats?.total_vehicles || 0, route: '/admin/vehicles', color: C.accent },
-    { icon: 'calendar', label: 'Réservations', count: stats?.total_reservations || 0, route: '/admin/reservations', color: C.warning },
+    { icon: 'car', label: t("Véhicules"), count: stats?.total_vehicles || 0, route: '/admin/vehicles', color: C.accent },
+    { icon: 'calendar', label: t("Réservations"), count: stats?.total_reservations || 0, route: '/admin/reservations', color: C.warning },
     { icon: 'people', label: 'Utilisateurs', count: stats?.total_users || 0, route: '/admin/users', color: C.success },
     { icon: 'card', label: 'Paiements', count: stats?.total_payments || 0, route: '/admin/payments', color: C.info },
-    { icon: 'locate', label: 'Suivi GPS', count: 0, route: '/admin/tracking', color: '#06b6d4' },
+    { icon: 'locate', label: t("Suivi GPS"), count: 0, route: '/admin/tracking', color: '#06b6d4' },
   ];
 
   if (loading) return <View style={[s.container, { backgroundColor: C.bg }]}><View style={s.center}><Text style={{ color: C.textLight }}>Chargement...</Text></View></View>;
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
       {/* Revenue Card */}
       <View style={[s.revenueCard, { backgroundColor: C.accent }]}>
         <View style={s.revenueHeader}>
-          <Text style={s.revenueLabel}>Chiffre d'Affaires Total</Text>
+          <Text style={s.revenueLabel}>{t("Chiffre d'Affaires Total")}</Text>
           <Ionicons name="trending-up" size={24} color="#FFFFFF" />
         </View>
         <Text style={s.revenueAmount}>CHF {(stats?.total_revenue || 0).toFixed(2)}</Text>
@@ -72,14 +73,14 @@ export default function AdminDashboard() {
               <Ionicons name={item.icon as any} size={24} color={item.color} />
             </View>
             <Text style={[s.statCount, { color: C.text }]}>{item.count}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>{item.label}</Text>
+            <Text style={[s.statLabel, { color: C.textLight }]}>{t(item.label)}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {/* Reservations by Status */}
       <View style={s.section}>
-        <Text style={[s.sectionTitle, { color: C.text }]}>Réservations par Statut</Text>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{t("Réservations par Statut")}</Text>
         <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
           {Object.entries(stats?.reservations_by_status || {}).map(([status, count]) => (
             <View key={status} style={s.statusItem}>
@@ -88,13 +89,13 @@ export default function AdminDashboard() {
               <Text style={[s.statusCount, { color: C.text }]}>{count}</Text>
             </View>
           ))}
-          {Object.keys(stats?.reservations_by_status || {}).length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune réservation</Text>}
+          {Object.keys(stats?.reservations_by_status || {}).length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Aucune réservation")}</Text>}
         </View>
       </View>
 
       {/* Top Vehicles */}
       <View style={s.section}>
-        <Text style={[s.sectionTitle, { color: C.text }]}>Véhicules les Plus Loués</Text>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{t("Véhicules les Plus Loués")}</Text>
         <View style={[s.card, { backgroundColor: C.card, borderColor: C.border }]}>
           {(stats?.top_vehicles || []).map((vehicle, index) => (
             <View key={vehicle.id} style={[s.topVehicleItem, index > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
@@ -105,21 +106,21 @@ export default function AdminDashboard() {
               <Text style={{ fontSize: 13, color: C.textLight }}>{vehicle.rental_count} locations</Text>
             </View>
           ))}
-          {(stats?.top_vehicles || []).length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>}
+          {(stats?.top_vehicles || []).length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>}
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={s.section}>
-        <Text style={[s.sectionTitle, { color: C.text }]}>Actions Rapides</Text>
+        <Text style={[s.sectionTitle, { color: C.text }]}>{t("Actions Rapides")}</Text>
         <View style={s.actionsRow}>
           <TouchableOpacity style={[s.actionBtn, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/admin/vehicles')}>
             <Ionicons name="add-circle" size={20} color={C.accent} />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: C.accent }}>Ajouter Véhicule</Text>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: C.accent }}>{t("Ajouter Véhicule")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[s.actionBtn, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/admin/reservations')}>
             <Ionicons name="eye" size={20} color={C.accent} />
-            <Text style={{ fontSize: 14, fontWeight: '600', color: C.accent }}>Voir Tout</Text>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: C.accent }}>{t("Voir Tout")}</Text>
           </TouchableOpacity>
         </View>
       </View>

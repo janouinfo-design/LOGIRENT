@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
+import { t } from '../../src/i18n';
+import { LanguageSelector } from '../../src/components/LanguageSelector';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -84,19 +86,22 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+            >
+              <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+            </TouchableOpacity>
+            <LanguageSelector color={COLORS.text} activeColor={COLORS.primary} />
+          </View>
 
           <View style={styles.header}>
             <View style={styles.logoContainer}>
               <Ionicons name="car-sport" size={40} color={COLORS.primary} />
             </View>
-            <Text style={styles.title}>Bon retour!</Text>
-            <Text style={styles.subtitle}>Connectez-vous pour continuer</Text>
+            <Text style={styles.title}>{t("Bon retour!")}</Text>
+            <Text style={styles.subtitle}>{t("Connectez-vous pour continuer")}</Text>
           </View>
 
           <View style={styles.form}>
@@ -109,8 +114,8 @@ export default function LoginScreen() {
             ) : null}
 
             <Input
-              label="Email"
-              placeholder="Entrez votre email"
+              label={t("Email")}
+              placeholder={t("Entrez votre email")}
               value={email}
               onChangeText={(text) => { setEmail(text); setLoginError(''); }}
               keyboardType="email-address"
@@ -120,8 +125,8 @@ export default function LoginScreen() {
             />
 
             <Input
-              label="Mot de passe"
-              placeholder="Entrez votre mot de passe"
+              label={t("Mot de passe")}
+              placeholder={t("Entrez votre mot de passe")}
               value={password}
               onChangeText={(text) => { setPassword(text); setLoginError(''); }}
               secureTextEntry
@@ -130,11 +135,11 @@ export default function LoginScreen() {
             />
 
             <TouchableOpacity style={styles.forgotButton} onPress={() => router.push('/forgot-password' as any)} data-testid="forgot-password-link">
-              <Text style={styles.forgotText}>Mot de passe oublie ? Reinitialiser</Text>
+              <Text style={styles.forgotText}>{t("Mot de passe oublie ? Reinitialiser")}</Text>
             </TouchableOpacity>
 
             <Button
-              title="Se connecter"
+              title={t("Se connecter")}
               onPress={handleLogin}
               loading={loading}
               size="large"
@@ -142,7 +147,7 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Pas encore de compte?</Text>
+            <Text style={styles.footerText}>{t("Pas encore de compte?")}</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
               <Text style={styles.footerLink}>S'inscrire</Text>
             </TouchableOpacity>

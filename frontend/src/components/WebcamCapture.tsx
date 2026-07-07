@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { t } from '../i18n';
 
 interface Props {
   visible: boolean;
@@ -109,7 +110,7 @@ export function WebcamCapture({ visible, onClose, onCapture, title = 'Prendre un
             </TouchableOpacity>
           )}
 
-          <Text style={s.hint}>Placez le document devant la camera puis appuyez sur le bouton</Text>
+          <Text style={s.hint}>{t("Placez le document devant la camera puis appuyez sur le bouton")}</Text>
         </View>
       </View>
     </Modal>

@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
 import Svg, { Rect, Text as SvgText, Line, Circle, Path, G } from 'react-native-svg';
+import { t } from '../../src/i18n';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -25,7 +26,7 @@ interface AdvancedStats {
 }
 
 function BarChart({ data, labelKey, valueKey, color, textColor, gridColor, height = 160 }: any) {
-  if (!data || data.length === 0) return <Text style={{ color: textColor, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>;
+  if (!data || data.length === 0) return <Text style={{ color: textColor, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>;
   const chartW = SCREEN_W - 80;
   const maxVal = Math.max(...data.map((d: any) => d[valueKey]), 1);
   const barW = Math.min(40, (chartW - 20) / data.length - 4);
@@ -101,29 +102,29 @@ export default function AdminStatistics() {
   const onRefresh = async () => { setRefreshing(true); await fetchData(); setRefreshing(false); };
 
   if (loading) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color={C.accent} /></View>;
-  if (!stats) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: C.textLight }}>Erreur de chargement</Text></View>;
+  if (!stats) return <View style={{ flex: 1, backgroundColor: C.bg, justifyContent: 'center', alignItems: 'center' }}><Text style={{ color: C.textLight }}>{t("Erreur de chargement")}</Text></View>;
 
   const pmColors: Record<string, string> = { card: C.accent, cash: '#fbbf24', twint: C.info };
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 16, paddingBottom: 40 }} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <Text style={{ color: C.text, fontSize: 22, fontWeight: '800' }}>Statistiques Avancées</Text>
-      <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2, marginBottom: 16 }}>Analyse détaillée de votre activité</Text>
+      <Text style={{ color: C.text, fontSize: 22, fontWeight: '800' }}>{t("Statistiques Avancées")}</Text>
+      <Text style={{ color: C.textLight, fontSize: 13, marginTop: 2, marginBottom: 16 }}>{t("Analyse détaillée de votre activité")}</Text>
 
       {/* KPIs */}
       <View style={st.kpiRow}>
         {[
-          { icon: 'cash', label: 'Revenu ce mois', value: `CHF ${stats.revenue_this_month.toFixed(0)}`, color: C.success, trend: stats.revenue_change_pct, sub: 'vs mois précédent' },
-          { icon: 'calendar', label: 'Réservations', value: `${stats.reservations_this_month}`, color: C.warning, sub: `${stats.reservations_last_month} mois dernier` },
-          { icon: 'time', label: 'Durée moyenne', value: `${stats.avg_booking_duration}j`, color: C.info, sub: 'par réservation' },
-          { icon: 'wallet', label: 'Panier moyen', value: `CHF ${stats.avg_revenue_per_reservation.toFixed(0)}`, color: C.accent, sub: 'par location' },
+          { icon: 'cash', label: t("Revenu ce mois"), value: `CHF ${stats.revenue_this_month.toFixed(0)}`, color: C.success, trend: stats.revenue_change_pct, sub: 'vs mois précédent' },
+          { icon: 'calendar', label: t("Réservations"), value: `${stats.reservations_this_month}`, color: C.warning, sub: `${stats.reservations_last_month} mois dernier` },
+          { icon: 'time', label: t("Durée moyenne"), value: `${stats.avg_booking_duration}j`, color: C.info, sub: 'par réservation' },
+          { icon: 'wallet', label: t("Panier moyen"), value: `CHF ${stats.avg_revenue_per_reservation.toFixed(0)}`, color: C.accent, sub: 'par location' },
         ].map((kpi, i) => (
           <View key={i} style={[st.kpiCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: kpi.color }]} data-testid={`kpi-${i}`}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: kpi.color + '20', justifyContent: 'center', alignItems: 'center' }}>
                 <Ionicons name={kpi.icon as any} size={16} color={kpi.color} />
               </View>
-              <Text style={{ color: C.textLight, fontSize: 11 }}>{kpi.label}</Text>
+              <Text style={{ color: C.textLight, fontSize: 11 }}>{t(kpi.label)}</Text>
             </View>
             <Text style={{ color: C.text, fontSize: 22, fontWeight: '800' }}>{kpi.value}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -141,7 +142,7 @@ export default function AdminStatistics() {
 
       {/* Revenue Chart */}
       <View style={st.section}>
-        <Text style={[st.sectionTitle, { color: C.text }]}>Revenu Journalier (30 jours)</Text>
+        <Text style={[st.sectionTitle, { color: C.text }]}>{t("Revenu Journalier (30 jours)")}</Text>
         <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
           <BarChart data={stats.daily_revenue} labelKey="date" valueKey="revenue" color={C.accent} textColor={C.textLight} gridColor={C.border} height={140} />
         </View>
@@ -149,7 +150,7 @@ export default function AdminStatistics() {
 
       {/* Weekly Trends */}
       <View style={st.section}>
-        <Text style={[st.sectionTitle, { color: C.text }]}>Tendance Hebdomadaire</Text>
+        <Text style={[st.sectionTitle, { color: C.text }]}>{t("Tendance Hebdomadaire")}</Text>
         <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
           <BarChart data={stats.weekly_trends} labelKey="week" valueKey="bookings" color={C.info} textColor={C.textLight} gridColor={C.border} height={120} />
         </View>
@@ -157,7 +158,7 @@ export default function AdminStatistics() {
 
       {/* Vehicle Utilization */}
       <View style={st.section}>
-        <Text style={[st.sectionTitle, { color: C.text }]}>Taux d'Utilisation des Véhicules</Text>
+        <Text style={[st.sectionTitle, { color: C.text }]}>{t("Taux d'Utilisation des Véhicules")}</Text>
         <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
           {stats.vehicle_utilization.slice(0, 8).map((v, i) => (
             <View key={v.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: i < 7 ? 8 : 0 }}>
@@ -168,14 +169,14 @@ export default function AdminStatistics() {
               <Text style={{ color: C.text, fontSize: 11, fontWeight: '700', width: 50, textAlign: 'right' }}>{v.utilization}%</Text>
             </View>
           ))}
-          {stats.vehicle_utilization.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>Aucune donnée</Text>}
+          {stats.vehicle_utilization.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 20 }}>{t("Aucune donnée")}</Text>}
         </View>
       </View>
 
       {/* Revenue per vehicle + Payment methods */}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={[st.section, { flex: 1 }]}>
-          <Text style={[st.sectionTitle, { color: C.text }]}>Revenu par Véhicule</Text>
+          <Text style={[st.sectionTitle, { color: C.text }]}>{t("Revenu par Véhicule")}</Text>
           <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
             {stats.revenue_per_vehicle.slice(0, 5).map((v, i) => (
               <View key={v.id} style={[{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10 }, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
@@ -186,11 +187,11 @@ export default function AdminStatistics() {
                 <Text style={{ color: '#fbbf24', fontSize: 14, fontWeight: '800' }}>CHF {v.revenue.toFixed(0)}</Text>
               </View>
             ))}
-            {stats.revenue_per_vehicle.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>Aucune donnée</Text>}
+            {stats.revenue_per_vehicle.length === 0 && <Text style={{ color: C.textLight, textAlign: 'center', padding: 16 }}>{t("Aucune donnée")}</Text>}
           </View>
         </View>
         <View style={[st.section, { flex: 1 }]}>
-          <Text style={[st.sectionTitle, { color: C.text }]}>Modes de Paiement</Text>
+          <Text style={[st.sectionTitle, { color: C.text }]}>{t("Modes de Paiement")}</Text>
           <View style={[st.chartCard, { backgroundColor: C.card, borderColor: C.border }]}>
             <DonutChart textColor={C.text} segments={stats.payment_methods.map(pm => ({ label: pm.method === 'cash' ? 'Espèces' : pm.method === 'card' ? 'Carte' : pm.method, value: pm.count, color: pmColors[pm.method] || C.textLight }))} size={110} />
           </View>
@@ -202,17 +203,17 @@ export default function AdminStatistics() {
         <View style={[st.miniCard, { backgroundColor: C.card, borderColor: C.error + '40' }]}>
           <Ionicons name="close-circle" size={20} color={C.error} />
           <Text style={{ color: C.text, fontSize: 22, fontWeight: '800' }}>{stats.cancellation_rate}%</Text>
-          <Text style={{ color: C.textLight, fontSize: 10, textAlign: 'center' }}>Taux d'annulation</Text>
+          <Text style={{ color: C.textLight, fontSize: 10, textAlign: 'center' }}>{t("Taux d'annulation")}</Text>
         </View>
         <View style={[st.miniCard, { backgroundColor: C.card, borderColor: C.success + '40' }]}>
           <Ionicons name="people" size={20} color={C.success} />
           <Text style={{ color: C.text, fontSize: 22, fontWeight: '800' }}>{stats.new_clients_30d}</Text>
-          <Text style={{ color: C.textLight, fontSize: 10, textAlign: 'center' }}>Nouveaux clients (30j)</Text>
+          <Text style={{ color: C.textLight, fontSize: 10, textAlign: 'center' }}>{t("Nouveaux clients (30j)")}</Text>
         </View>
         <View style={[st.miniCard, { backgroundColor: C.card, borderColor: C.accent + '40' }]}>
           <Ionicons name="car" size={20} color={C.accent} />
           <Text style={{ color: C.text, fontSize: 22, fontWeight: '800' }}>{basicStats?.total_vehicles || 0}</Text>
-          <Text style={{ color: C.textLight, fontSize: 10, textAlign: 'center' }}>Flotte totale</Text>
+          <Text style={{ color: C.textLight, fontSize: 10, textAlign: 'center' }}>{t("Flotte totale")}</Text>
         </View>
       </View>
       <View style={{ height: 40 }} />

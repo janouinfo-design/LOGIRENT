@@ -12,6 +12,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import api from '../../src/api/axios';
 import MiniCalendar from '../../src/components/MiniCalendar';
 import { VehiclePricingDisplay } from '../../src/components/VehiclePricingDisplay';
+import { t } from '../../src/i18n';
 
 const C = {
   primary: '#1E3A8A',
@@ -251,17 +252,17 @@ export default function BookingScreen() {
       {!hasDocuments && (
         <TouchableOpacity style={s.warning} onPress={() => router.push('/(tabs)/profile')} data-testid="doc-warning">
           <Ionicons name="warning" size={20} color="#92400E" />
-          <Text style={s.warningText}>Documents manquants. Uploadez votre permis et pièce d'identité avant de réserver.</Text>
+          <Text style={s.warningText}>{t("Documents manquants. Uploadez votre permis et pièce d'identité avant de réserver.")}</Text>
           <Ionicons name="chevron-forward" size={16} color="#92400E" />
         </TouchableOpacity>
       )}
 
       {/* Dates */}
       <View style={s.section}>
-        <Text style={s.sectionTitle}>Dates de location</Text>
+        <Text style={s.sectionTitle}>{t("Dates de location")}</Text>
         <View style={s.dateRow}>
           <TouchableOpacity style={s.dateCard} onPress={() => setShowDatePicker('start')} data-testid="start-date-card">
-            <Text style={s.dateLabel}>Date de départ</Text>
+            <Text style={s.dateLabel}>{t("Date de départ")}</Text>
             <View style={s.dateSelector}>
               <TouchableOpacity style={s.dateBtn} onPress={() => incrementDays('start', -1)}><Ionicons name="remove" size={20} color={C.primary} /></TouchableOpacity>
               <View style={s.dateDisplay}>
@@ -281,7 +282,7 @@ export default function BookingScreen() {
           <Ionicons name="arrow-forward" size={24} color={C.textLight} />
 
           <TouchableOpacity style={s.dateCard} onPress={() => setShowDatePicker('end')} data-testid="return-date-card">
-            <Text style={s.dateLabel}>Date de retour</Text>
+            <Text style={s.dateLabel}>{t("Date de retour")}</Text>
             <View style={s.dateSelector}>
               <TouchableOpacity style={s.dateBtn} onPress={() => incrementDays('end', -1)}><Ionicons name="remove" size={20} color={C.primary} /></TouchableOpacity>
               <View style={s.dateDisplay}>
@@ -311,7 +312,7 @@ export default function BookingScreen() {
         onSelectDate={handleCalendarDateSelect}
         selectedDate={showDatePicker === 'start' ? startDate : endDate}
         minDate={showDatePicker === 'end' ? addDays(startDate, 1) : undefined}
-        title={showDatePicker === 'start' ? 'Date de départ' : 'Date de retour'}
+        title={showDatePicker === 'start' ? t("Date de départ") : t("Date de retour")}
         vehicleId={id}
       />
 
@@ -331,7 +332,7 @@ export default function BookingScreen() {
 
       {/* Options */}
       <View style={s.section}>
-        <Text style={s.sectionTitle}>Options supplémentaires</Text>
+        <Text style={s.sectionTitle}>{t("Options supplémentaires")}</Text>
         {allOptions.map((opt: any) => {
           const sel = selectedOptions.includes(opt.name);
           const total = opt.price_per_day * totalDays;
@@ -378,13 +379,13 @@ export default function BookingScreen() {
   // ==================== STEP 2: Validation / Récapitulatif ====================
   const renderStep2 = () => (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Récapitulatif de la réservation</Text>
+      <Text style={s.sectionTitle}>{t("Récapitulatif de la réservation")}</Text>
 
       {/* Vehicle */}
       <View style={s.recapCard} data-testid="recap-vehicle">
         <View style={s.recapRow}>
           <Ionicons name="car-sport" size={20} color={C.primary} />
-          <Text style={s.recapLabel}>Véhicule</Text>
+          <Text style={s.recapLabel}>{t("Véhicule")}</Text>
         </View>
         <Text style={s.recapValue}>{vehicle.brand} {vehicle.model}</Text>
         <Text style={s.recapSub}>CHF {vehicle.price_per_day}/jour</Text>
@@ -394,7 +395,7 @@ export default function BookingScreen() {
       <View style={s.recapCard} data-testid="recap-dates">
         <View style={s.recapRow}>
           <Ionicons name="calendar" size={20} color={C.primary} />
-          <Text style={s.recapLabel}>Période</Text>
+          <Text style={s.recapLabel}>{t("Période")}</Text>
         </View>
         <Text style={s.recapValue}>
           {format(startDate, 'dd MMM yyyy', { locale: fr })} ({String(startHour).padStart(2, '0')}h) {' → '} 
@@ -426,7 +427,7 @@ export default function BookingScreen() {
       <View style={[s.recapCard, { backgroundColor: C.primary + '08' }]} data-testid="recap-price">
         <View style={s.recapRow}>
           <Ionicons name="receipt" size={20} color={C.primary} />
-          <Text style={s.recapLabel}>Détail du prix</Text>
+          <Text style={s.recapLabel}>{t("Détail du prix")}</Text>
         </View>
         <View style={s.priceRow}>
           <Text style={s.priceLabel}>{selectedTier ? `Forfait: ${selectedTier.name}` : `Base (${totalDays}j x CHF ${vehicle.price_per_day})`}</Text>
@@ -450,9 +451,9 @@ export default function BookingScreen() {
           <Ionicons name="shield-checkmark" size={20} color={C.success} />
           <Text style={s.recapLabel}>Conditions</Text>
         </View>
-        <View style={s.policyItem}><Ionicons name="checkmark-circle" size={16} color={C.success} /><Text style={s.policyText}>Annulation gratuite 24h avant</Text></View>
-        <View style={s.policyItem}><Ionicons name="checkmark-circle" size={16} color={C.success} /><Text style={s.policyText}>Assurance complète incluse</Text></View>
-        <View style={s.policyItem}><Ionicons name="checkmark-circle" size={16} color={C.success} /><Text style={s.policyText}>Assistance routière 24/7</Text></View>
+        <View style={s.policyItem}><Ionicons name="checkmark-circle" size={16} color={C.success} /><Text style={s.policyText}>{t("Annulation gratuite 24h avant")}</Text></View>
+        <View style={s.policyItem}><Ionicons name="checkmark-circle" size={16} color={C.success} /><Text style={s.policyText}>{t("Assurance complète incluse")}</Text></View>
+        <View style={s.policyItem}><Ionicons name="checkmark-circle" size={16} color={C.success} /><Text style={s.policyText}>{t("Assistance routière 24/7")}</Text></View>
       </View>
     </View>
   );
@@ -460,7 +461,7 @@ export default function BookingScreen() {
   // ==================== STEP 3: Paiement ====================
   const renderStep3 = () => (
     <View style={s.section}>
-      <Text style={s.sectionTitle}>Mode de paiement</Text>
+      <Text style={s.sectionTitle}>{t("Mode de paiement")}</Text>
 
       <TouchableOpacity style={[s.payCard, paymentMethod === 'card' && s.payCardActive]} onPress={() => setPaymentMethod('card')} data-testid="payment-card">
         <View style={[s.payRadio, paymentMethod === 'card' && s.payRadioActive]}>
@@ -468,8 +469,8 @@ export default function BookingScreen() {
         </View>
         <Ionicons name="card" size={28} color={paymentMethod === 'card' ? C.primary : C.textLight} />
         <View style={{ flex: 1 }}>
-          <Text style={[s.payTitle, paymentMethod === 'card' && { color: C.primary }]}>Carte bancaire</Text>
-          <Text style={s.paySub}>Visa, Mastercard, Apple Pay</Text>
+          <Text style={[s.payTitle, paymentMethod === 'card' && { color: C.primary }]}>{t("Carte bancaire")}</Text>
+          <Text style={s.paySub}>{t("Visa, Mastercard, Apple Pay")}</Text>
         </View>
       </TouchableOpacity>
 
@@ -480,7 +481,7 @@ export default function BookingScreen() {
         <View style={s.twintIcon}><Text style={s.twintText}>T</Text></View>
         <View style={{ flex: 1 }}>
           <Text style={[s.payTitle, paymentMethod === 'twint' && { color: C.twint }]}>TWINT</Text>
-          <Text style={s.paySub}>Paiement mobile suisse</Text>
+          <Text style={s.paySub}>{t("Paiement mobile suisse")}</Text>
         </View>
       </TouchableOpacity>
 
@@ -490,14 +491,14 @@ export default function BookingScreen() {
         </View>
         <Ionicons name="cash" size={28} color={paymentMethod === 'cash' ? C.secondary : C.textLight} />
         <View style={{ flex: 1 }}>
-          <Text style={[s.payTitle, paymentMethod === 'cash' && { color: '#92400E' }]}>Espèces</Text>
-          <Text style={s.paySub}>Payer lors de la prise du véhicule</Text>
+          <Text style={[s.payTitle, paymentMethod === 'cash' && { color: '#92400E' }]}>{t("Espèces")}</Text>
+          <Text style={s.paySub}>{t("Payer lors de la prise du véhicule")}</Text>
         </View>
       </TouchableOpacity>
 
       {/* Price Reminder */}
       <View style={s.payTotal}>
-        <Text style={s.payTotalLabel}>Montant à payer</Text>
+        <Text style={s.payTotalLabel}>{t("Montant à payer")}</Text>
         <Text style={s.payTotalVal}>CHF {totalPrice.toFixed(2)}</Text>
       </View>
 
@@ -517,7 +518,7 @@ export default function BookingScreen() {
         <View style={s.confirmIcon}>
           <Ionicons name="hourglass-outline" size={80} color="#F59E0B" />
         </View>
-        <Text style={s.confirmTitle}>Demande de réservation envoyée !</Text>
+        <Text style={s.confirmTitle}>{t("Demande de réservation envoyée !")}</Text>
         <Text style={s.confirmSub}>
           Votre demande de réservation pour le {vehicle.brand} {vehicle.model} a bien été reçue. Notre équipe va l'analyser et vous envoyer une confirmation dans les plus brefs délais.
         </Text>
@@ -525,15 +526,15 @@ export default function BookingScreen() {
         {/* Reservation Details */}
         <View style={s.confirmCard}>
           <View style={s.confirmRow}>
-            <Text style={s.confirmLabel}>Référence</Text>
+            <Text style={s.confirmLabel}>{t("Référence")}</Text>
             <Text style={s.confirmVal}>{createdReservation?.id?.slice(0, 8).toUpperCase() || '-'}</Text>
           </View>
           <View style={s.confirmRow}>
-            <Text style={s.confirmLabel}>Véhicule</Text>
+            <Text style={s.confirmLabel}>{t("Véhicule")}</Text>
             <Text style={s.confirmVal}>{vehicle.brand} {vehicle.model}</Text>
           </View>
           <View style={s.confirmRow}>
-            <Text style={s.confirmLabel}>Période</Text>
+            <Text style={s.confirmLabel}>{t("Période")}</Text>
             <Text style={s.confirmVal}>{format(startDate, 'dd/MM/yyyy')} - {format(endDate, 'dd/MM/yyyy')}</Text>
           </View>
           <View style={s.confirmRow}>
@@ -548,13 +549,13 @@ export default function BookingScreen() {
 
         <View style={s.contractPending}>
           <Ionicons name="mail-outline" size={18} color="#F59E0B" />
-          <Text style={[s.contractPendingText, { color: '#92400E' }]}>Un e-mail de confirmation vous sera envoyé une fois la réservation validée par notre équipe</Text>
+          <Text style={[s.contractPendingText, { color: '#92400E' }]}>{t("Un e-mail de confirmation vous sera envoyé une fois la réservation validée par notre équipe")}</Text>
         </View>
 
         {/* Actions */}
         <TouchableOpacity style={s.backToResBtn} onPress={() => router.push('/(tabs)/reservations')} data-testid="back-to-reservations-btn">
           <Ionicons name="list" size={18} color={C.primary} />
-          <Text style={s.backToResText}>Voir mes réservations</Text>
+          <Text style={s.backToResText}>{t("Voir mes réservations")}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -599,7 +600,7 @@ export default function BookingScreen() {
             {step > 1 ? (
               <TouchableOpacity style={s.prevBtn} onPress={() => setStep(step - 1)} data-testid="prev-step-btn">
                 <Ionicons name="arrow-back" size={18} color={C.primary} />
-                <Text style={s.prevBtnText}>Précédent</Text>
+                <Text style={s.prevBtnText}>{t("Précédent")}</Text>
               </TouchableOpacity>
             ) : <View />}
 
@@ -610,7 +611,7 @@ export default function BookingScreen() {
                 disabled={!canGoNext()}
                 data-testid="next-step-btn"
               >
-                <Text style={s.nextBtnText}>{step === 2 ? 'Choisir le paiement' : 'Valider la sélection'}</Text>
+                <Text style={s.nextBtnText}>{step === 2 ? t("Choisir le paiement") : t("Valider la sélection")}</Text>
                 <Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
             ) : (
@@ -626,7 +627,7 @@ export default function BookingScreen() {
                   <>
                     <Ionicons name="checkmark-circle" size={20} color="#fff" />
                     <Text style={s.confirmBtnText}>
-                      {paymentMethod === 'cash' ? 'Confirmer la réservation' : paymentMethod === 'twint' ? 'Payer par TWINT' : 'Payer par carte'}
+                      {paymentMethod === 'cash' ? 'Confirmer la réservation' : paymentMethod === 'twint' ? t("Payer par TWINT") : t("Payer par carte")}
                     </Text>
                   </>
                 )}

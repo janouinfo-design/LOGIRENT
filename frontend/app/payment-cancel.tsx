@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '../src/components/Button';
+import { t } from '../src/i18n';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -25,17 +26,15 @@ export default function PaymentCancelScreen() {
         <View style={styles.iconContainer}>
           <Ionicons name="warning" size={80} color={COLORS.warning} />
         </View>
-        <Text style={styles.title}>Payment Cancelled</Text>
-        <Text style={styles.subtitle}>
-          Your payment was cancelled. Your reservation is saved but not confirmed.
-        </Text>
+        <Text style={styles.title}>{t("Payment Cancelled")}</Text>
+        <Text style={styles.subtitle}>{t("Your payment was cancelled. Your reservation is saved but not confirmed.")}</Text>
         <View style={styles.buttons}>
           <Button
-            title="Try Again"
+            title={t("Try Again")}
             onPress={() => router.back()}
           />
           <Button
-            title="View My Reservations"
+            title={t("View My Reservations")}
             onPress={() => router.replace('/(tabs)/reservations')}
             variant="outline"
           />

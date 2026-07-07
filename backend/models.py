@@ -78,6 +78,7 @@ class UserProfile(BaseModel):
     license_issue_date: Optional[str] = None
     license_expiry_date: Optional[str] = None
     nationality: Optional[str] = None
+    preferred_language: Optional[str] = 'fr'
     role: str = "client"
     agency_id: Optional[str] = None
     agency_name: Optional[str] = None
@@ -94,6 +95,7 @@ class UserUpdate(BaseModel):
     license_issue_date: Optional[str] = None
     license_expiry_date: Optional[str] = None
     nationality: Optional[str] = None
+    preferred_language: Optional[str] = None
 
 
 class AdminUserUpdate(BaseModel):

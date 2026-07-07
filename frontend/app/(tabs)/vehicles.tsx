@@ -7,6 +7,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import Button from '../../src/components/Button';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const vehicleTypes = ['Tous', 'SUV', 'Grand SUV', 'Berline', 'Citadine', 'Compact', 'Utilitaire', 'Luxe', 'Van', 'Monospace', 'Cabriolet', 'Electrique'];
 const transmissions = ['Toutes', 'Automatique', 'Manuel'];
@@ -87,7 +88,7 @@ export default function VehiclesScreen() {
           {/* Left: Title + Categories */}
           <View style={st.leftSection}>
             <View style={st.titleRow}>
-              <Text style={[st.title, { color: C.text }]}>Notre Flotte</Text>
+              <Text style={[st.title, { color: C.text }]}>{t("Notre Flotte")}</Text>
               <Text style={[st.count, { color: C.textLight }]}>{groupedVehicles.length} modeles ({filteredVehicles.length} vehicules)</Text>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={st.catRow}>
@@ -113,7 +114,7 @@ export default function VehiclesScreen() {
               <Ionicons name="search" size={16} color={C.textLight} />
               <TextInput
                 style={[st.searchInput, { color: C.text }]}
-                placeholder="Rechercher..."
+                placeholder={t("Rechercher...")}
                 placeholderTextColor={C.textLight}
                 value={search}
                 onChangeText={setSearch}
@@ -143,8 +144,8 @@ export default function VehiclesScreen() {
         {groupedVehicles.length === 0 ? (
           <View style={st.empty}>
             <Ionicons name="car-outline" size={48} color={C.textLight} />
-            <Text style={[st.emptyText, { color: C.textLight }]}>Aucun véhicule trouvé</Text>
-            <Text style={[st.emptySub, { color: C.textLight }]}>Essayez d'ajuster vos filtres</Text>
+            <Text style={[st.emptyText, { color: C.textLight }]}>{t("Aucun véhicule trouvé")}</Text>
+            <Text style={[st.emptySub, { color: C.textLight }]}>{t("Essayez d'ajuster vos filtres")}</Text>
           </View>
         ) : (
           <View style={[st.grid, { gap }]}>
@@ -170,11 +171,11 @@ export default function VehiclesScreen() {
       <Modal visible={showFilters} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowFilters(false)}>
         <View style={[st.modal, { backgroundColor: C.bg }]}>
           <View style={[st.modalHeader, { borderColor: C.border }]}>
-            <Text style={[st.modalTitle, { color: C.text }]}>Filtres avancés</Text>
+            <Text style={[st.modalTitle, { color: C.text }]}>{t("Filtres avancés")}</Text>
             <TouchableOpacity onPress={() => setShowFilters(false)} data-testid="close-filters"><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
           </View>
           <ScrollView style={{ flex: 1, padding: 20 }}>
-            <Text style={[st.filterLabel, { color: C.text }]}>Type de véhicule</Text>
+            <Text style={[st.filterLabel, { color: C.text }]}>{t("Type de véhicule")}</Text>
             <View style={st.filterOptions}>
               {vehicleTypes.map(type => (
                 <TouchableOpacity key={type} style={[st.filterOpt, { borderColor: C.border }, selectedType === type && { backgroundColor: '#7C3AED', borderColor: '#7C3AED' }]} onPress={() => setSelectedType(type)}>
@@ -192,8 +193,8 @@ export default function VehiclesScreen() {
             </View>
           </ScrollView>
           <View style={[st.modalFooter, { borderColor: C.border }]}>
-            <Button title="Réinitialiser" onPress={resetFilters} variant="outline" style={{ flex: 1 }} />
-            <Button title="Appliquer" onPress={applyFilters} style={{ flex: 1 }} />
+            <Button title={t("Réinitialiser")} onPress={resetFilters} variant="outline" style={{ flex: 1 }} />
+            <Button title={t("Appliquer")} onPress={applyFilters} style={{ flex: 1 }} />
           </View>
         </View>
       </Modal>

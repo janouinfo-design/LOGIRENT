@@ -6,6 +6,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const SCREEN_W = Dimensions.get('window').width;
@@ -170,7 +171,7 @@ export default function AgenciesPage() {
   };
 
   const handleToggleActive = async (agency: Agency) => {
-    const action = agency.is_active !== false ? 'désactiver' : 'activer';
+    const action = agency.is_active !== false ? t("désactiver") : 'activer';
     if (!confirm(`Voulez-vous ${action} l'agence ${agency.name} ?`)) return;
     try {
       const storeToken = useAuthStore.getState().token;
@@ -194,7 +195,7 @@ export default function AgenciesPage() {
       <View style={styles.container}>
         <View style={styles.emptyState}>
           <Ionicons name="lock-closed" size={48} color={COLORS.textLight} />
-          <Text style={styles.emptyText}>Accès réservé au super administrateur</Text>
+          <Text style={styles.emptyText}>{t("Accès réservé au super administrateur")}</Text>
         </View>
       </View>
     );
@@ -204,14 +205,14 @@ export default function AgenciesPage() {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.headerRow}>
-          <Text style={styles.pageTitle}>Gestion des Agences</Text>
+          <Text style={styles.pageTitle}>{t("Gestion des Agences")}</Text>
           <TouchableOpacity
             style={styles.addBtn}
             onPress={() => { setEditAgency(null); setForm({ name: '', address: '', phone: '', email: '', admin_name: '', admin_email: '', admin_password: '' }); setError(''); setShowModal(true); }}
             data-testid="add-agency-btn"
           >
             <Ionicons name="add" size={20} color="#FFF" />
-            <Text style={styles.addBtnText}>Nouvelle agence</Text>
+            <Text style={styles.addBtnText}>{t("Nouvelle agence")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -220,7 +221,7 @@ export default function AgenciesPage() {
         ) : agencies.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="business-outline" size={48} color={COLORS.textLight} />
-            <Text style={styles.emptyText}>Aucune agence</Text>
+            <Text style={styles.emptyText}>{t("Aucune agence")}</Text>
           </View>
         ) : (
           <View style={styles.grid}>
@@ -231,7 +232,7 @@ export default function AgenciesPage() {
                   {/* Status badge */}
                   {agency.is_active === false && (
                     <View style={{ backgroundColor: '#EF4444', paddingVertical: 4, alignItems: 'center' }}>
-                      <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>COMPTE DESACTIVE</Text>
+                      <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>{t("COMPTE DESACTIVE")}</Text>
                     </View>
                   )}
                   {/* Icon + Actions */}
@@ -292,7 +293,7 @@ export default function AgenciesPage() {
                           <Ionicons name="log-in" size={14} color="#FFF" />
                         )}
                         <Text style={[styles.impersonateBtnText, { fontSize: 12 }]} numberOfLines={1}>
-                          {impersonating === agency.id ? '...' : 'Connexion Admin'}
+                          {impersonating === agency.id ? '...' : t("Connexion Admin")}
                         </Text>
                       </TouchableOpacity>
                     )}
@@ -302,7 +303,7 @@ export default function AgenciesPage() {
                       data-testid={`qr-agency-${agency.id}`}
                     >
                       <Ionicons name="qr-code-outline" size={13} color="#FFF" />
-                      <Text style={[styles.qrBtnText, { fontSize: 12 }]}>QR Codes</Text>
+                      <Text style={[styles.qrBtnText, { fontSize: 12 }]}>{t("QR Codes")}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={{
@@ -329,7 +330,7 @@ export default function AgenciesPage() {
                     >
                       <Ionicons name={agency.is_active !== false ? 'close-circle' : 'checkmark-circle'} size={14} color={agency.is_active !== false ? '#EF4444' : '#10B981'} />
                       <Text style={{ color: agency.is_active !== false ? '#EF4444' : '#10B981', fontSize: 12, fontWeight: '700' }}>
-                        {agency.is_active !== false ? 'Désactiver' : 'Activer'}
+                        {agency.is_active !== false ? t("Désactiver") : 'Activer'}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -350,46 +351,46 @@ export default function AgenciesPage() {
           >
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>{editAgency ? 'Modifier l\'agence' : 'Nouvelle agence'}</Text>
+                <Text style={styles.modalTitle}>{editAgency ? t("Modifier l'agence") : t("Nouvelle agence")}</Text>
                 <TouchableOpacity onPress={() => setShowModal(false)}>
                   <Ionicons name="close" size={24} color={COLORS.textLight} />
                 </TouchableOpacity>
               </View>
               {error ? <Text style={styles.modalError}>{error}</Text> : null}
               <View style={styles.modalForm}>
-                <Text style={styles.sectionLabel}>Informations agence</Text>
+                <Text style={styles.sectionLabel}>{t("Informations agence")}</Text>
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Nom de l'agence *</Text>
-                  <TextInput style={styles.fieldInput} value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} placeholder="Nom de l'agence" placeholderTextColor={COLORS.textLight} data-testid="agency-form-name" />
+                  <Text style={styles.fieldLabel}>{t("Nom de l'agence *")}</Text>
+                  <TextInput style={styles.fieldInput} value={form.name} onChangeText={(t) => setForm({ ...form, name: t })} placeholder={t("Nom de l'agence")} placeholderTextColor={COLORS.textLight} data-testid="agency-form-name" />
                 </View>
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>Adresse</Text>
-                  <TextInput style={styles.fieldInput} value={form.address} onChangeText={(t) => setForm({ ...form, address: t })} placeholder="Adresse" placeholderTextColor={COLORS.textLight} data-testid="agency-form-address" />
+                  <TextInput style={styles.fieldInput} value={form.address} onChangeText={(t) => setForm({ ...form, address: t })} placeholder={t("Adresse")} placeholderTextColor={COLORS.textLight} data-testid="agency-form-address" />
                 </View>
                 <View style={styles.fieldGroup}>
                   <Text style={styles.fieldLabel}>Telephone</Text>
                   <TextInput style={styles.fieldInput} value={form.phone} onChangeText={(t) => setForm({ ...form, phone: t })} placeholder="+41 22 000 0000" placeholderTextColor={COLORS.textLight} data-testid="agency-form-phone" />
                 </View>
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Email agence</Text>
-                  <TextInput style={styles.fieldInput} value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} placeholder="contact@agence.ch" placeholderTextColor={COLORS.textLight} data-testid="agency-form-email" />
+                  <Text style={styles.fieldLabel}>{t("Email agence")}</Text>
+                  <TextInput style={styles.fieldInput} value={form.email} onChangeText={(t) => setForm({ ...form, email: t })} placeholder={t("contact@agence.ch")} placeholderTextColor={COLORS.textLight} data-testid="agency-form-email" />
                 </View>
 
                 {editAgency === null && (
                   <View style={styles.adminSection}>
                     <View style={styles.sectionDivider} />
-                    <Text style={styles.sectionLabel}>Compte administrateur</Text>
+                    <Text style={styles.sectionLabel}>{t("Compte administrateur")}</Text>
                     <View style={styles.fieldGroup}>
-                      <Text style={styles.fieldLabel}>Nom de l'admin *</Text>
-                      <TextInput style={styles.fieldInput} value={form.admin_name} onChangeText={(t) => setForm({ ...form, admin_name: t })} placeholder="Jean Dupont" placeholderTextColor={COLORS.textLight} data-testid="agency-form-admin-name" />
+                      <Text style={styles.fieldLabel}>{t("Nom de l'admin *")}</Text>
+                      <TextInput style={styles.fieldInput} value={form.admin_name} onChangeText={(t) => setForm({ ...form, admin_name: t })} placeholder={t("Jean Dupont")} placeholderTextColor={COLORS.textLight} data-testid="agency-form-admin-name" />
                     </View>
                     <View style={styles.fieldGroup}>
-                      <Text style={styles.fieldLabel}>Email admin *</Text>
-                      <TextInput style={styles.fieldInput} value={form.admin_email} onChangeText={(t) => setForm({ ...form, admin_email: t })} placeholder="jean@agence.ch" placeholderTextColor={COLORS.textLight} autoCapitalize="none" keyboardType="email-address" data-testid="agency-form-admin-email" />
+                      <Text style={styles.fieldLabel}>{t("Email admin *")}</Text>
+                      <TextInput style={styles.fieldInput} value={form.admin_email} onChangeText={(t) => setForm({ ...form, admin_email: t })} placeholder={t("jean@agence.ch")} placeholderTextColor={COLORS.textLight} autoCapitalize="none" keyboardType="email-address" data-testid="agency-form-admin-email" />
                     </View>
                     <View style={styles.fieldGroup}>
-                      <Text style={styles.fieldLabel}>Mot de passe admin *</Text>
-                      <TextInput style={styles.fieldInput} value={form.admin_password} onChangeText={(t) => setForm({ ...form, admin_password: t })} placeholder="Mot de passe" placeholderTextColor={COLORS.textLight} secureTextEntry data-testid="agency-form-admin-password" />
+                      <Text style={styles.fieldLabel}>{t("Mot de passe admin *")}</Text>
+                      <TextInput style={styles.fieldInput} value={form.admin_password} onChangeText={(t) => setForm({ ...form, admin_password: t })} placeholder={t("Mot de passe")} placeholderTextColor={COLORS.textLight} secureTextEntry data-testid="agency-form-admin-password" />
                     </View>
                   </View>
                 )}
@@ -397,19 +398,19 @@ export default function AgenciesPage() {
                 {/* Navixy GPS Configuration */}
                 <View style={styles.sectionHeader}>
                   <Ionicons name="locate" size={18} color="#06b6d4" />
-                  <Text style={styles.sectionTitle}>Configuration Navixy GPS</Text>
+                  <Text style={styles.sectionTitle}>{t("Configuration Navixy GPS")}</Text>
                 </View>
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>URL API Navixy</Text>
-                  <TextInput style={styles.fieldInput} value={form.navixy_api_url} onChangeText={(t) => setForm({ ...form, navixy_api_url: t })} placeholder="https://api.navixy.com/v2" placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-url" />
+                  <Text style={styles.fieldLabel}>{t("URL API Navixy")}</Text>
+                  <TextInput style={styles.fieldInput} value={form.navixy_api_url} onChangeText={(t) => setForm({ ...form, navixy_api_url: t })} placeholder={t("https://api.navixy.com/v2")} placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-url" />
                 </View>
                 <View style={styles.fieldGroup}>
-                  <Text style={styles.fieldLabel}>Clé API (Hash) Navixy</Text>
+                  <Text style={styles.fieldLabel}>{t("Clé API (Hash) Navixy")}</Text>
                   <TextInput style={styles.fieldInput} value={form.navixy_hash} onChangeText={(t) => setForm({ ...form, navixy_hash: t })} placeholder="a6a4d4c91182..." placeholderTextColor={COLORS.textLight} data-testid="agency-form-navixy-hash" />
                 </View>
 
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave} data-testid="agency-form-save">
-                  <Text style={styles.saveBtnText}>{editAgency !== null ? 'Mettre a jour' : 'Creer l\'agence + admin'}</Text>
+                  <Text style={styles.saveBtnText}>{editAgency !== null ? t("Mettre a jour") : t("Creer l'agence + admin")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -426,10 +427,10 @@ export default function AgenciesPage() {
                 <View style={styles.successIcon}>
                   <Ionicons name="checkmark-circle" size={48} color={COLORS.success} />
                 </View>
-                <Text style={styles.modalTitle}>Agence creee avec succes !</Text>
+                <Text style={styles.modalTitle}>{t("Agence creee avec succes !")}</Text>
               </View>
               <View style={styles.credentialsBox}>
-                <Text style={styles.credentialsTitle}>Identifiants de connexion admin :</Text>
+                <Text style={styles.credentialsTitle}>{t("Identifiants de connexion admin :")}</Text>
                 <View style={styles.credentialRow}>
                   <Ionicons name="person" size={16} color={COLORS.accent} />
                   <Text style={styles.credentialLabel}>Nom :</Text>
@@ -442,19 +443,19 @@ export default function AgenciesPage() {
                 </View>
                 <View style={styles.credentialRow}>
                   <Ionicons name="lock-closed" size={16} color={COLORS.accent} />
-                  <Text style={styles.credentialLabel}>Mot de passe :</Text>
+                  <Text style={styles.credentialLabel}>{t("Mot de passe :")}</Text>
                   <Text style={styles.credentialValue}>{successInfo?.password}</Text>
                 </View>
               </View>
 
               {/* QR Codes in success modal */}
               <View style={styles.credentialsBox}>
-                <Text style={styles.credentialsTitle}>QR Codes de l'agence :</Text>
+                <Text style={styles.credentialsTitle}>{t("QR Codes de l'agence :")}</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-around', gap: 16, flexWrap: 'wrap', marginTop: 8 }}>
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.qrSectionHeader}>
                       <Ionicons name="phone-portrait-outline" size={14} color={COLORS.success} />
-                      <Text style={{ color: COLORS.success, fontSize: 12, fontWeight: '700' }}>App Client</Text>
+                      <Text style={{ color: COLORS.success, fontSize: 12, fontWeight: '700' }}>{t("App Client")}</Text>
                     </View>
                     <View style={[styles.qrContainer, { padding: 12 }]}>
                       <QRCode value={`${API_URL}`} size={120} level="H" fgColor="#1A1A2E" bgColor="#FFFFFF" />
@@ -463,7 +464,7 @@ export default function AgenciesPage() {
                   <View style={{ alignItems: 'center' }}>
                     <View style={styles.qrSectionHeader}>
                       <Ionicons name="shield-checkmark-outline" size={14} color={COLORS.warning} />
-                      <Text style={{ color: COLORS.warning, fontSize: 12, fontWeight: '700' }}>App Admin</Text>
+                      <Text style={{ color: COLORS.warning, fontSize: 12, fontWeight: '700' }}>{t("App Admin")}</Text>
                     </View>
                     <View style={[styles.qrContainer, { padding: 12 }]}>
                       <QRCode value={`${API_URL}/admin-login`} size={120} level="H" fgColor="#1A1A2E" bgColor="#FFFFFF" />
@@ -472,7 +473,7 @@ export default function AgenciesPage() {
                 </View>
               </View>
 
-              <Text style={styles.credentialsNote}>Communiquez ces identifiants et QR codes a l'administrateur de l'agence.</Text>
+              <Text style={styles.credentialsNote}>{t("Communiquez ces identifiants et QR codes a l'administrateur de l'agence.")}</Text>
               <TouchableOpacity style={styles.saveBtn} onPress={() => setSuccessInfo(null)} data-testid="agency-success-close">
                 <Text style={styles.saveBtnText}>Fermer</Text>
               </TouchableOpacity>
@@ -491,17 +492,15 @@ export default function AgenciesPage() {
               </TouchableOpacity>
               <Ionicons name="qr-code" size={32} color={COLORS.primary} />
               <Text style={[styles.modalTitle, { marginTop: 8 }]}>QR Codes - {qrAgency?.name}</Text>
-              <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 20, textAlign: 'center' }}>
-                Imprimez ces QR codes et affichez-les dans votre agence.
-              </Text>
+              <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 20, textAlign: 'center' }}>{t("Imprimez ces QR codes et affichez-les dans votre agence.")}</Text>
 
               {/* Client QR Code */}
               <View style={styles.qrSection} data-testid="qr-client-section">
                 <View style={styles.qrSectionHeader}>
                   <Ionicons name="phone-portrait-outline" size={18} color={COLORS.success} />
-                  <Text style={[styles.qrSectionTitle, { color: COLORS.success }]}>App Client</Text>
+                  <Text style={[styles.qrSectionTitle, { color: COLORS.success }]}>{t("App Client")}</Text>
                 </View>
-                <Text style={styles.qrDescription}>Le client scanne ce code pour s'inscrire et acceder au catalogue de l'agence.</Text>
+                <Text style={styles.qrDescription}>{t("Le client scanne ce code pour s'inscrire et acceder au catalogue de l'agence.")}</Text>
                 <View style={styles.qrContainer} data-testid="qr-code-client">
                   <QRCode
                     value={`${typeof window !== 'undefined' ? window.location.origin : API_URL}/a/${qrAgency?.slug || qrAgency?.id}`}
@@ -520,9 +519,9 @@ export default function AgenciesPage() {
               <View style={styles.qrSection} data-testid="qr-admin-section">
                 <View style={styles.qrSectionHeader}>
                   <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.warning} />
-                  <Text style={[styles.qrSectionTitle, { color: COLORS.warning }]}>App Admin Agence</Text>
+                  <Text style={[styles.qrSectionTitle, { color: COLORS.warning }]}>{t("App Admin Agence")}</Text>
                 </View>
-                <Text style={styles.qrDescription}>L'admin scanne ce code pour acceder a l'application mobile de gestion de l'agence.</Text>
+                <Text style={styles.qrDescription}>{t("L'admin scanne ce code pour acceder a l'application mobile de gestion de l'agence.")}</Text>
                 <View style={styles.qrContainer} data-testid="qr-code-admin">
                   <QRCode
                     value={`${typeof window !== 'undefined' ? window.location.origin : API_URL}/admin-login`}
@@ -553,9 +552,7 @@ export default function AgenciesPage() {
                 <Ionicons name="close" size={24} color={COLORS.textLight} />
               </TouchableOpacity>
             </View>
-            <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 16 }}>
-              Activez ou desactivez les modules pour cette agence.
-            </Text>
+            <Text style={{ color: COLORS.textLight, fontSize: 12, marginBottom: 16 }}>{t("Activez ou desactivez les modules pour cette agence.")}</Text>
             {loadingModules ? (
               <ActivityIndicator size="large" color={COLORS.accent} style={{ marginVertical: 30 }} />
             ) : (

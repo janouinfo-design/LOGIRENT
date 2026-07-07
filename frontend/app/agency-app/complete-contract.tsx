@@ -6,6 +6,7 @@ import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
 import SignatureCanvas from '../../src/components/SignatureCanvas';
 import VehicleInspection from '../../src/components/VehicleInspection';
+import { t } from '../../src/i18n';
 
 interface ContractData {
   id: string;
@@ -17,27 +18,27 @@ interface ContractData {
 
 const FIELDS = [
   { section: 'vehicle', label: 'Vehicule', fields: [
-    { key: 'vehicle_plate', label: 'Plaques', placeholder: 'Ex: VD-166068' },
-    { key: 'vehicle_color', label: 'Couleur', placeholder: 'Ex: BLANC' },
+    { key: 'vehicle_plate', label: 'Plaques', placeholder: t("Ex: VD-166068") },
+    { key: 'vehicle_color', label: 'Couleur', placeholder: t("Ex: BLANC") },
   ]},
   { section: 'client', label: 'Client', fields: [
-    { key: 'client_name', label: 'Nom', placeholder: 'Nom de famille' },
+    { key: 'client_name', label: 'Nom', placeholder: t("Nom de famille") },
     { key: 'client_firstname', label: 'Prenom', placeholder: 'Prenom' },
-    { key: 'client_address', label: 'Adresse', placeholder: 'Adresse complete' },
+    { key: 'client_address', label: 'Adresse', placeholder: t("Adresse complete") },
     { key: 'client_phone', label: 'Telephone', placeholder: '+41 79 ...' },
     { key: 'client_email', label: 'Email', placeholder: 'email@exemple.ch' },
-    { key: 'client_nationality', label: 'Nationalite', placeholder: 'CH, FR, ...' },
-    { key: 'client_dob', label: 'Date de naissance', placeholder: 'JJ.MM.AAAA' },
-    { key: 'client_license', label: 'Permis No.', placeholder: 'Numero de permis' },
-    { key: 'client_license_issued', label: "Date d'emission", placeholder: 'JJ.MM.AAAA' },
-    { key: 'client_license_valid', label: "Date d'expiration", placeholder: 'JJ.MM.AAAA' },
+    { key: 'client_nationality', label: 'Nationalite', placeholder: t("CH, FR, ...") },
+    { key: 'client_dob', label: t("Date de naissance"), placeholder: 'JJ.MM.AAAA' },
+    { key: 'client_license', label: t("Permis No."), placeholder: t("Numero de permis") },
+    { key: 'client_license_issued', label: t("Date d'emission"), placeholder: 'JJ.MM.AAAA' },
+    { key: 'client_license_valid', label: t("Date d'expiration"), placeholder: 'JJ.MM.AAAA' },
   ]},
   { section: 'km', label: 'Kilometrage', fields: [
-    { key: 'km_start', label: 'Km Depart', placeholder: 'Ex: 45230' },
+    { key: 'km_start', label: t("Km Depart"), placeholder: 'Ex: 45230' },
   ]},
   { section: 'pricing', label: 'Tarification', fields: [
-    { key: 'deposit', label: 'Caution (CHF)', placeholder: 'Ex: 1000' },
-    { key: 'deductible', label: 'Franchise (CHF)', placeholder: 'Ex: 1000' },
+    { key: 'deposit', label: t("Caution (CHF)"), placeholder: 'Ex: 1000' },
+    { key: 'deductible', label: t("Franchise (CHF)"), placeholder: 'Ex: 1000' },
   ]},
 ];
 
@@ -108,7 +109,7 @@ export default function CompleteContract() {
       setContract(resp.data);
       setSigned(resp.data.status === 'signed');
     } catch {
-      Alert.alert('Erreur', 'Contrat introuvable');
+      Alert.alert(t("Erreur"), t("Contrat introuvable"));
     } finally { setLoading(false); }
   }, [contract_id]);
 
@@ -133,7 +134,7 @@ export default function CompleteContract() {
       setContract(resp.data);
       setEditedFields({});
       if (Platform.OS === 'web') window.alert('Champs sauvegardés');
-      else Alert.alert('Sauvegarde', 'Champs mis à jour');
+      else Alert.alert(t("Sauvegarde"), t("Champs mis à jour"));
     } catch (e: any) {
       const msg = e.response?.data?.detail || 'Erreur';
       if (Platform.OS === 'web') window.alert(msg);
@@ -175,12 +176,12 @@ export default function CompleteContract() {
         URL.revokeObjectURL(url);
       }
     } catch {
-      Alert.alert('Erreur', 'Impossible de telecharger');
+      Alert.alert(t("Erreur"), t("Impossible de telecharger"));
     }
   };
 
   if (loading) return <View style={st.center}><ActivityIndicator size="large" color={C.accent} /></View>;
-  if (!contract) return <View style={st.center}><Text style={{ color: C.textLight }}>Contrat introuvable</Text></View>;
+  if (!contract) return <View style={st.center}><Text style={{ color: C.textLight }}>{t("Contrat introuvable")}</Text></View>;
 
   const d = contract.contract_data;
 
@@ -189,7 +190,7 @@ export default function CompleteContract() {
     return (
       <ScrollView style={{ flex: 1, backgroundColor: C.bg }} contentContainerStyle={{ padding: 20, alignItems: 'center', paddingTop: 50 }}>
         <Ionicons name="checkmark-circle" size={64} color="#10B981" />
-        <Text style={{ color: C.text, fontSize: 22, fontWeight: '800', marginTop: 16 }}>Contrat signe !</Text>
+        <Text style={{ color: C.text, fontSize: 22, fontWeight: '800', marginTop: 16 }}>{t("Contrat signe !")}</Text>
         <Text style={{ color: C.textLight, fontSize: 14, marginTop: 8, textAlign: 'center' }}>
           {d.vehicle_name} - {d.client_name} {d.client_firstname}
         </Text>
@@ -203,7 +204,7 @@ export default function CompleteContract() {
           data-testid="download-signed-pdf"
         >
           <Ionicons name="download" size={20} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>Telecharger le PDF</Text>
+          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{t("Telecharger le PDF")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -220,7 +221,7 @@ export default function CompleteContract() {
           data-testid="go-to-planning-btn"
         >
           <Ionicons name="calendar" size={20} color={C.accent} />
-          <Text style={{ color: C.accent, fontSize: 15, fontWeight: '600' }}>Voir sur le planning</Text>
+          <Text style={{ color: C.accent, fontSize: 15, fontWeight: '600' }}>{t("Voir sur le planning")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -229,14 +230,14 @@ export default function CompleteContract() {
           data-testid="new-reservation-btn"
         >
           <Ionicons name="add-circle" size={20} color={C.accent} />
-          <Text style={{ color: C.accent, fontSize: 15, fontWeight: '600' }}>Nouvelle reservation</Text>
+          <Text style={{ color: C.accent, fontSize: 15, fontWeight: '600' }}>{t("Nouvelle reservation")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={{ marginTop: 16 }}
           onPress={() => router.replace('/agency-app')}
         >
-          <Text style={{ color: C.textLight, fontSize: 13 }}>Retour a l'accueil</Text>
+          <Text style={{ color: C.textLight, fontSize: 13 }}>{t("Retour a l'accueil")}</Text>
         </TouchableOpacity>
       </ScrollView>
     );
@@ -259,9 +260,7 @@ export default function CompleteContract() {
         {/* Info banner */}
         <View style={[st.infoBanner, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
           <Ionicons name="information-circle" size={20} color="#3B82F6" />
-          <Text style={{ color: '#3B82F6', fontSize: 12, flex: 1 }}>
-            Completez les champs manquants puis faites signer le client
-          </Text>
+          <Text style={{ color: '#3B82F6', fontSize: 12, flex: 1 }}>{t("Completez les champs manquants puis faites signer le client")}</Text>
         </View>
 
         {/* Contract summary */}
@@ -275,7 +274,7 @@ export default function CompleteContract() {
             <Text style={{ color: C.text, fontSize: 13, fontWeight: '600' }}>{d.start_date} {d.start_time} - {d.end_date} {d.end_time}</Text>
           </View>
           <View style={st.summaryRow}>
-            <Text style={{ color: C.textLight, fontSize: 12 }}>Total TTC</Text>
+            <Text style={{ color: C.textLight, fontSize: 12 }}>{t("Total TTC")}</Text>
             <Text style={{ color: C.accent, fontSize: 15, fontWeight: '800' }}>CHF {Number(d.total_price || 0).toFixed(2)}</Text>
           </View>
         </View>
@@ -283,7 +282,7 @@ export default function CompleteContract() {
         {/* Editable fields */}
         {FIELDS.map(section => (
           <View key={section.section} style={[st.sectionCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Text style={[st.sectionTitle, { color: C.text }]}>{section.label}</Text>
+            <Text style={[st.sectionTitle, { color: C.text }]}>{t(section.label)}</Text>
             {section.fields.map(f => {
               const val = getValue(f.key);
               const isEmpty = !val || val === '—';
@@ -314,14 +313,14 @@ export default function CompleteContract() {
         <View style={[st.sectionCard, { backgroundColor: C.card, borderColor: C.border }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <Ionicons name="document-attach" size={18} color={C.accent} />
-            <Text style={[st.sectionTitle, { color: C.text, marginBottom: 0 }]}>Documents (Photos)</Text>
+            <Text style={[st.sectionTitle, { color: C.text, marginBottom: 0 }]}>{t("Documents (Photos)")}</Text>
           </View>
 
-          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PIECE D'IDENTITE</Text>
+          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>{t("PIECE D'IDENTITE")}</Text>
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
             {[{ key: 'id', label: 'Recto' }, { key: 'id_back', label: 'Verso' }].map(doc => (
               <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{t(doc.label)}</Text>
                 {docPreviews[doc.key] ? (
                   <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 90, borderRadius: 8 }} resizeMode="cover" />
                 ) : (
@@ -345,11 +344,11 @@ export default function CompleteContract() {
             ))}
           </View>
 
-          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PERMIS DE CONDUIRE</Text>
+          <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>{t("PERMIS DE CONDUIRE")}</Text>
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
             {[{ key: 'license', label: 'Recto' }, { key: 'license_back', label: 'Verso' }].map(doc => (
               <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
-                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{t(doc.label)}</Text>
                 {docPreviews[doc.key] ? (
                   <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 90, borderRadius: 8 }} resizeMode="cover" />
                 ) : (
@@ -372,7 +371,7 @@ export default function CompleteContract() {
               </View>
             ))}
           </View>
-          <Text style={{ color: C.textLight, fontSize: 10 }}>Formats: JPG, PNG, WebP (max 10 MB)</Text>
+          <Text style={{ color: C.textLight, fontSize: 10 }}>{t("Formats: JPG, PNG, WebP (max 10 MB)")}</Text>
         </View>
 
         {/* Save button */}
@@ -385,14 +384,14 @@ export default function CompleteContract() {
           >
             {saving ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="save" size={18} color="#fff" />}
             <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>
-              {saving ? 'Sauvegarde...' : 'Sauvegarder les modifications'}
+              {saving ? 'Sauvegarde...' : t("Sauvegarder les modifications")}
             </Text>
           </TouchableOpacity>
         )}
 
         {/* Vehicle Inspection Diagram */}
         <View style={[st.sectionCard, { backgroundColor: C.card, borderColor: C.border }]}>
-          <Text style={[st.sectionTitle, { color: C.text }]}>État du véhicule</Text>
+          <Text style={[st.sectionTitle, { color: C.text }]}>{t("État du véhicule")}</Text>
           <VehicleInspection
             damages={(() => {
               const dmg = editedFields.damages || contract?.contract_data?.damages || {};
@@ -422,7 +421,7 @@ export default function CompleteContract() {
           data-testid="open-sign-modal-btn"
         >
           <Ionicons name="create" size={20} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>Faire signer le client</Text>
+          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '700' }}>{t("Faire signer le client")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[st.actionBtn, { backgroundColor: C.card, borderWidth: 1, borderColor: C.border }]}
@@ -438,14 +437,12 @@ export default function CompleteContract() {
         <View style={st.modalOverlay}>
           <View style={[st.modalContent, { backgroundColor: C.card, borderColor: C.border }]}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <Text style={{ color: C.text, fontSize: 18, fontWeight: '800' }}>Signature du client</Text>
+              <Text style={{ color: C.text, fontSize: 18, fontWeight: '800' }}>{t("Signature du client")}</Text>
               <TouchableOpacity onPress={() => setShowSignModal(false)} data-testid="close-sign-modal">
                 <Ionicons name="close" size={24} color={C.textLight} />
               </TouchableOpacity>
             </View>
-            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 12 }}>
-              Le client signe ci-dessous pour accepter les conditions du contrat
-            </Text>
+            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 12 }}>{t("Le client signe ci-dessous pour accepter les conditions du contrat")}</Text>
             <SignatureCanvas onSave={handleSign} saving={signing} colors={C} />
           </View>
         </View>

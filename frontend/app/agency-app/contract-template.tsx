@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -35,9 +36,9 @@ function BookingOptionsSection({ colors: C }: { colors: any }) {
       const res = await api.put('/api/admin/booking-options', { options });
       setOptions(res.data.options || []);
       setHasChanges(false);
-      Alert.alert('Succès', 'Options de réservation mises à jour');
+      Alert.alert(t("Succès"), t("Options de réservation mises à jour"));
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible de sauvegarder');
+      Alert.alert(t("Erreur"), t("Impossible de sauvegarder"));
     } finally {
       setSaving(false);
     }
@@ -84,11 +85,9 @@ function BookingOptionsSection({ colors: C }: { colors: any }) {
     <View style={[optStyles.section, { backgroundColor: C.card, borderColor: C.border }]} data-testid="booking-options-section">
       <View style={optStyles.sectionHeader}>
         <Ionicons name="options-outline" size={18} color={C.accent} />
-        <Text style={[optStyles.sectionTitle, { color: C.text }]}>Options de réservation</Text>
+        <Text style={[optStyles.sectionTitle, { color: C.text }]}>{t("Options de réservation")}</Text>
       </View>
-      <Text style={[optStyles.hint, { color: C.textLight }]}>
-        Options proposées aux clients lors de la réservation (GPS, siège enfant, etc.)
-      </Text>
+      <Text style={[optStyles.hint, { color: C.textLight }]}>{t("Options proposées aux clients lors de la réservation (GPS, siège enfant, etc.)")}</Text>
 
       {options.map((opt, idx) => (
         <View key={idx} style={[optStyles.optRow, { borderColor: C.border, backgroundColor: opt.enabled ? C.bg : C.bg + '80' }]} data-testid={`booking-option-row-${idx}`}>
@@ -100,7 +99,7 @@ function BookingOptionsSection({ colors: C }: { colors: any }) {
               style={[optStyles.optNameInput, { color: C.text, borderColor: C.border }]}
               value={opt.name}
               onChangeText={v => updateOptionName(idx, v)}
-              placeholder="Nom de l'option"
+              placeholder={t("Nom de l'option")}
               placeholderTextColor={C.textLight + '60'}
               data-testid={`option-name-${idx}`}
             />
@@ -127,7 +126,7 @@ function BookingOptionsSection({ colors: C }: { colors: any }) {
           style={[optStyles.addInput, { color: C.text, borderColor: C.border, flex: 2 }]}
           value={newName}
           onChangeText={setNewName}
-          placeholder="Nouvelle option"
+          placeholder={t("Nouvelle option")}
           placeholderTextColor={C.textLight + '60'}
           data-testid="new-option-name"
         />
@@ -135,7 +134,7 @@ function BookingOptionsSection({ colors: C }: { colors: any }) {
           style={[optStyles.addInput, { color: C.text, borderColor: C.border, flex: 1 }]}
           value={newPrice}
           onChangeText={setNewPrice}
-          placeholder="CHF/jour"
+          placeholder={t("CHF/jour")}
           placeholderTextColor={C.textLight + '60'}
           keyboardType="numeric"
           data-testid="new-option-price"
@@ -150,7 +149,7 @@ function BookingOptionsSection({ colors: C }: { colors: any }) {
           {saving ? <ActivityIndicator color="#fff" size="small" /> : (
             <>
               <Ionicons name="save" size={16} color="#fff" />
-              <Text style={optStyles.saveBtnText}>Sauvegarder les options</Text>
+              <Text style={optStyles.saveBtnText}>{t("Sauvegarder les options")}</Text>
             </>
           )}
         </TouchableOpacity>
@@ -180,14 +179,14 @@ const optStyles = StyleSheet.create({
 // ==================== End Booking Options ====================
 
 const PRICE_FIELDS = [
-  { key: 'price_per_day', label: 'Par Jour (CHF)' },
-  { key: 'price_weekend_fri', label: 'Week-end Ven-Lun' },
-  { key: 'price_weekend_sat', label: 'Week-end Sam-Lun' },
-  { key: 'price_hour', label: "A L'heure" },
-  { key: 'price_week', label: 'Par Semaine' },
-  { key: 'price_month_2000', label: 'Par Mois 2000 Km' },
-  { key: 'price_month_3000', label: 'Par Mois 3000 Km' },
-  { key: 'price_extra_km', label: 'Km Supplémentaire' },
+  { key: 'price_per_day', label: t("Par Jour (CHF)") },
+  { key: 'price_weekend_fri', label: t("Week-end Ven-Lun") },
+  { key: 'price_weekend_sat', label: t("Week-end Sam-Lun") },
+  { key: 'price_hour', label: t("A L'heure") },
+  { key: 'price_week', label: t("Par Semaine") },
+  { key: 'price_month_2000', label: t("Par Mois 2000 Km") },
+  { key: 'price_month_3000', label: t("Par Mois 3000 Km") },
+  { key: 'price_extra_km', label: t("Km Supplémentaire") },
 ];
 
 export default function ContractTemplatePage() {
@@ -234,9 +233,9 @@ export default function ContractTemplatePage() {
       });
       setTemplate(res.data);
       setHasChanges(false);
-      Alert.alert('Succès', 'Modèle de contrat sauvegardé');
+      Alert.alert(t("Succès"), t("Modèle de contrat sauvegardé"));
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible de sauvegarder');
+      Alert.alert(t("Erreur"), t("Impossible de sauvegarder"));
     } finally {
       setSaving(false);
     }
@@ -258,9 +257,9 @@ export default function ContractTemplatePage() {
             headers: { 'Content-Type': 'multipart/form-data' },
           });
           setTemplate((t: any) => ({ ...t, logo_path: res.data.logo_path }));
-          Alert.alert('Succès', 'Logo téléchargé');
+          Alert.alert(t("Succès"), t("Logo téléchargé"));
         } catch (err) {
-          Alert.alert('Erreur', 'Upload échoué');
+          Alert.alert(t("Erreur"), t("Upload échoué"));
         } finally {
           setUploadingLogo(false);
         }
@@ -295,20 +294,16 @@ export default function ContractTemplatePage() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 200 }}>
-      <Text style={[s.pageTitle, { color: C.text }]} data-testid="template-page-title">Modèle de contrat</Text>
-      <Text style={[s.pageSubtitle, { color: C.textLight }]}>
-        Personnalisez le contrat pour votre agence
-      </Text>
+      <Text style={[s.pageTitle, { color: C.text }]} data-testid="template-page-title">{t("Modèle de contrat")}</Text>
+      <Text style={[s.pageSubtitle, { color: C.textLight }]}>{t("Personnalisez le contrat pour votre agence")}</Text>
 
       {/* Logo Section */}
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} data-testid="logo-section">
         <View style={s.sectionHeader}>
           <Ionicons name="image-outline" size={18} color={C.accent} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Logo de l'agence</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Logo de l'agence")}</Text>
         </View>
-        <Text style={[s.hint, { color: C.textLight }]}>
-          Ce logo apparaîtra en haut du PDF du contrat
-        </Text>
+        <Text style={[s.hint, { color: C.textLight }]}>{t("Ce logo apparaîtra en haut du PDF du contrat")}</Text>
         {logoUrl ? (
           <View style={s.logoPreview}>
             <Image source={{ uri: logoUrl }} style={s.logoImg} resizeMode="contain" />
@@ -330,8 +325,8 @@ export default function ContractTemplatePage() {
             ) : (
               <>
                 <Ionicons name="cloud-upload-outline" size={28} color={C.textLight} />
-                <Text style={{ color: C.textLight, fontSize: 13, marginTop: 4 }}>Cliquez pour télécharger un logo</Text>
-                <Text style={{ color: C.textLight, fontSize: 11 }}>PNG, JPG (max 5MB)</Text>
+                <Text style={{ color: C.textLight, fontSize: 13, marginTop: 4 }}>{t("Cliquez pour télécharger un logo")}</Text>
+                <Text style={{ color: C.textLight, fontSize: 11 }}>{t("PNG, JPG (max 5MB)")}</Text>
               </>
             )}
           </TouchableOpacity>
@@ -342,22 +337,22 @@ export default function ContractTemplatePage() {
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]}>
         <View style={s.sectionHeader}>
           <Ionicons name="globe-outline" size={18} color={C.accent} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Informations agence</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Informations agence")}</Text>
         </View>
         <View style={s.row}>
           <View style={s.fieldHalf}>
-            <Text style={[s.label, { color: C.textLight }]}>Site web</Text>
+            <Text style={[s.label, { color: C.textLight }]}>{t("Site web")}</Text>
             <TextInput
               style={[s.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]}
               value={website}
               onChangeText={v => { setWebsite(v); setHasChanges(true); }}
-              placeholder="www.monagence.ch"
+              placeholder={t("www.monagence.ch")}
               placeholderTextColor={C.textLight + '60'}
               data-testid="website-input"
             />
           </View>
           <View style={s.fieldHalf}>
-            <Text style={[s.label, { color: C.textLight }]}>Franchise (CHF)</Text>
+            <Text style={[s.label, { color: C.textLight }]}>{t("Franchise (CHF)")}</Text>
             <TextInput
               style={[s.input, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]}
               value={deductible}
@@ -375,15 +370,13 @@ export default function ContractTemplatePage() {
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} data-testid="prices-section">
         <View style={s.sectionHeader}>
           <Ionicons name="cash-outline" size={18} color={C.accent} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Tarifs par défaut</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Tarifs par défaut")}</Text>
         </View>
-        <Text style={[s.hint, { color: C.textLight }]}>
-          Ces tarifs seront pré-remplis dans les nouveaux contrats
-        </Text>
+        <Text style={[s.hint, { color: C.textLight }]}>{t("Ces tarifs seront pré-remplis dans les nouveaux contrats")}</Text>
         <View style={s.priceGrid}>
           {PRICE_FIELDS.map(f => (
             <View key={f.key} style={s.priceField}>
-              <Text style={[s.priceLabel, { color: C.textLight }]}>{f.label}</Text>
+              <Text style={[s.priceLabel, { color: C.textLight }]}>{t(f.label)}</Text>
               <TextInput
                 style={[s.priceInput, { color: C.text, borderColor: C.border, backgroundColor: C.bg }]}
                 value={prices[f.key] || ''}
@@ -405,7 +398,7 @@ export default function ContractTemplatePage() {
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border }]} data-testid="legal-section">
         <View style={s.sectionHeader}>
           <Ionicons name="document-text-outline" size={18} color={C.accent} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Texte juridique</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Texte juridique")}</Text>
         </View>
         <Text style={[s.hint, { color: C.textLight }]}>
           Utilisez {'{website}'} et {'{franchise}'} comme variables dynamiques
@@ -433,7 +426,7 @@ export default function ContractTemplatePage() {
         ) : (
           <>
             <Ionicons name="save" size={18} color="#fff" />
-            <Text style={s.saveBtnText}>Sauvegarder le modèle</Text>
+            <Text style={s.saveBtnText}>{t("Sauvegarder le modèle")}</Text>
           </>
         )}
       </TouchableOpacity>
@@ -442,16 +435,16 @@ export default function ContractTemplatePage() {
       <View style={[s.section, { backgroundColor: C.card, borderColor: C.border, marginTop: 12 }]} data-testid="preview-section">
         <View style={s.sectionHeader}>
           <Ionicons name="eye-outline" size={18} color={C.accent} />
-          <Text style={[s.sectionTitle, { color: C.text }]}>Aperçu du contrat PDF</Text>
+          <Text style={[s.sectionTitle, { color: C.text }]}>{t("Aperçu du contrat PDF")}</Text>
         </View>
         <Text style={[s.hint, { color: C.textLight }]}>
-          {hasChanges ? 'Sauvegardez d\'abord vos modifications, puis cliquez sur Aperçu' : 'Prévisualisation avec des données d\'exemple'}
+          {hasChanges ? t("Sauvegardez d'abord vos modifications, puis cliquez sur Aperçu") : t("Prévisualisation avec des données d'exemple")}
         </Text>
         <TouchableOpacity
           style={[s.previewBtn, { backgroundColor: '#6366F1', opacity: hasChanges ? 0.5 : 1 }]}
           onPress={async () => {
             if (hasChanges) {
-              Alert.alert('Attention', 'Sauvegardez d\'abord vos modifications avant de prévisualiser');
+              Alert.alert(t("Attention"), t("Sauvegardez d'abord vos modifications avant de prévisualiser"));
               return;
             }
             setLoadingPreview(true);
@@ -462,7 +455,7 @@ export default function ContractTemplatePage() {
               const url = URL.createObjectURL(res.data);
               setPreviewUrl(url);
             } catch (e) {
-              Alert.alert('Erreur', 'Impossible de générer l\'aperçu');
+              Alert.alert(t("Erreur"), t("Impossible de générer l'aperçu"));
             } finally {
               setLoadingPreview(false);
             }
@@ -476,7 +469,7 @@ export default function ContractTemplatePage() {
             <>
               <Ionicons name="document-outline" size={18} color="#fff" />
               <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700' }}>
-                {previewUrl ? 'Rafraîchir l\'aperçu' : 'Générer l\'aperçu'}
+                {previewUrl ? t("Rafraîchir l'aperçu") : t("Générer l'aperçu")}
               </Text>
             </>
           )}
@@ -490,13 +483,13 @@ export default function ContractTemplatePage() {
               data-testid="open-preview-tab"
             >
               <Ionicons name="open-outline" size={14} color="#6366F1" />
-              <Text style={{ color: '#6366F1', fontSize: 12, fontWeight: '700' }}>Ouvrir dans un nouvel onglet</Text>
+              <Text style={{ color: '#6366F1', fontSize: 12, fontWeight: '700' }}>{t("Ouvrir dans un nouvel onglet")}</Text>
             </TouchableOpacity>
             {/* @ts-ignore - iframe works on web */}
             <iframe
               src={previewUrl}
               style={{ width: '100%', height: 800, border: '1px solid #E5E7EB', borderRadius: 8 }}
-              title="Aperçu du contrat"
+              title={t("Aperçu du contrat")}
             />
           </View>
         )}

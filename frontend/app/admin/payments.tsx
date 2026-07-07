@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { format } from 'date-fns';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -121,12 +122,12 @@ export default function AdminPayments() {
       {/* Summary */}
       <View style={styles.summary}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Transactions</Text>
+          <Text style={styles.summaryLabel}>{t("Total Transactions")}</Text>
           <Text style={styles.summaryValue}>{total}</Text>
         </View>
         <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total Collecté</Text>
+          <Text style={styles.summaryLabel}>{t("Total Collecté")}</Text>
           <Text style={[styles.summaryValue, { color: COLORS.success }]}>CHF {totalPaid.toFixed(2)}</Text>
         </View>
       </View>
@@ -145,12 +146,12 @@ export default function AdminPayments() {
               <>
                 <Ionicons name="alert-circle-outline" size={48} color={COLORS.error} />
                 <Text style={[styles.emptyText, { color: COLORS.error }]}>{error}</Text>
-                <Text style={styles.emptySubtext}>Veuillez vous déconnecter et vous reconnecter</Text>
+                <Text style={styles.emptySubtext}>{t("Veuillez vous déconnecter et vous reconnecter")}</Text>
               </>
             ) : (
               <>
                 <Ionicons name="card-outline" size={48} color={COLORS.textLight} />
-                <Text style={styles.emptyText}>Aucune transaction</Text>
+                <Text style={styles.emptyText}>{t("Aucune transaction")}</Text>
               </>
             )}
           </View>

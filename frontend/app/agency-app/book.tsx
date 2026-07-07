@@ -8,6 +8,7 @@ import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
 import { WebcamCapture } from '../../src/components/WebcamCapture';
 import VehicleInspection from '../../src/components/VehicleInspection';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -366,14 +367,14 @@ export default function BookingFlow() {
       {/* ─── STEP 1: Client ─── */}
       {step === 'client' && (
         <View>
-          <Text style={[s.title, { color: C.text }]}>Selectionner un client</Text>
+          <Text style={[s.title, { color: C.text }]}>{t("Selectionner un client")}</Text>
 
           {/* Sub-step: Search or Create */}
           {clientSubStep === 'search' && !selectedClient && (
             <>
               <View style={[s.searchRow, { backgroundColor: C.card, borderColor: C.border }]}>
                 <Ionicons name="search" size={18} color={C.textLight} />
-                <TextInput style={[s.searchInput, { color: C.text }]} placeholder="Rechercher nom, email, tel..." placeholderTextColor={C.textLight} value={searchQuery} onChangeText={setSearchQuery} />
+                <TextInput style={[s.searchInput, { color: C.text }]} placeholder={t("Rechercher nom, email, tel...")} placeholderTextColor={C.textLight} value={searchQuery} onChangeText={setSearchQuery} />
                 {searching && <ActivityIndicator size="small" color={C.accent} />}
               </View>
               {searchResults.map(c => (
@@ -385,22 +386,22 @@ export default function BookingFlow() {
               ))}
               <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 }} onPress={() => setShowNewClient(!showNewClient)}>
                 <Ionicons name={showNewClient ? 'chevron-up' : 'person-add'} size={18} color={C.accent} />
-                <Text style={{ color: C.accent, fontWeight: '600' }}>{showNewClient ? 'Masquer' : 'Nouveau client'}</Text>
+                <Text style={{ color: C.accent, fontWeight: '600' }}>{showNewClient ? 'Masquer' : t("Nouveau client")}</Text>
               </TouchableOpacity>
               {showNewClient && (
                 <View style={[s.newForm, { backgroundColor: C.card, borderColor: C.border }]}>
-                  <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>Etape 1 : Informations de base</Text>
+                  <Text style={{ color: C.text, fontWeight: '700', fontSize: 15, marginBottom: 8 }}>{t("Etape 1 : Informations de base")}</Text>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Nom *" placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="book-new-name" />
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Prenom" placeholderTextColor={C.textLight} value={newFirstName} onChangeText={setNewFirstName} data-testid="book-new-firstname" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder={t("Nom *")} placeholderTextColor={C.textLight} value={newName} onChangeText={setNewName} data-testid="book-new-name" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder={t("Prenom")} placeholderTextColor={C.textLight} value={newFirstName} onChangeText={setNewFirstName} data-testid="book-new-firstname" />
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Email *" placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" keyboardType="email-address" data-testid="book-new-email" />
-                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder="Telephone" placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="book-new-phone" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder={t("Email *")} placeholderTextColor={C.textLight} value={newEmail} onChangeText={setNewEmail} autoCapitalize="none" keyboardType="email-address" data-testid="book-new-email" />
+                    <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border, flex: 1 }]} placeholder={t("Telephone")} placeholderTextColor={C.textLight} value={newPhone} onChangeText={setNewPhone} keyboardType="phone-pad" data-testid="book-new-phone" />
                   </View>
-                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8 }}>Un email de bienvenue avec les identifiants sera envoye automatiquement</Text>
+                  <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 8 }}>{t("Un email de bienvenue avec les identifiants sera envoye automatiquement")}</Text>
                   <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={createClient} disabled={creatingClient}>
-                    <Text style={s.btnText}>{creatingClient ? 'Creation...' : 'Creer et continuer'}</Text>
+                    <Text style={s.btnText}>{creatingClient ? 'Creation...' : t("Creer et continuer")}</Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -415,7 +416,7 @@ export default function BookingFlow() {
                   <Ionicons name="checkmark" size={18} color="#fff" />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 14 }}>Client cree - Email de bienvenue envoye</Text>
+                  <Text style={{ color: '#10B981', fontWeight: '700', fontSize: 14 }}>{t("Client cree - Email de bienvenue envoye")}</Text>
                   <Text style={{ color: C.textLight, fontSize: 12 }}>{selectedClient.name} ({newEmail})</Text>
                 </View>
               </View>
@@ -423,55 +424,55 @@ export default function BookingFlow() {
               {/* Section: Identite & Permis */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border }}>
                 <Ionicons name="id-card" size={16} color={C.accent} />
-                <Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Identite & Permis</Text>
+                <Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>{t("Identite & Permis")}</Text>
               </View>
 
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>LIEU DE NAISSANCE *</Text>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Geneve" placeholderTextColor={C.textLight} value={detBirthPlace} onChangeText={setDetBirthPlace} />
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>{t("LIEU DE NAISSANCE *")}</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("Geneve")} placeholderTextColor={C.textLight} value={detBirthPlace} onChangeText={setDetBirthPlace} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>DATE DE NAISSANCE *</Text>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={detBirthDate} onChangeText={setDetBirthDate} />
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>{t("DATE DE NAISSANCE *")}</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight} value={detBirthDate} onChangeText={setDetBirthDate} />
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>NATIONALITE *</Text>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Suisse" placeholderTextColor={C.textLight} value={detNationality} onChangeText={setDetNationality} />
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("Suisse")} placeholderTextColor={C.textLight} value={detNationality} onChangeText={setDetNationality} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>NUMERO DE PERMIS *</Text>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="GE-123456" placeholderTextColor={C.textLight} value={detLicenseNum} onChangeText={setDetLicenseNum} />
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>{t("NUMERO DE PERMIS *")}</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("GE-123456")} placeholderTextColor={C.textLight} value={detLicenseNum} onChangeText={setDetLicenseNum} />
                 </View>
               </View>
               <View style={{ flexDirection: 'row', gap: 8 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>DATE D'EMISSION *</Text>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={detLicenseIssue} onChangeText={setDetLicenseIssue} />
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>{t("DATE D'EMISSION *")}</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight} value={detLicenseIssue} onChangeText={setDetLicenseIssue} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>DATE D'EXPIRATION *</Text>
-                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="JJ-MM-AAAA" placeholderTextColor={C.textLight} value={detLicenseExpiry} onChangeText={setDetLicenseExpiry} />
+                  <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>{t("DATE D'EXPIRATION *")}</Text>
+                  <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("JJ-MM-AAAA")} placeholderTextColor={C.textLight} value={detLicenseExpiry} onChangeText={setDetLicenseExpiry} />
                 </View>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 3, textTransform: 'uppercase' }}>ADRESSE</Text>
-                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder="Rue de l'Exemple 10, Lausanne" placeholderTextColor={C.textLight} value={detAddress} onChangeText={setDetAddress} />
+                <TextInput style={[s.input, { backgroundColor: C.bg, color: C.text, borderColor: C.border }]} placeholder={t("Rue de l'Exemple 10, Lausanne")} placeholderTextColor={C.textLight} value={detAddress} onChangeText={setDetAddress} />
               </View>
 
               {/* Section: Documents (Photos) */}
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 8, paddingTop: 8, borderTopWidth: 1, borderTopColor: C.border }}>
                 <Ionicons name="document-attach" size={16} color={C.accent} />
-                <Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Documents (Photos)</Text>
+                <Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>{t("Documents (Photos)")}</Text>
               </View>
 
-              <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PIECE D'IDENTITE</Text>
+              <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>{t("PIECE D'IDENTITE")}</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
                 {[{ key: 'id', label: 'Recto' }, { key: 'id_back', label: 'Verso' }].map(doc => (
                   <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{t(doc.label)}</Text>
                     {docPreviews[doc.key] ? (
                       <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
                     ) : (
@@ -495,11 +496,11 @@ export default function BookingFlow() {
                 ))}
               </View>
 
-              <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>PERMIS DE CONDUIRE</Text>
+              <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase' }}>{t("PERMIS DE CONDUIRE")}</Text>
               <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
                 {[{ key: 'license', label: 'Recto' }, { key: 'license_back', label: 'Verso' }].map(doc => (
                   <View key={doc.key} style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{doc.label}</Text>
+                    <Text style={{ color: C.textLight, fontSize: 11, marginBottom: 4 }}>{t(doc.label)}</Text>
                     {docPreviews[doc.key] ? (
                       <Image source={{ uri: docPreviews[doc.key] }} style={{ width: '100%', height: 80, borderRadius: 8 }} resizeMode="cover" />
                     ) : (
@@ -522,14 +523,14 @@ export default function BookingFlow() {
                   </View>
                 ))}
               </View>
-              <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 8 }}>Formats acceptes: JPG, PNG, WebP (max 10 MB). Verification IA automatique.</Text>
+              <Text style={{ color: C.textLight, fontSize: 10, marginBottom: 8 }}>{t("Formats acceptes: JPG, PNG, WebP (max 10 MB). Verification IA automatique.")}</Text>
 
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
                 <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.border, flex: 1 }]} onPress={() => setClientSubStep('ready')}>
                   <Text style={[s.btnText, { color: C.text }]}>Passer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, flex: 1 }]} onPress={saveClientDetails} disabled={savingDetails}>
-                  <Text style={s.btnText}>{savingDetails ? 'Sauvegarde...' : 'Valider et continuer'}</Text>
+                  <Text style={s.btnText}>{savingDetails ? 'Sauvegarde...' : t("Valider et continuer")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -551,7 +552,7 @@ export default function BookingFlow() {
                 </TouchableOpacity>
               </View>
               <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 12 }]} onPress={() => setStep('calendar')}>
-                <Text style={s.btnText}>Suivant : Choisir les dates</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+                <Text style={s.btnText}>{t("Suivant : Choisir les dates")}</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           )}
@@ -563,14 +564,14 @@ export default function BookingFlow() {
         <View>
           <TouchableOpacity onPress={() => setStep('client')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <Ionicons name="arrow-back" size={20} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour au client</Text>
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>{t("Retour au client")}</Text>
           </TouchableOpacity>
-          <Text style={[s.title, { color: C.text }]}>Choisissez vos dates</Text>
+          <Text style={[s.title, { color: C.text }]}>{t("Choisissez vos dates")}</Text>
 
           {/* Date summary bar */}
           <View style={[s.dateSummaryBar, { backgroundColor: C.card, borderColor: C.border }]}>
             <TouchableOpacity style={[s.dateSummaryItem, startDate && !endDate && { borderColor: C.accent, borderWidth: 2 }]} onPress={() => { setStartDate(null); setEndDate(null); }}>
-              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>DÉBUT</Text>
+              <Text style={{ color: C.textLight, fontSize: 11, fontWeight: '600' }}>{t("DÉBUT")}</Text>
               <Text style={[s.dateSummaryText, { color: startDate ? C.text : C.textLight }]}>{startDate ? format(startDate, 'd MMM yyyy', { locale: fr }) : 'Sélectionner'}</Text>
             </TouchableOpacity>
             <Ionicons name="arrow-forward" size={18} color={C.textLight} />
@@ -600,7 +601,7 @@ export default function BookingFlow() {
           {startDate && endDate && (
             <View style={[s.hourSection, { backgroundColor: C.card, borderColor: C.border }]}>
               <View style={s.hourGroup}>
-                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>Heure de début</Text>
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>{t("Heure de début")}</Text>
                 <View style={[s.hourControl, { backgroundColor: C.bg, borderColor: C.border }]}>
                   <TouchableOpacity onPress={() => setStartHour(Math.max(0, startHour - 1))}><Ionicons name="remove-circle" size={26} color={C.textLight} /></TouchableOpacity>
                   <Text style={[s.hourValue, { color: C.text }]}>{String(startHour).padStart(2, '0')}:00</Text>
@@ -608,7 +609,7 @@ export default function BookingFlow() {
                 </View>
               </View>
               <View style={s.hourGroup}>
-                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>Heure de fin</Text>
+                <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>{t("Heure de fin")}</Text>
                 <View style={[s.hourControl, { backgroundColor: C.bg, borderColor: C.border }]}>
                   <TouchableOpacity onPress={() => setEndHour(Math.max(0, endHour - 1))}><Ionicons name="remove-circle" size={26} color={C.textLight} /></TouchableOpacity>
                   <Text style={[s.hourValue, { color: C.text }]}>{String(endHour).padStart(2, '0')}:00</Text>
@@ -629,7 +630,7 @@ export default function BookingFlow() {
           {/* Next to Vehicle step */}
           {startDate && endDate && totalDays > 0 && (
             <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('vehicle')}>
-              <Text style={s.btnText}>Suivant : Choisir un véhicule</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+              <Text style={s.btnText}>{t("Suivant : Choisir un véhicule")}</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
             </TouchableOpacity>
           )}
         </View>
@@ -640,9 +641,9 @@ export default function BookingFlow() {
         <View>
           <TouchableOpacity onPress={() => setStep('calendar')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <Ionicons name="arrow-back" size={20} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour aux dates</Text>
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>{t("Retour aux dates")}</Text>
           </TouchableOpacity>
-          <Text style={[s.title, { color: C.text }]}>Choisir un vehicule</Text>
+          <Text style={[s.title, { color: C.text }]}>{t("Choisir un vehicule")}</Text>
 
           {/* Date recap */}
           <View style={[s.dateRecap, { backgroundColor: C.accent + '10', borderColor: C.accent + '30' }]}>
@@ -682,7 +683,7 @@ export default function BookingFlow() {
                         opacity: isBooked ? 0.6 : 1,
                       },
                     ]}
-                    onPress={() => { if (!isBooked) setSelectedVehicle(v); else { Platform.OS === 'web' ? window.alert('Ce vehicule est deja reserve pour ces dates') : Alert.alert('Indisponible', 'Ce vehicule est deja reserve pour ces dates'); } }}
+                    onPress={() => { if (!isBooked) setSelectedVehicle(v); else { Platform.OS === 'web' ? window.alert('Ce vehicule est deja reserve pour ces dates') : Alert.alert(t("Indisponible"), t("Ce vehicule est deja reserve pour ces dates")); } }}
                     data-testid={`vehicle-${v.id}`}
                   >
                     {/* Photo placeholder */}
@@ -731,7 +732,7 @@ export default function BookingFlow() {
                 <Text style={{ color: C.accent, fontSize: 18, fontWeight: '800' }}>CHF {(selectedVehicle.price_per_day * totalDays).toFixed(0)}</Text>
               </View>
               <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary }]} onPress={() => setStep('options')} data-testid="next-to-options">
-                <Text style={s.btnText}>Suivant : Options & Paiement</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+                <Text style={s.btnText}>{t("Suivant : Options & Paiement")}</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           )}
@@ -743,12 +744,12 @@ export default function BookingFlow() {
         <View>
           <TouchableOpacity onPress={() => setStep('vehicle')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <Ionicons name="arrow-back" size={20} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour aux vehicules</Text>
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>{t("Retour aux vehicules")}</Text>
           </TouchableOpacity>
-          <Text style={[s.title, { color: C.text }]}>Options & Paiement</Text>
+          <Text style={[s.title, { color: C.text }]}>{t("Options & Paiement")}</Text>
           {(selectedVehicle.options || []).length > 0 && (
             <>
-              <Text style={[s.sectionTitle, { color: C.text }]}>Options disponibles</Text>
+              <Text style={[s.sectionTitle, { color: C.text }]}>{t("Options disponibles")}</Text>
               {selectedVehicle.options!.map((opt: any) => (
                 <TouchableOpacity key={opt.name} style={[s.optionCard, { backgroundColor: C.card, borderColor: selectedOptions.includes(opt.name) ? C.success : C.border }]} onPress={() => setSelectedOptions(p => p.includes(opt.name) ? p.filter(o => o !== opt.name) : [...p, opt.name])}>
                   <Ionicons name={selectedOptions.includes(opt.name) ? 'checkbox' : 'square-outline'} size={22} color={selectedOptions.includes(opt.name) ? C.success : C.textLight} />
@@ -758,19 +759,19 @@ export default function BookingFlow() {
               ))}
             </>
           )}
-          <Text style={[s.sectionTitle, { color: C.text, marginTop: 16 }]}>Mode de paiement</Text>
+          <Text style={[s.sectionTitle, { color: C.text, marginTop: 16 }]}>{t("Mode de paiement")}</Text>
           <TouchableOpacity style={[s.payCard, { backgroundColor: C.card, borderColor: paymentMethod === 'cash' ? C.warning : C.border }]} onPress={() => setPaymentMethod('cash')}>
             <Ionicons name="cash" size={24} color={paymentMethod === 'cash' ? C.warning : C.textLight} />
-            <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Espèces</Text><Text style={{ color: C.textLight, fontSize: 11 }}>Le client paie au retrait</Text></View>
+            <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>{t("Espèces")}</Text><Text style={{ color: C.textLight, fontSize: 11 }}>{t("Le client paie au retrait")}</Text></View>
             {paymentMethod === 'cash' && <Ionicons name="checkmark-circle" size={22} color={C.success} />}
           </TouchableOpacity>
           <TouchableOpacity style={[s.payCard, { backgroundColor: C.card, borderColor: paymentMethod === 'send_link' ? C.accent : C.border }]} onPress={() => setPaymentMethod('send_link')}>
             <Ionicons name="link" size={24} color={paymentMethod === 'send_link' ? C.accent : C.textLight} />
-            <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>Lien Stripe</Text><Text style={{ color: C.textLight, fontSize: 11 }}>Envoyé par email</Text></View>
+            <View style={{ flex: 1 }}><Text style={{ color: C.text, fontWeight: '700', fontSize: 14 }}>{t("Lien Stripe")}</Text><Text style={{ color: C.textLight, fontSize: 11 }}>{t("Envoyé par email")}</Text></View>
             {paymentMethod === 'send_link' && <Ionicons name="checkmark-circle" size={22} color={C.success} />}
           </TouchableOpacity>
           <TouchableOpacity style={[s.primaryBtn, { backgroundColor: C.primary, marginTop: 16 }]} onPress={() => setStep('confirm')}>
-            <Text style={s.btnText}>Voir le récapitulatif</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
+            <Text style={s.btnText}>{t("Voir le récapitulatif")}</Text><Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
       )}
@@ -780,29 +781,29 @@ export default function BookingFlow() {
         <View>
           <TouchableOpacity onPress={() => setStep('options')} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
             <Ionicons name="arrow-back" size={20} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>Retour aux options</Text>
+            <Text style={{ color: C.accent, fontSize: 14, fontWeight: '600' }}>{t("Retour aux options")}</Text>
           </TouchableOpacity>
           <Text style={[s.title, { color: C.text }]}>Recapitulatif</Text>
           <View style={[s.summaryCard, { backgroundColor: C.card, borderColor: C.border }]}>
-            <SummaryRow label="Client" value={selectedClient.name} C={C} />
-            <SummaryRow label="Vehicule" value={`${selectedVehicle.brand} ${selectedVehicle.model}`} C={C} />
-            <SummaryRow label="Debut" value={`${format(startDate, 'd MMM yyyy', { locale: fr })} a ${String(startHour).padStart(2, '0')}:00`} C={C} />
-            <SummaryRow label="Fin" value={`${format(endDate, 'd MMM yyyy', { locale: fr })} a ${String(endHour).padStart(2, '0')}:00`} C={C} />
-            <SummaryRow label="Duree" value={`${totalDays} jour(s)`} C={C} />
-            <SummaryRow label="Prix base" value={`CHF ${basePrice.toFixed(2)}`} C={C} />
-            {optionsPrice > 0 && <SummaryRow label="Options" value={`CHF ${optionsPrice.toFixed(2)}`} C={C} />}
+            <SummaryRow label={t("Client")} value={selectedClient.name} C={C} />
+            <SummaryRow label={t("Vehicule")} value={`${selectedVehicle.brand} ${selectedVehicle.model}`} C={C} />
+            <SummaryRow label={t("Debut")} value={`${format(startDate, 'd MMM yyyy', { locale: fr })} a ${String(startHour).padStart(2, '0')}:00`} C={C} />
+            <SummaryRow label={t("Fin")} value={`${format(endDate, 'd MMM yyyy', { locale: fr })} a ${String(endHour).padStart(2, '0')}:00`} C={C} />
+            <SummaryRow label={t("Duree")} value={`${totalDays} jour(s)`} C={C} />
+            <SummaryRow label={t("Prix base")} value={`CHF ${basePrice.toFixed(2)}`} C={C} />
+            {optionsPrice > 0 && <SummaryRow label={t("Options")} value={`CHF ${optionsPrice.toFixed(2)}`} C={C} />}
             <View style={[s.divider, { backgroundColor: C.border }]} />
             <View style={s.summaryRow}><Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Total</Text><Text style={{ color: C.accent, fontSize: 22, fontWeight: '800' }}>CHF {totalPrice.toFixed(2)}</Text></View>
-            <SummaryRow label="Paiement" value={paymentMethod === 'cash' ? 'Especes' : 'Lien Stripe'} C={C} />
+            <SummaryRow label={t("Paiement")} value={paymentMethod === 'cash' ? 'Especes' : t("Lien Stripe")} C={C} />
           </View>
 
           {/* Inspection vehicule */}
           <View style={[s.summaryCard, { backgroundColor: C.card, borderColor: C.border, marginTop: 12 }]}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Ionicons name="search" size={18} color={C.accent} />
-              <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>Inspection du vehicule</Text>
+              <Text style={{ color: C.text, fontSize: 15, fontWeight: '800' }}>{t("Inspection du vehicule")}</Text>
             </View>
-            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>Documentez l'etat du vehicule avant la remise au client</Text>
+            <Text style={{ color: C.textLight, fontSize: 12, marginBottom: 8 }}>{t("Documentez l'etat du vehicule avant la remise au client")}</Text>
             <VehicleInspection
               damages={inspectionDamages}
               onUpdateDamage={(key, val) => setInspectionDamages(prev => ({ ...prev, [key]: val }))}
@@ -812,7 +813,7 @@ export default function BookingFlow() {
           </View>
           <TouchableOpacity style={[s.confirmBtn, { backgroundColor: C.success }, submitting && { opacity: 0.6 }]} onPress={submitReservation} disabled={submitting} data-testid="confirm-btn">
             {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Ionicons name="checkmark-circle" size={22} color="#fff" />}
-            <Text style={s.btnText}>{submitting ? 'Création...' : 'Confirmer la réservation'}</Text>
+            <Text style={s.btnText}>{submitting ? t("Création...") : t("Confirmer la réservation")}</Text>
           </TouchableOpacity>
         </View>
       )}

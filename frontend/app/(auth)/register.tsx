@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import Input from '../../src/components/Input';
 import Button from '../../src/components/Button';
+import { t } from '../../src/i18n';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -94,7 +95,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <View style={styles.header}>
-            <Text style={styles.title}>Creer un compte</Text>
+            <Text style={styles.title}>{t("Creer un compte")}</Text>
             <Text style={styles.subtitle}>{agency_name ? `Rejoignez ${decodeURIComponent(agency_name)}` : 'Rejoignez LogiRent'}</Text>
           </View>
 
@@ -110,8 +111,8 @@ export default function RegisterScreen() {
 
           <View style={styles.form}>
             <Input
-              label="Nom complet"
-              placeholder="Entrez votre nom complet"
+              label={t("Nom complet")}
+              placeholder={t("Entrez votre nom complet")}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -120,8 +121,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Email"
-              placeholder="Entrez votre email"
+              label={t("Email")}
+              placeholder={t("Entrez votre email")}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -131,8 +132,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Telephone (Optionnel)"
-              placeholder="Entrez votre numero"
+              label={t("Telephone (Optionnel)")}
+              placeholder={t("Entrez votre numero")}
               value={phone}
               onChangeText={setPhone}
               keyboardType="phone-pad"
@@ -140,8 +141,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Mot de passe"
-              placeholder="Creez un mot de passe"
+              label={t("Mot de passe")}
+              placeholder={t("Creez un mot de passe")}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -150,8 +151,8 @@ export default function RegisterScreen() {
             />
 
             <Input
-              label="Confirmer le mot de passe"
-              placeholder="Confirmez votre mot de passe"
+              label={t("Confirmer le mot de passe")}
+              placeholder={t("Confirmez votre mot de passe")}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -160,7 +161,7 @@ export default function RegisterScreen() {
             />
 
             <Button
-              title="Creer le compte"
+              title={t("Creer le compte")}
               onPress={handleRegister}
               loading={loading}
               size="large"
@@ -169,9 +170,9 @@ export default function RegisterScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Deja un compte ?</Text>
+            <Text style={styles.footerText}>{t("Deja un compte ?")}</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-              <Text style={styles.footerLink}>Se connecter</Text>
+              <Text style={styles.footerLink}>{t("Se connecter")}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

@@ -705,6 +705,7 @@ async def send_contract(contract_id: str, user: dict = Depends(get_admin_user)):
                     contract_number=contract_number,
                     reservation=reservation or {},
                     agency_name=agency_name,
+                    lang=(client_doc.get("preferred_language") or 'fr'),
                 )
 
                 pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")
@@ -783,6 +784,7 @@ async def sign_contract(contract_id: str, data: ContractSign, user: dict = Depen
                 contract_number=contract_number,
                 reservation=reservation or {},
                 agency_name=agency_name,
+                lang=(client_doc.get("preferred_language") or 'fr'),
             )
 
             pdf_b64 = base64.b64encode(pdf_bytes).decode("utf-8")

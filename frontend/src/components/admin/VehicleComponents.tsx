@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import api from '../../api/axios';
 import Button from '../Button';
+import { t } from '../../i18n';
 
 interface VehicleFormProps {
   brand: string; setBrand: (v: string) => void;
@@ -29,7 +30,7 @@ export function VehicleForm(p: VehicleFormProps) {
           <TouchableOpacity key={o.value}
             style={[st.opt, { borderColor: value === o.value ? C.accent : C.border, backgroundColor: value === o.value ? C.accent + '15' : 'transparent' }]}
             onPress={() => onChange(o.value)}>
-            <Text style={{ fontSize: 13, fontWeight: '500', color: value === o.value ? C.accent : C.textLight }}>{o.label}</Text>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: value === o.value ? C.accent : C.textLight }}>{t(o.label)}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -43,7 +44,7 @@ export function VehicleForm(p: VehicleFormProps) {
         { label: 'Modele *', val: p.model, set: p.setModel, ph: 'ex: Series 3, Classe C...' },
       ].map((f, i) => (
         <View key={i} style={{ marginBottom: 16 }}>
-          <Text style={[st.label, { color: C.text }]}>{f.label}</Text>
+          <Text style={[st.label, { color: C.text }]}>{t(f.label)}</Text>
           <TextInput style={[st.input, { color: C.text, backgroundColor: C.bg, borderColor: C.border }]}
             value={f.val} onChangeText={f.set} placeholder={f.ph} placeholderTextColor={C.textLight} />
         </View>
@@ -55,7 +56,7 @@ export function VehicleForm(p: VehicleFormProps) {
             value={p.year} onChangeText={p.setYear} keyboardType="numeric" placeholder="2024" placeholderTextColor={C.textLight} />
         </View>
         <View style={{ flex: 1, marginLeft: 12 }}>
-          <Text style={[st.label, { color: C.text }]}>Prix/Jour (CHF) *</Text>
+          <Text style={[st.label, { color: C.text }]}>{t("Prix/Jour (CHF) *")}</Text>
           <TextInput style={[st.input, { color: C.text, backgroundColor: C.bg, borderColor: C.border }]}
             value={p.price} onChangeText={p.setPrice} keyboardType="numeric" placeholder="120" placeholderTextColor={C.textLight} />
         </View>
@@ -73,22 +74,22 @@ export function VehicleForm(p: VehicleFormProps) {
               <TouchableOpacity key={o.value}
                 style={[st.opt, { borderColor: p.transmission === o.value ? C.accent : C.border, backgroundColor: p.transmission === o.value ? C.accent + '15' : 'transparent' }]}
                 onPress={() => p.setTransmission(o.value)}>
-                <Text style={{ fontSize: 13, fontWeight: '500', color: p.transmission === o.value ? C.accent : C.textLight }}>{o.label}</Text>
+                <Text style={{ fontSize: 13, fontWeight: '500', color: p.transmission === o.value ? C.accent : C.textLight }}>{t(o.label)}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
       </View>
-      <OptionRow label="Type" value={p.type} onChange={p.setType}
+      <OptionRow label={t("Type")} value={p.type} onChange={p.setType}
         options={[{ value: 'berline', label: 'Berline' }, { value: 'SUV', label: 'SUV' }, { value: 'citadine', label: 'Citadine' }, { value: 'utilitaire', label: 'Utilitaire' }]} />
-      <OptionRow label="Carburant" value={p.fuelType} onChange={p.setFuelType}
+      <OptionRow label={t("Carburant")} value={p.fuelType} onChange={p.setFuelType}
         options={[{ value: 'essence', label: 'Essence' }, { value: 'diesel', label: 'Diesel' }, { value: 'electric', label: 'Electrique' }, { value: 'hybrid', label: 'Hybride' }]} />
-      <OptionRow label="Localisation" value={p.location} onChange={p.setLocation}
+      <OptionRow label={t("Localisation")} value={p.location} onChange={p.setLocation}
         options={[{ value: 'Geneva', label: 'Geneve' }, { value: 'Zurich', label: 'Zurich' }, { value: 'Lausanne', label: 'Lausanne' }, { value: 'Bern', label: 'Bern' }]} />
       <View style={{ marginBottom: 16 }}>
         <Text style={[st.label, { color: C.text }]}>Description</Text>
         <TextInput style={[st.input, { color: C.text, backgroundColor: C.bg, borderColor: C.border, height: 80, textAlignVertical: 'top' }]}
-          value={p.description} onChangeText={p.setDescription} placeholder="Description..." placeholderTextColor={C.textLight} multiline numberOfLines={4} />
+          value={p.description} onChangeText={p.setDescription} placeholder={t("Description...")} placeholderTextColor={C.textLight} multiline numberOfLines={4} />
       </View>
     </ScrollView>
   );
@@ -156,7 +157,7 @@ export function PhotoManagementModal({ visible, vehicle, C, onClose, onRefresh }
         <ScrollView style={{ flex: 1, padding: 20 }}>
           <TouchableOpacity style={[st.uploadBtn, { borderColor: C.accent }]} onPress={handleUpload} disabled={uploading}>
             {uploading ? <ActivityIndicator color={C.accent} /> : (
-              <><Ionicons name="cloud-upload" size={32} color={C.accent} /><Text style={{ color: C.accent, fontWeight: '600', marginTop: 8 }}>Ajouter une photo</Text></>
+              <><Ionicons name="cloud-upload" size={32} color={C.accent} /><Text style={{ color: C.accent, fontWeight: '600', marginTop: 8 }}>{t("Ajouter une photo")}</Text></>
             )}
           </TouchableOpacity>
           {photos.length > 0 ? (
@@ -174,7 +175,7 @@ export function PhotoManagementModal({ visible, vehicle, C, onClose, onRefresh }
           ) : (
             <View style={{ alignItems: 'center', paddingTop: 40 }}>
               <Ionicons name="images-outline" size={48} color={C.textLight} />
-              <Text style={{ color: C.textLight, marginTop: 12 }}>Aucune photo</Text>
+              <Text style={{ color: C.textLight, marginTop: 12 }}>{t("Aucune photo")}</Text>
             </View>
           )}
         </ScrollView>

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Dimensions, Refr
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
+import { t } from '../../src/i18n';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const isWide = SCREEN_W > 900;
@@ -38,20 +39,20 @@ export default function AnalyticsPage() {
 
   return (
     <ScrollView style={[s.page, { backgroundColor: C.bg }]} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />} data-testid="analytics-page">
-      <Text style={[s.pageTitle, { color: C.text }]}>Tableau de bord analytique</Text>
+      <Text style={[s.pageTitle, { color: C.text }]}>{t("Tableau de bord analytique")}</Text>
 
       {/* KPI Cards */}
       <View style={s.kpiRow} data-testid="kpi-row">
-        <KpiCard icon="cash-outline" label="Revenu ce mois" value={fmtCHF(adv?.revenue_this_month)} sub={`${pctChange > 0 ? '+' : ''}${pctChange}% vs mois dernier`} subColor={pctColor} subIcon={pctIcon} C={C} />
-        <KpiCard icon="calendar-outline" label="Reservations" value={String(adv?.reservations_this_month || 0)} sub={`${adv?.reservations_last_month || 0} mois dernier`} C={C} />
-        <KpiCard icon="time-outline" label="Duree moyenne" value={`${adv?.avg_booking_duration || 0} jours`} C={C} />
-        <KpiCard icon="receipt-outline" label="Revenu moyen" value={fmtCHF(adv?.avg_revenue_per_reservation)} C={C} />
+        <KpiCard icon="cash-outline" label={t("Revenu ce mois")} value={fmtCHF(adv?.revenue_this_month)} sub={`${pctChange > 0 ? '+' : ''}${pctChange}% vs mois dernier`} subColor={pctColor} subIcon={pctIcon} C={C} />
+        <KpiCard icon="calendar-outline" label={t("Reservations")} value={String(adv?.reservations_this_month || 0)} sub={`${adv?.reservations_last_month || 0} mois dernier`} C={C} />
+        <KpiCard icon="time-outline" label={t("Duree moyenne")} value={`${adv?.avg_booking_duration || 0} jours`} C={C} />
+        <KpiCard icon="receipt-outline" label={t("Revenu moyen")} value={fmtCHF(adv?.avg_revenue_per_reservation)} C={C} />
       </View>
 
       {/* Revenue per vehicle + Occupancy */}
       <View style={s.chartsRow}>
         <View style={[s.chartCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid="revenue-per-vehicle">
-          <Text style={[s.chartTitle, { color: C.text }]}>Revenu par vehicule</Text>
+          <Text style={[s.chartTitle, { color: C.text }]}>{t("Revenu par vehicule")}</Text>
           {(adv?.revenue_per_vehicle || []).map((v: any, i: number) => (
             <View key={v.id} style={s.barRow}>
               <Text style={[s.barLabel, { color: C.text }]} numberOfLines={1}>{i + 1}. {v.name}</Text>
@@ -62,11 +63,11 @@ export default function AnalyticsPage() {
               <Text style={[s.barSub, { color: C.textLight }]}>{v.bookings} loc.</Text>
             </View>
           ))}
-          {(!adv?.revenue_per_vehicle?.length) && <Text style={{ color: C.textLight, fontSize: 12 }}>Aucune donnee</Text>}
+          {(!adv?.revenue_per_vehicle?.length) && <Text style={{ color: C.textLight, fontSize: 12 }}>{t("Aucune donnee")}</Text>}
         </View>
 
         <View style={[s.chartCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid="occupancy-chart">
-          <Text style={[s.chartTitle, { color: C.text }]}>Taux d'occupation (30j)</Text>
+          <Text style={[s.chartTitle, { color: C.text }]}>{t("Taux d'occupation (30j)")}</Text>
           {(adv?.vehicle_utilization || []).map((v: any) => {
             const color = v.utilization > 70 ? '#10B981' : v.utilization > 40 ? '#F59E0B' : '#EF4444';
             return (
@@ -80,14 +81,14 @@ export default function AnalyticsPage() {
               </View>
             );
           })}
-          {(!adv?.vehicle_utilization?.length) && <Text style={{ color: C.textLight, fontSize: 12 }}>Aucune donnee</Text>}
+          {(!adv?.vehicle_utilization?.length) && <Text style={{ color: C.textLight, fontSize: 12 }}>{t("Aucune donnee")}</Text>}
         </View>
       </View>
 
       {/* Tier analytics + Payment methods */}
       <View style={s.chartsRow}>
         <View style={[s.chartCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid="tier-analytics">
-          <Text style={[s.chartTitle, { color: C.text }]}>Forfaits les plus populaires</Text>
+          <Text style={[s.chartTitle, { color: C.text }]}>{t("Forfaits les plus populaires")}</Text>
           <View style={s.tierSummary}>
             <View style={[s.tierBadge, { backgroundColor: '#EFF6FF' }]}><Text style={{ color: '#2563EB', fontSize: 11, fontWeight: '700' }}>{tiers?.with_tier || 0} avec forfait</Text></View>
             <View style={[s.tierBadge, { backgroundColor: '#F3F4F6' }]}><Text style={{ color: '#6B7280', fontSize: 11, fontWeight: '700' }}>{tiers?.without_tier || 0} sans forfait</Text></View>
@@ -105,11 +106,11 @@ export default function AnalyticsPage() {
               </View>
             </View>
           ))}
-          {(!tiers?.tier_stats?.length) && <Text style={{ color: C.textLight, fontSize: 12, marginTop: 8 }}>Aucune reservation avec forfait</Text>}
+          {(!tiers?.tier_stats?.length) && <Text style={{ color: C.textLight, fontSize: 12, marginTop: 8 }}>{t("Aucune reservation avec forfait")}</Text>}
         </View>
 
         <View style={[s.chartCard, { backgroundColor: C.card, borderColor: C.border }]} data-testid="payment-methods">
-          <Text style={[s.chartTitle, { color: C.text }]}>Methodes de paiement</Text>
+          <Text style={[s.chartTitle, { color: C.text }]}>{t("Methodes de paiement")}</Text>
           {(adv?.payment_methods || []).map((pm: any) => {
             const pmLabels: Record<string, string> = { card: 'Carte', cash: 'Especes', bank_transfer: 'Virement', stripe: 'Stripe' };
             const pmIcons: Record<string, string> = { card: 'card-outline', cash: 'cash-outline', bank_transfer: 'swap-horizontal-outline', stripe: 'logo-usd' };
@@ -124,7 +125,7 @@ export default function AnalyticsPage() {
           })}
           <View style={[s.pmRow, { borderColor: C.border, marginTop: 8 }]}>
             <Ionicons name="close-circle-outline" size={18} color="#EF4444" />
-            <Text style={[s.pmLabel, { color: C.text }]}>Taux d'annulation</Text>
+            <Text style={[s.pmLabel, { color: C.text }]}>{t("Taux d'annulation")}</Text>
             <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '700' }}>{adv?.cancellation_rate || 0}%</Text>
           </View>
         </View>
@@ -132,7 +133,7 @@ export default function AnalyticsPage() {
 
       {/* Weekly trends */}
       <View style={[s.chartCard, { backgroundColor: C.card, borderColor: C.border, marginHorizontal: 16, marginBottom: 40 }]} data-testid="weekly-trends">
-        <Text style={[s.chartTitle, { color: C.text }]}>Tendances hebdomadaires (8 semaines)</Text>
+        <Text style={[s.chartTitle, { color: C.text }]}>{t("Tendances hebdomadaires (8 semaines)")}</Text>
         <View style={s.weekGrid}>
           {(adv?.weekly_trends || []).map((w: any, i: number) => (
             <View key={i} style={s.weekCol}>

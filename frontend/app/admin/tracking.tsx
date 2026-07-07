@@ -5,6 +5,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import { t } from '../../src/i18n';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -113,7 +114,7 @@ export default function TrackingScreen() {
     return (
       <View style={[s.center, { backgroundColor: C.bg }]}>
         <ActivityIndicator size="large" color={C.accent} />
-        <Text style={{ color: C.textLight, marginTop: 12, fontSize: 14 }}>Chargement des positions GPS...</Text>
+        <Text style={{ color: C.textLight, marginTop: 12, fontSize: 14 }}>{t("Chargement des positions GPS...")}</Text>
       </View>
     );
   }
@@ -126,7 +127,7 @@ export default function TrackingScreen() {
           {selectedTracker ? (
             <View style={[s.mapLabel, { backgroundColor: C.accent }]}>
               <Ionicons name="location" size={14} color="#fff" />
-              <Text style={s.mapLabelText}>{selectedTracker.label}</Text>
+              <Text style={s.mapLabelText}>{t(selectedTracker.label)}</Text>
               <TouchableOpacity onPress={() => setSelectedTracker(null)} data-testid="clear-selection-btn">
                 <Ionicons name="close-circle" size={18} color="rgba(255,255,255,0.8)" />
               </TouchableOpacity>
@@ -134,14 +135,14 @@ export default function TrackingScreen() {
           ) : (
             <View style={[s.mapLabel, { backgroundColor: C.card }]}>
               <Ionicons name="map" size={14} color={C.textLight} />
-              <Text style={[s.mapLabelTextDef, { color: C.textLight }]}>Sélectionnez un véhicule pour le localiser</Text>
+              <Text style={[s.mapLabelTextDef, { color: C.textLight }]}>{t("Sélectionnez un véhicule pour le localiser")}</Text>
             </View>
           )}
           <iframe
             key={selectedTracker?.tracker_id || 'default'}
             src={getMapUrl()}
             style={{ width: '100%', height: 300, border: 'none' } as any}
-            title="GPS Map"
+            title={t("GPS Map")}
           />
         </View>
       )}
@@ -154,7 +155,7 @@ export default function TrackingScreen() {
             <TouchableOpacity onPress={() => router.back()} data-testid="back-btn">
               <Text style={{ color: C.primary, fontSize: 14, marginBottom: 4 }}>Retour</Text>
             </TouchableOpacity>
-            <Text style={[s.title, { color: C.text }]}>Suivi GPS Flotte</Text>
+            <Text style={[s.title, { color: C.text }]}>{t("Suivi GPS Flotte")}</Text>
             <Text style={{ color: C.textLight, fontSize: 11, marginTop: 2 }}>MAJ: {lastRefresh}</Text>
           </View>
           <View style={s.headerActions}>
@@ -169,7 +170,7 @@ export default function TrackingScreen() {
                 data-testid="sync-btn"
               >
                 <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>
-                  {syncing ? 'Sync...' : 'Sync véhicules'}
+                  {syncing ? 'Sync...' : t("Sync véhicules")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -180,15 +181,15 @@ export default function TrackingScreen() {
         <View style={s.statsRow}>
           <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.success }]}>
             <Text style={[s.statNum, { color: C.text }]}>{movingCount}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>En mouvement</Text>
+            <Text style={[s.statLabel, { color: C.textLight }]}>{t("En mouvement")}</Text>
           </View>
           <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.warning }]}>
             <Text style={[s.statNum, { color: C.text }]}>{parkedCount}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>Stationnés</Text>
+            <Text style={[s.statLabel, { color: C.textLight }]}>{t("Stationnés")}</Text>
           </View>
           <View style={[s.statCard, { backgroundColor: C.card, borderColor: C.border, borderLeftColor: C.error }]}>
             <Text style={[s.statNum, { color: C.text }]}>{offlineCount}</Text>
-            <Text style={[s.statLabel, { color: C.textLight }]}>Hors ligne</Text>
+            <Text style={[s.statLabel, { color: C.textLight }]}>{t("Hors ligne")}</Text>
           </View>
         </View>
 
@@ -207,7 +208,7 @@ export default function TrackingScreen() {
           >
             <View style={s.vehicleHeader}>
               <View style={[s.statusDot, { backgroundColor: getStatusColor(p) }]} />
-              <Text style={[s.vehicleName, { color: C.text }]} numberOfLines={1}>{p.label}</Text>
+              <Text style={[s.vehicleName, { color: C.text }]} numberOfLines={1}>{t(p.label)}</Text>
               <View style={[s.statusBadge, { backgroundColor: getStatusColor(p) + '20' }]}>
                 <Text style={[s.statusText, { color: getStatusColor(p) }]}>{getStatusLabel(p)}</Text>
               </View>
@@ -218,16 +219,16 @@ export default function TrackingScreen() {
                   {p.lat?.toFixed(4)}, {p.lng?.toFixed(4)} | {p.speed} km/h
                 </Text>
               ) : (
-                <Text style={[s.detailText, { color: C.textLight }]}>Position non disponible</Text>
+                <Text style={[s.detailText, { color: C.textLight }]}>{t("Position non disponible")}</Text>
               )}
               <Text style={[s.detailText, { color: C.textLight }]}>
-                Moteur: {p.ignition ? 'Allumé' : 'Éteint'} | MAJ: {p.last_update || 'N/A'}
+                Moteur: {p.ignition ? t("Allumé") : t("Éteint")} | MAJ: {p.last_update || 'N/A'}
               </Text>
             </View>
             {selectedTracker?.tracker_id === p.tracker_id && (
               <View style={[s.selectedIndicator, { backgroundColor: C.accent + '15' }]}>
                 <Ionicons name="location" size={14} color={C.accent} />
-                <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>Affiché sur la carte</Text>
+                <Text style={{ color: C.accent, fontSize: 11, fontWeight: '600' }}>{t("Affiché sur la carte")}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -236,7 +237,7 @@ export default function TrackingScreen() {
         {positions.length === 0 && (
           <View style={s.emptyState}>
             <Ionicons name="car-outline" size={40} color={C.textLight} />
-            <Text style={{ color: C.textLight, marginTop: 8, fontSize: 14 }}>Aucun véhicule GPS trouvé</Text>
+            <Text style={{ color: C.textLight, marginTop: 8, fontSize: 14 }}>{t("Aucun véhicule GPS trouvé")}</Text>
           </View>
         )}
       </ScrollView>

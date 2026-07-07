@@ -10,9 +10,17 @@ import base64
 import resend
 from datetime import datetime
 from database import RESEND_API_KEY, SENDER_EMAIL, db
+from utils.email_texts import tr
 
 resend.api_key = RESEND_API_KEY
 logger = logging.getLogger(__name__)
+
+
+def _user_lang(user: dict) -> str:
+    if not user:
+        return 'fr'
+    lang = user.get('preferred_language') or 'fr'
+    return lang if lang in ('fr', 'en', 'de') else 'fr'
 
 
 async def _send_via_smtp(smtp_config: dict, recipient: str, subject: str, html_content: str, attachments: list = None):
@@ -127,7 +135,8 @@ def _format_date(d):
     return str(d)
 
 
-def _email_wrapper(title_text: str, accent_color: str, body_html: str) -> str:
+def _email_wrapper(title_text: str, accent_color: str, body_html: str, lang: str = 'fr') -> str:
+    T = tr(lang)
     return f'''<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family:Arial,sans-serif;line-height:1.6;color:#1E293B;margin:0;padding:0;background-color:#F8FAFC;">
 <div style="max-width:600px;margin:0 auto;padding:20px;">
@@ -137,25 +146,27 @@ def _email_wrapper(title_text: str, accent_color: str, body_html: str) -> str:
   </div>
   <div style="background-color:#FFFFFF;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     {body_html}
-    <p style="color:#64748B;font-size:13px;margin-top:20px;">Pour toute question, contactez-nous a {SENDER_EMAIL}.</p>
-    <p style="margin-top:24px;">Cordialement,<br><strong>L\'equipe LogiRent</strong></p>
+    <p style="color:#64748B;font-size:13px;margin-top:20px;">{T['contact'].format(email=SENDER_EMAIL)}</p>
+    <p style="margin-top:24px;">{T['regards']}<br><strong>{T['team'].format(name='LogiRent')}</strong></p>
   </div>
-  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">LogiRent - Location de vehicules en Suisse</div>
+  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">{T['footer'].format(name='LogiRent')}</div>
 </div></body></html>'''
 
 
-def _documents_reminder_block() -> str:
-    return '''<div style="background-color:#FEF3C7;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #F59E0B;">
-      <p style="margin:0 0 8px;color:#92400E;font-weight:bold;">Documents obligatoires a presenter</p>
+def _documents_reminder_block(lang: str = 'fr') -> str:
+    T = tr(lang)
+    return f'''<div style="background-color:#FEF3C7;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #F59E0B;">
+      <p style="margin:0 0 8px;color:#92400E;font-weight:bold;">{T['docs_title']}</p>
       <ul style="margin:0;padding-left:20px;color:#92400E;">
-        <li>Carte d\'identite physique (originale, en cours de validite)</li>
-        <li>Permis de conduire physique (original, en cours de validite)</li>
+        <li>{T['docs_id']}</li>
+        <li>{T['docs_license']}</li>
       </ul>
-      <p style="margin:8px 0 0;color:#92400E;font-size:12px;">Sans ces documents, le vehicule ne pourra pas vous etre remis.</p>
+      <p style="margin:8px 0 0;color:#92400E;font-size:12px;">{T['docs_warning']}</p>
     </div>'''
 
 
-def _reservation_details_block(vehicle: dict, reservation: dict) -> str:
+def _reservation_details_block(vehicle: dict, reservation: dict, lang: str = 'fr') -> str:
+    T = tr(lang)
     start = _format_date(reservation.get('start_date', ''))
     end = _format_date(reservation.get('end_date', ''))
     vname = f"{vehicle['brand']} {vehicle['model']}"
@@ -165,74 +176,78 @@ def _reservation_details_block(vehicle: dict, reservation: dict) -> str:
     total_price = reservation.get('total_price', 0)
     return f'''<div style="background-color:#F8FAFC;padding:20px;border-radius:8px;margin:20px 0;">
       <h3 style="margin-top:0;color:#1A1A2E;">{vname}</h3>
-      <p style="margin:0 0 12px;color:#64748B;font-size:13px;">Categorie : {category}</p>
+      <p style="margin:0 0 12px;color:#64748B;font-size:13px;">{T['cat_label']} : {category}</p>
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:6px 0;color:#64748B;">Date de prise en charge :</td><td style="padding:6px 0;font-weight:bold;">{start}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Date de retour :</td><td style="padding:6px 0;font-weight:bold;">{end}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Duree :</td><td style="padding:6px 0;font-weight:bold;">{total_days} jour(s)</td></tr>
-        {"<tr><td style='padding:6px 0;color:#64748B;'>Lieu :</td><td style='padding:6px 0;font-weight:bold;'>" + location + "</td></tr>" if location else ""}
+        <tr><td style="padding:6px 0;color:#64748B;">{T['pickup']} :</td><td style="padding:6px 0;font-weight:bold;">{start}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['ret']} :</td><td style="padding:6px 0;font-weight:bold;">{end}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['duration']} :</td><td style="padding:6px 0;font-weight:bold;">{total_days} {T['days']}</td></tr>
+        {"<tr><td style='padding:6px 0;color:#64748B;'>" + T['location_label'] + " :</td><td style='padding:6px 0;font-weight:bold;'>" + location + "</td></tr>" if location else ""}
       </table>
     </div>
     <div style="background-color:#1A1A2E;color:#FFFFFF;padding:15px 20px;border-radius:8px;text-align:center;">
-      <span style="font-size:14px;">Montant total :</span>
+      <span style="font-size:14px;">{T['total']} :</span>
       <span style="font-size:24px;font-weight:bold;margin-left:10px;">CHF {total_price:.2f}</span>
     </div>'''
 
 
-def generate_reservation_confirmation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+def generate_reservation_confirmation_email(user_name: str, vehicle: dict, reservation: dict, lang: str = 'fr') -> str:
+    T = tr(lang)
     payment_method = reservation.get('payment_method', 'card')
     cash_note = ''
     if payment_method == 'cash':
-        cash_note = '''<div style="background-color:#EEF2FF;padding:12px;border-radius:8px;margin:16px 0;">
-          <p style="margin:0;color:#4338CA;font-size:13px;">Le paiement sera effectue en especes lors de la prise en charge du vehicule.</p>
+        cash_note = f'''<div style="background-color:#EEF2FF;padding:12px;border-radius:8px;margin:16px 0;">
+          <p style="margin:0;color:#4338CA;font-size:13px;">{T['cash_note']}</p>
         </div>'''
 
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">
-      <h2 style="color:#10B981;margin:0;font-size:20px;">Reservation Confirmee</h2>
+      <h2 style="color:#10B981;margin:0;font-size:20px;">{T['conf_title']}</h2>
     </div>
-    <p>Bonjour <strong>{user_name}</strong>,</p>
-    <p>Nous avons le plaisir de vous confirmer votre reservation. Nous vous garantissons le vehicule reserve ou un vehicule equivalent de la meme categorie.</p>
-    {_reservation_details_block(vehicle, reservation)}
+    <p>{T['hello']} <strong>{user_name}</strong>,</p>
+    <p>{T['conf_text']}</p>
+    {_reservation_details_block(vehicle, reservation, lang)}
     {cash_note}
-    {_documents_reminder_block()}'''
+    {_documents_reminder_block(lang)}'''
 
-    return _email_wrapper('Confirmation de reservation', '#10B981', body)
+    return _email_wrapper(T['conf_header'], '#10B981', body, lang)
 
 
 async def send_reservation_confirmation(user: dict, vehicle: dict, reservation: dict, agency_id: str = None):
-    html = generate_reservation_confirmation_email(user['name'], vehicle, reservation)
+    lang = _user_lang(user)
+    html = generate_reservation_confirmation_email(user['name'], vehicle, reservation, lang)
     vname = f"{vehicle['brand']} {vehicle['model']}"
     await send_email(
         user['email'],
-        f"Reservation confirmee - {vname} | LogiRent",
+        tr(lang)['conf_subject'].format(v=vname),
         html,
         agency_id=agency_id
     )
 
 
-def generate_reservation_request_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+def generate_reservation_request_email(user_name: str, vehicle: dict, reservation: dict, lang: str = 'fr') -> str:
+    T = tr(lang)
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#F59E0B15;border-radius:8px;margin-bottom:20px;">
-      <h2 style="color:#F59E0B;margin:0;font-size:20px;">Demande de reservation recue</h2>
+      <h2 style="color:#F59E0B;margin:0;font-size:20px;">{T['req_title']}</h2>
     </div>
-    <p>Bonjour <strong>{user_name}</strong>,</p>
-    <p>Nous avons bien recu votre demande de reservation. Notre equipe va l'analyser et vous envoyer une confirmation dans les plus brefs delais.</p>
-    {_reservation_details_block(vehicle, reservation)}
+    <p>{T['hello']} <strong>{user_name}</strong>,</p>
+    <p>{T['req_text']}</p>
+    {_reservation_details_block(vehicle, reservation, lang)}
     <div style="background-color:#FEF3C715;padding:12px;border-radius:8px;margin:16px 0;border:1px solid #F59E0B30;">
-      <p style="margin:0;color:#92400E;font-size:13px;">Votre reservation est en attente de confirmation par notre equipe. Vous recevrez un e-mail des qu'elle sera validee.</p>
+      <p style="margin:0;color:#92400E;font-size:13px;">{T['req_pending']}</p>
     </div>
-    {_documents_reminder_block()}'''
+    {_documents_reminder_block(lang)}'''
 
-    return _email_wrapper('Demande de reservation', '#F59E0B', body)
+    return _email_wrapper(T['req_header'], '#F59E0B', body, lang)
 
 
 async def send_reservation_request_email(user: dict, vehicle: dict, reservation: dict, agency_id: str = None):
-    html = generate_reservation_request_email(user['name'], vehicle, reservation)
+    lang = _user_lang(user)
+    html = generate_reservation_request_email(user['name'], vehicle, reservation, lang)
     vname = f"{vehicle['brand']} {vehicle['model']}"
     await send_email(
         user['email'],
-        f"Demande de reservation recue - {vname} | LogiRent",
+        tr(lang)['req_subject'].format(v=vname),
         html,
         agency_id=agency_id
     )
@@ -301,14 +316,15 @@ async def send_new_request_admin_email(client: dict, vehicle: dict, reservation:
         logger.error(f"Failed to send new request admin emails: {e}")
 
 
-def generate_price_offer_email(client_name: str, vehicle: dict, reservation: dict, old_price: float, new_price: float, message: str = '') -> str:
+def generate_price_offer_email(client_name: str, vehicle: dict, reservation: dict, old_price: float, new_price: float, message: str = '', lang: str = 'fr') -> str:
+    T = tr(lang)
     vname = f"{vehicle.get('brand', '')} {vehicle.get('model', '')}".strip()
     price_changed = abs((old_price or 0) - (new_price or 0)) > 0.01
     price_block = ''
     if price_changed:
         price_block = f'''
         <div style="background-color:#FEF3C7;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #F59E0B;">
-          <p style="margin:0 0 8px;color:#92400E;font-weight:bold;font-size:14px;">Nouveau prix propose</p>
+          <p style="margin:0 0 8px;color:#92400E;font-weight:bold;font-size:14px;">{T['offer_new_price']}</p>
           <div style="display:flex;align-items:center;gap:10px;">
             <span style="color:#92400E;text-decoration:line-through;font-size:15px;">CHF {old_price:.2f}</span>
             <span style="color:#64748B;font-size:18px;">&rarr;</span>
@@ -318,98 +334,102 @@ def generate_price_offer_email(client_name: str, vehicle: dict, reservation: dic
     else:
         price_block = f'''
         <div style="background-color:#10B98115;padding:16px;border-radius:8px;margin:16px 0;border-left:4px solid #10B981;">
-          <p style="margin:0;color:#047857;font-weight:bold;font-size:14px;">Montant total : <span style="font-size:20px;">CHF {new_price:.2f}</span></p>
+          <p style="margin:0;color:#047857;font-weight:bold;font-size:14px;">{T['total']} : <span style="font-size:20px;">CHF {new_price:.2f}</span></p>
         </div>'''
 
     message_block = ''
     if message:
         message_block = f'''
         <div style="background-color:#F1F5F9;padding:14px;border-radius:8px;margin:16px 0;">
-          <p style="margin:0 0 6px;color:#64748B;font-size:12px;font-weight:bold;text-transform:uppercase;">Message de l'agence</p>
+          <p style="margin:0 0 6px;color:#64748B;font-size:12px;font-weight:bold;text-transform:uppercase;">{T['offer_msg_label']}</p>
           <p style="margin:0;color:#1E293B;font-size:14px;line-height:1.5;">{message}</p>
         </div>'''
 
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#3B82F615;border-radius:8px;margin-bottom:20px;border:2px solid #3B82F6;">
-      <h2 style="color:#1D4ED8;margin:0;font-size:20px;">Offre de reservation</h2>
-      <p style="color:#1D4ED8;margin:6px 0 0;font-size:13px;">L'agence vous propose une offre pour votre demande</p>
+      <h2 style="color:#1D4ED8;margin:0;font-size:20px;">{T['offer_header']}</h2>
+      <p style="color:#1D4ED8;margin:6px 0 0;font-size:13px;">{T['offer_sub']}</p>
     </div>
-    <p>Bonjour <strong>{client_name}</strong>,</p>
-    <p>Apres etude de votre demande, notre agence vous fait parvenir une offre pour la reservation du <strong>{vname}</strong>.</p>
-    {_reservation_details_block(vehicle, reservation)}
+    <p>{T['hello']} <strong>{client_name}</strong>,</p>
+    <p>{T['offer_text'].format(v=vname)}</p>
+    {_reservation_details_block(vehicle, reservation, lang)}
     {price_block}
     {message_block}
     <div style="background-color:#EFF6FF;padding:14px;border-radius:8px;margin:16px 0;border:1px solid #3B82F640;">
       <p style="margin:0;color:#1E40AF;font-size:13px;line-height:1.5;">
-        Pour <strong>accepter cette offre</strong>, connectez-vous a votre espace LogiRent.
-        Si vous ne souhaitez pas donner suite, vous pouvez ignorer ce message.
+        {T['offer_accept']}
       </p>
     </div>
-    {_documents_reminder_block()}'''
+    {_documents_reminder_block(lang)}'''
 
-    return _email_wrapper('Offre de reservation', '#3B82F6', body)
+    return _email_wrapper(T['offer_header'], '#3B82F6', body, lang)
 
 
 async def send_price_offer_email(client: dict, vehicle: dict, reservation: dict, old_price: float, new_price: float, message: str = '', agency_id: str = None):
     if not client or not client.get('email'):
         return
-    html = generate_price_offer_email(client.get('name', ''), vehicle, reservation, old_price, new_price, message)
+    lang = _user_lang(client)
+    html = generate_price_offer_email(client.get('name', ''), vehicle, reservation, old_price, new_price, message, lang)
     vname = f"{vehicle.get('brand', '')} {vehicle.get('model', '')}".strip()
-    subject = f"Offre de reservation - {vname} - CHF {new_price:.2f} | LogiRent"
+    subject = tr(lang)['offer_subject'].format(v=vname, p=new_price)
     await send_email(client['email'], subject, html, agency_id=agency_id)
 
 
-def generate_payment_confirmation_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+def generate_payment_confirmation_email(user_name: str, vehicle: dict, reservation: dict, lang: str = 'fr') -> str:
+    T = tr(lang)
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">
-      <h2 style="color:#10B981;margin:0;font-size:20px;">Paiement Confirme</h2>
+      <h2 style="color:#10B981;margin:0;font-size:20px;">{T['pay_title']}</h2>
     </div>
-    <p>Bonjour <strong>{user_name}</strong>,</p>
-    <p>Nous confirmons la bonne reception de votre paiement. Votre reservation est desormais entierement validee.</p>
-    {_reservation_details_block(vehicle, reservation)}
+    <p>{T['hello']} <strong>{user_name}</strong>,</p>
+    <p>{T['pay_text']}</p>
+    {_reservation_details_block(vehicle, reservation, lang)}
     <div style="background-color:#10B98115;padding:12px;border-radius:8px;margin:16px 0;text-align:center;">
-      <p style="margin:0;color:#047857;font-weight:bold;">Paiement recu - Reservation validee</p>
+      <p style="margin:0;color:#047857;font-weight:bold;">{T['pay_badge']}</p>
     </div>
-    {_documents_reminder_block()}'''
+    {_documents_reminder_block(lang)}'''
 
-    return _email_wrapper('Confirmation de paiement', '#10B981', body)
+    return _email_wrapper(T['pay_header'], '#10B981', body, lang)
 
 
 async def send_payment_confirmation(user: dict, vehicle: dict, reservation: dict):
-    html = generate_payment_confirmation_email(user['name'], vehicle, reservation)
+    lang = _user_lang(user)
+    html = generate_payment_confirmation_email(user['name'], vehicle, reservation, lang)
     vname = f"{vehicle['brand']} {vehicle['model']}"
     await send_email(
         user['email'],
-        f"Paiement confirme - {vname} | LogiRent",
+        tr(lang)['pay_subject'].format(v=vname),
         html
     )
 
 
-def generate_reminder_24h_email(user_name: str, vehicle: dict, reservation: dict) -> str:
+def generate_reminder_24h_email(user_name: str, vehicle: dict, reservation: dict, lang: str = 'fr') -> str:
+    T = tr(lang)
     start = _format_date(reservation.get('start_date', ''))
     location = vehicle.get('location', '')
 
     body = f'''
     <div style="text-align:center;padding:16px;background-color:#3B82F615;border-radius:8px;margin-bottom:20px;">
-      <h2 style="color:#3B82F6;margin:0;font-size:20px;">Rappel - Votre location commence demain</h2>
+      <h2 style="color:#3B82F6;margin:0;font-size:20px;">{T['rem_title']}</h2>
     </div>
-    <p>Bonjour <strong>{user_name}</strong>,</p>
-    <p>Nous vous rappelons que votre location debute <strong>demain le {start}</strong>.</p>
-    {_reservation_details_block(vehicle, reservation)}
-    {_documents_reminder_block()}
+    <p>{T['hello']} <strong>{user_name}</strong>,</p>
+    <p>{T['rem_text'].format(d=start)}</p>
+    {_reservation_details_block(vehicle, reservation, lang)}
+    {_documents_reminder_block(lang)}
     <div style="background-color:#EEF2FF;padding:12px;border-radius:8px;margin:16px 0;">
-      <p style="margin:0;color:#4338CA;font-size:13px;">{"Lieu de prise en charge : <strong>" + location + "</strong>" if location else "Le lieu de prise en charge vous sera communique par votre agence."}</p>
+      <p style="margin:0;color:#4338CA;font-size:13px;">{T['rem_location'].format(loc=location) if location else T['rem_location_missing']}</p>
     </div>'''
 
-    return _email_wrapper('Rappel - Location demain', '#3B82F6', body)
+    return _email_wrapper(T['rem_header'], '#3B82F6', body, lang)
 
 
 async def send_reminder_24h(user: dict, vehicle: dict, reservation: dict):
-    html = generate_reminder_24h_email(user['name'], vehicle, reservation)
+    lang = _user_lang(user)
+    html = generate_reminder_24h_email(user['name'], vehicle, reservation, lang)
     vname = f"{vehicle['brand']} {vehicle['model']}"
     await send_email(
         user['email'],
-        f"Rappel : votre location de {vname} commence demain | LogiRent",
+        tr(lang)['rem_subject'].format(v=vname),
         html
     )
 
@@ -424,7 +444,14 @@ async def send_cash_reservation_email(user: dict, vehicle: dict, reservation: di
     await send_reservation_confirmation(user, vehicle, reservation)
 
 
-def generate_status_change_email(user_name: str, vehicle_name: str, status: str, reservation: dict) -> str:
+def status_change_subject(status: str, vehicle_name: str, lang: str = 'fr') -> str:
+    T = tr(lang)
+    key = f'st_{status}_subject' if f'st_{status}_subject' in T else 'st_update_subject'
+    return T[key].format(v=vehicle_name)
+
+
+def generate_status_change_email(user_name: str, vehicle_name: str, status: str, reservation: dict, lang: str = 'fr') -> str:
+    T = tr(lang)
     start_date = reservation.get('start_date', '')
     end_date = reservation.get('end_date', '')
     if isinstance(start_date, datetime):
@@ -442,47 +469,51 @@ def generate_status_change_email(user_name: str, vehicle_name: str, status: str,
         except Exception:
             pass
 
-    status_info = {
-        'confirmed': {'title': 'Réservation Confirmée', 'color': '#10B981', 'msg': f'Votre réservation pour <strong>{vehicle_name}</strong> a été confirmée.'},
-        'active': {'title': 'Location En Cours', 'color': '#7C3AED', 'msg': f'Votre location de <strong>{vehicle_name}</strong> est maintenant active. Bon trajet !'},
-        'completed': {'title': 'Location Terminée', 'color': '#6B7280', 'msg': f'Votre location de <strong>{vehicle_name}</strong> est terminée. Merci de votre confiance !'},
-        'cancelled': {'title': 'Réservation Annulée', 'color': '#EF4444', 'msg': f'Votre réservation pour <strong>{vehicle_name}</strong> a été annulée.'},
-    }
-    info = status_info.get(status, {'title': 'Mise à jour', 'color': '#6B7280', 'msg': 'Le statut de votre réservation a été mis à jour.'})
+    colors = {'confirmed': '#10B981', 'active': '#7C3AED', 'completed': '#6B7280', 'cancelled': '#EF4444'}
+    if status in colors:
+        title = T[f'st_{status}_title']
+        msg = T[f'st_{status}_msg'].format(v=vehicle_name)
+        color = colors[status]
+    else:
+        title = T['st_update_title']
+        msg = T['st_update_msg']
+        color = '#6B7280'
 
     return f'''<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="font-family:Arial,sans-serif;line-height:1.6;color:#1E293B;margin:0;padding:0;background-color:#F8FAFC;">
 <div style="max-width:600px;margin:0 auto;padding:20px;">
   <div style="background-color:#1A1A2E;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
     <h1 style="color:#FFFFFF;margin:0;font-size:24px;">LogiRent</h1>
-    <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;">Mise à jour de votre réservation</p>
+    <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;">{T['st_header']}</p>
   </div>
   <div style="background-color:#FFFFFF;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-    <div style="text-align:center;padding:16px;background-color:{info["color"]}15;border-radius:8px;margin-bottom:20px;">
-      <h2 style="color:{info["color"]};margin:0;font-size:20px;">{info["title"]}</h2>
+    <div style="text-align:center;padding:16px;background-color:{color}15;border-radius:8px;margin-bottom:20px;">
+      <h2 style="color:{color};margin:0;font-size:20px;">{title}</h2>
     </div>
-    <p>Bonjour <strong>{user_name}</strong>,</p>
-    <p>{info["msg"]}</p>
+    <p>{T['hello']} <strong>{user_name}</strong>,</p>
+    <p>{msg}</p>
     <div style="background-color:#F8FAFC;padding:16px;border-radius:8px;margin:20px 0;">
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:6px 0;color:#64748B;">Véhicule:</td><td style="padding:6px 0;font-weight:bold;">{vehicle_name}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Du:</td><td style="padding:6px 0;font-weight:bold;">{start_date}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Au:</td><td style="padding:6px 0;font-weight:bold;">{end_date}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Montant:</td><td style="padding:6px 0;font-weight:bold;">CHF {reservation.get("total_price", 0):.2f}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['veh_label']}:</td><td style="padding:6px 0;font-weight:bold;">{vehicle_name}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['from_label']}:</td><td style="padding:6px 0;font-weight:bold;">{start_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['to_label']}:</td><td style="padding:6px 0;font-weight:bold;">{end_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['amount_label']}:</td><td style="padding:6px 0;font-weight:bold;">CHF {reservation.get("total_price", 0):.2f}</td></tr>
       </table>
     </div>
-    <p style="color:#64748B;font-size:13px;">Pour toute question, contactez-nous à {SENDER_EMAIL}.</p>
-    <p style="margin-top:24px;">Cordialement,<br><strong>L'équipe LogiRent</strong></p>
+    <p style="color:#64748B;font-size:13px;">{T['contact'].format(email=SENDER_EMAIL)}</p>
+    <p style="margin-top:24px;">{T['regards']}<br><strong>{T['team'].format(name='LogiRent')}</strong></p>
   </div>
-  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">LogiRent - Location de véhicules</div>
+  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">{T['footer'].format(name='LogiRent')}</div>
 </div></body></html>'''
 
 
-async def send_welcome_email(recipient: str, client_name: str, password: str, agency_name: str, agency_id: str = None):
+async def send_welcome_email(recipient: str, client_name: str, password: str, agency_name: str, agency_id: str = None, lang: str = 'fr'):
     """Send welcome email with credentials and QR code for mobile app"""
     import qrcode
     import io
     import base64
+
+    T = tr(lang)
 
     # Generate QR code for the mobile app link
     app_url = os.environ.get('APP_URL', 'https://logirent.ch')
@@ -494,30 +525,29 @@ async def send_welcome_email(recipient: str, client_name: str, password: str, ag
     qr_img.save(buf, format='PNG')
     qr_b64 = base64.b64encode(buf.getvalue()).decode('utf-8')
 
-    subject = f"Bienvenue chez {agency_name} - Vos identifiants de connexion"
+    subject = T['wel_subject'].format(name=agency_name)
 
     html = f'''<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#F1F5F9;">
 <div style="max-width:600px;margin:20px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
   <div style="background:linear-gradient(135deg,#1A1A2E,#6366F1);padding:32px;text-align:center;">
     <h1 style="color:#fff;margin:0;font-size:24px;">{agency_name}</h1>
-    <p style="color:#C7D2FE;margin:8px 0 0;">Bienvenue sur notre plateforme de location</p>
+    <p style="color:#C7D2FE;margin:8px 0 0;">{T['wel_sub']}</p>
   </div>
   <div style="padding:28px 32px;">
-    <p style="font-size:16px;color:#1E293B;">Bonjour <strong>{client_name}</strong>,</p>
+    <p style="font-size:16px;color:#1E293B;">{T['hello']} <strong>{client_name}</strong>,</p>
     <p style="color:#475569;line-height:1.6;">
-      Votre compte a été créé avec succès par <strong>{agency_name}</strong>.
-      Vous pouvez désormais vous connecter pour consulter nos véhicules disponibles et effectuer vos réservations.
+      {T['wel_text'].format(name=agency_name)}
     </p>
 
     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:20px;margin:20px 0;">
-      <h3 style="margin:0 0 12px;color:#1A1A2E;font-size:15px;">Vos identifiants de connexion</h3>
+      <h3 style="margin:0 0 12px;color:#1A1A2E;font-size:15px;">{T['wel_creds']}</h3>
       <table style="width:100%;border-collapse:collapse;">
         <tr>
-          <td style="padding:8px 0;color:#64748B;font-size:13px;width:100px;">Email</td>
+          <td style="padding:8px 0;color:#64748B;font-size:13px;width:100px;">{T['wel_email']}</td>
           <td style="padding:8px 0;color:#1E293B;font-weight:700;font-size:14px;">{recipient}</td>
         </tr>
         <tr>
-          <td style="padding:8px 0;color:#64748B;font-size:13px;">Mot de passe</td>
+          <td style="padding:8px 0;color:#64748B;font-size:13px;">{T['wel_pass']}</td>
           <td style="padding:8px 0;font-size:14px;">
             <code style="background:#EEF2FF;padding:4px 10px;border-radius:6px;color:#4338CA;font-weight:700;font-size:15px;letter-spacing:1px;">
               {password}
@@ -526,40 +556,40 @@ async def send_welcome_email(recipient: str, client_name: str, password: str, ag
         </tr>
       </table>
       <p style="margin:12px 0 0;color:#EF4444;font-size:11px;">
-        Nous vous recommandons de changer votre mot de passe après votre première connexion.
+        {T['wel_change']}
       </p>
     </div>
 
     <div style="text-align:center;margin:24px 0;">
       <a href="{app_url}" style="display:inline-block;background:#6366F1;color:#fff;text-decoration:none;padding:14px 40px;border-radius:10px;font-weight:700;font-size:15px;">
-        Se connecter maintenant
+        {T['wel_login']}
       </a>
     </div>
 
     <div style="background:#FAFAFA;border:1px solid #E5E7EB;border-radius:10px;padding:20px;text-align:center;margin:20px 0;">
-      <h3 style="margin:0 0 8px;color:#1A1A2E;font-size:14px;">Application mobile</h3>
-      <p style="color:#64748B;font-size:12px;margin:0 0 12px;">Scannez ce QR code pour accéder à l'application</p>
+      <h3 style="margin:0 0 8px;color:#1A1A2E;font-size:14px;">{T['wel_mobile']}</h3>
+      <p style="color:#64748B;font-size:12px;margin:0 0 12px;">{T['wel_scan']}</p>
       <img src="data:image/png;base64,{qr_b64}" alt="QR Code" style="width:150px;height:150px;" />
       <p style="color:#6366F1;font-size:11px;margin:8px 0 0;">{app_url}</p>
     </div>
 
     <p style="color:#64748B;font-size:13px;margin-top:20px;">
-      Pour toute question, n'hésitez pas à nous contacter.
+      {T['wel_contact']}
     </p>
     <p style="margin-top:16px;color:#1E293B;">
-      Cordialement,<br><strong>L'équipe {agency_name}</strong>
+      {T['regards']}<br><strong>{T['team'].format(name=agency_name)}</strong>
     </p>
   </div>
   <div style="text-align:center;padding:16px;color:#94A3B8;font-size:11px;background:#F8FAFC;border-top:1px solid #E2E8F0;">
-    {agency_name} — Location de véhicules | <a href="{app_url}" style="color:#6366F1;">{app_url}</a>
+    {T['wel_footer'].format(name=agency_name)} | <a href="{app_url}" style="color:#6366F1;">{app_url}</a>
   </div>
 </div></body></html>'''
 
     return await send_email(recipient, subject, html, agency_id=agency_id)
 
 
-
-def generate_contract_signed_email(client_name: str, vehicle_name: str, contract_number: str, reservation: dict, agency_name: str = "LogiRent") -> str:
+def generate_contract_signed_email(client_name: str, vehicle_name: str, contract_number: str, reservation: dict, agency_name: str = "LogiRent", lang: str = 'fr') -> str:
+    T = tr(lang)
     start_date = reservation.get('start_date', '')
     end_date = reservation.get('end_date', '')
     if isinstance(start_date, datetime):
@@ -582,28 +612,28 @@ def generate_contract_signed_email(client_name: str, vehicle_name: str, contract
 <div style="max-width:600px;margin:0 auto;padding:20px;">
   <div style="background-color:#1A1A2E;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
     <h1 style="color:#FFFFFF;margin:0;font-size:24px;">{agency_name}</h1>
-    <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;">Contrat de location signe</p>
+    <p style="color:rgba(255,255,255,0.7);margin:8px 0 0;">{T['ct_header']}</p>
   </div>
   <div style="background-color:#FFFFFF;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     <div style="text-align:center;padding:16px;background-color:#10B98115;border-radius:8px;margin-bottom:20px;">
-      <h2 style="color:#10B981;margin:0;font-size:20px;">Contrat Signe avec Succes</h2>
+      <h2 style="color:#10B981;margin:0;font-size:20px;">{T['ct_title']}</h2>
     </div>
-    <p>Bonjour <strong>{client_name}</strong>,</p>
-    <p>Votre contrat de location <strong>N&deg; {contract_number}</strong> pour le vehicule <strong>{vehicle_name}</strong> a ete signe avec succes.</p>
-    <p>Vous trouverez le contrat signe en piece jointe de cet email au format PDF.</p>
+    <p>{T['hello']} <strong>{client_name}</strong>,</p>
+    <p>{T['ct_text'].format(n=contract_number, v=vehicle_name)}</p>
+    <p>{T['ct_pdf_text']}</p>
     <div style="background-color:#F8FAFC;padding:16px;border-radius:8px;margin:20px 0;">
       <table style="width:100%;border-collapse:collapse;">
-        <tr><td style="padding:6px 0;color:#64748B;">Vehicule:</td><td style="padding:6px 0;font-weight:bold;">{vehicle_name}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Du:</td><td style="padding:6px 0;font-weight:bold;">{start_date}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Au:</td><td style="padding:6px 0;font-weight:bold;">{end_date}</td></tr>
-        <tr><td style="padding:6px 0;color:#64748B;">Montant:</td><td style="padding:6px 0;font-weight:bold;">CHF {reservation.get("total_price", 0):.2f}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['veh_label']}:</td><td style="padding:6px 0;font-weight:bold;">{vehicle_name}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['from_label']}:</td><td style="padding:6px 0;font-weight:bold;">{start_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['to_label']}:</td><td style="padding:6px 0;font-weight:bold;">{end_date}</td></tr>
+        <tr><td style="padding:6px 0;color:#64748B;">{T['amount_label']}:</td><td style="padding:6px 0;font-weight:bold;">CHF {reservation.get("total_price", 0):.2f}</td></tr>
       </table>
     </div>
     <div style="text-align:center;padding:12px;background-color:#EEF2FF;border-radius:8px;margin:16px 0;">
-      <p style="margin:0;color:#4338CA;font-size:13px;">Le PDF du contrat est joint a cet email</p>
+      <p style="margin:0;color:#4338CA;font-size:13px;">{T['ct_pdf_badge']}</p>
     </div>
-    <p style="color:#64748B;font-size:13px;">Pour toute question, contactez-nous a {SENDER_EMAIL}.</p>
-    <p style="margin-top:24px;">Cordialement,<br><strong>L'equipe {agency_name}</strong></p>
+    <p style="color:#64748B;font-size:13px;">{T['contact'].format(email=SENDER_EMAIL)}</p>
+    <p style="margin-top:24px;">{T['regards']}<br><strong>{T['team'].format(name=agency_name)}</strong></p>
   </div>
-  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">{agency_name} - Location de vehicules</div>
+  <div style="text-align:center;padding:16px;color:#64748B;font-size:11px;">{T['footer'].format(name=agency_name)}</div>
 </div></body></html>'''

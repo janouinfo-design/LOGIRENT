@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
+import { t } from '../i18n';
 
 const tabs = [
   { name: 'index', route: '/(tabs)', icon: 'home', iconOutline: 'home-outline', label: 'Accueil' },
@@ -44,7 +45,7 @@ export function ClientNavBar() {
                 </View>
               )}
             </View>
-            <Text style={[s.label, active && s.labelActive]}>{tab.label}</Text>
+            <Text style={[s.label, active && s.labelActive]}>{t(tab.label)}</Text>
           </TouchableOpacity>
         );
       })}

@@ -4,15 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { useThemeStore } from '../../src/store/themeStore';
 import api from '../../src/api/axios';
+import { t } from '../../src/i18n';
 
 const ACCENT = '#7C3AED';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
   draft: { bg: '#6B728018', text: '#6B7280', label: 'Brouillon' },
-  pending: { bg: '#F59E0B18', text: '#B45309', label: 'En attente' },
+  pending: { bg: '#F59E0B18', text: '#B45309', label: t("En attente") },
   partially_paid: { bg: '#3B82F618', text: '#1D4ED8', label: 'Partiel' },
   paid: { bg: '#10B98118', text: '#059669', label: 'Paye' },
-  overdue: { bg: '#EF444418', text: '#DC2626', label: 'En retard' },
+  overdue: { bg: '#EF444418', text: '#DC2626', label: t("En retard") },
   cancelled: { bg: '#6B728018', text: '#6B7280', label: 'Annulee' },
   refunded: { bg: '#8B5CF618', text: '#7C3AED', label: 'Rembourse' },
 };
@@ -101,14 +102,14 @@ export default function InvoicesScreen() {
         URL.revokeObjectURL(url);
       }
     } catch (e) {
-      Alert.alert('Erreur', 'Impossible de telecharger le PDF');
+      Alert.alert(t("Erreur"), t("Impossible de telecharger le PDF"));
     }
   };
 
   const handleSendEmail = async (invId: string) => {
     try {
       await api.post(`/api/invoices/${invId}/send`);
-      Alert.alert('Succes', 'Facture envoyee par email');
+      Alert.alert(t("Succes"), t("Facture envoyee par email"));
     } catch (e: any) {
       Alert.alert('Erreur', e.response?.data?.detail || 'Erreur');
     }
@@ -172,7 +173,7 @@ export default function InvoicesScreen() {
             data-testid="create-invoice-btn"
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={st.createBtnText}>Nouvelle facture</Text>
+            <Text style={st.createBtnText}>{t("Nouvelle facture")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -181,21 +182,21 @@ export default function InvoicesScreen() {
           <View style={[st.summaryCard, { backgroundColor: '#10B98112', borderColor: '#10B98130' }]}>
             <Ionicons name="checkmark-circle" size={24} color="#10B981" />
             <View>
-              <Text style={{ color: '#6B7280', fontSize: 12 }}>Total paye</Text>
+              <Text style={{ color: '#6B7280', fontSize: 12 }}>{t("Total paye")}</Text>
               <Text style={{ color: '#059669', fontSize: 20, fontWeight: '900' }}>CHF {totalPaid.toFixed(2)}</Text>
             </View>
           </View>
           <View style={[st.summaryCard, { backgroundColor: '#F59E0B12', borderColor: '#F59E0B30' }]}>
             <Ionicons name="time" size={24} color="#F59E0B" />
             <View>
-              <Text style={{ color: '#6B7280', fontSize: 12 }}>En attente</Text>
+              <Text style={{ color: '#6B7280', fontSize: 12 }}>{t("En attente")}</Text>
               <Text style={{ color: '#B45309', fontSize: 20, fontWeight: '900' }}>CHF {totalPending.toFixed(2)}</Text>
             </View>
           </View>
           <View style={[st.summaryCard, { backgroundColor: ACCENT + '12', borderColor: ACCENT + '30' }]}>
             <Ionicons name="document-text" size={24} color={ACCENT} />
             <View>
-              <Text style={{ color: '#6B7280', fontSize: 12 }}>Total factures</Text>
+              <Text style={{ color: '#6B7280', fontSize: 12 }}>{t("Total factures")}</Text>
               <Text style={{ color: ACCENT, fontSize: 20, fontWeight: '900' }}>{invoices.length}</Text>
             </View>
           </View>
@@ -206,9 +207,9 @@ export default function InvoicesScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
             {[
               { key: 'all', label: 'Toutes' },
-              { key: 'pending', label: 'En attente' },
+              { key: 'pending', label: t("En attente") },
               { key: 'paid', label: 'Payees' },
-              { key: 'overdue', label: 'En retard' },
+              { key: 'overdue', label: t("En retard") },
               { key: 'cancelled', label: 'Annulees' },
             ].map(f => (
               <TouchableOpacity
@@ -217,7 +218,7 @@ export default function InvoicesScreen() {
                 onPress={() => setFilter(f.key)}
                 data-testid={`filter-${f.key}`}
               >
-                <Text style={[st.filterText, filter === f.key && { color: '#fff' }]}>{f.label}</Text>
+                <Text style={[st.filterText, filter === f.key && { color: '#fff' }]}>{t(f.label)}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -225,7 +226,7 @@ export default function InvoicesScreen() {
             <Ionicons name="search" size={16} color={C.textLight} />
             <TextInput
               style={[st.searchInput, { color: C.text }]}
-              placeholder="Rechercher..."
+              placeholder={t("Rechercher...")}
               placeholderTextColor={C.textLight}
               value={search}
               onChangeText={setSearch}
@@ -238,7 +239,7 @@ export default function InvoicesScreen() {
         {filtered.length === 0 ? (
           <View style={st.emptyState}>
             <Ionicons name="document-text-outline" size={48} color={C.textLight} />
-            <Text style={{ color: C.textLight, fontSize: 16, fontWeight: '600', marginTop: 12 }}>Aucune facture</Text>
+            <Text style={{ color: C.textLight, fontSize: 16, fontWeight: '600', marginTop: 12 }}>{t("Aucune facture")}</Text>
           </View>
         ) : (
           filtered.map(inv => {
@@ -250,7 +251,7 @@ export default function InvoicesScreen() {
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Text style={[st.invNumber, { color: C.text }]}>{inv.invoice_number}</Text>
                       <View style={[st.statusBadge, { backgroundColor: sc.bg }]}>
-                        <Text style={{ color: sc.text, fontSize: 11, fontWeight: '700' }}>{sc.label}</Text>
+                        <Text style={{ color: sc.text, fontSize: 11, fontWeight: '700' }}>{t(sc.label)}</Text>
                       </View>
                       <View style={[st.typeBadge, { borderColor: C.border }]}>
                         <Text style={{ color: C.textLight, fontSize: 10, fontWeight: '600' }}>{TYPE_LABELS[inv.invoice_type] || inv.invoice_type}</Text>
@@ -310,10 +311,10 @@ export default function InvoicesScreen() {
         <View style={st.modalOverlay}>
           <View style={[st.modalContent, { backgroundColor: C.card }]}>
             <View style={st.modalHeader}>
-              <Text style={[st.modalTitle, { color: C.text }]}>Nouvelle facture</Text>
+              <Text style={[st.modalTitle, { color: C.text }]}>{t("Nouvelle facture")}</Text>
               <TouchableOpacity onPress={() => setShowCreate(false)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
             </View>
-            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 8 }}>Type de facture</Text>
+            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 8 }}>{t("Type de facture")}</Text>
             <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
               {['reservation', 'deposit', 'final'].map(t => (
                 <TouchableOpacity
@@ -345,7 +346,7 @@ export default function InvoicesScreen() {
               disabled={!selectedResId || creating}
               data-testid="submit-create-invoice"
             >
-              {creating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={st.submitBtnText}>Creer la facture</Text>}
+              {creating ? <ActivityIndicator color="#fff" size="small" /> : <Text style={st.submitBtnText}>{t("Creer la facture")}</Text>}
             </TouchableOpacity>
           </View>
         </View>
@@ -356,21 +357,21 @@ export default function InvoicesScreen() {
         <View style={st.modalOverlay}>
           <View style={[st.modalContent, { backgroundColor: C.card }]}>
             <View style={st.modalHeader}>
-              <Text style={[st.modalTitle, { color: C.text }]}>Ajouter une penalite</Text>
+              <Text style={[st.modalTitle, { color: C.text }]}>{t("Ajouter une penalite")}</Text>
               <TouchableOpacity onPress={() => setShowPenalty(null)}><Ionicons name="close" size={24} color={C.text} /></TouchableOpacity>
             </View>
             <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 4 }}>Description</Text>
             <TextInput
               style={[st.input, { borderColor: C.border, color: C.text }]}
-              placeholder="Ex: Retard retour, dommage constate..."
+              placeholder={t("Ex: Retard retour, dommage constate...")}
               placeholderTextColor={C.textLight}
               value={penaltyLabel}
               onChangeText={setPenaltyLabel}
             />
-            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 4, marginTop: 12 }}>Montant (CHF)</Text>
+            <Text style={{ color: C.textLight, fontSize: 13, marginBottom: 4, marginTop: 12 }}>{t("Montant (CHF)")}</Text>
             <TextInput
               style={[st.input, { borderColor: C.border, color: C.text }]}
-              placeholder="Ex: 150"
+              placeholder={t("Ex: 150")}
               placeholderTextColor={C.textLight}
               value={penaltyAmount}
               onChangeText={setPenaltyAmount}
@@ -380,7 +381,7 @@ export default function InvoicesScreen() {
               style={[st.submitBtn, { backgroundColor: '#EF4444', marginTop: 16 }]}
               onPress={handleAddPenalty}
             >
-              <Text style={st.submitBtnText}>Creer facture penalite</Text>
+              <Text style={st.submitBtnText}>{t("Creer facture penalite")}</Text>
             </TouchableOpacity>
           </View>
         </View>

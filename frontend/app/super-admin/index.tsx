@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../src/api/axios';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const _C = { bg: '#0a0a12', card: '#14141f', text: '#fff', textLight: '#9ca3af', border: '#1f1f2e', accent: '#f87171', gold: '#fbbf24', success: '#22c55e', info: '#06b6d4', purple: '#a78bfa' };
 
@@ -53,7 +54,7 @@ export default function SuperAdminDashboard() {
 
   return (
     <ScrollView style={[s.container, { backgroundColor: C.bg }]} contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}>
-      <Text style={[s.title, { color: C.text }]}>Vue Globale</Text>
+      <Text style={[s.title, { color: C.text }]}>{t("Vue Globale")}</Text>
       <Text style={[s.subtitle, { color: C.textLight }]}>{agencies.length} agences actives</Text>
 
       {/* Global Stats */}
@@ -66,12 +67,12 @@ export default function SuperAdminDashboard() {
         <View style={[s.statCard, { borderTopColor: C.info, backgroundColor: C.card }]}>
           <Ionicons name="car" size={24} color={C.info} />
           <Text style={[s.statNum, { color: C.text }]}>{totalVehicles}</Text>
-          <Text style={[s.statLabel, { color: C.textLight }]}>Véhicules</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>{t("Véhicules")}</Text>
         </View>
         <View style={[s.statCard, { borderTopColor: C.gold, backgroundColor: C.card }]}>
           <Ionicons name="calendar" size={24} color={C.gold} />
           <Text style={[s.statNum, { color: C.text }]}>{totalReservations}</Text>
-          <Text style={[s.statLabel, { color: C.textLight }]}>Réservations</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>{t("Réservations")}</Text>
         </View>
         <View style={[s.statCard, { borderTopColor: C.success, backgroundColor: C.card }]}>
           <Ionicons name="people" size={24} color={C.success} />
@@ -81,7 +82,7 @@ export default function SuperAdminDashboard() {
       </View>
 
       {/* Per-Agency Breakdown */}
-      <Text style={[s.sectionTitle, { color: C.text }]}>Statistiques par Agence</Text>
+      <Text style={[s.sectionTitle, { color: C.text }]}>{t("Statistiques par Agence")}</Text>
       {agencies.map((agency) => (
         <View key={agency.id} style={[s.agencyCard, { backgroundColor: C.card, borderColor: C.border }]}>
           <View style={s.agencyHeader}>
@@ -96,11 +97,11 @@ export default function SuperAdminDashboard() {
           <View style={s.agencyStats}>
             <View style={s.agencyStat}>
               <Text style={[s.agencyStatNum, { color: C.text }]}>{agency.vehicle_count}</Text>
-              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>Véhicules</Text>
+              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>{t("Véhicules")}</Text>
             </View>
             <View style={s.agencyStat}>
               <Text style={[s.agencyStatNum, { color: C.text }]}>{agency.reservation_count}</Text>
-              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>Réservations</Text>
+              <Text style={[s.agencyStatLabel, { color: C.textLight }]}>{t("Réservations")}</Text>
             </View>
             <View style={s.agencyStat}>
               <Text style={[s.agencyStatNum, { color: C.text }]}>{agency.admin_count}</Text>

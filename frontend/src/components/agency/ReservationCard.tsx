@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { t } from '../../i18n';
 
 const STATUS_MAP: Record<string, { label: string; short: string; color: string }> = {
   pending: { label: 'Confirmee', short: 'Conf', color: '#10B981' },
@@ -15,8 +16,8 @@ const STATUS_MAP: Record<string, { label: string; short: string; color: string }
 
 const PAYMENT_MAP: Record<string, { label: string; color: string }> = {
   paid: { label: 'Paye', color: '#10B981' },
-  unpaid: { label: 'Non paye', color: '#F59E0B' },
-  pending: { label: 'En cours', color: '#FBBF24' },
+  unpaid: { label: t("Non paye"), color: '#F59E0B' },
+  pending: { label: t("En cours"), color: '#FBBF24' },
   refunded: { label: 'Rembourse', color: '#6B7280' },
 };
 
@@ -54,7 +55,7 @@ export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPr
       <View style={st.header}>
         <Text style={[st.name, { color: C.text }]} numberOfLines={1}>{item.user_name}</Text>
         <View style={[st.badge, { backgroundColor: s.color + '20' }]}>
-          <Text style={[st.badgeText, { color: s.color }]}>{s.label}</Text>
+          <Text style={[st.badgeText, { color: s.color }]}>{t(s.label)}</Text>
         </View>
       </View>
 
@@ -70,7 +71,7 @@ export const ReservationCard = ({ item, C, statusColor, updateStatus, onActionPr
       <View style={st.priceRow}>
         <Text style={[st.price, { color: C.accent }]}>CHF {item.total_price?.toFixed(0)}</Text>
         <View style={[st.payBadge, { backgroundColor: p.color + '18' }]}>
-          <Text style={{ color: p.color, fontSize: 11, fontWeight: '700' }}>{p.label}</Text>
+          <Text style={{ color: p.color, fontSize: 11, fontWeight: '700' }}>{t(p.label)}</Text>
         </View>
       </View>
 

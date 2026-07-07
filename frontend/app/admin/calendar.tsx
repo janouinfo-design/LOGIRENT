@@ -5,6 +5,7 @@ import api from '../../src/api/axios';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useThemeStore } from '../../src/store/themeStore';
+import { t } from '../../src/i18n';
 
 const COLORS = {
   primary: '#1E3A8A',
@@ -368,14 +369,14 @@ export default function AdminCalendar() {
       {/* Legend */}
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, paddingBottom: 12 }}>
         {[
-          { color: COLORS.departure, label: 'Départ' },
+          { color: COLORS.departure, label: t("Départ") },
           { color: COLORS.return, label: 'Retour' },
           { color: COLORS.overdue, label: 'Retard' },
-          { color: COLORS.success + '60', label: 'En cours' },
+          { color: COLORS.success + '60', label: t("En cours") },
         ].map(item => (
           <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: item.color }} />
-            <Text style={{ fontSize: 11, color: COLORS.textLight }}>{item.label}</Text>
+            <Text style={{ fontSize: 11, color: COLORS.textLight }}>{t(item.label)}</Text>
           </View>
         ))}
       </View>
@@ -531,7 +532,7 @@ export default function AdminCalendar() {
           {selectedDateEvents.departures.length === 0 && selectedDateEvents.returns.length === 0 && selectedDateEvents.ongoing.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 24 }}>
               <Ionicons name="calendar-outline" size={32} color={COLORS.textLight} />
-              <Text style={{ fontSize: 14, color: COLORS.textLight, marginTop: 8 }}>Aucune réservation ce jour</Text>
+              <Text style={{ fontSize: 14, color: COLORS.textLight, marginTop: 8 }}>{t("Aucune réservation ce jour")}</Text>
             </View>
           )}
         </View>
@@ -544,7 +545,7 @@ export default function AdminCalendar() {
         {selectedEvent && (
           <View style={{ flex: 1, backgroundColor: COLORS.background }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, backgroundColor: COLORS.card, borderBottomWidth: 1, borderBottomColor: COLORS.border }}>
-              <Text style={{ fontSize: 18, fontWeight: '600', color: COLORS.text }}>Détail de la réservation</Text>
+              <Text style={{ fontSize: 18, fontWeight: '600', color: COLORS.text }}>{t("Détail de la réservation")}</Text>
               <TouchableOpacity onPress={() => setShowDetailModal(false)}>
                 <Ionicons name="close" size={24} color={COLORS.text} />
               </TouchableOpacity>
@@ -557,7 +558,7 @@ export default function AdminCalendar() {
                 </View>
               )}
               <View style={{ marginBottom: 18 }}>
-                <Text style={styles.sectionTitle}>Véhicule</Text>
+                <Text style={styles.sectionTitle}>{t("Véhicule")}</Text>
                 <Text style={styles.sectionValue}>{selectedEvent.vehicle_name}</Text>
               </View>
               <View style={{ marginBottom: 18 }}>
@@ -568,7 +569,7 @@ export default function AdminCalendar() {
               </View>
               <View style={{ flexDirection: 'row', gap: 16, marginBottom: 18 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>Départ</Text>
+                  <Text style={styles.sectionTitle}>{t("Départ")}</Text>
                   <Text style={styles.sectionValue}>{format(new Date(selectedEvent.start_date), 'dd MMM yyyy', { locale: fr })}</Text>
                   <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.departure, marginTop: 2 }}>{format(new Date(selectedEvent.start_date), 'HH:mm')}</Text>
                 </View>
@@ -582,7 +583,7 @@ export default function AdminCalendar() {
               </View>
               <View style={{ flexDirection: 'row', gap: 16, marginBottom: 18 }}>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>Durée</Text>
+                  <Text style={styles.sectionTitle}>{t("Durée")}</Text>
                   <Text style={styles.sectionValue}>{selectedEvent.total_days} jours</Text>
                 </View>
                 <View style={{ flex: 1 }}>
@@ -600,8 +601,8 @@ export default function AdminCalendar() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sectionTitle}>Paiement</Text>
                   <Text style={styles.sectionValue}>
-                    {selectedEvent.payment_status === 'paid' ? 'Paye' : selectedEvent.payment_status === 'pending' ? 'En cours' : 'Non paye'}
-                    {selectedEvent.payment_method === 'cash' ? ' (Espèces)' : ' (Carte)'}
+                    {selectedEvent.payment_status === 'paid' ? 'Paye' : selectedEvent.payment_status === 'pending' ? t("En cours") : t("Non paye")}
+                    {selectedEvent.payment_method === 'cash' ? t(" (Espèces)") : ' (Carte)'}
                   </Text>
                 </View>
               </View>

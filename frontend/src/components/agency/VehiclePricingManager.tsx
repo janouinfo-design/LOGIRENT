@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import api from '../../api/axios';
+import { t } from '../../i18n';
 
 interface PricingTier {
   id: string;
@@ -74,9 +75,9 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
       });
       setTiers(resp.data.pricing_tiers);
       setEditMode(false);
-      Platform.OS === 'web' ? window.alert('Tarifs sauvegardes !') : Alert.alert('Succes', 'Tarifs sauvegardes !');
+      Platform.OS === 'web' ? window.alert('Tarifs sauvegardes !') : Alert.alert(t("Succes"), t("Tarifs sauvegardes !"));
     } catch (err: any) {
-      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert('Erreur');
+      Platform.OS === 'web' ? window.alert(err.response?.data?.detail || 'Erreur') : Alert.alert(t("Erreur"));
     } finally { setSaving(false); }
   };
 
@@ -87,7 +88,7 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
       <View style={st.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Ionicons name="pricetags" size={18} color={C.accent} />
-          <Text style={[st.title, { color: C.text }]}>Tarifs / Forfaits</Text>
+          <Text style={[st.title, { color: C.text }]}>{t("Tarifs / Forfaits")}</Text>
           <View style={{ backgroundColor: C.accent + '20', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 }}>
             <Text style={{ color: C.accent, fontSize: 11, fontWeight: '700' }}>{tiers.length}</Text>
           </View>
@@ -109,7 +110,7 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
       {tiers.length === 0 ? (
         <View style={{ alignItems: 'center', padding: 20 }}>
           <Ionicons name="pricetags-outline" size={28} color={C.textLight} />
-          <Text style={{ color: C.textLight, fontSize: 13, marginTop: 8 }}>Aucun tarif configure</Text>
+          <Text style={{ color: C.textLight, fontSize: 13, marginTop: 8 }}>{t("Aucun tarif configure")}</Text>
         </View>
       ) : (
         <View style={{ gap: 6 }}>
@@ -117,7 +118,7 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
           <View style={[st.row, { backgroundColor: C.bg, borderColor: C.border }]}>
             <Text style={[st.colHeader, { color: C.textLight, flex: 2.5 }]}>Forfait</Text>
             <Text style={[st.colHeader, { color: C.textLight, flex: 1 }]}>Km</Text>
-            <Text style={[st.colHeader, { color: C.textLight, flex: 1 }]}>Prix CHF</Text>
+            <Text style={[st.colHeader, { color: C.textLight, flex: 1 }]}>{t("Prix CHF")}</Text>
             <Text style={[st.colHeader, { color: C.textLight, flex: 1.2 }]}>Periode</Text>
             <Text style={[st.colHeader, { color: C.textLight, flex: 0.8, textAlign: 'center' }]}>Actif</Text>
             <Text style={[st.colHeader, { color: C.textLight, flex: 0.8, textAlign: 'center' }]}>Actions</Text>
@@ -129,14 +130,14 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
                 style={[st.input, { color: C.text, borderColor: C.border, flex: 2.5 }]}
                 value={tier.name}
                 onChangeText={(v) => { updateTier(i, 'name', v); setEditMode(true); }}
-                placeholder="Ex: 100 km / jour"
+                placeholder={t("Ex: 100 km / jour")}
                 placeholderTextColor={C.textLight}
               />
               <TextInput
                 style={[st.input, { color: C.text, borderColor: C.border, flex: 1 }]}
                 value={tier.kilometers?.toString() || ''}
                 onChangeText={(v) => { updateTier(i, 'kilometers', v ? parseInt(v) || null : null); setEditMode(true); }}
-                placeholder="km"
+                placeholder={t("km")}
                 placeholderTextColor={C.textLight}
                 keyboardType="numeric"
               />
@@ -144,7 +145,7 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
                 style={[st.input, { color: C.accent, borderColor: C.border, flex: 1, fontWeight: '700' }]}
                 value={tier.price?.toString() || ''}
                 onChangeText={(v) => { updateTier(i, 'price', parseFloat(v) || 0); setEditMode(true); }}
-                placeholder="CHF"
+                placeholder={t("CHF")}
                 placeholderTextColor={C.textLight}
                 keyboardType="numeric"
               />
