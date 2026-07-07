@@ -78,6 +78,91 @@ async def get_admin_stats(user: dict = Depends(get_admin_user)):
     )
 
 
+@router.get("/admin/models/performance")
+async def get_models_performance(days: int = 30, user: dict = Depends(get_admin_user)):
+    agency_id = user.get('agency_id')
+    is_super = user.get('role') == 'super_admin'
+    mf = {} if is_super else {"agency_id": agency_id}
+    days = max(7, min(365, days))
+    now = datetime.utcnow()
+    window_start = now - timedelta(days=days)
+
+    models = await db.vehicle_models.find({**mf}, {"_id": 0}).to_list(200)
+    results = []
+    total_revenue = 0.0
+    total_unmet = 0
+    occ_sum = 0.0
+    occ_n = 0
+
+    for m in models:
+        mid = m["id"]
+        fleet = await db.vehicles.find({"model_id": mid, "is_active": {"$ne": False}}, {"_id": 0, "mileage": 1, "status": 1}).to_list(200)
+        fleet_count = len(fleet)
+        avg_mileage = round(sum(v.get("mileage") or 0 for v in fleet) / fleet_count) if fleet_count else 0
+
+        res_list = await db.reservations.find({
+            "model_id": mid,
+            "status": {"$in": ["confirmed", "active", "completed"]},
+            "start_date": {"$lte": now},
+            "end_date": {"$gte": window_start},
+        }, {"_id": 0, "start_date": 1, "end_date": 1}).to_list(500)
+        booked_days = 0
+        for r in res_list:
+            s, e = r.get("start_date"), r.get("end_date")
+            if not isinstance(s, datetime) or not isinstance(e, datetime):
+                continue
+            s = max(s, window_start)
+            e = min(e, now)
+            booked_days += max(0, (e - s).days)
+        capacity = fleet_count * days
+        occupancy = min(100, round((booked_days / capacity) * 100)) if capacity else 0
+
+        rev_agg = await db.reservations.aggregate([
+            {"$match": {"model_id": mid, "status": {"$in": ["confirmed", "active", "completed"]}, "start_date": {"$gte": window_start, "$lte": now}}},
+            {"$group": {"_id": None, "total": {"$sum": "$total_price"}, "count": {"$sum": 1}}},
+        ]).to_list(1)
+        revenue = round(rev_agg[0]["total"], 2) if rev_agg else 0
+        bookings = rev_agg[0]["count"] if rev_agg else 0
+
+        unmet = await db.reservations.count_documents({
+            "model_id": mid,
+            "status": "cancelled",
+            "$or": [{"vehicle_id": None}, {"vehicle_id": ""}],
+            "created_at": {"$gte": window_start},
+        })
+
+        total_revenue += revenue
+        total_unmet += unmet
+        if fleet_count:
+            occ_sum += occupancy
+            occ_n += 1
+
+        results.append({
+            "model_id": mid,
+            "name": f"{m.get('brand', '')} {m.get('model', '')}".strip(),
+            "type": m.get("type", ""),
+            "price_per_day": m.get("price_per_day", 0),
+            "fleet_count": fleet_count,
+            "avg_mileage": avg_mileage,
+            "occupancy_rate": occupancy,
+            "booked_days": booked_days,
+            "revenue": revenue,
+            "bookings": bookings,
+            "unmet_demand": unmet,
+        })
+
+    results.sort(key=lambda x: x["revenue"], reverse=True)
+    return {
+        "days": days,
+        "models": results,
+        "totals": {
+            "revenue": round(total_revenue, 2),
+            "avg_occupancy": round(occ_sum / occ_n) if occ_n else 0,
+            "unmet_demand": total_unmet,
+        },
+    }
+
+
 @router.get("/admin/stats/advanced")
 async def get_advanced_stats(user: dict = Depends(get_admin_user)):
     agency_id = user.get('agency_id')

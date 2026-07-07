@@ -124,7 +124,6 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 ## Prioritized Backlog
 
 ### P1 - Next
-- Page "Performance par modele" (taux occupation, revenus, KM moyen, demande non satisfaite par modele)
 - Dynamic AI Pricing, Predictive Maintenance
 - Automatic invoice email reminders, Accounting export
 
@@ -149,3 +148,11 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
   - **IMPORTANT (contenu dynamique)**: noms/descriptions de vehicules saisis par l'agence restent tels quels (choix utilisateur valide).
   - **NOTE Metro CI mode**: le serveur Expo preview tourne avec CI=true (hot reload desactive) — un `sudo supervisorctl restart expo` est requis pour voir les changements frontend.
   - **Tests**: testing_agent iteration_79 (backend 9/9 PASS, frontend valide apres fixes: selecteur client ajoute, bug `t(t.label)` corrige, imports dupliques dedupliques). Verification visuelle DE/EN sur landing, client connecte et dashboard admin agence.
+
+## Page "Performance par modele" (Session 2026-07-07)
+
+17. **Dashboard Performance par modele** (admin agence, menu Finance > Performance):
+  - **Backend**: `GET /api/admin/models/performance?days=30|90|365` (routes/admin.py). Par modele du catalogue: fleet_count, avg_mileage, occupancy_rate (jours loues / capacite flotte x periode, statuts confirmed/active/completed), booked_days, revenue + bookings (reservations demarrees dans la periode), unmet_demand (reservations cancelled SANS vehicule assigne = demandes refusees). Totaux globaux (revenue, avg_occupancy, unmet_demand). Trie par revenue desc. Super admin = toutes agences.
+  - **Frontend**: `/app/frontend/app/agency-app/performance.tsx` — selecteur periode 30j/90j/1an, 3 KPI cards, cartes par modele avec barre d'occupation coloree (vert>=60, orange>=30, rouge<30), badge rouge "X refusee(s)" si demande non satisfaite. Entierement traduit FR/EN/DE.
+  - Menu: entree "Performance" ajoutee dans le groupe Finance + Tabs.Screen "performance" dans agency-app/_layout.tsx.
+  - Teste: curl API (donnees reelles OK) + verification visuelle de la page en EN.

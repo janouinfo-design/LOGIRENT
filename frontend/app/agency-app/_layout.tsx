@@ -44,6 +44,7 @@ const MENU_ITEMS: MenuItem[] = [
       { key: 'invoices', label: 'Factures', icon: 'receipt', iconO: 'receipt-outline' },
       { key: 'billing-settings', label: t("Parametres facturation"), icon: 'settings', iconO: 'settings-outline' },
       { key: 'statistics', label: 'Statistiques', icon: 'stats-chart', iconO: 'stats-chart-outline' },
+      { key: 'performance', label: 'Performance', icon: 'speedometer', iconO: 'speedometer-outline' },
       { key: 'analytics', label: 'Analytics', icon: 'analytics', iconO: 'analytics-outline' },
     ],
   },
@@ -522,6 +523,7 @@ export default function AgencyAppLayout() {
           <Tabs.Screen name="reservations" options={{ title: 'Reservations' }} />
           <Tabs.Screen name="vehicles" options={{ title: 'Vehicules' }} />
           <Tabs.Screen name="statistics" options={{ title: 'Stats' }} />
+          <Tabs.Screen name="performance" options={{ title: 'Performance' }} />
           <Tabs.Screen name="analytics" options={{ title: 'Analytics' }} />
           <Tabs.Screen name="tracking" options={{ title: 'GPS' }} />
           <Tabs.Screen name="clients" options={{ title: 'Clients' }} />
