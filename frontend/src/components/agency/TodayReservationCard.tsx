@@ -95,11 +95,11 @@ export const TodayReservationCard = ({ item, C, onStatusChange, onActionPress, o
       <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
         <View style={[st.timeChip, { backgroundColor: '#10B98110', borderColor: '#10B98130' }]}>
           <Ionicons name="log-in-outline" size={12} color="#10B981" />
-          <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '700' }}>Depart {startTime}</Text>
+          <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '700' }}>{t("Depart")} {startTime}</Text>
         </View>
         <View style={[st.timeChip, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
           <Ionicons name="log-out-outline" size={12} color="#3B82F6" />
-          <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Retour {endTime}</Text>
+          <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>{t("Retour")} {endTime}</Text>
         </View>
       </View>
 

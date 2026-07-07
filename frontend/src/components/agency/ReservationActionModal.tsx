@@ -226,7 +226,7 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                 <View>
                   <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8 }} onPress={() => setShowInspection(null)}>
                     <Ionicons name="arrow-back" size={16} color={C.accent} />
-                    <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>Retour</Text>
+                    <Text style={{ color: C.accent, fontSize: 12, fontWeight: '600' }}>{t("Retour")}</Text>
                   </TouchableOpacity>
                   <VehicleInspectionForm
                     reservationId={actionModal.id}
@@ -239,7 +239,7 @@ export const ReservationActionModal = ({ actionModal, setActionModal, C, statusC
                 <View>
                   {(['checkout', 'checkin'] as const).map(t => {
                     const done = inspections.find((i: any) => i.type === t);
-                    const label = t === 'checkout' ? 'Depart' : 'Retour';
+                    const label = t === 'checkout' ? t("Depart") : t("Retour");
                     const icon = t === 'checkout' ? 'log-out-outline' : 'log-in-outline';
                     return (
                       <TouchableOpacity key={t} style={[st.actionBtn, { borderColor: C.border }]}

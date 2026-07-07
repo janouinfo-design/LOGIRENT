@@ -73,7 +73,7 @@ export function ReservationCard({ item, C, onStatusPress, onPaymentPress, onCont
         {item.payment_method === 'cash' && (
           <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4 }}>
             <Ionicons name="cash" size={12} color="#D97706" />
-            <Text style={{ fontSize: 11, color: '#D97706', fontWeight: '500' }}>Especes</Text>
+            <Text style={{ fontSize: 11, color: '#D97706', fontWeight: '500' }}>{t("Especes")}</Text>
           </View>
         )}
         <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.accent + '15', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}

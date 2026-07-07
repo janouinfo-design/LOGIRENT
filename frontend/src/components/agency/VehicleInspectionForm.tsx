@@ -88,7 +88,7 @@ export default function VehicleInspectionForm({ reservationId, vehicleId, type, 
   };
 
   const allChecked = items.every(i => i.checked);
-  const typeLabel = type === 'checkout' ? 'Depart' : 'Retour';
+  const typeLabel = type === 'checkout' ? t("Depart") : t("Retour");
   const isReadOnly = !!existing;
 
   if (loading) return <ActivityIndicator color={C.accent} style={{ marginVertical: 40 }} />;

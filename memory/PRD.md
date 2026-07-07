@@ -124,12 +124,28 @@ LogiRent is a complete car rental management solution for Swiss vehicle rental a
 ## Prioritized Backlog
 
 ### P1 - Next
+- Page "Performance par modele" (taux occupation, revenus, KM moyen, demande non satisfaite par modele)
 - Dynamic AI Pricing, Predictive Maintenance
 - Automatic invoice email reminders, Accounting export
 
 ### P2 - Future
 - Multi-channel (Expedia, Kayak), Loyalty program, Multi-currency
+- Traduction des notifications in-app stockees en DB (actuellement FR uniquement)
+- Email admin "nouvelle demande" reste FR (choix: admin-facing)
 
 ### P3 - Backlog
 - App Store/Play Store submission (blocked on user creating Google Play account)
 - Health dashboard, Fine management
+
+## Internationalisation FR/EN/DE (Session 2026-07-07)
+
+16. **i18n complet FR/EN/DE sur toute l'application** (client + admin agence + super admin):
+  - **Core**: `/app/frontend/src/i18n/index.tsx` — fonction globale `t()` (texte francais = cle, fallback = texte source), `I18nProvider` avec remount `key={lang}` au changement de langue, detection automatique de la langue navigateur au 1er chargement (web), persistance localStorage/AsyncStorage cle `app_lang`.
+  - **Dictionnaires**: `translations.en.ts` + `translations.de.ts` (~935 cles chacun), generes par lots via GPT-5.2 (script `/app/scripts/translate_keys.py`) + completes manuellement (labels de menus, statuts, boutons).
+  - **Codemod**: `/app/scripts/i18n_codemod.py` a transforme ~75 fichiers .tsx (Text nodes, placeholders, props UI, ternaires, Alert.alert) + 2e passe sur 32 fichiers pour les mots isoles (Refuser, Assigner, Depart...).
+  - **Selecteur `LanguageSelector`** (`src/components/LanguageSelector.tsx`, testID lang-fr/en/de) place sur: landing publique (overlay hero), page login, TopNav client connecte (header accueil), page Profil client (section Parametres > Langue), header admin agence (a cote de la cloche), barre super admin.
+  - **Backend**: champ `preferred_language` sur UserUpdate/UserProfile/build_user_profile. Le changement de langue d'un client connecte est synchronise via `PUT /api/auth/profile`.
+  - **Emails multilingues**: `utils/email_texts.py` (dict T fr/en/de) + refonte `utils/email.py` — tous les emails client (confirmation, demande recue, offre de prix, paiement, rappel 24h, changement de statut, bienvenue, contrat signe) sont generes dans la langue `user.preferred_language`. Sujets traduits via `status_change_subject()`. L'email admin "nouvelle demande" reste FR (admin-facing).
+  - **IMPORTANT (contenu dynamique)**: noms/descriptions de vehicules saisis par l'agence restent tels quels (choix utilisateur valide).
+  - **NOTE Metro CI mode**: le serveur Expo preview tourne avec CI=true (hot reload desactive) — un `sudo supervisorctl restart expo` est requis pour voir les changements frontend.
+  - **Tests**: testing_agent iteration_79 (backend 9/9 PASS, frontend valide apres fixes: selecteur client ajoute, bug `t(t.label)` corrige, imports dupliques dedupliques). Verification visuelle DE/EN sur landing, client connecte et dashboard admin agence.

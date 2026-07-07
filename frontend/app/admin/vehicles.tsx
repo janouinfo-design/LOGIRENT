@@ -187,7 +187,7 @@ export default function AdminVehicles() {
         <VehicleForm {...formProps} />
         <View style={[st.modalFooter, { backgroundColor: C.card, borderTopColor: C.border }]}>
           <Button title={t("Annuler")} onPress={onClose} variant="outline" style={{ flex: 1 }} />
-          <Button title={isEdit ? 'Enregistrer' : 'Ajouter'} onPress={() => handleSave(isEdit)} loading={submitting} style={{ flex: 1 }} />
+          <Button title={isEdit ? t("Enregistrer") : t("Ajouter")} onPress={() => handleSave(isEdit)} loading={submitting} style={{ flex: 1 }} />
         </View>
       </View>
     </Modal>

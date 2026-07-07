@@ -456,7 +456,7 @@ export default function AgencyReservations() {
             <View style={[s.tRow, { backgroundColor: '#F1F5F9' }]}>
               <Text style={[s.tH, { flex: 1.2 }]}>Client</Text>
               <Text style={[s.tH, { flex: 1.2 }]}>Vehicule</Text>
-              <Text style={[s.tH, { flex: 0.7 }]}>Debut</Text>
+              <Text style={[s.tH, { flex: 0.7 }]}>{t("Debut")}</Text>
               <Text style={[s.tH, { flex: 0.5 }]}>Heure</Text>
               <Text style={[s.tH, { flex: 0.6 }]}>{t("Creee le")}</Text>
               <Text style={[s.tH, { flex: 0.8 }]}>Statut</Text>
@@ -495,14 +495,14 @@ export default function AgencyReservations() {
                   </TouchableOpacity>
                   {(r.status === 'active' || r.status === 'confirmed') && (
                     <TouchableOpacity style={[s.actionBtn, { borderColor: '#10B98140', backgroundColor: '#F0FDF4' }]} onPress={() => setReturnModal(r)} data-testid={`return-recent-${r.id}`}>
-                      <Text style={[s.actionBtnText, { color: '#059669' }]}>Retour</Text>
+                      <Text style={[s.actionBtnText, { color: '#059669' }]}>{t("Retour")}</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity style={[s.actionBtn, { borderColor: '#F59E0B40' }]} onPress={() => setActionModal(r)}>
-                    <Text style={[s.actionBtnText, { color: '#D97706' }]}>Modifier</Text>
+                    <Text style={[s.actionBtnText, { color: '#D97706' }]}>{t("Modifier")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[s.actionBtn, { borderColor: '#EF444440' }]} onPress={() => updateStatus(r.id, 'cancelled')}>
-                    <Text style={[s.actionBtnText, { color: '#EF4444' }]}>Annuler</Text>
+                    <Text style={[s.actionBtnText, { color: '#EF4444' }]}>{t("Annuler")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={{ padding: 4 }} onPress={() => setActionModal(r)}>
                     <Ionicons name="ellipsis-horizontal" size={16} color={C.textLight} />
@@ -672,11 +672,11 @@ export default function AgencyReservations() {
                   </TouchableOpacity>
                   {(r.status === 'active' || r.status === 'confirmed') && (
                     <TouchableOpacity style={[s.actionBtn, { borderColor: '#10B98140', backgroundColor: '#F0FDF4' }]} onPress={() => setReturnModal(r)} data-testid={`return-btn-${r.id}`}>
-                      <Text style={[s.actionBtnText, { color: '#059669' }]}>Retour</Text>
+                      <Text style={[s.actionBtnText, { color: '#059669' }]}>{t("Retour")}</Text>
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity style={[s.actionBtn, { borderColor: '#F59E0B40' }]} onPress={() => setActionModal(r)}>
-                    <Text style={[s.actionBtnText, { color: '#D97706' }]}>Modifier</Text>
+                    <Text style={[s.actionBtnText, { color: '#D97706' }]}>{t("Modifier")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={{ padding: 4 }} onPress={() => setActionModal(r)}>
                     <Ionicons name="ellipsis-horizontal" size={16} color={C.textLight} />

@@ -76,7 +76,7 @@ export default function ClientVehicleDetail() {
     <View style={[st.container, { backgroundColor: C.bg }]}>
       <TouchableOpacity onPress={() => router.back()} style={[st.backBtn, { backgroundColor: C.card, borderColor: C.border }]} data-testid="back-btn">
         <Ionicons name="arrow-back" size={20} color={C.text} />
-        <Text style={{ fontSize: 14, fontWeight: '600', color: C.text }}>Retour</Text>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: C.text }}>{t("Retour")}</Text>
       </TouchableOpacity>
 
       <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>

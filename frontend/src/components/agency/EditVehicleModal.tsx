@@ -356,7 +356,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
                             <Text style={{ color: isLast ? C.border : C.accent, fontSize: 16 }}>&#9660;</Text>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={() => handleDeletePhoto(idx)} style={{ padding: 6, backgroundColor: '#EF444412', borderRadius: 6 }} data-testid={`delete-photo-${idx}`}>
-                            <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>Supprimer</Text>
+                            <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>{t("Supprimer")}</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
@@ -467,7 +467,7 @@ export default function EditVehicleModal({ vehicle, colors: C, onClose, onSaved 
             {/* Actions */}
             <View style={vst.modalActions}>
               <TouchableOpacity onPress={onClose} style={[vst.actionBtn, { borderColor: C.border }]} data-testid="cancel-edit">
-                <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>Annuler</Text>
+                <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>{t("Annuler")}</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={saveEdit} disabled={saving} style={[vst.actionBtn, vst.saveBtn, { backgroundColor: C.accent }]} data-testid="save-edit">
                 {saving ? <ActivityIndicator size="small" color="#fff" /> : <>

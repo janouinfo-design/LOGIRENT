@@ -314,7 +314,7 @@ export default function ContractTemplatePage() {
               </TouchableOpacity>
               <TouchableOpacity style={[s.btnSm, { backgroundColor: '#EF4444' }]} onPress={deleteLogo} data-testid="delete-logo-btn">
                 <Ionicons name="trash" size={14} color="#fff" />
-                <Text style={s.btnSmText}>Supprimer</Text>
+                <Text style={s.btnSmText}>{t("Supprimer")}</Text>
               </TouchableOpacity>
             </View>
           </View>

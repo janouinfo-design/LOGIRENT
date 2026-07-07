@@ -216,7 +216,7 @@ export default function AdminUsers() {
                       <TouchableOpacity onPress={() => handlePhoto(doc.type)} disabled={uploading === doc.type}>
                         {uploading === doc.type ? <View style={[st.docPlaceholder, { borderColor: C.border }]}><ActivityIndicator color={C.accent} /></View>
                           : doc.photo ? <View><Image source={{ uri: doc.photo }} style={st.docImg} /><View style={st.docOverlay}><Ionicons name="camera" size={20} color="#fff" /></View></View>
-                          : <View style={[st.docPlaceholder, { borderColor: C.border }]}><Ionicons name="add-circle" size={28} color={C.accent} /><Text style={{ color: C.accent, fontSize: 11, marginTop: 4 }}>Ajouter</Text></View>}
+                          : <View style={[st.docPlaceholder, { borderColor: C.border }]}><Ionicons name="add-circle" size={28} color={C.accent} /><Text style={{ color: C.accent, fontSize: 11, marginTop: 4 }}>{t("Ajouter")}</Text></View>}
                       </TouchableOpacity>
                     </View>
                   ))}

@@ -475,7 +475,7 @@ export default function AgenciesPage() {
 
               <Text style={styles.credentialsNote}>{t("Communiquez ces identifiants et QR codes a l'administrateur de l'agence.")}</Text>
               <TouchableOpacity style={styles.saveBtn} onPress={() => setSuccessInfo(null)} data-testid="agency-success-close">
-                <Text style={styles.saveBtnText}>Fermer</Text>
+                <Text style={styles.saveBtnText}>{t("Fermer")}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -535,7 +535,7 @@ export default function AgenciesPage() {
               </View>
 
               <TouchableOpacity style={styles.saveBtn} onPress={() => setQrAgency(null)} data-testid="qr-modal-close">
-                <Text style={styles.saveBtnText}>Fermer</Text>
+                <Text style={styles.saveBtnText}>{t("Fermer")}</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -625,7 +625,7 @@ export default function AgenciesPage() {
                 style={{ flex: 1, backgroundColor: COLORS.border, borderRadius: 10, height: 44, justifyContent: 'center', alignItems: 'center' }}
                 onPress={() => setModulesAgency(null)}
               >
-                <Text style={{ color: COLORS.text, fontWeight: '600' }}>Annuler</Text>
+                <Text style={{ color: COLORS.text, fontWeight: '600' }}>{t("Annuler")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={{ flex: 1, backgroundColor: '#6C2BD9', borderRadius: 10, height: 44, justifyContent: 'center', alignItems: 'center', opacity: savingModules ? 0.6 : 1 }}

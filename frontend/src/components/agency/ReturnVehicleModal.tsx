@@ -292,7 +292,7 @@ export default function ReturnVehicleModal({ visible, reservation, vehicle, onCl
                   <Text style={{ fontSize: 14, fontWeight: '900', color: '#1E3A5F' }}>CHF {result.new_total?.toFixed(2)}</Text>
                 </View>
                 <TouchableOpacity onPress={() => { setResult(null); onSuccess(); onClose(); }} style={{ marginTop: 20, backgroundColor: '#10B981', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 10 }} data-testid="close-return-success">
-                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>Fermer</Text>
+                  <Text style={{ color: '#fff', fontSize: 14, fontWeight: '800' }}>{t("Fermer")}</Text>
                 </TouchableOpacity>
               </View>
             )}

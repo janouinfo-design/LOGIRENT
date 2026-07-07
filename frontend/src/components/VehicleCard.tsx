@@ -39,7 +39,7 @@ export default function VehicleCard({ vehicle, onPress, index = 0 }: Props) {
         )}
         <View style={[s.statusBadge, { backgroundColor: isAvailable ? '#10B98118' : '#EF444418', borderColor: isAvailable ? '#10B98140' : '#EF444440' }]}>
           <View style={[s.statusDot, { backgroundColor: isAvailable ? '#10B981' : '#EF4444' }]} />
-          <Text style={{ fontSize: 11, fontWeight: '700', color: isAvailable ? '#059669' : '#DC2626' }}>{isAvailable ? 'Disponible' : 'Indisponible'}</Text>
+          <Text style={{ fontSize: 11, fontWeight: '700', color: isAvailable ? '#059669' : '#DC2626' }}>{isAvailable ? t('Disponible') : t('Indisponible')}</Text>
         </View>
         {photoCount > 1 && (
           <View style={s.photoBadge}><Ionicons name="camera" size={11} color="#fff" /><Text style={s.photoBadgeText}>{photoCount}</Text></View>

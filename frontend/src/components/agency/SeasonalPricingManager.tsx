@@ -67,7 +67,7 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
         </View>
         <TouchableOpacity style={s.addBtn} onPress={addItem} data-testid="add-seasonal-price">
           <Ionicons name="add" size={16} color="#FFF" />
-          <Text style={s.addBtnText}>Ajouter</Text>
+          <Text style={s.addBtnText}>{t("Ajouter")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -94,7 +94,7 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
 
             <View style={s.row}>
               <View style={s.dateField}>
-                <Text style={s.label}>Debut</Text>
+                <Text style={s.label}>{t("Debut")}</Text>
                 <TextInput
                   style={s.input}
                   placeholder={t("AAAA-MM-JJ")}
@@ -104,7 +104,7 @@ export default function SeasonalPricingManager({ vehicleId }: Props) {
                 />
               </View>
               <View style={s.dateField}>
-                <Text style={s.label}>Fin</Text>
+                <Text style={s.label}>{t("Fin")}</Text>
                 <TextInput
                   style={s.input}
                   placeholder={t("AAAA-MM-JJ")}

@@ -153,7 +153,7 @@ export default function TrackingScreen() {
         <View style={s.headerRow}>
           <View>
             <TouchableOpacity onPress={() => router.back()} data-testid="back-btn">
-              <Text style={{ color: C.primary, fontSize: 14, marginBottom: 4 }}>Retour</Text>
+              <Text style={{ color: C.primary, fontSize: 14, marginBottom: 4 }}>{t("Retour")}</Text>
             </TouchableOpacity>
             <Text style={[s.title, { color: C.text }]}>{t("Suivi GPS Flotte")}</Text>
             <Text style={{ color: C.textLight, fontSize: 11, marginTop: 2 }}>MAJ: {lastRefresh}</Text>

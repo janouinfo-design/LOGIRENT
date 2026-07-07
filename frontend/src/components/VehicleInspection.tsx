@@ -381,7 +381,7 @@ export default function VehicleInspection({ damages, onUpdateDamage, editable, c
                   testID="remove-damage-btn"
                 >
                   <Ionicons name="trash" size={16} color="#EF4444" />
-                  <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>Supprimer</Text>
+                  <Text style={{ color: '#EF4444', fontSize: 13, fontWeight: '700' }}>{t("Supprimer")}</Text>
                 </TouchableOpacity>
               ) : <View />}
               <TouchableOpacity

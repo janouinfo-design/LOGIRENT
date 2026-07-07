@@ -5,6 +5,7 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { useAuthStore } from '../../src/store/authStore';
 import { useNotificationStore } from '../../src/store/notificationStore';
 import { usePushNotifications } from '../../src/hooks/usePushNotifications';
+import { t } from '../../src/i18n';
 
 export default function TabLayout() {
   const { isAuthenticated, user, isLoading } = useAuthStore();
@@ -45,18 +46,18 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{
-        title: 'Accueil',
+        title: t('Accueil'),
         tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />,
       }} />
       <Tabs.Screen name="vehicles" options={{
         href: null,
       }} />
       <Tabs.Screen name="reservations" options={{
-        title: 'Locations',
+        title: t('Locations'),
         tabBarIcon: ({ color, focused }) => <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={24} color={color} />,
       }} />
       <Tabs.Screen name="notifications" options={{
-        title: 'Notifs',
+        title: t('Notifs'),
         tabBarIcon: ({ color, focused }) => (
           <View>
             <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={24} color={color} />

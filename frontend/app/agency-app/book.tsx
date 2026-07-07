@@ -652,7 +652,7 @@ export default function BookingFlow() {
               {startDate && format(startDate, 'd MMM', { locale: fr })} - {endDate && format(endDate, 'd MMM yyyy', { locale: fr })} ({totalDays}j)
             </Text>
             <TouchableOpacity onPress={() => setStep('calendar')} style={{ backgroundColor: C.accent, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 6 }}>
-              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Modifier</Text>
+              <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{t("Modifier")}</Text>
             </TouchableOpacity>
           </View>
 

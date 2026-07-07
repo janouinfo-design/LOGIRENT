@@ -12,6 +12,7 @@ import api from '../../src/api/axios';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { t } from '../../src/i18n';
+import { LanguageSelector } from '../../src/components/LanguageSelector';
 
 const _C = {
   purple: '#7C3AED',
@@ -496,7 +497,7 @@ export default function ProfileScreen() {
                 )}
                 <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.id_photo ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('id')} data-testid="upload-id-front-btn">
                   {uploadingId ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                    <Text style={{ color: user.id_photo ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.id_photo ? 'Modifier' : 'Ajouter'}</Text>
+                    <Text style={{ color: user.id_photo ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.id_photo ? t("Modifier") : t("Ajouter")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -509,7 +510,7 @@ export default function ProfileScreen() {
                 )}
                 <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.id_photo_back ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('id_back')} data-testid="upload-id-back-btn">
                   {uploadingIdBack ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                    <Text style={{ color: user.id_photo_back ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.id_photo_back ? 'Modifier' : 'Ajouter'}</Text>
+                    <Text style={{ color: user.id_photo_back ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.id_photo_back ? t("Modifier") : t("Ajouter")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -543,7 +544,7 @@ export default function ProfileScreen() {
                 )}
                 <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.license_photo ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('license')} data-testid="upload-license-front-btn">
                   {uploadingLicense ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                    <Text style={{ color: user.license_photo ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.license_photo ? 'Modifier' : 'Ajouter'}</Text>
+                    <Text style={{ color: user.license_photo ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.license_photo ? t("Modifier") : t("Ajouter")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -556,7 +557,7 @@ export default function ProfileScreen() {
                 )}
                 <TouchableOpacity style={[styles.docBtnSmall, { backgroundColor: user.license_photo_back ? '#EDE9FE' : '#7C3AED' }]} onPress={() => pickAndUpload('license_back')} data-testid="upload-license-back-btn">
                   {uploadingLicenseBack ? <ActivityIndicator size="small" color="#7C3AED" /> : (
-                    <Text style={{ color: user.license_photo_back ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.license_photo_back ? 'Modifier' : 'Ajouter'}</Text>
+                    <Text style={{ color: user.license_photo_back ? '#7C3AED' : '#FFF', fontSize: 12, fontWeight: '600' }}>{user.license_photo_back ? t("Modifier") : t("Ajouter")}</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -575,6 +576,15 @@ export default function ProfileScreen() {
         {/* Menu */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: C.text }]}>{t("Paramètres")}</Text>
+          <View style={[styles.menuCard, { backgroundColor: C.card, borderColor: C.border, marginBottom: 10 }]}>
+            <View style={[styles.menuItem, { justifyContent: 'space-between' }]} data-testid="profile-language-row">
+              <View style={styles.menuLeft}>
+                <View style={styles.menuIcon}><Ionicons name="language" size={18} color={C.purple} /></View>
+                <Text style={styles.menuText}>{t("Langue")}</Text>
+              </View>
+              <LanguageSelector color={C.text} activeColor={C.purple} />
+            </View>
+          </View>
           <View style={[styles.menuCard, { backgroundColor: C.card, borderColor: C.border }]}>
             {menuItems.map((item, i) => (
               <TouchableOpacity key={item.label} style={[styles.menuItem, i < menuItems.length - 1 && styles.menuBorder]} onPress={() => item.action && item.action()} data-testid={`menu-${i}`}>
@@ -620,7 +630,7 @@ export default function ProfileScreen() {
               <Text style={uploadModalStyles.btnText}>{t("Choisir depuis la galerie")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={uploadModalStyles.cancelBtn} onPress={() => setUploadModal(null)}>
-              <Text style={uploadModalStyles.cancelText}>Annuler</Text>
+              <Text style={uploadModalStyles.cancelText}>{t("Annuler")}</Text>
             </TouchableOpacity>
           </View>
         </View>

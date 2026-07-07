@@ -243,7 +243,7 @@ export const GanttChart = ({
           </Text>
           <TouchableOpacity onPress={handleDragCancel} style={g.dragCancelBtn}>
             <Ionicons name="close" size={14} color="#EF4444" />
-            <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>Annuler</Text>
+            <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>{t("Annuler")}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -549,7 +549,7 @@ export const GanttChart = ({
                 {popup.res.status !== 'confirmed' && popup.res.status !== 'completed' && popup.res.status !== 'cancelled' && (
                   <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#10B98115', borderColor: '#10B98140' }]} onPress={() => { updateStatus(popup.res.id, 'confirmed'); setPopup(null); }}>
                     <Ionicons name="checkmark-circle" size={14} color="#10B981" />
-                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>Confirmer</Text>
+                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '700' }}>{t("Confirmer")}</Text>
                   </TouchableOpacity>
                 )}
                 {popup.res.status !== 'active' && popup.res.status !== 'completed' && popup.res.status !== 'cancelled' && (
@@ -567,7 +567,7 @@ export const GanttChart = ({
                 {popup.res.status !== 'cancelled' && popup.res.status !== 'completed' && (
                   <TouchableOpacity style={[g.actionBtn, { backgroundColor: '#EF444415', borderColor: '#EF444440' }]} onPress={() => { updateStatus(popup.res.id, 'cancelled'); setPopup(null); }}>
                     <Ionicons name="close-circle" size={14} color="#EF4444" />
-                    <Text style={{ color: '#EF4444', fontSize: 12, fontWeight: '700' }}>Annuler</Text>
+                    <Text style={{ color: '#EF4444', fontSize: 12, fontWeight: '700' }}>{t("Annuler")}</Text>
                   </TouchableOpacity>
                 )}
                 {onOpenReservation && (

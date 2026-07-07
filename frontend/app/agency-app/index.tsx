@@ -157,7 +157,7 @@ export default function AgencyAppHome() {
 
   const rejectRequest = async (id: string) => {
     const confirmed = Platform.OS === 'web'
-      ? window.confirm('Refuser cette demande de réservation ? Le client sera notifié par e-mail.')
+      ? window.confirm(t('Refuser cette demande de réservation ? Le client sera notifié par e-mail.'))
       : await new Promise<boolean>((resolve) => {
           Alert.alert(t("Refuser la demande"), t("Le client sera notifié par e-mail."), [
             { text: 'Annuler', style: 'cancel', onPress: () => resolve(false) },
@@ -286,17 +286,17 @@ export default function AgencyAppHome() {
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/vehicles')} data-testid="stat-vehicles">
           <Ionicons name="car" size={32} color={C.info} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_vehicles || 0}</Text>
-          <Text style={[s.statLabel, { color: C.textLight }]}>Vehicules</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>{t("Vehicules")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/reservations')} data-testid="stat-reservations">
           <Ionicons name="calendar" size={32} color={C.warning} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_reservations || 0}</Text>
-          <Text style={[s.statLabel, { color: C.textLight }]}>Reservations</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>{t("Reservations")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/clients')} data-testid="stat-clients">
           <Ionicons name="people" size={32} color={C.success} />
           <Text style={[s.statNum, { color: C.text }]}>{stats?.total_users || 0}</Text>
-          <Text style={[s.statLabel, { color: C.textLight }]}>Clients</Text>
+          <Text style={[s.statLabel, { color: C.textLight }]}>{t("Clients")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={[s.statCard, { backgroundColor: C.card, borderColor: C.border }]} onPress={() => router.push('/agency-app/statistics')} data-testid="stat-revenue">
           <Ionicons name="cash" size={32} color={C.accent} />
@@ -384,7 +384,7 @@ export default function AgencyAppHome() {
                         )}
                       </View>
                       <View style={[s.pendingV2Badge, { backgroundColor: '#F59E0B20' }]}>
-                        <Text style={[s.pendingV2BadgeText, { color: '#F59E0B' }]}>Attente</Text>
+                        <Text style={[s.pendingV2BadgeText, { color: '#F59E0B' }]}>{t("Attente")}</Text>
                       </View>
                     </View>
 
@@ -408,11 +408,11 @@ export default function AgencyAppHome() {
                     <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
                       <View style={[s.pendingV2TimeChip, { backgroundColor: '#10B98110', borderColor: '#10B98130' }]}>
                         <Ionicons name="log-in-outline" size={11} color="#10B981" />
-                        <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>Depart {startTime}</Text>
+                        <Text style={{ color: '#10B981', fontSize: 10, fontWeight: '700' }}>{t("Depart")} {startTime}</Text>
                       </View>
                       <View style={[s.pendingV2TimeChip, { backgroundColor: '#3B82F610', borderColor: '#3B82F630' }]}>
                         <Ionicons name="log-out-outline" size={11} color="#3B82F6" />
-                        <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>Retour {endTime}</Text>
+                        <Text style={{ color: '#3B82F6', fontSize: 10, fontWeight: '700' }}>{t("Retour")} {endTime}</Text>
                       </View>
                     </View>
 
@@ -424,7 +424,7 @@ export default function AgencyAppHome() {
                       <View style={[s.pendingV2PayBadge, { backgroundColor: (r.payment_method === 'cash' ? '#A855F7' : '#3B82F6') + '18' }]}>
                         <Ionicons name={r.payment_method === 'cash' ? 'cash-outline' : 'card-outline'} size={11} color={r.payment_method === 'cash' ? '#A855F7' : '#3B82F6'} />
                         <Text style={{ color: r.payment_method === 'cash' ? '#A855F7' : '#3B82F6', fontSize: 10, fontWeight: '700' }}>
-                          {r.payment_method === 'cash' ? 'Especes' : 'Carte'}
+                          {r.payment_method === 'cash' ? t("Especes") : t("Carte")}
                         </Text>
                       </View>
                     </View>
@@ -437,7 +437,7 @@ export default function AgencyAppHome() {
                         data-testid={`pending-reject-${r.id}`}
                       >
                         <Ionicons name="close" size={14} color="#EF4444" />
-                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>Refuser</Text>
+                        <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '700' }}>{t("Refuser")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[s.pendingV2Btn, { backgroundColor: '#3B82F615', borderWidth: 1, borderColor: '#3B82F640' }]}
@@ -446,7 +446,7 @@ export default function AgencyAppHome() {
                         data-testid={`pending-offer-${r.id}`}
                       >
                         <Ionicons name="pricetag" size={13} color="#3B82F6" />
-                        <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>Modifier</Text>
+                        <Text style={{ color: '#3B82F6', fontSize: 11, fontWeight: '700' }}>{t("Modifier")}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
                         style={[s.pendingV2Btn, { backgroundColor: r.vehicle_id ? '#10B981' : '#7C3AED' }, isProcessing && { opacity: 0.6 }]}
@@ -460,7 +460,7 @@ export default function AgencyAppHome() {
                           <>
                             <Ionicons name={r.vehicle_id ? 'checkmark' : 'car-sport'} size={14} color="#fff" />
                             <Text style={{ color: '#fff', fontSize: 11, fontWeight: '700' }}>
-                              {r.vehicle_id ? 'Confirmer' : 'Assigner'}
+                              {r.vehicle_id ? t("Confirmer") : t("Assigner")}
                             </Text>
                           </>
                         )}
@@ -642,7 +642,7 @@ export default function AgencyAppHome() {
                 disabled={sendingOffer}
                 data-testid="offer-cancel"
               >
-                <Text style={[s.offerBtnCancelText, { color: C.text }]}>Annuler</Text>
+                <Text style={[s.offerBtnCancelText, { color: C.text }]}>{t("Annuler")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[s.offerBtn, s.offerBtnSend, sendingOffer && { opacity: 0.6 }]}
@@ -796,7 +796,7 @@ export default function AgencyAppHome() {
                 disabled={assigning}
                 data-testid="assign-cancel"
               >
-                <Text style={[s.offerBtnCancelText, { color: C.text }]}>Annuler</Text>
+                <Text style={[s.offerBtnCancelText, { color: C.text }]}>{t("Annuler")}</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -115,7 +115,7 @@ export default function AgencyVehicles() {
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={20} color="#fff" />
-          <Text style={st.addBtnText}>Ajouter</Text>
+          <Text style={st.addBtnText}>{t("Ajouter")}</Text>
         </TouchableOpacity>
       </View>
 

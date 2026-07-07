@@ -7,6 +7,7 @@ import { useVehicleStore } from '../../src/store/vehicleStore';
 import { useAuthStore } from '../../src/store/authStore';
 import VehicleCard from '../../src/components/VehicleCard';
 import { useI18n, t } from '../../src/i18n';
+import { LanguageSelector } from '../../src/components/LanguageSelector';
 import { useThemeStore } from '../../src/store/themeStore';
 
 const vehicleTypes = [
@@ -168,8 +169,9 @@ export default function HomeScreen() {
               <Text style={st.headerTitle}>LogiRent</Text>
             </View>
             <View style={st.headerRight}>
-              <Text style={st.headerSub}>{lang === 'fr' ? t("Location de véhicules") : t("Vehicle Rental")}</Text>
-              <Text style={st.headerStat}>{vehicles.length} {lang === 'fr' ? t("véhicules disponibles") : t("vehicles available")}</Text>
+              <LanguageSelector color="#FFFFFF" activeColor="#FFFFFF" compact />
+              <Text style={st.headerSub}>{t("Location de véhicules")}</Text>
+              <Text style={st.headerStat}>{vehicles.length} {t("véhicules disponibles")}</Text>
             </View>
           </View>
         </View>

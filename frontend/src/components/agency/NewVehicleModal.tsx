@@ -333,7 +333,7 @@ export default function NewVehicleModal({ visible, colors: C, onClose, onCreated
           {/* Actions */}
           <View style={{ flexDirection: 'row', gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border }}>
             <TouchableOpacity onPress={handleClose} style={[s.actionBtn, { borderWidth: 1, borderColor: C.border }]}>
-              <Text style={{ color: C.text, fontSize: 14, fontWeight: '600' }}>Annuler</Text>
+              <Text style={{ color: C.text, fontSize: 14, fontWeight: '600' }}>{t("Annuler")}</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={handleCreate} disabled={loading} style={[s.actionBtn, { backgroundColor: '#7C3AED', opacity: loading ? 0.6 : 1 }]} data-testid="save-add-vehicle-btn">
               {loading ? <ActivityIndicator size="small" color="#fff" /> : (

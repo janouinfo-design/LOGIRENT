@@ -91,7 +91,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
 
       <View style={styles.datesRow}>
         <View style={styles.dateBox}>
-          <Text style={styles.dateLabel}>Debut</Text>
+          <Text style={styles.dateLabel}>{t("Debut")}</Text>
           <Text style={styles.dateValue}>{format(new Date(item.start_date), 'd MMM yyyy', { locale: fr })}</Text>
           <Text style={styles.dateTime}>{format(new Date(item.start_date), 'HH:mm')}</Text>
         </View>
@@ -100,7 +100,7 @@ function ReservationCard({ item, vehicle, onCancel }: { item: Reservation; vehic
           <Text style={styles.daysCount}>{item.total_days} jour{item.total_days > 1 ? 's' : ''}</Text>
         </View>
         <View style={[styles.dateBox, { alignItems: 'flex-end' }]}>
-          <Text style={styles.dateLabel}>Fin</Text>
+          <Text style={styles.dateLabel}>{t("Fin")}</Text>
           <Text style={styles.dateValue}>{format(new Date(item.end_date), 'd MMM yyyy', { locale: fr })}</Text>
           <Text style={styles.dateTime}>{format(new Date(item.end_date), 'HH:mm')}</Text>
         </View>
@@ -263,15 +263,15 @@ function CalendarView({ reservations, vehicles }: { reservations: Reservation[];
       <View style={calStyles.legend}>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.purple }]} />
-          <Text style={calStyles.legendText}>Active</Text>
+          <Text style={calStyles.legendText}>{t("Active")}</Text>
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.warning }]} />
-          <Text style={calStyles.legendText}>Attente</Text>
+          <Text style={calStyles.legendText}>{t("Attente")}</Text>
         </View>
         <View style={calStyles.legendItem}>
           <View style={[calStyles.legendDot, { backgroundColor: _C.success }]} />
-          <Text style={calStyles.legendText}>Confirmee</Text>
+          <Text style={calStyles.legendText}>{t("Confirmee")}</Text>
         </View>
       </View>
 

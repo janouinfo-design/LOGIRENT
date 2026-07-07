@@ -417,7 +417,7 @@ export const EditClientModal = ({ visible, onClose, client, C, onSaved }: Props)
               {/* ===== Bottom Buttons - like vehicle modal ===== */}
               <View style={st.bottomBtns}>
                 <TouchableOpacity style={[st.cancelBtn, { borderColor: C.border }]} onPress={onClose}>
-                  <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>Annuler</Text>
+                  <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>{t("Annuler")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[st.saveBtn, { backgroundColor: C.primary || C.accent }, saving && { opacity: 0.6 }]} onPress={saveEdit} disabled={saving} data-testid="save-edit-client-btn">
                   {saving ? <ActivityIndicator size="small" color="#fff" /> : (

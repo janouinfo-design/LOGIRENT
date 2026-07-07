@@ -72,7 +72,7 @@ export default function VehicleCard({ item, cardW, colors: C, onEdit, onDelete, 
       <View style={[s.cta, { borderTopColor: C.border }]}>
         <TouchableOpacity onPress={() => onEdit(item)} style={[s.btnEdit, { borderColor: '#F59E0B40', backgroundColor: '#F59E0B10' }]} data-testid={`edit-btn-${item.id}`} activeOpacity={0.7}>
           <Ionicons name="create-outline" size={15} color="#D97706" />
-          <Text style={{ color: '#D97706', fontSize: 12, fontWeight: '700' }}>Modifier</Text>
+          <Text style={{ color: '#D97706', fontSize: 12, fontWeight: '700' }}>{t("Modifier")}</Text>
         </TouchableOpacity>
         {onDelete && (
           <TouchableOpacity onPress={() => onDelete(item)} style={[s.btnEdit, { borderColor: '#EF444440', backgroundColor: '#EF444410' }]} data-testid={`delete-btn-${item.id}`} activeOpacity={0.7}>

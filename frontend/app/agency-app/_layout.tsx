@@ -115,24 +115,24 @@ function MobileBottomTabs({ C, pathname, pendingCount, onNavigate, agencyModules
     finally { setPickupLoading(false); }
   };
 
-  const renderTab = (t: any) => {
-    const active = isActive(t.key);
+  const renderTab = (tb: any) => {
+    const active = isActive(tb.key);
     return (
       <TouchableOpacity
-        key={t.key}
+        key={tb.key}
         style={bs.tab}
-        onPress={() => { if (t.key === '__more__') setMoreOpen(true); else onNavigate(t.key); }}
-        data-testid={`mobile-tab-${t.key}`}
+        onPress={() => { if (tb.key === '__more__') setMoreOpen(true); else onNavigate(tb.key); }}
+        data-testid={`mobile-tab-${tb.key}`}
       >
         <View>
-          <Ionicons name={(active ? t.icon : t.iconO) as any} size={22} color={active ? ACCENT : C.textLight} />
-          {t.badge > 0 && (
+          <Ionicons name={(active ? tb.icon : tb.iconO) as any} size={22} color={active ? ACCENT : C.textLight} />
+          {tb.badge > 0 && (
             <View style={bs.tabBadge}>
-              <Text style={bs.tabBadgeText}>{t.badge > 9 ? '9+' : t.badge}</Text>
+              <Text style={bs.tabBadgeText}>{tb.badge > 9 ? '9+' : tb.badge}</Text>
             </View>
           )}
         </View>
-        <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t(t.label)}</Text>
+        <Text style={[bs.tabLabel, { color: active ? ACCENT : C.textLight }]}>{t(tb.label)}</Text>
       </TouchableOpacity>
     );
   };

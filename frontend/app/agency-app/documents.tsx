@@ -217,7 +217,7 @@ export default function DocumentScanScreen() {
         <View style={[s.mainGrid, !isWide && { flexDirection: 'column' }]}>
           {/* Client Selector */}
           <View style={[s.clientPanel, { backgroundColor: C.card, borderColor: C.border }]}>
-            <Text style={[s.panelTitle, { color: C.text }]}>Clients</Text>
+            <Text style={[s.panelTitle, { color: C.text }]}>{t("Clients")}</Text>
             <View style={[s.searchBox, { borderColor: C.border }]}>
               <Ionicons name="search" size={16} color={C.textLight} />
               <TextInput
@@ -335,7 +335,7 @@ export default function DocumentScanScreen() {
                                       data-testid={`validate-${doc.id}`}
                                     >
                                       <Ionicons name="create" size={14} color="#fff" />
-                                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Valider</Text>
+                                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>{t("Valider")}</Text>
                                     </TouchableOpacity>
                                   )}
                                   {(!doc.ocr_status || doc.ocr_status === 'failed') && (
@@ -422,7 +422,7 @@ export default function DocumentScanScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={[s.approveBtn]} onPress={() => handleValidate('validated')}>
                 <Ionicons name="checkmark-circle" size={18} color="#fff" />
-                <Text style={{ color: '#fff', fontWeight: '700' }}>Valider</Text>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>{t("Valider")}</Text>
               </TouchableOpacity>
             </View>
           </View>

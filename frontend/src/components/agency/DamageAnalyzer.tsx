@@ -196,7 +196,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
                 </TouchableOpacity>
                 <TouchableOpacity style={s.webcamCancelBtn} onPress={stopWebcam} data-testid="webcam-cancel-btn">
                   <Ionicons name="close" size={18} color={C.textLight} />
-                  <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Annuler</Text>
+                  <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>{t("Annuler")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -219,7 +219,7 @@ export default function DamageAnalyzer({ inspectionId, context, onAnalysisComple
                     <Text style={s.pickerOptionText}>Galerie</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={s.pickerCancel} onPress={() => setShowPickerModal(false)} data-testid="cancel-picker-btn">
-                    <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>Annuler</Text>
+                    <Text style={{ color: C.textLight, fontSize: 12, fontWeight: '600' }}>{t("Annuler")}</Text>
                   </TouchableOpacity>
                 </View>
               )}

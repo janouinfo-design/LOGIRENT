@@ -327,7 +327,7 @@ export function NewClientModal({ visible, onClose, onCreated }: Props) {
                 {/* Bottom Buttons */}
                 <View style={s.bottomBtns}>
                   <TouchableOpacity style={[s.cancelBtn, { borderColor: C.border }]} onPress={handleClose} data-testid="cancel-new-client">
-                    <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>Annuler</Text>
+                    <Text style={{ color: C.textLight, fontSize: 14, fontWeight: '600' }}>{t("Annuler")}</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={[s.saveBtn, { backgroundColor: C.accent }]} onPress={createClient} disabled={saving} data-testid="create-client-btn">
                     {saving ? <ActivityIndicator color="#fff" size="small" /> : (

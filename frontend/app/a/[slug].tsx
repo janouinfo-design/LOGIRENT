@@ -88,7 +88,7 @@ export default function AgencyPage() {
         <Ionicons name="alert-circle-outline" size={48} color={C.gray} />
         <Text style={styles.errorText}>{error || 'Agence introuvable'}</Text>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.push('/')}>
-          <Text style={styles.backBtnText}>Retour</Text>
+          <Text style={styles.backBtnText}>{t("Retour")}</Text>
         </TouchableOpacity>
       </View>
     );

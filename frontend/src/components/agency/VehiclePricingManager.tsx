@@ -102,7 +102,7 @@ export const VehiclePricingManager = ({ vehicleId, C }: Props) => {
           )}
           <TouchableOpacity style={[st.addBtn, { backgroundColor: C.accent + '15' }]} onPress={addTier} data-testid="add-tier-btn">
             <Ionicons name="add" size={16} color={C.accent} />
-            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>Ajouter</Text>
+            <Text style={{ color: C.accent, fontSize: 12, fontWeight: '700' }}>{t("Ajouter")}</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -359,7 +359,7 @@ export default function AdminCalendar() {
                 style={{ paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 }}
                 onPress={() => setShowMonthPicker(false)}
               >
-                <Text style={{ fontSize: 13, fontWeight: '500', color: COLORS.textLight }}>Fermer</Text>
+                <Text style={{ fontSize: 13, fontWeight: '500', color: COLORS.textLight }}>{t("Fermer")}</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -574,7 +574,7 @@ export default function AdminCalendar() {
                   <Text style={{ fontSize: 14, fontWeight: '600', color: COLORS.departure, marginTop: 2 }}>{format(new Date(selectedEvent.start_date), 'HH:mm')}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.sectionTitle}>Retour</Text>
+                  <Text style={styles.sectionTitle}>{t("Retour")}</Text>
                   <Text style={[styles.sectionValue, selectedEvent.is_overdue && { color: COLORS.overdue }]}>
                     {format(new Date(selectedEvent.end_date), 'dd MMM yyyy', { locale: fr })}
                   </Text>

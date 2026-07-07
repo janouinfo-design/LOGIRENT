@@ -207,7 +207,7 @@ export default function MyInvoicesScreen() {
                         ) : (
                           <>
                             <Ionicons name="card" size={16} color="#fff" />
-                            <Text style={s.payBtnText}>Carte</Text>
+                            <Text style={s.payBtnText}>{t("Carte")}</Text>
                           </>
                         )}
                       </TouchableOpacity>
